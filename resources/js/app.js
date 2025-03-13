@@ -5,8 +5,22 @@ import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
+import { createI18n } from 'vue-i18n';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+
+const i18n = createI18n({
+    legacy: false, // Use Composition API style
+    locale: 'es', // Default language
+    messages: {
+      en: {
+        greeting: 'Hello',
+      },
+      es: {
+        greeting: 'Hola',
+      },
+    },
+  });
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
