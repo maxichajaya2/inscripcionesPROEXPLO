@@ -4,7 +4,7 @@ import 'primeicons/primeicons.css'
 </script>
 
 <template>
-    <footer class="bg-white py-4">
+    <footer class="bg-white py-4 pt-10 mt-10">
         <div class="flex px-3 mx-auto max-w-7xl md:px-6 lg:px-8">
             <div class="flex-col items-center shrink-0">
                 <p>Organizado por:</p>

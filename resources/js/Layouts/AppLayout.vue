@@ -1,15 +1,17 @@
 <script setup>
+import { Head } from '@inertiajs/vue3';
 import Banner from '@/Components/Banner.vue';
 import Footer from '@/Footer/Footer.vue';
+
 import { Link } from '@inertiajs/vue3';
 </script>
 
 <template>
     <div class="light">
 
-    <Head :title="Inscripciones" />
+    <Head />
 
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
+        <div class="min-h-screen bg-white-100">
 
             <Banner />
 

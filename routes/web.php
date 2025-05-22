@@ -25,14 +25,8 @@ Route::get('/', [InscripcionController::class, 'index'])->name('inscripcion.inde
         'phpVersion' => PHP_VERSION,
     ]);*/
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/registro/convencionista', [InscripcionController::class, 'convencionista'])->name('inscripcion.convencionista');
+Route::get('/registro/docente', [InscripcionController::class, 'docente'])->name('inscripcion.docente');
+Route::get('/registro/estudiante', [InscripcionController::class, 'estudiante'])->name('inscripcion.estudiante');
+Route::get('/registro/extemin', [InscripcionController::class, 'extemin'])->name('inscripcion.extemin');
 
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
-
-require __DIR__.'/auth.php';

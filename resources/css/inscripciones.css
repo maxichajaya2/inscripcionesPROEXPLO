@@ -1,0 +1,166 @@
+:root {
+  --primary-color: #004F59; /* green-500 */
+  --primary-color-text: #004F59;
+}
+
+.text-green-iimp{
+  color: #004F59 !important;
+}
+
+.bg-green-iimp{
+    background-color: #004F59 !important;
+  }
+
+.border-green-iimp{
+  border-color: #004F59 !important;
+}
+
+.p-radiobutton-checked .p-radiobutton-box  {
+  background-color: #004F59 !important; /* green-500 */
+  border-color: #004F59 !important;
+}
+
+.border-rounded-full{
+    border-radius: 9999px !important;
+}
+
+.bg-lightgreen-iimp{
+   background-color: rgba(196, 212, 214, 0.5) !important;
+}
+
+.border-lightgreen-iimp{
+   border-color: rgba(196, 212, 214, 0.5) !important;
+}
+
+.container-title-visitor{
+    display: flex;
+    width: 100%;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+    padding: 12px 8px 12px 40px;
+}
+
+.container-visitor-border{
+    border-width: 1px;
+    border-radius: 8px;
+    border-style: solid;
+    margin-bottom: 24px;
+    display: block;
+    text-decoration: none;
+}
+
+.container-visitor-border:hover {
+  color: #fff;
+  background-color: #004F59;
+}
+
+.modal-green{
+  color: #fff !important;
+  background-color: #004F59 !important;
+}
+
+.modal-head-title{
+    font-size: 22px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.modal-green .p-button{
+  color: #fff !important;
+}
+
+.modal-green .p-button:hover{
+  color: #004F59 !important;
+}
+
+.modal-green .p-dialog-header{
+    max-height: 55px;
+    margin-left: auto;
+}
+
+.modal-custom-scroll {
+    overflow-y: auto;
+}
+
+
+.modal-custom-scroll::-webkit-scrollbar {
+    width: 4px;
+}
+
+.modal-custom-scroll::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 4px;
+}
+
+.modal-custom-scroll::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 40px;
+}
+
+.modal-cancel-button{
+    color: #fff !important;
+    background-color: #004F59 !important;
+    border-color: #fff !important;
+}
+
+.modal-continue-button{
+    color: #004F59 !important;
+    background-color: #fff !important;
+    border: none;
+}
+
+.head-tarif{
+    text-align: center;
+    background-color: #F2A900;
+    border-radius: 15px 15px 0px 0px;
+}
+
+.body-tarif{
+    color: #F2A900;
+    border-right: 2px solid #F2A900;
+    border-left: 2px solid #F2A900;
+}
+
+.foot-tarif{
+    border-top: 2px solid #296b74;
+}
+
+.p-step-active .p-step-title{
+    color: #004F59 !important;
+    font-weight: bold;
+}
+
+.p-step-active .p-step-number {
+    color: #004F59 !important;
+    font-weight: bold;
+}
+
+.p-step:has(~ .p-step-active) .p-stepper-separator
+ {
+    background: #004F59 !important;
+}
+
+.p-datepicker:has(.p-datepicker-input-icon-container) .p-datepicker-input{
+    border-color: #004F59 !important;
+}
+
+.custom-checkbox.p-checkbox .p-checkbox-box.p-highlight {
+  background-color: #004F59;
+  border-color: #004F59;
+}
+
+.p-button .p-component {
+    background-color: #004F59 !important;
+}
+
+.p-datepicker-input-icon-container{
+    color: #004F59 !important;
+}
+
+.section-conditions{
+    padding: 24px;
+    border-radius: 8px;
+    background-color: rgba(196, 212, 214, 0.5);
+}
+

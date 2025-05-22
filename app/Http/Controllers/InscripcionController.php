@@ -11,4 +11,8 @@ class InscripcionController extends Controller
     public function index(){
         return Inertia::render('Inscripcion/Index');
     }
+
+    public function convencionista(){
+        return Inertia::render('Inscripcion/Convencionista');
+    }
 }
