@@ -6,6 +6,7 @@ import IntroImage from '@/Components/IntroImage.vue';
 import { usePage , router } from '@inertiajs/vue3';
 import { ref, onMounted } from 'vue';
 import Skeleton from 'primevue/skeleton';
+import Functions from '@/Functions';
 
 import "../../../css/inscripciones.css";
 
@@ -26,19 +27,19 @@ import "../../../css/inscripciones.css";
                                 <GreenArrowRight class="block w-auto" />
                             </div>
                         </a>
-                        <a href="/registro/docente" class = "container-visitor-border max-w-[400px] cursor-pointer border-green-iimp">
+                        <a href="/registro/docente" class = "container-visitor-border max-w-[400px] cursor-pointer border-green-iimp" style = "display :none;">
                             <div class = "container-title-visitor">
                                 <h5>Docente</h5>
                                 <GreenArrowRight class="block w-auto" />
                             </div>
                         </a>
-                        <a href="/registro/estudiante" class = "container-visitor-border max-w-[400px] cursor-pointer border-green-iimp">
+                        <a href="/registro/estudiante" class = "container-visitor-border max-w-[400px] cursor-pointer border-green-iimp" style = "display :none;">
                             <div class = "container-title-visitor">
                                 <h5>Estudiante</h5>
                                 <GreenArrowRight class="block w-auto" />
                             </div>
                         </a>
-                        <a href="/registro/extemin" class = "container-visitor-border max-w-[400px] cursor-pointer border-green-iimp">
+                        <a href="/registro/extemin" class = "container-visitor-border max-w-[400px] cursor-pointer border-green-iimp" style = "display :none;">
                             <div class = "container-title-visitor">
                                 <h5>EXTEMIN</h5>
                                 <GreenArrowRight class="block w-auto" />
@@ -52,7 +53,7 @@ import "../../../css/inscripciones.css";
             </div>
             <div class ="row">
                 <div class = "col">
-                    <div class ="flex justify-between border-green-iimp rounded-[8px] border mt-6 mb-6 p-[20px]">
+                    <div class ="flex justify-between border-green-iimp rounded-[8px] border mt-6 mb-6 p-[20px]" >
                         <div class ="flex justify-center min-w-[80px]">
                             <img src ="/images/icon-fence.svg" class="m-auto">
                         </div>

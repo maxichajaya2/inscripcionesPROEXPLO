@@ -147,6 +147,12 @@ const hasPermission= (listado_permisos, permiso) =>{
 
 }
 
+function toLocalDateOnly(dateStr) {
+  const utcDate = new Date(dateStr);
+  utcDate.setDate(utcDate.getDate() + 1);
+  return utcDate;
+}
+
 const preventChangeInput= (e) =>{
     e.preventDefault();
 }
@@ -166,4 +172,5 @@ export default {
     preventChangeInput,
     hasPermission,
     getCartCurrency,
+    toLocalDateOnly,
 }

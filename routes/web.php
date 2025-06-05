@@ -5,6 +5,10 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\InscripcionController;
+use App\Http\Controllers\DocumentosController;
+use App\Http\Controllers\DocumentApiController;
+use App\Http\Controllers\PadreController;
+use App\Http\Controllers\NiubizController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,8 +29,18 @@ Route::get('/', [InscripcionController::class, 'index'])->name('inscripcion.inde
         'phpVersion' => PHP_VERSION,
     ]);*/
 
+Route::post('/padre/departamentos', [PadreController::class, 'getDepartamentos'])->name('padre.departamentos');
+Route::post('/padre/provincias', [PadreController::class, 'getProvincias'])->name('padre.provincias');
+Route::post('/padre/distritos', [PadreController::class, 'getDistritos'])->name('padre.distritos');
+
 Route::get('/registro/convencionista', [InscripcionController::class, 'convencionista'])->name('inscripcion.convencionista');
 Route::get('/registro/docente', [InscripcionController::class, 'docente'])->name('inscripcion.docente');
 Route::get('/registro/estudiante', [InscripcionController::class, 'estudiante'])->name('inscripcion.estudiante');
 Route::get('/registro/extemin', [InscripcionController::class, 'extemin'])->name('inscripcion.extemin');
 
+Route::post('/api/validatepersonsoc', [DocumentApiController::class, 'validatePersonSoc'])->name('api.validatepersonsoc');
+Route::post('/api/getperson', [DocumentApiController::class, 'getPersonData'])->name('api.getdataperson');
+
+Route::post('/api/document', [DocumentApiController::class, 'getData'])->name('api.document');
+
+Route::post('/pago/getform', [NiubizController::class, 'getForm'])->name('niubiz.getform');

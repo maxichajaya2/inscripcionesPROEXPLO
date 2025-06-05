@@ -1,9 +1,13 @@
 <script setup>
+import { useToast } from 'primevue/usetoast';
+import Toast from 'primevue/toast';
 import { Head } from '@inertiajs/vue3';
 import Banner from '@/Components/Banner.vue';
 import Footer from '@/Footer/Footer.vue';
 
 import { Link } from '@inertiajs/vue3';
+
+const toast = useToast();
 </script>
 
 <template>
@@ -30,6 +34,7 @@ import { Link } from '@inertiajs/vue3';
             <!-- Footer Content -->
             <Footer />
         </div>
+        <Toast />
 
     </div>
 </template>

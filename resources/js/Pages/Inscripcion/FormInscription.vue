@@ -1,6 +1,6 @@
 <script setup>
 import InputText from 'primevue/inputtext';
-import Dropdown from 'primevue/dropdown';
+import Select from 'primevue/select';
 import Divider from 'primevue/divider';
 import Button from 'primevue/button';
 import Calendar from 'primevue/calendar';
@@ -8,15 +8,30 @@ import Checkbox from 'primevue/checkbox';
 import RadioButton from 'primevue/radiobutton';
 import Card from 'primevue/card';
 import InputGroup from 'primevue/inputgroup';
-import { ref, onMounted, computed, onBeforeMount } from 'vue';
+import { ref, onMounted, computed, watch  } from 'vue';
 import { useForm } from 'vee-validate';
 import * as yup from 'yup';
 import { usePage, router } from '@inertiajs/vue3';
-
+import ProgressSpinner from 'primevue/progressspinner';
+import Functions from '@/Functions';
 
 import "../../../css/inscripciones.css";
 
-const visible = ref(true);
+const page = usePage();
+const props = defineProps({
+    data_persona: Object
+});
+
+const es_socio = ref(false);
+const generos = computed(() => usePage().props.general.generos);
+const nacionalidades = computed(() => usePage().props.general.paises);
+const paises = computed(() => usePage().props.general.paises);
+const tipoDocumentoPago = computed(() => page.props.general.tipoDocumentoPago);
+const tipoDocumento = computed(() => page.props.general.tipDocEmp)
+const departamentos = ref();
+const provincias = ref();
+const distritos = ref();
+
 
 const { defineField, errors, handleSubmit, setValues, resetForm ,values  } = useForm({
     validationSchema: yup.object({
@@ -24,33 +39,75 @@ const { defineField, errors, handleSubmit, setValues, resetForm ,values  } = use
     })
 })
 
+const [nombres, nombresAttrs] = defineField('nombres');
+const [apellido_paterno, apellido_paternoAttrs] = defineField('apellido_paterno');
+const [apellido_materno, apellido_maternoAttrs] = defineField('apellido_materno');
+const [fecha_nacimiento, fecha_nacimientoAttrs] = defineField('fecha_nacimiento');
+const [sexo, sexoAttrs] = defineField('sexo');
+const [correo, correoAttrs] = defineField('correo');
+const [celular, celularAttrs] = defineField('celular');
+const [nacionalidad, nacionalidadAttrs] = defineField('nacionalidad');
+const [pais, paisAttrs] = defineField('pais');
+const [departamento, departamentoAttrs] = defineField('departamento');
+const [provincia, provinciaAttrs] = defineField('provincia');
+const [distrito, distritoAttrs] = defineField('distrito');
+const [direccionPersona, direccionPersonaAttrs] = defineField('direccionPersona');
+const [empresa, empresaAttrs] = defineField('empresa');
+const [cargo, cargoAttrs] = defineField('cargo');
+const [credencial, credencialAttrs] = defineField('credencial');
+const [auth, authAttrs] = defineField('auth');
+const [selectTipoDocPago, selectTipoDocPagoAttrs] = defineField('selectTipoDocPago');
+
+const [categoria, categoriaAttrs] = defineField('categoria');
+
+const [documentoEmpresa, documentoEmpresaAttrs] = defineField('documentoEmpresa');
+const [razonSocial, razonSocialAttrs] = defineField('razonSocial');
+const [responsable, responsableAttrs] = defineField('responsable');
+const [tipoDocumentoEmpresa, tipoDocumentoEmpresaAttrs] = defineField('tipoDocumentoEmpresa');
+const [direccionEmpresa, direccionEmpresaAttrs] = defineField('direccionEmpresa');
+const [selectTipoPago, selectTipoPagoAttrs] = defineField('selectTipoPago');
+
 const today = new Date();
-const [documento, documentoAttrs] = defineField('documento');
-const [id_tipo_documento, id_tipo_documentoAttrs] = defineField('id_tipo_documento');
-const [selectTipo, selectTipoAttrs] = defineField('selectTipo');
 
+const loadDepartamentos = async () => {
+    departamento.value = undefined;
+    provincia.value = undefined;
+    distrito.value = undefined;
+    departamentos.value = await Functions.loadDepartamentos(pais.value).then(data => { return data });
+}
 
-/* wip locale
-const customLocale = {
-  firstDayOfWeek: 1,
-  dayNames: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
-  dayNamesShort: ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'],
-  dayNamesMin: ['D', 'L', 'M', 'M', 'J', 'V', 'S'],
-  monthNames: [
-    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
-  ],
-  monthNamesShort: [
-    'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin',
-    'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'
-  ],
-  today: 'Aujourd’hui',
-  clear: 'Effacer'
-}*/
+const loadProvincias = async () => {
+    provincia.value = undefined;
+    distrito.value = undefined;
+    provincias.value = await Functions.loadProvincias(pais.value, departamento.value).then(data => { return data });
+}
 
-const hideModal = () => {
-    visible.value = !visible;
-};
+const loadDistritos = async () => {
+    distrito.value = undefined;
+    distritos.value = await Functions.loadDistritos(pais.value, departamento.value, provincia.value).then(data => { return data });
+}
+
+watch(() => props.data_persona, (newVal, oldVal) => {
+    selectTipoPago.value = 1;
+
+     if(typeof props.data_persona.persona != 'undefined' ){
+        es_socio.value =  props.data_persona.persona.es_socio;
+        if(props.data_persona.persona.es_socio ){
+            categoria.value = 1;
+        }else{
+            categoria.value = 2;
+        }
+        props.data_persona.persona.fecha_nacimiento = Functions.toLocalDateOnly(props.data_persona.persona.fecha_nacimiento);
+        setValues(props.data_persona.persona);
+        loadDepartamentos()
+        setValues(props.data_persona.persona );
+        loadProvincias()
+        setValues(props.data_persona.persona );
+        loadDistritos()
+        setValues(props.data_persona.persona );
+
+     }
+});
 
 const onlyNumberKey = (event) => {
   const charCode = event.charCode ? event.charCode : event.keyCode
@@ -63,19 +120,34 @@ const goStart = () => {
     router.get(route('inscripcion.index'));
 };
 
-function getDocument() {
-    return { "validate" : true
-    };
+function setTipoDocPago(){
+    documentoEmpresa.value = "";
+    razonSocial.value = "";
+    direccionEmpresa.value = "";
+    responsable.value = "";
+
+    if(tipoDocumentoEmpresa.value == 2){ //ruc
+        selectTipoDocPago.value = 1; // factura
+    }else{
+        selectTipoDocPago.value = 2; //boleta
+    }
+}
+
+function getInscripcion() {
+    console.log(values);
+    return { "validate" : true ,
+            "form": values
+        };
 }
 
 defineExpose({
-  getDocument
+  getInscripcion
 });
 
 </script>
 
 <template>
-    <form id="FormValidacionDoc">
+
         <div class="gap-6 p-6 w-full justify-around overflow-visible">
             <div class ="text-green-iimp font-bold p-4">
 
@@ -88,24 +160,24 @@ defineExpose({
                     <div>
                         <div class="grid gap-6 m-6 md:grid-cols-2" >
                             <div class="w-full sm:col-span-1">
-                                    <label class="">Nombres*</label>
-                                    <InputText for="documento" name="documento" v-model="documento" v-bind="documentoAttrs" class="w-full border-green-iimp"
-                                    />
-                                    <span class="font-normal text-red-600">{{ errors.documento }}</span>
+                                    <label for="nombres" class="">Nombres*</label>
+                                    <InputText name="nombres" v-model="nombres" v-bind="nombresAttrs" class="w-full border-green-iimp"
+                                                                        />
+                                    <span class="font-normal text-red-600">{{ errors.nombres }}</span>
                             </div>
                             <div class="grid gap-6 md:grid-cols-2" >
                                 <div class="col-span-3 sm:col-span-1">
-                                    <label for="id_tipo_documento" class="">Apellido Paterno*</label>
-                                    <InputText for="documento" name="documento" v-model="documento" v-bind="documentoAttrs" class="w-full border-green-iimp"
+                                    <label for="apellido_paterno" class="">Apellido Paterno*</label>
+                                    <InputText name="apellido_paterno" v-model="apellido_paterno" v-bind="apellido_paternoAttrs" class="w-full border-green-iimp"
                                     />
-                                    <span class="font-normal text-red-600">{{ errors.id_tipo_documento }}</span>
+                                    <span class="font-normal text-red-600">{{ errors.apellido_paterno }}</span>
 
                                 </div>
                                 <div class="col-span-3 sm:col-span-1">
-                                        <label class="">Apellido Materno</label>
-                                        <InputText for="documento" name="documento" v-model="documento" v-bind="documentoAttrs" class="w-full border-green-iimp"
-                                        @keypress="onlyNumberKey" />
-                                        <span class="font-normal text-red-600">{{ errors.documento }}</span>
+                                        <label for="apellido_materno" class="">Apellido Materno</label>
+                                        <InputText name="apellido_materno" v-model="apellido_materno" v-bind="apellido_maternoAttrs" class="w-full border-green-iimp"
+                                         />
+                                        <span class="font-normal text-red-600">{{ errors.apellido_materno }}</span>
                                 </div>
                             </div>
 
@@ -114,108 +186,108 @@ defineExpose({
                         <div class="grid gap-6 m-6 md:grid-cols-4" >
 
                                 <div class="col-span-3 sm:col-span-1">
-                                    <label for="id_tipo_documento" class="">País*</label>
-                                    <Dropdown name="tipo_doc" v-model="id_tipo_documento" v-bind="id_tipo_documentoAttrs"
-                                            optionLabel="name_es" optionValue="id" placeholder="Seleccione Documento" showClear
-                                            checkmark class="w-full border-green-iimp" />
-                                    <span class="font-normal text-red-600">{{ errors.id_tipo_documento }}</span>
+                                    <label for="pais" class="">País*</label>
+                                    <Select name="pais" v-model="pais" v-bind="paisAttrs"
+                                            optionLabel="name" optionValue="id" placeholder="Elegir" showClear filter @change="loadDepartamentos" :options="paises"
+                                            class="w-full border-green-iimp" />
+                                    <span class="font-normal text-red-600">{{ errors.pais }}</span>
 
                                 </div>
                                 <div class="col-span-3 sm:col-span-1">
-                                        <label class="">Departamento</label>
-                                        <Dropdown name="tipo_doc" v-model="id_tipo_documento" v-bind="id_tipo_documentoAttrs"
-                                            optionLabel="name_es" optionValue="id" placeholder="Seleccione Documento" showClear
-                                            checkmark class="w-full border-green-iimp" />
-                                        <span class="font-normal text-red-600">{{ errors.documento }}</span>
+                                        <label for="departamento" class="">Departamento</label>
+                                        <Select name="departamento" v-model="departamento" v-bind="departamentoAttrs" filter @change="loadProvincias" :options="departamentos"
+                                            optionLabel="name" optionValue="id_departamento" placeholder="Elegir" showClear
+                                            class="w-full border-green-iimp" />
+                                        <span class="font-normal text-red-600">{{ errors.departamento }}</span>
                                 </div>
 
                                 <div class="w-full sm:col-span-1">
-                                        <label class="">Provincia</label>
-                                        <Dropdown name="tipo_doc" v-model="id_tipo_documento" v-bind="id_tipo_documentoAttrs"
-                                            optionLabel="name_es" optionValue="id" placeholder="Seleccione Documento" showClear
-                                            checkmark class="w-full border-green-iimp" />
-                                        <span class="font-normal text-red-600">{{ errors.documento }}</span>
+                                        <label for="provincia" class="">Provincia</label>
+                                        <Select name="provincia" v-model="provincia" v-bind="provinciaAttrs" filter @change="loadDistritos" :options="provincias"
+                                            optionLabel="name" optionValue="id_provincia" placeholder="Elegir" showClear
+                                            class="w-full border-green-iimp" />
+                                        <span class="font-normal text-red-600">{{ errors.provincia }}</span>
                                 </div>
                                 <div class="w-full sm:col-span-1">
-                                        <label class="">Distrito</label>
-                                        <Dropdown name="tipo_doc" v-model="id_tipo_documento" v-bind="id_tipo_documentoAttrs"
-                                            optionLabel="name_es" optionValue="id" placeholder="Seleccione Documento" showClear
-                                            checkmark class="w-full border-green-iimp" />
-                                        <span class="font-normal text-red-600">{{ errors.documento }}</span>
+                                        <label for="distrito" class="">Distrito</label>
+                                        <Select name="distrito" v-model="distrito" v-bind="distritoAttrs" filter :options="distritos"
+                                            optionLabel="name" optionValue="id_distrito" placeholder="Elegir" showClear
+                                            class="w-full border-green-iimp" />
+                                        <span class="font-normal text-red-600">{{ errors.distrito }}</span>
                                 </div>
                         </div>
 
                         <div class="grid gap-6 m-6 md:grid-cols-2" >
                             <div class="grid gap-6 md:grid-cols-2" >
                                 <div class="col-span-3 sm:col-span-1">
-                                        <label class="">Correo Electrónico*</label>
-                                        <InputText for="documento" name="documento" v-model="documento" v-bind="documentoAttrs" class="w-full border-green-iimp"
-                                        @keypress="onlyNumberKey" />
-                                        <span class="font-normal text-red-600">{{ errors.documento }}</span>
+                                        <label for="correo" class="">Correo Electrónico*</label>
+                                        <InputText name="correo" v-model="correo" v-bind="correoAttrs" class="w-full border-green-iimp"
+                                         />
+                                        <span class="font-normal text-red-600">{{ errors.correo }}</span>
                                 </div>
                                 <div class="col-span-3 sm:col-span-1">
-                                        <label for="id_tipo_documento" class="">Celular*</label>
-                                        <InputText for="documento" name="documento" v-model="documento" v-bind="documentoAttrs" class="w-full border-green-iimp"
+                                        <label for="celular" class="">Celular*</label>
+                                        <InputText name="celular" v-model="celular" v-bind="celularAttrs" class="w-full border-green-iimp"
                                         />
-                                        <span class="font-normal text-red-600">{{ errors.id_tipo_documento }}</span>
+                                        <span class="font-normal text-red-600">{{ errors.id_tipo_celular }}</span>
 
                                 </div>
 
                             </div>
                             <div class="w-full sm:col-span-1">
-                                    <label class="">Dirección*</label>
-                                    <InputText for="documento" name="documento" v-model="documento" v-bind="documentoAttrs" class="w-full border-green-iimp"
+                                    <label for="direccionPersona"  class="">Dirección*</label>
+                                    <InputText name="direccionPersona" v-model="direccionPersona" v-bind="direccionPersonaAttrs" class="w-full border-green-iimp"
                                     />
-                                    <span class="font-normal text-red-600">{{ errors.documento }}</span>
+                                    <span class="font-normal text-red-600">{{ errors.direccionPersona }}</span>
                             </div>
 
                         </div>
 
                         <div class="grid gap-6 m-6 md:grid-cols-3" >
                                 <div class="w-full sm:col-span-1">
-                                    <label class="">Fecha de Nacimiento*</label>
-                                    <Calendar name="documento" v-model="documento" modelValue=undefined v-bind="documentoAttrs" :maxDate="today" showIcon
-                                    iconDisplay="input" class="w-full leading-3 border-green-iimp" dateFormat="yy-mm-dd" />
-                                    <span class="font-normal text-red-600">{{ errors.documento }}</span>
+                                    <label for="fecha_nacimiento" class="">Fecha de Nacimiento*</label>
+                                    <Calendar name="fecha_nacimiento" v-model="fecha_nacimiento" modelValue=undefined v-bind="fecha_nacimientoAttrs" :maxDate="today" showIcon
+                                    iconDisplay="input" class="w-full leading-3 border-green-iimp" dateFormat="yy-mm-dd" :showTime="false" />
+                                    <span class="font-normal text-red-600">{{ errors.fecha_nacimiento }}</span>
                                 </div>
 
                                 <div class="w-full sm:col-span-1">
-                                        <label class="">Empresa*</label>
-                                        <InputText for="documento" name="documento" v-model="documento" v-bind="documentoAttrs" class="w-full border-green-iimp"
-                                        @keypress="onlyNumberKey" />
-                                        <span class="font-normal text-red-600">{{ errors.documento }}</span>
+                                        <label for="empresa" class="">Empresa*</label>
+                                        <InputText name="empresa" v-model="empresa" v-bind="empresaAttrs" class="w-full border-green-iimp"
+                                         />
+                                        <span class="font-normal text-red-600">{{ errors.empresa }}</span>
                                 </div>
                                 <div class="w-full sm:col-span-1">
-                                        <label class="">Cargo*</label>
-                                        <InputText for="documento" name="documento" v-model="documento" v-bind="documentoAttrs" class="w-full border-green-iimp"
-                                        @keypress="onlyNumberKey" />
-                                        <span class="font-normal text-red-600">{{ errors.documento }}</span>
+                                        <label for="cargo"  class="">Cargo*</label>
+                                        <InputText name="cargo" v-model="cargo" v-bind="cargoAttrs" class="w-full border-green-iimp"
+                                         />
+                                        <span class="font-normal text-red-600">{{ errors.cargo }}</span>
                                 </div>
                         </div>
 
                         <div class="grid gap-6 m-6 md:grid-cols-2" >
                             <div class="grid gap-6 md:grid-cols-2" >
                                 <div class="col-span-3 sm:col-span-1">
-                                        <label for="id_tipo_documento" class="">Sexo*</label>
-                                            <Dropdown name="tipo_doc" v-model="id_tipo_documento" v-bind="id_tipo_documentoAttrs"
-                                                optionLabel="name_es" optionValue="id" placeholder="Seleccione Documento" showClear
-                                                checkmark class="w-full border-green-iimp" />
-                                        <span class="font-normal text-red-600">{{ errors.id_tipo_documento }}</span>
+                                        <label for="sexo" class="">Sexo*</label>
+                                            <Select name="sexo" v-model="sexo" v-bind="sexoAttrs"
+                                                optionLabel="label" optionValue="value" placeholder="Elegir" showClear checkmark :options="generos"
+                                                 class="w-full border-green-iimp" />
+                                        <span class="font-normal text-red-600">{{ errors.sexo }}</span>
 
                                 </div>
                                 <div class="col-span-3 sm:col-span-1">
-                                        <label class="">Nacionalidad*</label>
-                                        <Dropdown name="tipo_doc" v-model="id_tipo_documento" v-bind="id_tipo_documentoAttrs"
-                                            optionLabel="name_es" optionValue="id" placeholder="Seleccione Documento" showClear
-                                            checkmark class="w-full border-green-iimp" />
-                                        <span class="font-normal text-red-600">{{ errors.documento }}</span>
+                                        <label for ="nacionalidad" class="">Nacionalidad*</label>
+                                        <Select name="nacionalidad" v-model="nacionalidad" v-bind="nacionalidadAttrs" filter  :options="paises"
+                                            optionLabel="name" optionValue="id" placeholder="Elegir" showClear
+                                             class="w-full border-green-iimp" />
+                                        <span class="font-normal text-red-600">{{ errors.nacionalidad }}</span>
                                 </div>
                             </div>
                             <div class="w-full sm:col-span-1">
-                                        <label class="">Nombre Credencial*</label>
-                                        <InputText for="documento" name="documento" v-model="documento" v-bind="documentoAttrs" class="w-full border-green-iimp"
-                                        @keypress="onlyNumberKey" />
-                                        <span class="font-normal text-red-600">{{ errors.documento }}</span>
+                                        <label for ="credencial" class="">Nombre Credencial*</label>
+                                        <InputText name="credencial" v-model="credencial" v-bind="credencialAttrs" class="w-full border-green-iimp"
+                                         />
+                                        <span class="font-normal text-red-600">{{ errors.credencial }}</span>
                                 </div>
                         </div>
 
@@ -231,8 +303,8 @@ defineExpose({
                                     <p>Este material podrá difundirse a través de spots televisivos y/o radiales, avisos en prensa escrita, afiches, volantes, encartes, folletos, banners impresos, sitios web, aplicativos (APP) del Evento y/o del IIMP, redes sociales, merchandising y cualquier otro tipo de material de soporte audio-.visual, ya sea en formato físico o digital. Suscribo esta autorización en señal de conformidad en todos sus extremos, la cual se otorga por tiempo indefinido y sin restricción geográfica.</p>
                             </div>
                             <div class="flex font-normal p-2 w-full justify-end">
-                                    <Checkbox :binary="true" />
-                                    <label for="id_tipo_documento" class="pl-2">Autorización para compartir Datos Personales</label>
+                                    <Checkbox :binary="true" v-model="auth" />
+                                    <label for="auth" class="pl-2">Autorización para compartir Datos Personales</label>
 
                             </div>
 
@@ -240,6 +312,32 @@ defineExpose({
                     </div>
 
                 </div>
+            </div>
+
+            <div class ="text-green-iimp font-bold p-4">
+                <Card class="mt-5 overflow-hidden">
+                    <template #header>
+                        <div class="w-full py-3 text-xl font-bold text-center bg-lightgreen-iimp border-lightgreen-iimp">Categorías</div>
+                    </template>
+
+                    <template #content>
+
+                        <div class="flex items-center" v-if="es_socio">
+                            <RadioButton  v-model="categoria" v-bind="categoriaAttrs"
+                                                name="categoria" :value="1" class="radio-green-iimp " @click="$event.preventDefault()" />
+                            <label  class="ml-2">Tarjeta</label>
+                        </div>
+                        <div class="flex items-center" v-else >
+                            <RadioButton  v-model="categoria" v-bind="categoriaAttrs"
+                                                name="categoria" :value='2' class="ml-6 radio-green-iimp " @click="$event.preventDefault()" />
+                            <div class="flex justify-between w-full ml-6 mr-6" >
+                                  <label  class="ml-2">Convencionista No Asociado</label>
+                                  <p class="text-yellow-price">USD 1 900</p>
+                            </div>
+                        </div>
+
+                    </template>
+                </Card>
             </div>
             <div class ="text-green-iimp font-bold p-4">
 
@@ -251,90 +349,84 @@ defineExpose({
 
                     <template #content>
 
-                        <div class="flex justify-around w-full mb-4">
-                            <Card class="gap-3 text-center min-w-[450px]">
-                                <template #content>
-                                    <div class="text-lg font-semibold m-4">Seleccione el Documento de Pago</div>
-
-                                    <div class="flex flex-wrap justify-center gap-3">
-                                        <div class="flex items-center">
-                                            <RadioButton v-model="selectTipo" v-bind="selectTipoAttrs"
-                                                name="tipodocfac" :value="1" class="radio-green-iimp " />
-                                            <label  class="ml-2">Boleta</label>
-                                        </div>
-                                        <div class="flex items-center">
-                                            <RadioButton v-model="selectTipo" v-bind="selectTipoAttrs"
-                                                name="tipodocfac" :value="2" />
-                                            <label  class="ml-2">Factura</label>
-                                        </div>
-
-                                    </div>
-                                    <span class="font-normal text-red-600">{{ errors.selectTipo }}</span>
-                                </template>
-                            </Card>
-                            <Card class="gap-3 text-center min-w-[450px]">
-                                <template #content>
-                                    <div class="text-lg font-semibold m-4">Seleccione Metodo de pago</div>
-
-                                    <div class="flex flex-wrap justify-center gap-3">
-                                        <div class="flex items-center">
-                                            <RadioButton v-model="selectTipo" v-bind="selectTipoAttrs"
-                                                name="tipodocfac" :value="1" class="radio-green-iimp " />
-                                            <label  class="ml-2">Tarjeta</label>
-                                        </div>
-                                    </div>
-                                    <span class="font-normal text-red-600">{{ errors.selectTipo }}</span>
-                                </template>
-                            </Card>
-                        </div>
-
                         <div class="grid gap-6 m-6 md:grid-cols-2" >
 
                                 <div class="grid gap-6 md:grid-cols-2" >
                                     <div class="col-span-3 sm:col-span-1">
-                                        <label for="id_tipo_documento" class="">Tipo de Documento*</label>
-                                        <Dropdown name="tipo_doc" v-model="id_tipo_documento" v-bind="id_tipo_documentoAttrs"
-                                                optionLabel="name_es" optionValue="id" placeholder="Seleccione Documento" showClear
-                                                checkmark class="w-full border-green-iimp" />
-                                        <span class="font-normal text-red-600">{{ errors.id_tipo_documento }}</span>
+                                        <label for="tipoDocumentoEmpresa" class="">Tipo de Documento*</label>
+                                        <Select name="tipoDocumentoEmpresa" v-model="tipoDocumentoEmpresa" v-bind="tipoDocumentoEmpresaAttrs" :options="tipoDocumento"
+                                                optionLabel="name_es" optionValue="id" placeholder="Elegir" showClear
+                                                checkmark class="w-full border-green-iimp" @change="setTipoDocPago" />
+                                        <span class="font-normal text-red-600">{{ errors.tipoDocumentoEmpresa }}</span>
 
                                     </div>
 
                                     <div class="col-span-3 sm:col-span-1">
-                                            <label class="">Número de Documento</label>
+                                            <label for="documentoEmpresa" class="">Número de Documento</label>
                                             <InputGroup>
-                                                <InputText name="documento" v-model="documento" v-bind="documentoAttrs"
+                                                <InputText name="documentoEmpresa" v-model="documentoEmpresa" v-bind="documentoEmpresaAttrs"
                                                     class="border-green-iimp " />
                                                 <Button icon="pi pi-search"
-                                                    class="border-green-iimp bg-green-iimp" @click="" />
+                                                    class="border-green-iimp bg-green-iimp" @click=""  style = "display:none;"/>
                                             </InputGroup>
-                                            <span class="font-normal text-red-600">{{ errors.documento }}</span>
+                                            <span class="font-normal text-red-600">{{ errors.documentoEmpresa }}</span>
                                     </div>
                                 </div>
                                 <div class="w-full sm:col-span-1">
-                                        <label class="">Nombre o Razón Social*</label>
-                                        <InputText for="documento" name="documento" v-model="documento" v-bind="documentoAttrs" class="w-full border-green-iimp"
+                                        <label for="razonSocial" class="">Nombre o Razón Social*</label>
+                                        <InputText name="razonSocial" v-model="razonSocial" v-bind="razonSocialAttrs" class="w-full border-green-iimp"
                                         />
-                                        <span class="font-normal text-red-600">{{ errors.documento }}</span>
+                                        <span class="font-normal text-red-600">{{ errors.razonSocial }}</span>
                                 </div>
 
                         </div>
 
                         <div class="grid gap-6 m-6 md:grid-cols-2" >
                             <div class="w-full sm:col-span-1">
-                                        <label class="">Dirección Fiscal*</label>
-                                        <InputText for="documento" name="documento" v-model="documento" v-bind="documentoAttrs" class="w-full border-green-iimp"
+                                        <label for="direccionEmpresa" class="">Dirección Fiscal*</label>
+                                        <InputText name="direccionEmpresa" v-model="direccionEmpresa" v-bind="direccionEmpresaAttrs" class="w-full border-green-iimp"
                                         />
-                                        <span class="font-normal text-red-600">{{ errors.documento }}</span>
+                                        <span class="font-normal text-red-600">{{ errors.direccionEmpresa }}</span>
                             </div>
 
                             <div class="w-full sm:col-span-1">
-                                        <label class="">Responsable de Facturación*</label>
-                                        <InputText for="documento" name="documento" v-model="documento" v-bind="documentoAttrs" class="w-full border-green-iimp"
+                                        <label for="responsable" class="">Responsable de Facturación*</label>
+                                        <InputText name="responsable" v-model="responsable" v-bind="responsableAttrs" class="w-full border-green-iimp"
                                         />
-                                        <span class="font-normal text-red-600">{{ errors.documento }}</span>
+                                        <span class="font-normal text-red-600">{{ errors.responsable }}</span>
                             </div>
 
+                        </div>
+
+                        <div class="flex justify-around w-full mb-4">
+                            <Card class="gap-3 text-center min-w-[450px]">
+                                <template #content>
+                                    <div class="text-lg font-semibold m-4">Documento de Pago</div>
+
+                                    <div class="flex flex-wrap justify-center gap-3">
+                                        <div class="flex items-center" v-for="tipodocpago in tipoDocumentoPago">
+                                            <RadioButton v-model="selectTipoDocPago" v-bind="selectTipoDocPagoAttrs" :inputId="tipodocpago.nombre"
+                                                name="tipodocpago" :value="tipodocpago.id"  @click="$event.preventDefault()"/>
+                                            <label :for="tipodocpago.nombre" class="ml-2">{{ tipodocpago.nombre }}</label>
+                                        </div>
+                                    </div>
+                                    <span class="font-normal text-red-600">{{ errors.selectTipoDocPago }}</span>
+                                </template>
+                            </Card>
+                            <Card class="gap-3 text-center min-w-[450px]">
+                                <template #content>
+                                    <div class="text-lg font-semibold m-4">Metodo de pago</div>
+
+                                    <div class="flex flex-wrap justify-center gap-3">
+                                        <div class="flex items-center">
+                                            <RadioButton v-model="selectTipoPago" v-bind="selectTipoPagoAttrs"
+                                                name="tipodocfac" :value="1" class="radio-green-iimp " @click="$event.preventDefault()" />
+                                            <label  class="ml-2">Tarjeta</label>
+                                        </div>
+                                    </div>
+                                    <span class="font-normal text-red-600">{{ errors.selectTipoPago }}</span>
+                                </template>
+                            </Card>
                         </div>
 
                     </template>
@@ -342,6 +434,6 @@ defineExpose({
                 </Card>
             </div>
         </div>
-    </form>
+
 </template>
 

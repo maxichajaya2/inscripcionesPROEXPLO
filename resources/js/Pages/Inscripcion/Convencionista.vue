@@ -4,12 +4,13 @@ import colorbar from '@/Components/colorbar.vue';
 import GreenArrowRight from '@/Components/GreenArrowRight.vue';
 import IntroImage from '@/Components/IntroImage.vue';
 import { usePage , router } from '@inertiajs/vue3';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted , computed } from 'vue';
 import Dialog from 'primevue/dialog';
 import FormValidacionDoc from './FormValidacionDoc.vue';
 import FormInscription from './FormInscription.vue';
 import FormPayment from './FormPayment.vue';
 import Button from 'primevue/button';
+import Functions from '@/Functions';
 
 import Stepper from 'primevue/stepper';
 import StepList from 'primevue/steplist';
@@ -22,10 +23,55 @@ import Skeleton from 'primevue/skeleton';
 import "../../../css/inscripciones.css";
 
 const visible = ref(true);
+const page = usePage();
+const props = defineProps({});
 
-const childFormValidacionDoc = ref(null);
+const formDataValidacionDoc = ref(null);
+const formDataInscription = ref(null);
+const formDataPayment = ref(null);
+const data_persona = ref({});
+
+const childFormValidacionDoc = ref();
 const childFormInscription = ref(null);
 const childFormPayment = ref(null);
+
+
+const validate = async (value) =>{
+    switch(value){
+        case "Documento":
+            formDataValidacionDoc.value  = childFormValidacionDoc.value.getValidacionDoc();
+            if(formDataValidacionDoc.value.validate){
+
+                const response = await axios.post( '/api/getperson',
+                        { id_tipo_documento: formDataValidacionDoc.value.formValidacionDoc.tipo_doc, numero_documento: formDataValidacionDoc.value.formValidacionDoc.documento } );
+
+                data_persona.value = response.data;
+                return true;
+            }else{
+                return false;
+            }
+            break;
+
+        case "Inscripcion":
+
+            formDataInscription.value  = childFormInscription.value.getInscripcion();
+
+            if(formDataInscription.value.validate){
+                console.log()
+                const payment = await axios.post( '/pago/getform',
+                        { form: formDataInscription.value.form } );
+
+                data_persona.value = response.data;
+                return true;
+
+            }else{
+                return false;
+            }
+            break;
+    }
+
+    return false;
+}
 
 const hideModal = () => {
     visible.value = !visible;
@@ -55,14 +101,14 @@ const goStart = () => {
                         <StepPanel v-slot="{ activateCallback }" value="1">
                             <FormValidacionDoc ref="childFormValidacionDoc" />
                             <div class="flex p-6 justify-end">
-                                <Button label="Validar" icon="pi pi-arrow-right" iconPos="right" @click="true? activateCallback('2'): false "  class="bg-green-iimp border-rounded-full" />
+                                <Button label="Validar" icon="pi pi-arrow-right" iconPos="right" @click="async () => await validate('Documento') ? activateCallback('2'): false " class="bg-green-iimp border-rounded-full" />
                             </div>
                         </StepPanel>
-                        <StepPanel v-slot="{ activateCallback }" value="2">
-                            <FormInscription ref="childFormInscription" />
+                        <StepPanel v-slot="{ activateCallback }" value="2" >
+                            <FormInscription ref="childFormInscription" :data_persona="data_persona" />
                             <div class="flex justify-between p-6">
                                 <Button label="Regresar" severity="secondary" icon="pi pi-arrow-left" @click="activateCallback('1')" class="border-rounded-full" />
-                                <Button label="Registro" icon="pi pi-arrow-right" iconPos="right" @click="true? activateCallback('3'): false " class="bg-green-iimp border-rounded-full"  />
+                                <Button label="Registro" icon="pi pi-arrow-right" iconPos="right" @click="async () => await validate('Inscripcion') ? activateCallback('3'): false " class="bg-green-iimp border-rounded-full"  />
                             </div>
                         </StepPanel>
                         <StepPanel v-slot="{ activateCallback }" value="3">
@@ -96,9 +142,15 @@ const goStart = () => {
                     </div>
                 </div>
                 <div id="body-tarif" class="flex font-bold ">
-                    <div class="w-[65%] min-w-[200px] text-center pt-[10px] pb-[10px]">Convencionista por día</div>
+                    <div class="w-[65%] min-w-[200px] text-center pt-[10px] pb-[10px]">Convencionista No Asociado</div>
                     <div class="w-[35%] min-w-[150px] text-center body-tarif pt-[10px] pb-[10px]">
-                        <p>USD 600</p>
+                        <p>USD 1 900</p>
+                    </div>
+                </div>
+                <div id="body-tarif" class="flex font-bold ">
+                    <div class="w-[65%] min-w-[200px] text-center pt-[10px] pb-[10px]">Convencionista Asociado</div>
+                    <div class="w-[35%] min-w-[150px] text-center body-tarif pt-[10px] pb-[10px]">
+                        <p>USD 1 700</p>
                     </div>
                 </div>
                 <div id="foot-tarif" class="flex foot-tarif pt-[10px]">

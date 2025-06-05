@@ -16,7 +16,7 @@ import { Link } from '@inertiajs/vue3';
                                     </div>
                                 <!-- Idiomas -->
                                     <div class="flex">
-                                        <ul class="flex space-x-4 items-center ">
+                                        <ul class="flex space-x-4 items-center " style="display :none;" >
                                             <li class="border-r border-r-2 border-black pr-3" >ES</li>
                                             <li>EN</li>
                                         </ul>

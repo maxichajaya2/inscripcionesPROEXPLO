@@ -16,6 +16,18 @@ return [
     |
     */
 
+    'event_name'=> "PERUMIN 37",
+    'id_evento'=> "2",
+    'event_type'=> "2",
+    'event_code'=> "16",
+    'evento'=> "perumin",
+    'valid_ip'=> "200.37.185.4",
+    'valid_pass' => "$2y$10EoqWZuIEQ4vnwtm2IU3bruqmBD9yDiLrdIGNTHnSIRgAAatpBE9YK",
+    "reglamento_es"=>"https://ecommerce.perumin.com/files_perumin/reglamentos/es/REGLAMENTOS_DE_EXHIBICION.pdf",
+    "reglamento_proveedores_es"=>"https://ecommerce.perumin.com/files_perumin/reglamentos/es/REGLAMENTO_DE_PROVEEDOR.pdf",
+    "mapa"=>"https://ecommerce.perumin.com/files_perumin/mapa/PERUMIN%2037.pdf",
+    "cache_duration"=>43200,//12 horas
+
     'name' => env('APP_NAME', 'Laravel'),
 
     /*
@@ -55,10 +67,9 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://localhost'),
+    'url' => env('APP_URL', 'https://inscripciones.perumin.com'),
 
     'asset_url' => env('ASSET_URL'),
-
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
@@ -70,7 +81,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'America/Lima',
 
     /*
     |--------------------------------------------------------------------------
