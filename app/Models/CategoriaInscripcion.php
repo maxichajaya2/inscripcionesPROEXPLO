@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Carbon\Carbon;
 
 class CategoriaInscripcion extends Model
 {
@@ -13,8 +15,9 @@ class CategoriaInscripcion extends Model
     protected $connection = 'pgsql_second';
     protected $table = "categoria_inscripcion";
 
-    public function precio(): BelongsTo
+    public function precio(): BelongsToMany
     {
-        return $this->belongsTo(Precio::class, 'id_precio');
+        return $this->belongsToMany(Precio::class, 'detalle_categoria', 'id_categoria_inscripcion', 'id_precio');
     }
+
 }

@@ -5,14 +5,308 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Carbon\Carbon;
+use App\Models\Inscripcion;
+use App\Models\Persona;
+use App\Models\Ocupacion;
+use App\Models\Direccion;
+use App\Models\Cuota;
+use App\Models\Facturacion;
+use App\Models\Pasarela;
+use App\Models\Niubiz;
+use App\Models\CategoriaInscripcion;
+
+
 
 class InscripcionController extends Controller
 {
+    public function __construct()
+    {
+        $this->now = Carbon::now()->format('Y-m-d');
+    }
+
     public function index(){
         return Inertia::render('Inscripcion/Index');
     }
 
     public function convencionista(){
-        return Inertia::render('Inscripcion/Convencionista');
+        $categorias = CategoriaInscripcion::whereRaw("nombre_es like '%CONVENCIONISTA%'")->where('es_beneficio',false)->orderBy('orden_es','ASC')->get();
+
+        foreach($categorias as $categoria){
+            $categoria->precio_disponible = $categoria->precio->where('fecha_inicio', '<=', $this->now)->where('fecha_fin', '>=', $this->now)->first();
+        }
+
+        $title = "Convencionista";
+
+        $modal_texts = [
+            "Convencionista No Asociado" => "Tarifa dirigida a todo el público en general. El participante que se inscriba en esta categoría tendrá acceso a las actividades del programa durante la semana del evento y visita a la Exhibición Tecnológica Minera - EXTEMIN.",
+            "Convencionista Asociado" => "Beneficio exclusivo para los socios activos del IIMP (al día en su cuota del año en curso). Permite el acceso a todas las actividades del programa durante la semana del evento y visita a la Exhibición Tecnológica Minera - EXTEMIN. Deberá contar con una membresía mínima de 3 meses.",
+            "Convencionista por día" => "Tarifa que permite elegir el o los días en que asistirá a PERUMIN 37 Convención Minera. El participante que se inscriba en esta categoría tendrá acceso a las actividades del programa y visita a la Exhibición Tecnológica Minera - EXTEMIN durante el día elegido.",
+        ];
+
+        return Inertia::render('Inscripcion/Inicio', compact('categorias','title','modal_texts'));
     }
+
+    public function getForm(Request $request){
+
+        $form_data = (Object)$request->form;
+
+        $persona = Persona::where('id_tipo_documento',$form_data->id_tipo_documento)->where('documento',$form_data->documento)->firstorNew();
+        $ocupacion = Ocupacion::whereRaw("name like '%". $form_data->cargo."%'")->where('isactive',true)->first();
+        $categoria = CategoriaInscripcion::find($form_data->selected_categoria);
+        $categoria->precio_disponible = $categoria->precio->where('fecha_inicio', '<=', $this->now)->where('fecha_fin', '>=', $this->now)->first();
+
+        if(!$ocupacion){
+            $ocupacion = 2795; //indice ocupacion no especificada o no se encuentra en el listado
+        }else{
+            $ocupacion = $ocupacion->id;
+        }
+
+        if(isset($persona->id_direccion)){
+
+            $persona->direccion->id_pais = $form_data->pais;
+            $persona->direccion->id_departamento = $form_data->departamento > 0 ? $form_data->departamento : 0 ;
+            $persona->direccion->id_provincia = $form_data->provincia > 0 ? $form_data->provincia : 0 ;
+            $persona->direccion->id_distrito = $form_data->distrito > 0 ? $form_data->distrito : 0 ;
+            $persona->direccion->direccion = $form_data->direccionPersona;
+            $persona->direccion->update();
+
+        }else{
+            $direccion = new Direccion;
+            $direccion->id_pais = $form_data->pais;
+            $direccion->id_departamento = $form_data->departamento > 0 ? $form_data->departamento : 0 ;
+            $direccion->id_provincia = $form_data->provincia > 0 ? $form_data->provincia : 0 ;
+            $direccion->id_distrito = $form_data->distrito > 0 ? $form_data->distrito : 0 ;
+            $direccion->direccion = $form_data->direccionPersona;
+            $direccion->save();
+
+            $persona->id_direccion = $direccion->id;
+        }
+
+        $persona->nombres = $form_data->nombres;
+        $persona->apellido_paterno = $form_data->apellido_paterno;
+        $persona->apellido_materno = strlen($form_data->apellido_materno) > 0 ? $form_data->apellido_materno: "";
+        $persona->correo = $form_data->correo;
+        $persona->celular = $form_data->celular;
+        $persona->sexo = $form_data->sexo;
+        $persona->id_ocupacion = $ocupacion;
+        $persona->id_nacionalidad = $form_data->id_nacionalidad;
+        $persona->fecha_nacimiento = Carbon::parse($form_data->fecha_nacimiento)->subDay()->format('Y-m-d');
+
+        if(isset($persona->id)){
+            /*$fecha_nacimiento_actual = Carbon::parse($persona->fecha_nacimiento)->format('Y-m-d');
+
+            if($fecha_nacimiento_actual != $fecha_nacimiento_nueva){
+                $persona->fecha_nacimiento = $fecha_nacimiento_nueva;
+            }*/
+
+            $persona->update();
+        }else{
+
+            $persona->save();
+        }
+
+        $send = app(\App\Http\Controllers\WebServiceController::class)->wsPersona_create_update($persona);
+
+        if(strlen($persona->sie_code)== 0){
+            $persona->sie_code = $send['sie_code'];
+            $persona->update();
+        }
+
+        $sub_total = round( ($categoria->precio_disponible->valor)/1.18 , 2);
+
+        $facturacion = new Facturacion;
+        $facturacion->id_tipo_servicio = 4; // servicio inscripciones perumin tabla tipo servicio
+        $facturacion->id_moneda = $categoria->precio_disponible->moneda->id;
+        $facturacion->id_tipo_pago = $form_data->selectTipoPago;
+        $facturacion->tipo_doc_pago = $form_data->selectTipoDocPago;
+        $facturacion->id_tipo_doc_facturador = $form_data->tipoDocumentoEmpresa;
+        $facturacion->numero_doc_facturador = $form_data->documentoEmpresa;
+        $facturacion->nombre_facturador = $form_data->razonSocial;
+        $facturacion->direccion_facturador = $form_data->direccionEmpresa;
+        $facturacion->id_comprador = $persona->id;
+        $facturacion->tipo_comprador = 'persona';
+        $facturacion->sub_total = $sub_total;
+        $facturacion->IGV = $sub_total * 0.18;
+        $facturacion->detraccion = 0;
+        $facturacion->total = $categoria->precio_disponible->valor;
+        $facturacion->observacion = "registro facturacion persona, pendiente de pago";
+        $facturacion->save();
+
+         $informacion = json_decode('{
+                    "cuota": "1",
+                    "valor" : "' . $facturacion->total . '",
+                    "porcentaje" : "100",
+                    "estado_pago" : false
+                }');
+
+        $cuota = new Cuota;
+        $cuota->informacion = $informacion;
+        $cuota->isactive = true;
+        $cuota->created_at = Carbon::now();
+        $cuota->updated_at = Carbon::now();
+        $cuota->id_facturacion = $facturacion->id;
+        $cuota->estado_pago = 'PENDIENTE';
+        $cuota->save();
+
+        $inscripcion = new Inscripcion;
+        $inscripcion->id_persona = $persona->id;
+        $inscripcion->id_categoria_inscripcion = $form_data->selected_categoria;
+        $inscripcion->id_facturacion = $facturacion->id;
+        $inscripcion->usuario_creacion = $persona->id;
+        $inscripcion->origen = 'web';
+        $inscripcion->observacion = 'registro individual de persona, pendiente de pago';
+        $inscripcion->credencial = $form_data->credencial;
+        $inscripcion->autorizacion_datos = isset($form_data->auth) ? $form_data->auth : false;
+        $inscripcion->dias = '{"lun":1,"mar":1,"mie":1,"jue":1,"vie":1}';
+
+        $inscripcion->save();
+
+        $form = app(\App\Http\Controllers\NiubizController::class)->getForm($persona, $inscripcion, $facturacion, url()->previous() , url()->current() );
+
+        $cuota->respuesta_api = $form->k;
+        $cuota->update();
+
+        $formulario = json_decode( base64_decode($form->frm));
+
+        return json_encode(['status' => true , 'formulario' => $formulario]);
+
+    }
+
+    public function niubizPayment($id, $order){
+
+        $facturacion = Facturacion::findOrFail($id);
+        $cuota = $facturacion->cuotas->first();
+
+        $transactiontoken = $_POST['transactionToken'];
+
+        //$respuesta = app(\App\Http\Controllers\NiubizController::class)->authorization($cuota->respuesta_api, $facturacion->total, $transactiontoken, $order);
+
+        $respuesta = '{
+            "header": {
+                "ecoreTransactionUUID": "3746e2a1-19bb-4251-b920-f7d2cc7c7c6e",
+                "ecoreTransactionDate": 1749744006879,
+                "millis": 958
+            },
+            "fulfillment": {
+                "channel": "web",
+                "merchantId": "456879853",
+                "terminalId": "00000001",
+                "captureType": "manual",
+                "countable": true,
+                "fastPayment": false,
+                "signature": "3746e2a1-19bb-4251-b920-f7d2cc7c7c6e"
+            },
+            "order": {
+                "tokenId": "3624210E49BA4F80A4210E49BA4F80E0",
+                "purchaseNumber": "8291",
+                "amount": 1900,
+                "installment": 0,
+                "currency": "USD",
+                "authorizedAmount": 1900,
+                "authorizationCode": "091800",
+                "actionCode": "000",
+                "traceNumber": "31645",
+                "transactionDate": "250612110006",
+                "transactionId": "993211570048581"
+            },
+            "dataMap": {
+                "TERMINAL": "00000001",
+                "BRAND_ACTION_CODE": "00",
+                "BRAND_HOST_DATE_TIME": "201222141839",
+                "TRACE_NUMBER": "31645",
+                "CARD_TYPE": "D",
+                "ECI_DESCRIPTION": "Transaccion no autenticada pero enviada en canal seguro",
+                "SIGNATURE": "3746e2a1-19bb-4251-b920-f7d2cc7c7c6e",
+                "CARD": "447411******2240",
+                "MERCHANT": "109705108",
+                "STATUS": "Authorized",
+                "ACTION_DESCRIPTION": "Aprobado y completado con exito",
+                "ID_UNICO": "993211570048581",
+                "AMOUNT": "1900.0",
+                "AUTHORIZATION_CODE": "091800",
+                "YAPE_ID": "",
+                "CURRENCY": "0604",
+                "TRANSACTION_DATE": "250612110006",
+                "ACTION_CODE": "000",
+                "CVV2_VALIDATION_RESULT": "M",
+                "ECI": "07",
+                "ID_RESOLUTOR": "420201222142237",
+                "BRAND": "visa",
+                "ADQUIRENTE": "570002",
+                "BRAND_NAME": "VI",
+                "PROCESS_CODE": "000000",
+                "TRANSACTION_ID": "993211570048581"
+            }
+        }';
+
+        $filtered_response = app(\App\Http\Controllers\NiubizController::class)->filterResponse($respuesta);
+
+        $pasarela = Pasarela::where('id_evento', config('app.id_evento'))->where('codigo_tipo_pago','niubiz_tarjeta')->first();
+        $niubiz = new Niubiz;
+
+        if (isset($filtered_response['errorcode'])||is_null($filtered_response['transactionId']) || $filtered_response['transactionId']=="") {
+                dd(1);
+				// no ejecutadov
+				/*$xx=$modelweb->asignarpago($purchaseNumber,$respuesta,'FALLIDO');
+				$motivodeneg= isset($respuesta->data->ACTION_DESCRIPTION) ? $respuesta->data->ACTION_DESCRIPTION: "Operacion Fallida";
+				$ejecutado=0;
+
+				if($language =="esp"){
+					$msg = "Error en el pago, descripcion: ". $motivodeneg.", numero de ficha: ".$id_ficha. ",";
+				}else{
+					$msg = "Error in payment, description: ". $motivodeneg .", register number: ".$id_ficha;
+				}
+
+				header('Location: ' . $base_urlreturn.'?error='.$msg ); exit();*/
+
+		}else{
+
+            $niubiz->num_orden = $order;
+            $niubiz->card_num = $filtered_response['CARD'];
+            $niubiz->idtransaccion = $filtered_response['transactionId'];
+            $niubiz->id_compra = $cuota->id;
+            $niubiz->fecha = $filtered_response['date'];
+            $niubiz->hora = $filtered_response['time'];
+            $niubiz->monto = $facturacion->total;
+            $niubiz->detalle = $filtered_response['BRAND'];
+            $niubiz->id_evento = config('app.id_evento');
+            $niubiz->id_pasarela = $pasarela->id;
+            $niubiz->codigo_tipo_pago = 'niubiz_tarjeta';
+            $niubiz->estado = 'pagado';
+            $niubiz->save();
+
+            $informacion = json_decode('{
+                    "cuota": "1",
+                    "valor" : "' . $facturacion->total . '",
+                    "porcentaje" : "100",
+                    "estado_pago" : true
+                }');
+
+            $cuota->informacion = $informacion;
+            $cuota->estado_pago = 'PAGADO';
+            $cuota->update();
+
+            $facturacion->observacion = "registro facturacion persona, pagada niubiz id ".$niubiz->id;
+            $facturacion->update();
+
+            $inscripcion = Inscripcion::where('id_facturacion', $facturacion->id)->first();
+            $inscripcion->observacion = "registro facturacion persona, pagada niubiz id ".$niubiz->id;
+            $inscripcion->update();
+
+            $response= app(\App\Http\Controllers\WebServiceController::class)->wsInscripcion_create_update($ficha );
+
+            dd($response);
+
+
+        }
+        dd($pasarela);
+        dd($_POST);
+    var_dump($order);
+        dd($id);
+
+    }
+
+
+
+
 }

@@ -1,10 +1,8 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import colorbar from '@/Components/colorbar.vue';
-import GreenArrowRight from '@/Components/GreenArrowRight.vue';
-import IntroImage from '@/Components/IntroImage.vue';
 import { usePage , router } from '@inertiajs/vue3';
-import { ref, onMounted , computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import Dialog from 'primevue/dialog';
 import FormValidacionDoc from './FormValidacionDoc.vue';
 import FormInscription from './FormInscription.vue';
@@ -24,7 +22,11 @@ import "../../../css/inscripciones.css";
 
 const visible = ref(true);
 const page = usePage();
-const props = defineProps({});
+const props = defineProps({
+    title : String,
+    categorias : Object,
+    modal_texts : Object,
+})
 
 const formDataValidacionDoc = ref(null);
 const formDataInscription = ref(null);
@@ -57,11 +59,12 @@ const validate = async (value) =>{
             formDataInscription.value  = childFormInscription.value.getInscripcion();
 
             if(formDataInscription.value.validate){
-                console.log()
-                const payment = await axios.post( '/pago/getform',
-                        { form: formDataInscription.value.form } );
 
-                data_persona.value = response.data;
+                const form_payment = await axios.post( '/pago/getform',
+                        { form: formDataInscription.value.formInscription } );
+
+                formDataPayment.value = form_payment.data.formulario;
+
                 return true;
 
             }else{
@@ -105,29 +108,24 @@ const goStart = () => {
                             </div>
                         </StepPanel>
                         <StepPanel v-slot="{ activateCallback }" value="2" >
-                            <FormInscription ref="childFormInscription" :data_persona="data_persona" />
+                            <FormInscription ref="childFormInscription" :data_persona="data_persona" :categorias="props.categorias"/>
                             <div class="flex justify-between p-6">
                                 <Button label="Regresar" severity="secondary" icon="pi pi-arrow-left" @click="activateCallback('1')" class="border-rounded-full" />
                                 <Button label="Registro" icon="pi pi-arrow-right" iconPos="right" @click="async () => await validate('Inscripcion') ? activateCallback('3'): false " class="bg-green-iimp border-rounded-full"  />
                             </div>
                         </StepPanel>
                         <StepPanel v-slot="{ activateCallback }" value="3">
-                            <FormPayment ref="childFormPayment" />
+                            <FormPayment ref="childFormPayment"  :data_persona="data_persona" :formulario = "formDataPayment" />
                             <div class="flex justify-between p-6">
                                 <Button label="Regresar" severity="secondary" icon="pi pi-arrow-left" @click="activateCallback('2')" class="border-rounded-full" />
-                                <Button label="Finalizar" icon="pi pi-check" iconPos="right" @click="" class="bg-green-iimp border-rounded-full"/>
+                                <!--<Button label="Finalizar" icon="pi pi-check" iconPos="right" @click="" class="bg-green-iimp border-rounded-full"/>-->
                             </div>
                         </StepPanel>
                     </StepPanels>
                 </Stepper>
-
             </div>
-
         </div>
     </AppLayout>
-
-
-
 
     <Dialog v-model:visible="visible" modal :style="{ border: 'none' }" class="modal-green max-w-[750px] modal-custom-scroll"  :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
         <div class="modal-head-title font-bold">
@@ -141,18 +139,14 @@ const goStart = () => {
                          Tarifa regular
                     </div>
                 </div>
-                <div id="body-tarif" class="flex font-bold ">
-                    <div class="w-[65%] min-w-[200px] text-center pt-[10px] pb-[10px]">Convencionista No Asociado</div>
+
+                <div id="body-tarif" class="flex font-bold" v-for="(categoria) in categorias">
+                    <div class="w-[65%] min-w-[200px] text-center pt-[10px] pb-[10px]">{{  categoria.nombre_es }}</div>
                     <div class="w-[35%] min-w-[150px] text-center body-tarif pt-[10px] pb-[10px]">
-                        <p>USD 1 900</p>
+                        <p>USD {{  categoria.precio_disponible.valor }}</p>
                     </div>
                 </div>
-                <div id="body-tarif" class="flex font-bold ">
-                    <div class="w-[65%] min-w-[200px] text-center pt-[10px] pb-[10px]">Convencionista Asociado</div>
-                    <div class="w-[35%] min-w-[150px] text-center body-tarif pt-[10px] pb-[10px]">
-                        <p>USD 1 700</p>
-                    </div>
-                </div>
+
                 <div id="foot-tarif" class="flex foot-tarif pt-[10px]">
                     <div class="w-[65%] min-w-[200px]"></div>
                     <div class="w-[35%] min-w-[150px]">
@@ -164,12 +158,10 @@ const goStart = () => {
         <div class ="p-[50px] modal-custom-scroll">
             <p class ="font-bold" >Beneficios:</p>
             <ul class="mt-5 mb-5 ml-10 list-disc">
-                <li class ="font-bold">Convencionista No Asociado</li>
-                <p class ="text-justify">Tarifa dirigida a todo el público en general. El participante que se inscriba en esta categoría tendrá acceso a las actividades del programa durante la semana del evento y visita a la Exhibición Tecnológica Minera - EXTEMIN.</p>
-                <li class ="font-bold">Convencionista Asociado</li>
-                <p class ="text-justify">Beneficio exclusivo para los socios activos del IIMP (al día en su cuota del año en curso). Permite el acceso a todas las actividades del programa durante la semana del evento y visita a la Exhibición Tecnológica Minera - EXTEMIN. Deberá contar con una membresía mínima de 3 meses.</p>
-                <li class ="font-bold">Convencionista por día</li>
-                <p class ="text-justify">Tarifa que permite elegir el o los días en que asistirá a PERUMIN 37 Convención Minera. El participante que se inscriba en esta categoría tendrá acceso a las actividades del programa y visita a la Exhibición Tecnológica Minera - EXTEMIN durante el día elegido.</p>
+                <div v-for="(text,index) in modal_texts">
+                    <li class ="font-bold">{{ index }}</li>
+                    <p class ="text-justify">{{ text }}</p>
+                </div>
             </ul>
         </div>
         <div class="flex justify-around">

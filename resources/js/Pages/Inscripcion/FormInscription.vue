@@ -12,14 +12,16 @@ import { ref, onMounted, computed, watch  } from 'vue';
 import { useForm } from 'vee-validate';
 import * as yup from 'yup';
 import { usePage, router } from '@inertiajs/vue3';
-import ProgressSpinner from 'primevue/progressspinner';
+import { useToast } from 'primevue/usetoast';
 import Functions from '@/Functions';
 
 import "../../../css/inscripciones.css";
 
 const page = usePage();
+const toast = useToast();
 const props = defineProps({
-    data_persona: Object
+    data_persona: Object,
+    categorias: Object
 });
 
 const es_socio = ref(false);
@@ -35,7 +37,39 @@ const distritos = ref();
 
 const { defineField, errors, handleSubmit, setValues, resetForm ,values  } = useForm({
     validationSchema: yup.object({
-        //friso: yup.string().required('Friso es requerido'),
+        tipoDocumentoEmpresa: yup.mixed().required('Tipo documento de Empresa es requerido'),
+        documentoEmpresa: yup.number().when(
+            'tipoDocumentoEmpresa',
+            (tipoDocumentoEmpresa) => {
+                if (typeof tipoDocumentoEmpresa[0] != 'undefined') {
+                    if (tipoDocumentoEmpresa[0] == 2) {
+                        return yup.number().typeError('El valor debe ser numérico').test('len', 'Debe tener exactamente 11 dígitos', val => val && val.toString().length === 11)
+                    } else {
+                        return yup.string().required('Documento es requerido')
+                    }
+                }
+            },
+        ),
+        nombres: yup.string().required('Nombre es requerido'),
+        apellido_paterno: yup.string().required('Apellido Paterno es requerido'),
+        fecha_nacimiento: yup.mixed().required('Fecha de nacimiento es requerida'),
+        sexo: yup.mixed().required('Sexo es requerido'),
+        correo: yup.string().required('Correo es requerido'),
+        celular: yup.string().required('Celular es requerido'),
+        pais: yup.mixed().required('Pais es requerido'),
+        nacionalidad: yup.mixed().required('Nacionalidad es requerida'),
+        direccionPersona: yup.string().required('Direccion de inscrito es requerida'),
+        empresa: yup.string().required('Empresa es requerida'),
+        cargo: yup.string().required('Cargo es requerido'),
+        credencial: yup.string().required('Nombre en credencial es requerido'),
+
+        razonSocial: yup.string().required('Razón social es requerido'),
+        direccionEmpresa: yup.string().required('Dirección de empresa es requerida'),
+        documentoEmpresa: yup.string().required('Documento de empresa es requerido'),
+        responsable: yup.string().required('Nombre en responsable es requerido'),
+        selectTipoPago: yup.string().required('Tipo de pago es requerido'),
+
+        selectTipoDocPago: yup.string().required('Seleccionar tipo de documento de pago es requerido'),
     })
 })
 
@@ -58,7 +92,7 @@ const [credencial, credencialAttrs] = defineField('credencial');
 const [auth, authAttrs] = defineField('auth');
 const [selectTipoDocPago, selectTipoDocPagoAttrs] = defineField('selectTipoDocPago');
 
-const [categoria, categoriaAttrs] = defineField('categoria');
+const [selected_categoria, selected_categoriaAttrs] = defineField('selected_categoria');
 
 const [documentoEmpresa, documentoEmpresaAttrs] = defineField('documentoEmpresa');
 const [razonSocial, razonSocialAttrs] = defineField('razonSocial');
@@ -68,6 +102,12 @@ const [direccionEmpresa, direccionEmpresaAttrs] = defineField('direccionEmpresa'
 const [selectTipoPago, selectTipoPagoAttrs] = defineField('selectTipoPago');
 
 const today = new Date();
+
+onMounted(() => {
+    tipoDocumentoEmpresa.value = 2;
+    selectTipoDocPago.value = 1;
+    selectTipoPago.value = 3;
+})
 
 const loadDepartamentos = async () => {
     departamento.value = undefined;
@@ -88,37 +128,52 @@ const loadDistritos = async () => {
 }
 
 watch(() => props.data_persona, (newVal, oldVal) => {
-    selectTipoPago.value = 1;
 
      if(typeof props.data_persona.persona != 'undefined' ){
         es_socio.value =  props.data_persona.persona.es_socio;
-        if(props.data_persona.persona.es_socio ){
-            categoria.value = 1;
+
+        if(props.categorias[0].control == 'CV'){
+            props.categorias.forEach(categoria => {
+
+                if(newVal.persona.es_socio && categoria.condicion == 'SO'){
+                    selected_categoria.value = categoria.id;
+                }
+                if(!newVal.persona.es_socio && categoria.condicion == 'NS'){
+                    selected_categoria.value = categoria.id;
+                }
+            });
         }else{
-            categoria.value = 2;
+            selected_categoria.value = props.categorias[0].id;
         }
-        props.data_persona.persona.fecha_nacimiento = Functions.toLocalDateOnly(props.data_persona.persona.fecha_nacimiento);
-        setValues(props.data_persona.persona);
+
+        props.data_persona.persona.fecha_nacimiento = Functions.toLocalDateOnly(newVal.persona.fecha_nacimiento);
+        setValues(newVal.persona);
         loadDepartamentos()
-        setValues(props.data_persona.persona );
+        setValues(newVal.persona );
         loadProvincias()
-        setValues(props.data_persona.persona );
+        setValues(newVal.persona );
         loadDistritos()
-        setValues(props.data_persona.persona );
+        setValues(newVal.persona );
 
      }
 });
 
 const onlyNumberKey = (event) => {
-  const charCode = event.charCode ? event.charCode : event.keyCode
-  if (charCode < 48 || charCode > 57) {
-    event.preventDefault()
-  }
-}
 
-const goStart = () => {
-    router.get(route('inscripcion.index'));
-};
+    if( tipoDocumentoEmpresa.value == 2 ){
+        const charCode = event.charCode ? event.charCode : event.keyCode
+        if (charCode < 48 || charCode > 57) {
+            event.preventDefault()
+        }else{
+            if(typeof documentoEmpresa.value != 'undefined' ){
+                if(documentoEmpresa.value.length == 11){
+                    event.preventDefault()
+                }
+            }
+
+        }
+    }
+}
 
 function setTipoDocPago(){
     documentoEmpresa.value = "";
@@ -134,10 +189,18 @@ function setTipoDocPago(){
 }
 
 function getInscripcion() {
-    console.log(values);
-    return { "validate" : true ,
-            "form": values
-        };
+
+    if( (Object.keys(errors._value).length > 0) ){
+
+        toast.add({ severity: 'error', summary: 'Complete todos los campos requeridos', life: 2000 });
+        return { "validate" : false };
+
+    }
+
+    return { "validate" : true,
+            "formInscription" : values
+    };
+
 }
 
 defineExpose({
@@ -277,7 +340,7 @@ defineExpose({
                                 </div>
                                 <div class="col-span-3 sm:col-span-1">
                                         <label for ="nacionalidad" class="">Nacionalidad*</label>
-                                        <Select name="nacionalidad" v-model="nacionalidad" v-bind="nacionalidadAttrs" filter  :options="paises"
+                                        <Select name="nacionalidad" v-model="nacionalidad" v-bind="nacionalidadAttrs" filter  :options="nacionalidades"
                                             optionLabel="name" optionValue="id" placeholder="Elegir" showClear
                                              class="w-full border-green-iimp" />
                                         <span class="font-normal text-red-600">{{ errors.nacionalidad }}</span>
@@ -303,7 +366,7 @@ defineExpose({
                                     <p>Este material podrá difundirse a través de spots televisivos y/o radiales, avisos en prensa escrita, afiches, volantes, encartes, folletos, banners impresos, sitios web, aplicativos (APP) del Evento y/o del IIMP, redes sociales, merchandising y cualquier otro tipo de material de soporte audio-.visual, ya sea en formato físico o digital. Suscribo esta autorización en señal de conformidad en todos sus extremos, la cual se otorga por tiempo indefinido y sin restricción geográfica.</p>
                             </div>
                             <div class="flex font-normal p-2 w-full justify-end">
-                                    <Checkbox :binary="true" v-model="auth" />
+                                    <Checkbox :binary="true" v-model="auth" v-bind="authAttrs" name="auth"/>
                                     <label for="auth" class="pl-2">Autorización para compartir Datos Personales</label>
 
                             </div>
@@ -322,20 +385,36 @@ defineExpose({
 
                     <template #content>
 
-                        <div class="flex items-center" v-if="es_socio">
-                            <RadioButton  v-model="categoria" v-bind="categoriaAttrs"
-                                                name="categoria" :value="1" class="radio-green-iimp " @click="$event.preventDefault()" />
-                            <label  class="ml-2">Tarjeta</label>
-                        </div>
-                        <div class="flex items-center" v-else >
-                            <RadioButton  v-model="categoria" v-bind="categoriaAttrs"
-                                                name="categoria" :value='2' class="ml-6 radio-green-iimp " @click="$event.preventDefault()" />
-                            <div class="flex justify-between w-full ml-6 mr-6" >
-                                  <label  class="ml-2">Convencionista No Asociado</label>
-                                  <p class="text-yellow-price">USD 1 900</p>
-                            </div>
-                        </div>
+                        <div class="flex items-center  w-full" v-for="(categoria) in categorias" >
+                            <div v-if="categoria.control =='CV'" class="w-full">
+                                <div v-if="es_socio && (categoria.condicion == 'SO')" class="flex items-center w-full" >
+                                    <RadioButton  v-model="selected_categoria" v-bind="selected_categoriaAttrs"
+                                                    name="selected_categoria" :value='categoria.id' class="ml-6 radio-green-iimp" />
+                                    <div class="flex justify-between w-full ml-6 mr-6" >
+                                        <label  class="ml-2">{{  categoria.nombre_es }}</label>
+                                        <p class="text-yellow-price">USD  {{  categoria.precio_disponible.valor }}</p>
+                                    </div>
+                                </div>
+                                <div v-if="!es_socio && (categoria.condicion == 'NS')" class="flex items-center  w-full" >
+                                    <RadioButton  v-model="selected_categoria" v-bind="selected_categoriaAttrs"
+                                                    name="selected_categoria" :value='categoria.id' class="ml-6 radio-green-iimp" />
+                                    <div class="flex justify-between w-full ml-6 mr-6" >
+                                        <label  class="ml-2">{{  categoria.nombre_es }}</label>
+                                        <p class="text-yellow-price">USD  {{  categoria.precio_disponible.valor }}</p>
+                                    </div>
+                                </div>
+                                <div v-if="(categoria.condicion == 'VD')" class="flex items-center w-full" >
+                                    <RadioButton  v-model="selected_categoria" v-bind="selected_categoriaAttrs"
+                                                    name="selected_categoria" :value='categoria.id' class="ml-6 radio-green-iimp" />
+                                    <div class="flex justify-between w-full ml-6 mr-6" >
+                                        <label  class="ml-2">{{  categoria.nombre_es }}</label>
+                                        <p class="text-yellow-price">USD  {{  categoria.precio_disponible.valor }}</p>
+                                    </div>
+                                </div>
 
+                            </div>
+
+                        </div>
                     </template>
                 </Card>
             </div>
@@ -365,7 +444,7 @@ defineExpose({
                                             <label for="documentoEmpresa" class="">Número de Documento</label>
                                             <InputGroup>
                                                 <InputText name="documentoEmpresa" v-model="documentoEmpresa" v-bind="documentoEmpresaAttrs"
-                                                    class="border-green-iimp " />
+                                                    class="border-green-iimp " @keypress="onlyNumberKey"  :maxlength="25" />
                                                 <Button icon="pi pi-search"
                                                     class="border-green-iimp bg-green-iimp" @click=""  style = "display:none;"/>
                                             </InputGroup>
@@ -415,12 +494,12 @@ defineExpose({
                             </Card>
                             <Card class="gap-3 text-center min-w-[450px]">
                                 <template #content>
-                                    <div class="text-lg font-semibold m-4">Metodo de pago</div>
+                                    <div class="text-lg font-semibold m-4">Método de pago</div>
 
                                     <div class="flex flex-wrap justify-center gap-3">
                                         <div class="flex items-center">
                                             <RadioButton v-model="selectTipoPago" v-bind="selectTipoPagoAttrs"
-                                                name="tipodocfac" :value="1" class="radio-green-iimp " @click="$event.preventDefault()" />
+                                                name="tipodocfac" :value="3" class="radio-green-iimp " @click="$event.preventDefault()" />
                                             <label  class="ml-2">Tarjeta</label>
                                         </div>
                                     </div>

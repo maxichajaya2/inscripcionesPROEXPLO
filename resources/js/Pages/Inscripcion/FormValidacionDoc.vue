@@ -1,10 +1,8 @@
 <script setup>
 import InputText from 'primevue/inputtext';
-import Dropdown from 'primevue/dropdown';
 import Select from 'primevue/select';
-import Button from 'primevue/button';
 import { usePage, router } from '@inertiajs/vue3';
-import { ref, onMounted, computed, onBeforeMount } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useForm, useField } from 'vee-validate';
 import * as yup from 'yup';
 import Functions from '@/Functions';
@@ -41,10 +39,6 @@ const { defineField, errors, handleSubmit, setValues, resetForm ,values } = useF
 
 const [tipo_doc, tipo_docAttrs] = defineField('tipo_doc');
 const [documento, documentoAttrs] = defineField('documento');
-
-const hideModal = () => {
-    visible.value = !visible;
-};
 
 const onlyNumberKey = (event) => {
     if( tipo_doc.value == 1 ){
@@ -92,13 +86,8 @@ const clearDocument = () => {
     documento.value = "";
 }
 
-const goStart = () => {
-    router.get(route('inscripcion.index'));
-};
-
 onMounted(() => {
     tipo_doc.value = 1;
-
 })
 
 defineExpose({
@@ -117,7 +106,7 @@ defineExpose({
                 <div class="col-span-3 sm:col-span-1 p-4">
 
                     <label for="tipo_doc" class="">Tipo de documento*</label>
-                    <Select name="tipo_doc" v-model="tipo_doc" v-bind="tipo_docAttrs" :options="tipoDocumento"
+                    <Select name="tipo_doc" v-model="tipo_doc" v-bind="tipo_docAttrs" :options="tipoDocumento" @change="clearDocument"
                     optionLabel="name_es" optionValue="id" placeholder="Seleccione Documento" showClear checkmark
                     class="w-full border-green-iimp" />
                     <span class="font-normal text-red-600">{{ errors.tipo_doc }}</span>

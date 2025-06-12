@@ -26,6 +26,7 @@ return [
     "reglamento_es"=>"https://ecommerce.perumin.com/files_perumin/reglamentos/es/REGLAMENTOS_DE_EXHIBICION.pdf",
     "reglamento_proveedores_es"=>"https://ecommerce.perumin.com/files_perumin/reglamentos/es/REGLAMENTO_DE_PROVEEDOR.pdf",
     "mapa"=>"https://ecommerce.perumin.com/files_perumin/mapa/PERUMIN%2037.pdf",
+    "url_logo_niubiz" => "https://cms.iimp.org.pe/images/logo.svg",
     "cache_duration"=>43200,//12 horas
 
     'name' => env('APP_NAME', 'Laravel'),

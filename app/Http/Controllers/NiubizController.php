@@ -12,8 +12,8 @@ class NiubizController extends Controller
 {
     public function __construct()
     {
-        $this->url_timeout="/pago/time-out";
-		$this->url_callback="/pago/ejecutar";
+        $this->url_timeout="";
+		$this->url_callback="";
 
 		$this->url_api = "https://services.iimp.org.pe/";
 
@@ -66,77 +66,67 @@ class NiubizController extends Controller
 	}
 
     public function authorization($key,$amount,$transactionToken,$purchaseNumber){
+
 		$url = $this->url_api."niubiz.php";
 
-		$niubiz_data['ipAddress'] = VALID_IP;
-		$niubiz_data['accessKey'] = VALID_PASS;
+		$niubiz_data['ipAddress'] = config('app.valid_ip');
+		$niubiz_data['accessKey'] = config('app.valid_pass');
 		$niubiz_data['serviceKey'] = "niubiz_tarjeta";
-		$niubiz_data['event'] = EVENT;
-		$niubiz_data['id_event'] = ID_EVENT;
-		$niubiz_data['siecode_event'] = SIE_CODE_EVENT;
+		$niubiz_data['event'] = config('app.evento');
+		$niubiz_data['id_event'] = config('app.id_evento');
+		$niubiz_data['siecode_event'] = config('app.event_code');
 
 		$data['key'] = $key;
-		$data['url_timeout'] = $this->url_timeout;
-		$data['url_callback'] = $this->url_callback;
+		$data['url_timeout'] = "";
+		$data['url_callback'] = "";
 		$data['amount'] = $amount;
 		$data['token'] = $transactionToken;
 		$data['purchasenumber'] = $purchaseNumber;
 		$data['process'] = "get_authorization";
 		$niubiz_data['data']=$data;
 
-		return $this->ws->sendWS($url,json_encode($niubiz_data) );
+		return app(\App\Http\Controllers\WebServiceController::class)->sendWS($url,json_encode($niubiz_data) );
     }
 
-    public function processForm($data,$idvisa,$lang,$objtar,$id_registro_persona)
-	{
-		$url = $this->url_api."niubiz.php";
+    public function getForm($persona, $inscripcion , $facturacion , $url_timeout, $url_base){
 
-		$niubiz_data['ipAddress'] = VALID_IP;
-		$niubiz_data['accessKey'] = VALID_PASS;
-		$niubiz_data['serviceKey'] = "niubiz_tarjeta";
-		$niubiz_data['event'] = EVENT;
-		$niubiz_data['id_event'] = ID_EVENT;
-		$niubiz_data['siecode_event'] = SIE_CODE_EVENT;
-
-		$DESCPRODUCTO=$objtar->cnddsc;
-
-		$producto="INSCRIPTION PROEXPLO 2025 - ".$DESCPRODUCTO;
-		if($lang=="esp"){
-			$producto="INSCRIPCION PROEXPLO 2025 - ".$DESCPRODUCTO;
-		}
-
-		$data->url_timeout = $this->url_timeout;
-		$data->url_callback = $this->url_callback."?entorno=".ENV."&purchaseNumber=".$idvisa."&ididioma=".$lang."&amount=".$data->monto."&idficha=".$data->fichnro."&nombres=".$nombrest."&producto=".$producto;
-		//pendiente key
-		$data->process = "get_form";
-		$data->logo = "https://proexplo.com.pe/proexplo2025/front/public/images/logo-light.png";
-		$data->color_code = "#ff8000";
-
-		$data->email = $data->correo;
-		$data->numerodocumento = $data->nrodoc;
-		$data->idpersona = $id_registro_persona;
-		$data->amount = $data->monto;
-		$data->telefono = $data->celular;
-		$data->items_number = 1;
-		$data->numero_orden = $idvisa;
-
-		$data->apellido = trim($data->apellidop ." ".$data->apellidom);
-
-		$niubiz_data['data']=$data;
-
-		return $this->ws->sendWS($url,json_encode($niubiz_data) );
-	}
-
-    public function getForm(Request $request){
         $url = $this->url_api."niubiz.php";
 
         $numero_orden = $this->getNumOrder();
-        dd($numero_orden);
 
+        $niubiz_data['ipAddress'] = config('app.valid_ip');
+		$niubiz_data['accessKey'] = config('app.valid_pass');
+		$niubiz_data['serviceKey'] = "niubiz_tarjeta";
+		$niubiz_data['event'] = config('app.evento');
+		$niubiz_data['id_event'] = config('app.id_evento');
+		$niubiz_data['siecode_event'] = config('app.event_code');
 
-        dd($url);
-        dd($request->all());
-        dd(1);
+        $data = new \stdClass();
+
+        $data->url_timeout = $url_timeout;
+		$data->url_callback = $url_base.'/niubiz/'.$facturacion->id.'/'.$numero_orden->numero_orden ;
+        $data->process = "get_form";
+		$data->logo = config('app.url_logo_niubiz');
+		$data->color_code = "#004F59";
+
+        $nombre = explode(" ", $persona->nombres);
+        $nombre = trim($nombre[0]);
+
+        $data->nombre = $nombre;
+        $data->apellido = $persona->apellido_paterno;
+        $data->email = $persona->correo;
+		$data->numerodocumento = $persona->documento;
+		$data->idpersona = $persona->id;
+		$data->amount = $facturacion->total;//
+		$data->telefono = $persona->celular;
+		$data->items_number = 1;
+		$data->numero_orden = $numero_orden->numero_orden;
+        $data->raw_data = true;
+
+		$niubiz_data['data']= $data;
+
+        return app(\App\Http\Controllers\WebServiceController::class)->sendWS($url, json_encode($niubiz_data));
+
     }
 
 }
