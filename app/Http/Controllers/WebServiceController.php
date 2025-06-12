@@ -8,6 +8,7 @@ use App\Models\Contacto;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use App\Helpers\HtmlHelper;
 use App\Models\PorcentajeCuotas;
+use App\Models\TipoPago;
 use Illuminate\Support\Facades\Http;
 
 class WebServiceController extends Controller
@@ -16,15 +17,7 @@ class WebServiceController extends Controller
     {
         $this->url_enviroment = 'KBServiciosIIMPJavaEnvironment';
 		$this->url_connection='http://200.37.185.5:8080';
-
-		$this->VALID_IP = "200.37.185.4";
-		$this->VALID_PASS = '$2y$10EoqWZuIEQ4vnwtm2IU3bruqmBD9yDiLrdIGNTHnSIRgAAatpBE9YK';
-		$this->EVENT = "proexplo";
-		$this->CURRENT_EVENT = "PROEXPLO 2025";
-		$this->ID_EVENT = "3";
-		$this->SIE_CODE_TIPO_EVENT = "1";
-		$this->SIE_CODE_EVENT = "25";
-
+        $this->now = Carbon::now()->format('Y-m-d');
 
         $this->urlPersonValidation = 'https://secure2.iimp.org:8443/KB_WEBASOCJavaEnvironment/rest/validarAsociado';
         $this->url_new_connection = "https://services.iimp.org.pe";
@@ -106,6 +99,71 @@ class WebServiceController extends Controller
         }
     }
 
+    public function wsInscripcion_create_update( $facturacion, $persona, $inscripcion , $niubiz){
+		try{
+			$url= "{$this->url_new_connection}/connection.php";
+
+            $tipo_pago = TipoPago::find($facturacion->id_tipo_pago);
+            $inscripcion->categoria_inscripcion->precio_disponible = $inscripcion->categoria_inscripcion->precio->where('fecha_inicio', '<=', $this->now)->where('fecha_fin', '>=', $this->now)->first();
+
+            $ws['ipAddress'] = config('app.valid_ip');
+            $ws['accessKey'] = config('app.valid_pass');
+            $ws['serviceKey'] = "ws";
+            $ws['event'] = config('app.evento');
+            $ws['id_event'] = config('app.id_evento');
+            $ws['siecode_event'] = config('app.event_code');
+
+			$data_ws =[];
+			$data_ws['service'] = "inscripcion_register_update";
+			$data_ws['inscrito_idtipodocumento'] = $persona->tipoDocumento->sie_code;
+			$data_ws['inscrito_numerodocumento'] = $persona->documento;
+
+            $data_ws['inscrito_empresa'] = $facturacion->observacion;
+			$data_ws['inscrito_cargo'] = $persona->ocupacion->name;
+			$data_ws['auth_datos'] = $inscripcion->autorizacion_datos > 0 ? 1 : 0;
+			$data_ws['pago_estado'] = "PAGADO";
+			$data_ws['pago_tipo'] = $tipo_pago->siecode;
+			$data_ws['pago_tarjeta'] = $niubiz->card_num;
+			$data_ws['pago_orden'] = $niubiz->num_orden;
+			$data_ws['pago_transaccion'] = $niubiz->idtransaccion;
+            $data_ws['facturacion_razon_social'] = $facturacion->nombre_facturador;
+            $data_ws['facturacion_siecode_tipo_documento'] = $facturacion->tipoDocumentoFacturador->sie_code;
+			$data_ws['facturacion_numero_documento'] = $facturacion->numero_doc_facturador;
+			$data_ws['facturacion_tipo_documentopago'] = $facturacion->tipoDocumentoPago->siecode;
+			$data_ws['facturacion_persona'] = $facturacion->responsable_facturador;
+			$data_ws['facturacion_telefono'] = $persona->celular;
+			$data_ws['facturacion_email'] = $persona->correo;
+			$data_ws['facturacion_direccion'] = $facturacion->direccion_facturador;
+            $data_ws['facturacion_importe'] = (float)$facturacion->total;
+            $data_ws['ficha_tipo'] = 2; //inscripciones individuales
+			$data_ws['ficha_control'] = $inscripcion->categoria_inscripcion->control;
+			$data_ws['ficha_categoria'] = $inscripcion->categoria_inscripcion->categoria;
+			$data_ws['ficha_condicion'] = $inscripcion->categoria_inscripcion->condicion;
+            $data_ws['simbolo_moneda'] = $inscripcion->categoria_inscripcion->precio_disponible->moneda->simbolo;;
+			$data_ws['evento_tipo'] = config('app.event_type');
+			$data_ws['evento_codigo'] = config('app.event_code') ;
+			$data_ws['ficha_id'] = $inscripcion->id;
+			$data_ws['lun'] = 1;
+			$data_ws['mar'] = 1;
+			$data_ws['mie'] = 1;
+			$data_ws['jue'] = 1;
+			$data_ws['vie'] = 1;
+
+			$ws['data'] = $data_ws;
+
+			$response = $this->sendWS($url, json_encode($ws));dd($response);
+
+			if( strpos( $response->Message, "Success") !== false ){
+				return ['status' => true ];
+			}else{
+				return ['status' => false ];
+			}
+
+		}catch (RequestException $e) {
+            return ['status' => false ];
+        }
+	}
+
     private function validateService ($request) {
         if($request->ok()) {
             return true;
@@ -155,31 +213,4 @@ class WebServiceController extends Controller
 
 	}
 
-    /*public function sendWS($url,$data, $head = null)
-	{
-		if (!is_null($head)) {
-			$content = array(
-				'Authorization: '.$head,
-				'Content-Type: application/json',
-				'Content-Length: '.strlen($data)
-			);
-		}else{
-			$content = array(
-			'Content-Type: application/json',
-			'Content-Length: '.strlen($data)
-			);
-		}
-
-		$ch = curl_init($url);
-		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, $content );
-		$response = curl_exec($ch);
-		$response = json_decode($response);
-		curl_close($ch);
-
-		return $response;
-	}*/
 }

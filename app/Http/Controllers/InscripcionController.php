@@ -46,6 +46,25 @@ class InscripcionController extends Controller
         return Inertia::render('Inscripcion/Inicio', compact('categorias','title','modal_texts'));
     }
 
+    public function extemin(){
+        $categorias = CategoriaInscripcion::whereRaw("nombre_es like '%EXTEMIN%'")->where('es_beneficio',false)->orderBy('orden_es','ASC')->get();
+
+        foreach($categorias as $categoria){
+            $categoria->precio_disponible = $categoria->precio->where('fecha_inicio', '<=', $this->now)->where('fecha_fin', '>=', $this->now)->first();
+        }
+
+        $title = "Extemin";
+
+        $modal_texts = [
+            "EXTEMIN por día" => "Tarifa que permite el acceso solo a la Exhibición Tecnológica Minera (EXTEMIN), eligiendo el o los días en que asistirá a la Exhibición.",
+            "EXTEMIN por semana" => "Tarifa que permite el acceso solo a la Exhibición Tecnológica Minera (EXTEMIN) durante la semana completa.",
+        ];
+
+        return Inertia::render('Inscripcion/Inicio', compact('categorias','title','modal_texts'));
+    }
+
+
+
     public function getForm(Request $request){
 
         $form_data = (Object)$request->form;
@@ -76,17 +95,17 @@ class InscripcionController extends Controller
             $direccion->id_departamento = $form_data->departamento > 0 ? $form_data->departamento : 0 ;
             $direccion->id_provincia = $form_data->provincia > 0 ? $form_data->provincia : 0 ;
             $direccion->id_distrito = $form_data->distrito > 0 ? $form_data->distrito : 0 ;
-            $direccion->direccion = $form_data->direccionPersona;
+            $direccion->direccion = trim($form_data->direccionPersona);
             $direccion->save();
 
             $persona->id_direccion = $direccion->id;
         }
 
-        $persona->nombres = $form_data->nombres;
-        $persona->apellido_paterno = $form_data->apellido_paterno;
-        $persona->apellido_materno = strlen($form_data->apellido_materno) > 0 ? $form_data->apellido_materno: "";
-        $persona->correo = $form_data->correo;
-        $persona->celular = $form_data->celular;
+        $persona->nombres = trim($form_data->nombres);
+        $persona->apellido_paterno = trim($form_data->apellido_paterno);
+        $persona->apellido_materno = strlen($form_data->apellido_materno) > 0 ? trim($form_data->apellido_materno): "";
+        $persona->correo = trim($form_data->correo);
+        $persona->celular = trim($form_data->celular);
         $persona->sexo = $form_data->sexo;
         $persona->id_ocupacion = $ocupacion;
         $persona->id_nacionalidad = $form_data->id_nacionalidad;
@@ -101,6 +120,8 @@ class InscripcionController extends Controller
 
             $persona->update();
         }else{
+            $persona->id_tipo_documento = $form_data->id_tipo_documento;
+            $persona->documeno = trim( $form_data->documento);
 
             $persona->save();
         }
@@ -112,7 +133,7 @@ class InscripcionController extends Controller
             $persona->update();
         }
 
-        $sub_total = round( ($categoria->precio_disponible->valor)/1.18 , 2);
+        $IGV = round( ($categoria->precio_disponible->valor * 0.18) , 2);
 
         $facturacion = new Facturacion;
         $facturacion->id_tipo_servicio = 4; // servicio inscripciones perumin tabla tipo servicio
@@ -120,16 +141,17 @@ class InscripcionController extends Controller
         $facturacion->id_tipo_pago = $form_data->selectTipoPago;
         $facturacion->tipo_doc_pago = $form_data->selectTipoDocPago;
         $facturacion->id_tipo_doc_facturador = $form_data->tipoDocumentoEmpresa;
-        $facturacion->numero_doc_facturador = $form_data->documentoEmpresa;
-        $facturacion->nombre_facturador = $form_data->razonSocial;
-        $facturacion->direccion_facturador = $form_data->direccionEmpresa;
+        $facturacion->numero_doc_facturador = trim($form_data->documentoEmpresa);
+        $facturacion->nombre_facturador = trim($form_data->razonSocial);
+        $facturacion->direccion_facturador = trim( $form_data->direccionEmpresa);
+        $facturacion->responsable_facturador = trim( $form_data->responsable);
         $facturacion->id_comprador = $persona->id;
         $facturacion->tipo_comprador = 'persona';
-        $facturacion->sub_total = $sub_total;
-        $facturacion->IGV = $sub_total * 0.18;
+        $facturacion->IGV = $IGV;
+        $facturacion->sub_total = floatval($categoria->precio_disponible->valor) - $IGV;
         $facturacion->detraccion = 0;
         $facturacion->total = $categoria->precio_disponible->valor;
-        $facturacion->observacion = "registro facturacion persona, pendiente de pago";
+        $facturacion->observacion = trim($form_data->empresa);
         $facturacion->save();
 
          $informacion = json_decode('{
@@ -155,7 +177,7 @@ class InscripcionController extends Controller
         $inscripcion->usuario_creacion = $persona->id;
         $inscripcion->origen = 'web';
         $inscripcion->observacion = 'registro individual de persona, pendiente de pago';
-        $inscripcion->credencial = $form_data->credencial;
+        $inscripcion->credencial = trim($form_data->credencial);
         $inscripcion->autorizacion_datos = isset($form_data->auth) ? $form_data->auth : false;
         $inscripcion->dias = '{"lun":1,"mar":1,"mie":1,"jue":1,"vie":1}';
 
@@ -245,7 +267,7 @@ class InscripcionController extends Controller
         $niubiz = new Niubiz;
 
         if (isset($filtered_response['errorcode'])||is_null($filtered_response['transactionId']) || $filtered_response['transactionId']=="") {
-                dd(1);
+                dd('Error en el pago');
 				// no ejecutadov
 				/*$xx=$modelweb->asignarpago($purchaseNumber,$respuesta,'FALLIDO');
 				$motivodeneg= isset($respuesta->data->ACTION_DESCRIPTION) ? $respuesta->data->ACTION_DESCRIPTION: "Operacion Fallida";
@@ -286,23 +308,20 @@ class InscripcionController extends Controller
             $cuota->estado_pago = 'PAGADO';
             $cuota->update();
 
-            $facturacion->observacion = "registro facturacion persona, pagada niubiz id ".$niubiz->id;
-            $facturacion->update();
-
             $inscripcion = Inscripcion::where('id_facturacion', $facturacion->id)->first();
             $inscripcion->observacion = "registro facturacion persona, pagada niubiz id ".$niubiz->id;
             $inscripcion->update();
 
-            $response= app(\App\Http\Controllers\WebServiceController::class)->wsInscripcion_create_update($ficha );
+            $persona = Persona::find($inscripcion->id_persona);
 
-            dd($response);
-
-
+            $response= app(\App\Http\Controllers\WebServiceController::class)->wsInscripcion_create_update($facturacion, $persona, $inscripcion , $niubiz );
+            $response = ['status' => true];
+            if($response['status']){
+                return Inertia::render('Inscripcion/Confirmacion', compact('facturacion','inscripcion','niubiz','persona'));
+            }
         }
-        dd($pasarela);
-        dd($_POST);
-    var_dump($order);
-        dd($id);
+
+        return Inertia::render('Inscripcion/Index');
 
     }
 

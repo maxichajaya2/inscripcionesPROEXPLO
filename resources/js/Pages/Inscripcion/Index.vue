@@ -39,7 +39,7 @@ import "../../../css/inscripciones.css";
                                 <GreenArrowRight class="block w-auto" />
                             </div>
                         </a>
-                        <a href="/registro/extemin" class = "container-visitor-border max-w-[400px] cursor-pointer border-green-iimp" style = "display :none;">
+                        <a href="/registro/extemin" class = "container-visitor-border max-w-[400px] cursor-pointer border-green-iimp">
                             <div class = "container-title-visitor">
                                 <h5>EXTEMIN</h5>
                                 <GreenArrowRight class="block w-auto" />

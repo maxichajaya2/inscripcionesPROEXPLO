@@ -90,7 +90,7 @@ const goStart = () => {
     <AppLayout title="inscripciones">
         <div class=" px-3 mx-auto max-w-7xl md:px-6 lg:px-8 font-(family-name:Roboto)">
             <div id = "titulo_inicial" class = "mt-8 mb-8">
-                <h1 class="text-3xl text-green-iimp font-bold mb-2">Convencionista</h1>
+                <h1 class="text-3xl text-green-iimp font-bold mb-2">{{  props.title }}</h1>
                 <colorbar class="block w-auto" />
             </div>
             <div class = "flex justify-around mt-6 mb-6">

@@ -411,9 +411,17 @@ defineExpose({
                                         <p class="text-yellow-price">USD  {{  categoria.precio_disponible.valor }}</p>
                                     </div>
                                 </div>
-
                             </div>
-
+                            <div v-else class="w-full">
+                                <div class="flex items-center w-full" >
+                                    <RadioButton  v-model="selected_categoria" v-bind="selected_categoriaAttrs"
+                                                    name="selected_categoria" :value='categoria.id' class="ml-6 radio-green-iimp" />
+                                    <div class="flex justify-between w-full ml-6 mr-6" >
+                                        <label  class="ml-2">{{  categoria.nombre_es }}</label>
+                                        <p class="text-yellow-price">USD  {{  categoria.precio_disponible.valor }}</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </template>
                 </Card>
