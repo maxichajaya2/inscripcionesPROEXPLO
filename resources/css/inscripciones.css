@@ -168,3 +168,18 @@
     background-color: rgba(196, 212, 214, 0.5);
 }
 
+.table-celd{
+    border-color: #004F59 !important;
+    border-width: 3px;
+    border-radius: 10px;
+    border-style: solid;
+}
+
+  table {
+    border-collapse: separate; /* IMPORTANT */
+   /* border-spacing: 0;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;  for clipping */
+  }
+

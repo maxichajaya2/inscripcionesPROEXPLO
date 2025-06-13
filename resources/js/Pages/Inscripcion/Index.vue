@@ -89,7 +89,6 @@ import "../../../css/inscripciones.css";
                                 <li>Asistencia a las Conferencias Comerciales (sin interpretación simultánea)</li>
                                 <li>Acceso a la grabación de las conferencias</li>
                                 <li>Acceso a networking a través del App</li>
-                                <li>Material de trabajo</li>
                                 <li>Certificado digital de participación a solicitud</li>
                                 <li>Acceso a las presentaciones en PDF de las conferencias autorizadas</li>
                                 <li>Asistencia a EXTEMIN 2025</li>

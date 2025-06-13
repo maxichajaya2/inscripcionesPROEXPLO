@@ -9,6 +9,7 @@ import Card from 'primevue/card';
 import "../../../css/inscripciones.css";
 
 const props = defineProps({
+    categoria_seleccionada:Object,
     data_persona: Object,
     formulario: String
 });
@@ -49,22 +50,6 @@ watch(() => props.formulario, (newVal, oldVal) => {
     document.getElementById('form_holder').appendChild(form);
 });
 
-const [documento, documentoAttrs] = defineField('documento');
-const [id_tipo_documento, id_tipo_documentoAttrs] = defineField('id_tipo_documento');
-
-const goStart = () => {
-    router.get(route('inscripcion.index'));
-};
-
-function getDocument() {
-    return { "validate" : true
-    };
-}
-
-defineExpose({
-  getDocument
-});
-
 </script>
 
 <template>
@@ -77,14 +62,29 @@ defineExpose({
                 <Card>
                     <template #content>
                         <div v-if="(formulario != undefined) && (formulario != null)">
-                            <div>
-                                {{ formulario.script.amount }}
-                            </div>
+                            <table class="min-w-full border text-black rounded-[20px]">
+                                <tbody>
+                                    <tr>
+                                        <td class="p-4 w-[50%] table-celd font-bold">Inscrito</td>
+                                        <td class="p-4 w-[50%] table-celd">{{ data_persona.persona.nombres }} {{ data_persona.persona.apellido_paterno }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-4 w-[50%] table-celd font-bold">Categoria</td>
+                                        <td class="p-4 w-[50%] table-celd">{{ categoria_seleccionada.nombre_es }}</td>
+                                    </tr>
+                                     <tr>
+                                        <td class="p-4 w-[50%] table-celd font-bold">Total</td>
+                                        <td class="p-4 w-[50%] table-celd">USD {{ formulario.script.amount }}</td>
+                                    </tr>
 
+                                </tbody>
+                            </table>
                         </div>
-                        <div id="form_holder" class="flex justify-around">
-
-                        </div>
+                        <table class="min-w-full border text-black rounded-[20px] p-6">
+                            <tbody>
+                                <div id="form_holder" class="flex justify-around"></div>
+                            </tbody>
+                        </table>
                     </template>
                 </Card>
             </div>

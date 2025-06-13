@@ -65,8 +65,6 @@ class InscripcionController extends Controller
         return Inertia::render('Inscripcion/Inicio', compact('categorias','title','modal_texts'));
     }
 
-
-
     public function getForm(Request $request){
 
         $form_data = (Object)$request->form;
@@ -203,9 +201,9 @@ class InscripcionController extends Controller
 
         $transactiontoken = $_POST['transactionToken'];
 
-        //$respuesta = app(\App\Http\Controllers\NiubizController::class)->authorization($cuota->respuesta_api, $facturacion->total, $transactiontoken, $order);
+        $respuesta = app(\App\Http\Controllers\NiubizController::class)->authorization($cuota->respuesta_api, $facturacion->total, $transactiontoken, $order);
 
-        $respuesta = '{
+        /*$respuesta = '{
             "header": {
                 "ecoreTransactionUUID": "3746e2a1-19bb-4251-b920-f7d2cc7c7c6e",
                 "ecoreTransactionDate": 1749744006879,
@@ -261,7 +259,7 @@ class InscripcionController extends Controller
                 "PROCESS_CODE": "000000",
                 "TRANSACTION_ID": "993211570048581"
             }
-        }';
+        }';*/
 
         $filtered_response = app(\App\Http\Controllers\NiubizController::class)->filterResponse($respuesta);
 
@@ -315,18 +313,41 @@ class InscripcionController extends Controller
 
             $persona = Persona::find($inscripcion->id_persona);
 
-            //$response= app(\App\Http\Controllers\WebServiceController::class)->wsInscripcion_create_update($facturacion, $persona, $inscripcion , $niubiz );
+            $response= app(\App\Http\Controllers\WebServiceController::class)->wsInscripcion_create_update($facturacion, $persona, $inscripcion , $niubiz );
 
-            $response = ['status' => true];
+            //$response = ['status' => true];
+
             if($response['status']){
-                dd(1);
+
                 Mail::to($persona->correo)->send(new \App\Mail\MailInscripcion( $inscripcion, $niubiz));
 
-                return Inertia::render('Inscripcion/Confirmacion', compact('facturacion','inscripcion','niubiz','persona'));
+                return redirect('/pago/confirmar/'.$inscripcion->id);
             }
         }
 
-        return Inertia::render('Inscripcion/Index');
+        return redirect('/');
+
+    }
+
+    public function confirmPayment($id){
+
+        $inscripcion = Inscripcion::find($id);
+        $categoria = $inscripcion->categoria_inscripcion;
+        $facturacion = $inscripcion->facturacion;
+        $persona = $inscripcion->persona;
+        $persona->nombre_completo = trim($persona->nombres." ".$persona->apellido_paterno." ".$persona->apellido_materno);
+        $documento_persona = $persona->tipoDocumento;
+        $documento_empresa = $facturacion->tipoDocumentoFacturador;
+        $tipo_doc_pago = $facturacion->tipoDocumentoPago;
+        $tipo_pago = $facturacion->tipoPago;
+        $cuota = $facturacion->cuotas->first();
+
+        if($facturacion->id_tipo_pago == 3){ //tarjeta
+            $pago = Niubiz::where('id_compra',$cuota->id)->first();
+            $pago->digitos = substr( $pago->card_num ,-8);
+        }
+
+        return Inertia::render('Inscripcion/Confirmacion', compact('facturacion','pago','persona','categoria','documento_persona','documento_empresa','tipo_doc_pago','tipo_pago'));
 
     }
 

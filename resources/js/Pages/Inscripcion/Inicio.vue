@@ -32,6 +32,7 @@ const formDataValidacionDoc = ref(null);
 const formDataInscription = ref(null);
 const formDataPayment = ref(null);
 const data_persona = ref({});
+const categoria_seleccionada = ref({});
 
 const childFormValidacionDoc = ref();
 const childFormInscription = ref(null);
@@ -59,6 +60,11 @@ const validate = async (value) =>{
             formDataInscription.value  = childFormInscription.value.getInscripcion();
 
             if(formDataInscription.value.validate){
+                props.categorias.forEach(categoria => {
+                    if(categoria.id == formDataInscription.value.formInscription.selected_categoria){
+                        categoria_seleccionada.value = categoria;
+                    }
+                });
 
                 const form_payment = await axios.post( '/pago/getform',
                         { form: formDataInscription.value.formInscription } );
@@ -115,7 +121,7 @@ const goStart = () => {
                             </div>
                         </StepPanel>
                         <StepPanel v-slot="{ activateCallback }" value="3">
-                            <FormPayment ref="childFormPayment"  :data_persona="data_persona" :formulario = "formDataPayment" />
+                            <FormPayment ref="childFormPayment"  :data_persona="data_persona" :formulario = "formDataPayment" :categoria_seleccionada ="categoria_seleccionada" />
                             <div class="flex justify-between p-6">
                                 <Button label="Regresar" severity="secondary" icon="pi pi-arrow-left" @click="activateCallback('2')" class="border-rounded-full" />
                                 <!--<Button label="Finalizar" icon="pi pi-check" iconPos="right" @click="" class="bg-green-iimp border-rounded-full"/>-->
