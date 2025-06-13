@@ -80,11 +80,7 @@ watch(() => props.formulario, (newVal, oldVal) => {
                                 </tbody>
                             </table>
                         </div>
-                        <table class="min-w-full border text-black rounded-[20px] p-6">
-                            <tbody>
-                                <div id="form_holder" class="flex justify-around"></div>
-                            </tbody>
-                        </table>
+                        <div id="form_holder" class="flex justify-around p-6"></div>
                     </template>
                 </Card>
             </div>
