@@ -27,21 +27,33 @@ import "../../../css/inscripciones.css";
                                 <GreenArrowRight class="block w-auto" />
                             </div>
                         </a>
-                        <a href="/registro/docente" class = "container-visitor-border max-w-[400px] cursor-pointer border-green-iimp" style = "display :none;">
+                        <a href="/registro/extemin" class = "container-visitor-border max-w-[400px] cursor-pointer border-green-iimp">
+                            <div class = "container-title-visitor">
+                                <h5>EXTEMIN</h5>
+                                <GreenArrowRight class="block w-auto" />
+                            </div>
+                        </a>
+                        <a href="https://forms.gle/vBeHVVkHT2RdcPGi7" target ="_blank" class = "container-visitor-border max-w-[400px] cursor-pointer border-green-iimp" >
                             <div class = "container-title-visitor">
                                 <h5>Docente</h5>
                                 <GreenArrowRight class="block w-auto" />
                             </div>
                         </a>
-                        <a href="/registro/estudiante" class = "container-visitor-border max-w-[400px] cursor-pointer border-green-iimp" style = "display :none;">
+                        <a href="https://forms.gle/vBeHVVkHT2RdcPGi7" target ="_blank" class = "container-visitor-border max-w-[400px] cursor-pointer border-green-iimp" >
                             <div class = "container-title-visitor">
                                 <h5>Estudiante</h5>
                                 <GreenArrowRight class="block w-auto" />
                             </div>
                         </a>
-                        <a href="/registro/extemin" class = "container-visitor-border max-w-[400px] cursor-pointer border-green-iimp">
+                        <a href="https://forms.gle/vBeHVVkHT2RdcPGi7" target ="_blank" class = "container-visitor-border max-w-[400px] cursor-pointer border-green-iimp">
                             <div class = "container-title-visitor">
-                                <h5>EXTEMIN</h5>
+                                <h5>Asociado SME</h5>
+                                <GreenArrowRight class="block w-auto" />
+                            </div>
+                        </a>
+                        <a href="https://forms.gle/vBeHVVkHT2RdcPGi7" target ="_blank" class = "container-visitor-border max-w-[400px] cursor-pointer border-green-iimp">
+                            <div class = "container-title-visitor">
+                                <h5>Participante por día</h5>
                                 <GreenArrowRight class="block w-auto" />
                             </div>
                         </a>
@@ -60,7 +72,8 @@ import "../../../css/inscripciones.css";
                         <div class ="w-[90%]">
                             <div class ="">
                                 <h6 class="font-bold">Otros participantes</h6>
-                                <span>Si eres auspiciador, exhibidor, prensa o asociado SME comunícate con nosotros al correo inscripciones@iimp.org.pe para orientarte en el proceso de inscripción.</span>
+                                <span>Si eres auspiciador, exhibidor o prensa  comunícate con nosotros al correo inscripciones@iimp.org.pe para orientarte en el proceso de inscripción.</span>
+                                <!-- <span>Si eres auspiciador, exhibidor, prensa o asociado SME comunícate con nosotros al correo inscripciones@iimp.org.pe para orientarte en el proceso de inscripción.</span> -->
                             </div>
                         </div>
                     </div>

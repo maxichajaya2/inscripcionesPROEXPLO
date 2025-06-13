@@ -14,6 +14,8 @@ use App\Models\Facturacion;
 use App\Models\Pasarela;
 use App\Models\Niubiz;
 use App\Models\CategoriaInscripcion;
+use App\Mail\MailInscripcion;
+use Illuminate\Support\Facades\Mail;
 
 
 
@@ -280,7 +282,6 @@ class InscripcionController extends Controller
 				}
 
 				header('Location: ' . $base_urlreturn.'?error='.$msg ); exit();*/
-
 		}else{
 
             $niubiz->num_orden = $order;
@@ -314,9 +315,13 @@ class InscripcionController extends Controller
 
             $persona = Persona::find($inscripcion->id_persona);
 
-            $response= app(\App\Http\Controllers\WebServiceController::class)->wsInscripcion_create_update($facturacion, $persona, $inscripcion , $niubiz );
+            //$response= app(\App\Http\Controllers\WebServiceController::class)->wsInscripcion_create_update($facturacion, $persona, $inscripcion , $niubiz );
+
             $response = ['status' => true];
             if($response['status']){
+                dd(1);
+                Mail::to($persona->correo)->send(new \App\Mail\MailInscripcion( $inscripcion, $niubiz));
+
                 return Inertia::render('Inscripcion/Confirmacion', compact('facturacion','inscripcion','niubiz','persona'));
             }
         }
