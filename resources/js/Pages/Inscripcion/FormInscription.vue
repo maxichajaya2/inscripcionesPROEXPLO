@@ -44,7 +44,9 @@ const { defineField, errors, handleSubmit, setValues, resetForm ,values  } = use
                 if (typeof tipoDocumentoEmpresa[0] != 'undefined') {
                     if (tipoDocumentoEmpresa[0] == 2) {
                         return yup.number().typeError('El valor debe ser numérico').test('len', 'Debe tener exactamente 11 dígitos', val => val && val.toString().length === 11)
-                    } else {
+                    } else if (tipoDocumentoEmpresa[0] == 1){
+                        return yup.number().typeError('El valor debe ser numérico').test('len', 'Debe tener exactamente 8 dígitos', val => val && val.toString().length === 8)
+                    }   else {
                         return yup.string().required('Documento es requerido')
                     }
                 }
@@ -160,7 +162,7 @@ watch(() => props.data_persona, (newVal, oldVal) => {
 
 const onlyNumberKey = (event) => {
 
-    if( tipoDocumentoEmpresa.value == 2 ){
+    if( tipoDocumentoEmpresa.value == 2 || tipoDocumentoEmpresa.value == 1 ){
         const charCode = event.charCode ? event.charCode : event.keyCode
         if (charCode < 48 || charCode > 57) {
             event.preventDefault()

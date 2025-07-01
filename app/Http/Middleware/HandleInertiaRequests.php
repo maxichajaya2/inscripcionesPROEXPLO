@@ -48,7 +48,7 @@ class HandleInertiaRequests extends Middleware
                 ->whereJsonContains('tipo', 'persona')->get();
         $sharedData['general.tipoDocumentoPago'] = TipoDocumentoPago::where('isactive', true)->get();
         $sharedData['general.tipDocEmp'] = TipoDocumento::where('isactive', true)
-                ->whereJsonContains('tipo', 'empresa')->get();
+                ->whereJsonContains('tipo', 'empresa')->orWhere('name_es', '=','DNI')->get(); // se agrego dni como documento para el pago
         $sharedData['general.tipoServicios'] = TipoServicio::where('isactive', true)->get();
         $sharedData['general.generos'] = config('data.generos');
 

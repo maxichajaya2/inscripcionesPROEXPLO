@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Http;
 use App\Models\Persona;
 use App\Models\TipoDocumento;
 use App\Http\Controllers\WebServiceController;
+use Carbon\Carbon;
 use stdClass;
 
 class DocumentApiController extends Controller
@@ -17,6 +18,7 @@ class DocumentApiController extends Controller
     public function __construct()
     {
         $this->urlApi = 'https://api.apis.net.pe/v2';
+        $this->now = Carbon::now()->format('Y-m-d');
     }
 
         protected function token(){
@@ -70,6 +72,7 @@ class DocumentApiController extends Controller
 
         }else{
             $persona = new \stdClass();
+            $persona->fecha_nacimiento = $this->now;
         }
 
 
