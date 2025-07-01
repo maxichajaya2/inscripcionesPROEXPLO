@@ -51,7 +51,7 @@ class HandleInertiaRequests extends Middleware
                 ->whereJsonContains('tipo', 'empresa')->orWhere('name_es', '=','DNI')->get(); // se agrego dni como documento para el pago
         $sharedData['general.tipoServicios'] = TipoServicio::where('isactive', true)->get();
         $sharedData['general.generos'] = config('data.generos');
-
+        $sharedData['general.reglamento_inscripciones'] = config('app.reglamento_inscripciones');
         $sharedData['flash'] = [
             'success' => $request->session()->get('success'),
             'error' => $request->session()->get('error'),

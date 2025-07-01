@@ -83,7 +83,7 @@ const validate = async (value) =>{
 }
 
 const hideModal = () => {
-    visible.value = !visible;
+    visible.value = !visible.value;
 };
 
 const goStart = () => {

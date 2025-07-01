@@ -2,6 +2,7 @@
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Divider from 'primevue/divider';
+import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
 import Calendar from 'primevue/calendar';
 import Checkbox from 'primevue/checkbox';
@@ -26,6 +27,7 @@ const props = defineProps({
 
 const es_socio = ref(false);
 const generos = computed(() => usePage().props.general.generos);
+const reglamento_inscripciones = computed(() => usePage().props.general.reglamento_inscripciones);
 const nacionalidades = computed(() => usePage().props.general.paises);
 const paises = computed(() => usePage().props.general.paises);
 const tipoDocumentoPago = computed(() => page.props.general.tipoDocumentoPago);
@@ -33,6 +35,7 @@ const tipoDocumento = computed(() => page.props.general.tipDocEmp)
 const departamentos = ref();
 const provincias = ref();
 const distritos = ref();
+const visible = ref(false);
 
 
 const { defineField, errors, handleSubmit, setValues, resetForm ,values  } = useForm({
@@ -70,8 +73,10 @@ const { defineField, errors, handleSubmit, setValues, resetForm ,values  } = use
         documentoEmpresa: yup.string().required('Documento de empresa es requerido'),
         responsable: yup.string().required('Nombre en responsable es requerido'),
         selectTipoPago: yup.string().required('Tipo de pago es requerido'),
-
         selectTipoDocPago: yup.string().required('Seleccionar tipo de documento de pago es requerido'),
+
+        terminos: yup.string().required('Es requerido aceptar los Términos y Condiciones'),
+        reglamento: yup.string().required('Es requerido aceptar el Reglamento'),
     })
 })
 
@@ -92,6 +97,8 @@ const [empresa, empresaAttrs] = defineField('empresa');
 const [cargo, cargoAttrs] = defineField('cargo');
 const [credencial, credencialAttrs] = defineField('credencial');
 const [auth, authAttrs] = defineField('auth');
+const [terminos, terminosAttrs] = defineField('terminos');
+const [reglamento, reglamentoAttrs] = defineField('reglamento');
 const [selectTipoDocPago, selectTipoDocPagoAttrs] = defineField('selectTipoDocPago');
 
 const [selected_categoria, selected_categoriaAttrs] = defineField('selected_categoria');
@@ -168,7 +175,11 @@ const onlyNumberKey = (event) => {
             event.preventDefault()
         }else{
             if(typeof documentoEmpresa.value != 'undefined' ){
-                if(documentoEmpresa.value.length == 11){
+                if(documentoEmpresa.value.length == 11 && tipoDocumentoEmpresa.value == 2){
+                    event.preventDefault()
+                }
+
+                if(documentoEmpresa.value.length == 8 && tipoDocumentoEmpresa.value == 1){
                     event.preventDefault()
                 }
             }
@@ -176,6 +187,15 @@ const onlyNumberKey = (event) => {
         }
     }
 }
+
+const showModal = () => {
+    visible.value = !visible.value;
+};
+
+const acceptModal = () => {
+    visible.value = !visible.value;
+    terminos.value = true;
+};
 
 function setTipoDocPago(){
     documentoEmpresa.value = "";
@@ -193,7 +213,8 @@ function setTipoDocPago(){
 function getInscripcion() {
 
     if( (Object.keys(errors._value).length > 0) ){
-
+        if(terminos.value != true) toast.add({ severity: 'error', summary: 'Es requerido aceptar los Términos y Condiciones', life: 2000 });
+        if(reglamento.value != true) toast.add({ severity: 'error', summary: 'Es requerido aceptar el Reglamento', life: 2000 });
         toast.add({ severity: 'error', summary: 'Complete todos los campos requeridos', life: 2000 });
         return { "validate" : false };
 
@@ -522,7 +543,86 @@ defineExpose({
 
                 </Card>
             </div>
+            <div class ="text-green-iimp font-bold p-4 flex justify-between">
+                <div class="">
+                    <Checkbox :binary="true" v-model="terminos" v-bind="terminosAttrs" name="terminos"/>
+                    <label for="terminos" class="pl-2 cursor-pointer" @click="showModal">Términos y condiciones de participación *</label>
+
+                </div>
+
+                <div class="">
+                    <Checkbox :binary="true" v-model="reglamento" v-bind="reglamentoAttrs" name="reglamento"/>
+                    <a :href="reglamento_inscripciones" target="_blank" rel="noopener noreferrer" title="Ver reglamento" >
+                        <label for="reglamento" class="pl-2 cursor-pointer">Reglamento de Participación *</label>
+                    </a>
+                </div>
+
+            </div>
         </div>
+
+        <Dialog v-model:visible="visible" modal :style="{ border: 'none' }" class="modal-green max-w-[750px] modal-custom-scroll m-[5px]"  :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
+            <div class="modal-head-title font-bold">
+                <p>TÉRMINOS Y CONDICIONES DE PARTICIPACIÓN</p>
+                <p>PERUMIN 37 CONVENCIÓN MINERA</p>
+            </div>
+            <div class ="pt-[30px] pr-[30px] pl-[30px] pb-[20px] modal-custom-scroll">
+                <ul class="mt-5 mb-5 ml-10 font'bold list-decimal">
+
+                        <li class ="font-bold">Aceptación de los Términos</li>
+                        <p class ="text-justify mb-4">Al adquirir una entrada para el evento, el asistente acepta expresamente los presentes
+                            Términos y Condiciones. El ingreso al recinto implica conformidad con todas las normas
+                            aquí descritas.</p>
+                        <li class ="font-bold">Uso de Imagen</li>
+                        <p class ="text-justify mb-4">Al adquirir una entrada para el evento, el asistente acepta expresamente los presentes
+                            Términos y Condiciones. El ingreso al recinto implica conformidad con todas las normas
+                            aquí descritas.</p>
+                        <li class ="font-bold">Tratamiento de Datos Personales</li>
+                        <p class ="text-justify mb-4">Los datos personales proporcionados por el asistente al momento de adquirir la entrada
+                            serán tratados de conformidad con la Ley N° 29733 – Ley de Protección de Datos
+                            Personales, y su reglamento. Dichos datos serán utilizados exclusivamente para fines
+                            administrativos, de seguridad, estadísticos y de comunicación institucional.</p>
+                        <li class ="font-bold">Reglas de Ingreso y Permanencia</li>
+                        <p class ="text-justify mb-4">Se requiere portar una entrada válida y un documento de identidad oficial para ingresar
+                            al evento. El IIMP se reserva el derecho de admisión y permanencia por motivos de
+                            seguridad, conducta inapropiada, o incumplimiento de normas. No se permite el ingreso
+                            con armas, objetos peligrosos, sustancias ilegales ni bebidas alcohólicas del exterior.</p>
+                        <li class ="font-bold">Uso de Drones</li>
+                        <p class ="text-justify mb-4">Por razones de seguridad, privacidad y cumplimiento normativo, queda prohibido el uso
+                            de drones o vehículos aéreos no tripulados (VANT) dentro del recinto del evento sin
+                            autorización previa y expresa del IIMP. Cualquier operación autorizada deberá cumplir
+                            con la normativa vigente de la Dirección General de Aeronáutica Civil (DGAC) del Perú.
+                            El incumplimiento de esta disposición puede ser sancionado con el retiro inmediato del
+                            evento y la denuncia correspondiente.</p>
+                        <li class ="font-bold">Reembolsos y Cancelación</li>
+                        <p class ="text-justify mb-4">En caso de cancelación o modificación sustancial del evento por causas de fuerza
+                            mayor, caso fortuito o razones operativas, el IIMP informará oportunamente a través de
+                            sus canales oficiales. Las políticas de devolución o reprogramación se establecerán
+                            según corresponda en cada caso.</p>
+                        <li class ="font-bold">Limitación de Responsabilidad</li>
+                        <p class ="text-justify mb-4">El IIMP no será responsable por pérdidas, robos, accidentes o daños personales
+                            ocurridos durante el evento, salvo aquellos que deriven de su actuación dolosa o
+                            negligente.</p>
+                        <li class ="font-bold">Prohibición de Reventa</li>
+                        <p class ="text-justify mb-4">Está prohibida la reventa no autorizada de entradas. El IIMP no se responsabiliza por
+                            entradas adquiridas fuera de los canales oficiales de venta.</p>
+                        <li class ="font-bold">Propiedad Intelectual</li>
+                        <p class ="text-justify mb-4">Las marcas, logotipos, contenidos y diseños vinculados al evento son propiedad del
+                            IIMP o de sus aliados estratégicos. Queda prohibido su uso sin autorización previa y por
+                            escrito.</p>
+                        <li class ="font-bold">Jurisdicción y Ley Aplicable</li>
+                        <p class ="text-justify">Estos Términos se rigen por las leyes de la República del Perú. Cualquier controversia
+                            será resuelta por los tribunales competentes de la ciudad de Lima.</p>
+
+                </ul>
+            </div>
+            <div class="flex justify-around">
+                <div class="flex max-w-[450px] justify-evenly w-[100%]">
+                    <button class="border border-white modal-continue-button p-[12px] rounded-full font-bold min-w-[130px]" @click="acceptModal" >
+                        Aceptar
+                    </button>
+                </div>
+            </div>
+        </Dialog>
 
 </template>
 
