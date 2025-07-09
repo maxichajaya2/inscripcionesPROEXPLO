@@ -83,18 +83,18 @@ class InscripcionController extends Controller
         if(isset($persona->id_direccion)){
 
             $persona->direccion->id_pais = $form_data->pais;
-            $persona->direccion->id_departamento = $form_data->departamento > 0 ? $form_data->departamento : 0 ;
-            $persona->direccion->id_provincia = $form_data->provincia > 0 ? $form_data->provincia : 0 ;
-            $persona->direccion->id_distrito = $form_data->distrito > 0 ? $form_data->distrito : 0 ;
+            $persona->direccion->id_departamento = isset($form_data->departamento) ? $form_data->departamento : 0 ;
+            $persona->direccion->id_provincia = isset($form_data->provincia) ? $form_data->provincia : 0 ;
+            $persona->direccion->id_distrito = isset($form_data->distrito) ? $form_data->distrito : 0 ;
             $persona->direccion->direccion = $form_data->direccionPersona;
             $persona->direccion->update();
 
         }else{
             $direccion = new Direccion;
             $direccion->id_pais = $form_data->pais;
-            $direccion->id_departamento = $form_data->departamento > 0 ? $form_data->departamento : 0 ;
-            $direccion->id_provincia = $form_data->provincia > 0 ? $form_data->provincia : 0 ;
-            $direccion->id_distrito = $form_data->distrito > 0 ? $form_data->distrito : 0 ;
+            $direccion->id_departamento = isset($form_data->departamento) ? $form_data->departamento : 0 ;
+            $direccion->id_provincia = isset($form_data->provincia) ? $form_data->provincia : 0 ;
+            $direccion->id_distrito = isset($form_data->distrito) ? $form_data->distrito : 0 ;
             $direccion->direccion = trim($form_data->direccionPersona);
             $direccion->save();
 
@@ -103,12 +103,12 @@ class InscripcionController extends Controller
 
         $persona->nombres = trim($form_data->nombres);
         $persona->apellido_paterno = trim($form_data->apellido_paterno);
-        $persona->apellido_materno = strlen($form_data->apellido_materno) > 0 ? trim($form_data->apellido_materno): "";
+        $persona->apellido_materno = isset($form_data->apellido_materno) ? trim($form_data->apellido_materno): "";
         $persona->correo = trim($form_data->correo);
         $persona->celular = trim($form_data->celular);
         $persona->sexo = $form_data->sexo;
         $persona->id_ocupacion = $ocupacion;
-        $persona->id_nacionalidad = $form_data->id_nacionalidad;
+        $persona->id_nacionalidad = $form_data->nacionalidad;
         $persona->fecha_nacimiento = Carbon::parse($form_data->fecha_nacimiento)->subDay()->format('Y-m-d');
 
         if(isset($persona->id)){
@@ -121,7 +121,7 @@ class InscripcionController extends Controller
             $persona->update();
         }else{
             $persona->id_tipo_documento = $form_data->id_tipo_documento;
-            $persona->documeno = trim( $form_data->documento);
+            $persona->documento = trim( $form_data->documento);
 
             $persona->save();
         }
