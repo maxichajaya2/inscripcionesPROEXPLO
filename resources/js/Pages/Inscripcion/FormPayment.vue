@@ -5,7 +5,6 @@ import * as yup from 'yup';
 import { usePage, router } from '@inertiajs/vue3';
 import Card from 'primevue/card';
 
-
 import "../../../css/inscripciones.css";
 
 const props = defineProps({
@@ -80,7 +79,7 @@ watch(() => props.formulario, (newVal, oldVal) => {
                                 </tbody>
                             </table>
                         </div>
-                        <div id="form_holder" class="flex justify-around p-6"></div>
+                        <div id="form_holder" class="flex justify-around w-[100%] pt-6 pb-6"></div>
                     </template>
                 </Card>
             </div>

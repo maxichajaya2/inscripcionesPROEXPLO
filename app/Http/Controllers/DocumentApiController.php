@@ -43,22 +43,22 @@ class DocumentApiController extends Controller
         if($request->ok()){
             $request =   json_decode($request);
             if(isset($request->numeroDocumento)){
-                $request->success = true;
+                $response = [ 'persona' => $request ,'status' => true];
             }else{
-                $request->success = false;
+                $response = ['status' => false];
             }
 
-            $json = $request;
         } else {
-            $json = ['status' => false];
+            $response = ['status' => false];
         }
-        return $json;
+        return $response;
     }
 
     public function getPersonData(Request $request) {
 
         $tipo_documento = TipoDocumento::find($request->id_tipo_documento);
         $persona = Persona::where('id_tipo_documento',$request->id_tipo_documento)->where('documento',$request->numero_documento)->first();
+        $status = true;
 
         if($persona){
             $persona->pais = $persona->direccion->id_pais;
@@ -72,27 +72,42 @@ class DocumentApiController extends Controller
 
         }else{
             $persona = new \stdClass();
+            $persona->id_tipo_documento = $request->id_tipo_documento;
+            $persona->documento = $request->numero_documento;
+            $persona->pais = 0;
+            $persona->departamento  = 0;
+            $persona->provincia  = 0;
+            $persona->distrito  = 0;
+            $persona->nacionalidad  = 0;
+            $persona->direccionPersona  = "";
+            $persona->cargo = "";
+            $persona->ocupacion = "";
+            $persona->celular = "";
+            $persona->correo = "";
+            $persona->sexo = 0;
+            $persona->nombres = "";
+            $persona->apellido_paterno = "";
+            $persona->apellido_materno = "";
             $persona->fecha_nacimiento = $this->now;
         }
 
-
         if($request->id_tipo_documento == 1 ){
-            if($request->id_tipo_documento == 1 ){
+
                 $api_persona = $this->getData('dni', $request->numero_documento);
 
-                $persona->nombres = $api_persona->nombres;
-                $persona->apellido_paterno = $api_persona->apellidoPaterno;
-                $persona->apellido_materno = $api_persona->apellidoMaterno;
+                if($api_persona['status']){
+                    $persona->nombres = $api_persona['persona']->nombres;
+                    $persona->apellido_paterno = $api_persona['persona']->apellidoPaterno;
+                    $persona->apellido_materno = $api_persona['persona']->apellidoMaterno;
+                }else{
+                    $status = false;
+                }
 
-            }
-        }else{
-            $persona->id_tipo_documento = $request->id_tipo_documento;
-            $persona->documento = $request->numero_documento;
         }
 
         $persona->es_socio = app(\App\Http\Controllers\WebServiceController::class)->validatePersonMember($tipo_documento->sie_code, $request->numero_documento);
 
-        return json_encode(['persona' => $persona]);
+        return json_encode(['persona' => $persona , 'status' => $status ]);
 
     }
 

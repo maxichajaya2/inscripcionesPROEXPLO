@@ -1,14 +1,14 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import colorbar from '@/Components/colorbar.vue';
-import { usePage , router } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
 import { ref, onMounted } from 'vue';
 import Dialog from 'primevue/dialog';
 import FormValidacionDoc from './FormValidacionDoc.vue';
 import FormInscription from './FormInscription.vue';
 import FormPayment from './FormPayment.vue';
 import Button from 'primevue/button';
-import Functions from '@/Functions';
+import { useToast } from 'primevue/usetoast';
 
 import Stepper from 'primevue/stepper';
 import StepList from 'primevue/steplist';
@@ -16,12 +16,11 @@ import StepPanels from 'primevue/steppanels';
 import StepPanel from 'primevue/steppanel';
 import Step from 'primevue/step';
 
-import Skeleton from 'primevue/skeleton';
-
 import "../../../css/inscripciones.css";
 
 const visible = ref(true);
-const page = usePage();
+const loading = ref(false);
+const toast = useToast();
 const props = defineProps({
     title : String,
     categorias : Object,
@@ -42,6 +41,7 @@ const childFormPayment = ref(null);
 const validate = async (value) =>{
     switch(value){
         case "Documento":
+            loading.value = true;
             formDataValidacionDoc.value  = childFormValidacionDoc.value.getValidacionDoc();
             if(formDataValidacionDoc.value.validate){
 
@@ -49,14 +49,21 @@ const validate = async (value) =>{
                         { id_tipo_documento: formDataValidacionDoc.value.formValidacionDoc.tipo_doc, numero_documento: formDataValidacionDoc.value.formValidacionDoc.documento } );
 
                 data_persona.value = response.data;
+                loading.value = false;
+                if(response.data.status == false){
+                    toast.add({ severity: 'error', summary: 'No existe el número de documento', life: 2000 });
+                    return false;
+                }
+
                 return true;
             }else{
+                loading.value = false;
                 return false;
             }
             break;
 
         case "Inscripcion":
-
+            loading.value = true;
             formDataInscription.value  = childFormInscription.value.getInscripcion();
 
             if(formDataInscription.value.validate){
@@ -70,10 +77,11 @@ const validate = async (value) =>{
                         { form: formDataInscription.value.formInscription } );
 
                 formDataPayment.value = form_payment.data.formulario;
-
+                loading.value = false;
                 return true;
 
             }else{
+                loading.value = false;
                 return false;
             }
             break;
@@ -110,14 +118,14 @@ const goStart = () => {
                         <StepPanel v-slot="{ activateCallback }" value="1">
                             <FormValidacionDoc ref="childFormValidacionDoc" />
                             <div class="flex p-6 justify-end">
-                                <Button label="Validar" icon="pi pi-arrow-right" iconPos="right" @click="async () => await validate('Documento') ? activateCallback('2'): false " class="bg-green-iimp border-rounded-full" />
+                                <Button label="Validar" icon="pi pi-arrow-right" iconPos="right" @click="async () => await validate('Documento') ? activateCallback('2'): false " class="bg-green-iimp border-rounded-full" :loading="loading" />
                             </div>
                         </StepPanel>
                         <StepPanel v-slot="{ activateCallback }" value="2" >
                             <FormInscription ref="childFormInscription" :data_persona="data_persona" :categorias="props.categorias"/>
                             <div class="flex justify-between p-6">
                                 <Button label="Regresar" severity="secondary" icon="pi pi-arrow-left" @click="activateCallback('1')" class="border-rounded-full" />
-                                <Button label="Registro" icon="pi pi-arrow-right" iconPos="right" @click="async () => await validate('Inscripcion') ? activateCallback('3'): false " class="bg-green-iimp border-rounded-full"  />
+                                <Button label="Registro" icon="pi pi-arrow-right" iconPos="right" @click="async () => await validate('Inscripcion') ? activateCallback('3'): false " class="bg-green-iimp border-rounded-full"  :loading="loading" />
                             </div>
                         </StepPanel>
                         <StepPanel v-slot="{ activateCallback }" value="3">

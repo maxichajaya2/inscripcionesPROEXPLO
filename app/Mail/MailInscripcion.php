@@ -29,7 +29,7 @@ class MailInscripcion extends Mailable
                 from: new Address('extemin@iimp.org.pe', config('app.event_name')),
                 subject: config('app.event_name') . " - Confirmación de inscripción",
                 cc: ['sipionibanez.d@gmail.com'],
-                bcc: ['diego.sipion@iimp.org.pe']
+                bcc: ['diego.sipion@iimp.org.pe', 'cobranzas@iimp.org.pe']
             );
 
         }else{

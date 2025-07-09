@@ -137,6 +137,15 @@ const loadDistritos = async () => {
 }
 
 watch(() => props.data_persona, (newVal, oldVal) => {
+    empresa.value = '';
+    credencial.value = '';
+    tipoDocumentoEmpresa.value = 2;
+    selectTipoDocPago.value = 1;
+    selectTipoPago.value = 3;
+    documentoEmpresa.value = '';
+    razonSocial.value = '';
+    direccionEmpresa.value = '';
+    responsable.value = '';
 
      if(typeof props.data_persona.persona != 'undefined' ){
         es_socio.value =  props.data_persona.persona.es_socio;
@@ -213,11 +222,38 @@ function setTipoDocPago(){
 function getInscripcion() {
 
     if( (Object.keys(errors._value).length > 0) ){
-        if(terminos.value != true) toast.add({ severity: 'error', summary: 'Es requerido aceptar los Términos y Condiciones', life: 2000 });
-        if(reglamento.value != true) toast.add({ severity: 'error', summary: 'Es requerido aceptar el Reglamento', life: 2000 });
         toast.add({ severity: 'error', summary: 'Complete todos los campos requeridos', life: 2000 });
         return { "validate" : false };
+    }
 
+    if(terminos.value != true){
+        toast.add({ severity: 'error', summary: 'Es requerido aceptar los Términos y Condiciones', life: 2000 });
+        return { "validate" : false };
+    }
+
+    if(reglamento.value != true){
+        toast.add({ severity: 'error', summary: 'Es requerido aceptar el Reglamento', life: 2000 });
+        return { "validate" : false };
+    }
+
+    if(typeof documentoEmpresa.value != 'undefined' ){
+        if( documentoEmpresa.value.length != 11 && tipoDocumentoEmpresa.value == 2 ){
+            toast.add({ severity: 'error', summary: 'El RUC debe ser de 11 caracteres', life: 2000 });
+            return { "validate" : false };
+        }
+
+        if( documentoEmpresa.value.length != 8 && tipoDocumentoEmpresa.value == 1 ){
+            toast.add({ severity: 'error', summary: 'El DNI debe ser de 8 caracteres', life: 2000 });
+            return { "validate" : false };
+        }
+    }else{
+        toast.add({ severity: 'error', summary: 'Debe ingresar un documento para facturación', life: 2000 });
+        return { "validate" : false };
+    }
+
+    if(props.data_persona.persona.nombres.length ==0 || props.data_persona.persona.apellido_paterno.length ==0){
+        props.data_persona.persona.nombres = nombres.value;
+        props.data_persona.persona.apellido_paterno = apellido_paterno.value;
     }
 
     return { "validate" : true,
@@ -472,7 +508,7 @@ defineExpose({
                                     </div>
 
                                     <div class="col-span-3 sm:col-span-1">
-                                            <label for="documentoEmpresa" class="">Número de Documento</label>
+                                            <label for="documentoEmpresa" class="">Número de Documento *</label>
                                             <InputGroup>
                                                 <InputText name="documentoEmpresa" v-model="documentoEmpresa" v-bind="documentoEmpresaAttrs"
                                                     class="border-green-iimp " @keypress="onlyNumberKey"  :maxlength="25" />
@@ -483,7 +519,7 @@ defineExpose({
                                     </div>
                                 </div>
                                 <div class="w-full sm:col-span-1">
-                                        <label for="razonSocial" class="">Nombre o Razón Social*</label>
+                                        <label for="razonSocial" class="">Nombre o Razón Social *</label>
                                         <InputText name="razonSocial" v-model="razonSocial" v-bind="razonSocialAttrs" class="w-full border-green-iimp"
                                         />
                                         <span class="font-normal text-red-600">{{ errors.razonSocial }}</span>
@@ -493,14 +529,14 @@ defineExpose({
 
                         <div class="grid gap-6 m-6 md:grid-cols-2" >
                             <div class="w-full sm:col-span-1">
-                                        <label for="direccionEmpresa" class="">Dirección Fiscal*</label>
+                                        <label for="direccionEmpresa" class="">Dirección Fiscal *</label>
                                         <InputText name="direccionEmpresa" v-model="direccionEmpresa" v-bind="direccionEmpresaAttrs" class="w-full border-green-iimp"
                                         />
                                         <span class="font-normal text-red-600">{{ errors.direccionEmpresa }}</span>
                             </div>
 
                             <div class="w-full sm:col-span-1">
-                                        <label for="responsable" class="">Responsable de Facturación*</label>
+                                        <label for="responsable" class="">Responsable de Facturación *</label>
                                         <InputText name="responsable" v-model="responsable" v-bind="responsableAttrs" class="w-full border-green-iimp"
                                         />
                                         <span class="font-normal text-red-600">{{ errors.responsable }}</span>
@@ -569,49 +605,28 @@ defineExpose({
                 <ul class="mt-5 mb-5 ml-10 font'bold list-decimal">
 
                         <li class ="font-bold">Aceptación de los Términos</li>
-                        <p class ="text-justify mb-4">Al adquirir una entrada para el evento, el asistente acepta expresamente los presentes
-                            Términos y Condiciones. El ingreso al recinto implica conformidad con todas las normas
-                            aquí descritas.</p>
+                        <p class ="text-justify mb-4">Al comprar una entrada e ingresar al evento, el comprador declara haber leído, comprendido y aceptado el Reglamento de Inscripciones publicado en la página web oficial del evento, así como todos los presentes términos establecidos.</p>
                         <li class ="font-bold">Uso de Imagen</li>
-                        <p class ="text-justify mb-4">Al adquirir una entrada para el evento, el asistente acepta expresamente los presentes
-                            Términos y Condiciones. El ingreso al recinto implica conformidad con todas las normas
-                            aquí descritas.</p>
+                        <p class ="text-justify mb-4">El asistente autoriza de forma gratuita, expresa, indefinida y sin limitación territorial, al Instituto de Ingenieros de Minas del Perú (IIMP), a registrar y difundir su imagen personal captada durante el evento, mediante fotografías, videos o cualquier otro medio audiovisual, en publicaciones impresas, medios digitales, redes sociales, transmisiones en vivo u otros formatos de comunicación institucional.</p>
                         <li class ="font-bold">Tratamiento de Datos Personales</li>
-                        <p class ="text-justify mb-4">Los datos personales proporcionados por el asistente al momento de adquirir la entrada
-                            serán tratados de conformidad con la Ley N° 29733 – Ley de Protección de Datos
-                            Personales, y su reglamento. Dichos datos serán utilizados exclusivamente para fines
-                            administrativos, de seguridad, estadísticos y de comunicación institucional.</p>
+                        <p class ="text-justify mb-4">Los datos personales proporcionados por el asistente al momento de adquirir la entrada serán tratados de conformidad con la Ley N° 29733 – Ley de Protección de Datos Personales, y su reglamento. Dichos datos serán utilizados exclusivamente para fines administrativos, de seguridad, estadísticos y de comunicación institucional.</p>
                         <li class ="font-bold">Reglas de Ingreso y Permanencia</li>
-                        <p class ="text-justify mb-4">Se requiere portar una entrada válida y un documento de identidad oficial para ingresar
-                            al evento. El IIMP se reserva el derecho de admisión y permanencia por motivos de
-                            seguridad, conducta inapropiada, o incumplimiento de normas. No se permite el ingreso
-                            con armas, objetos peligrosos, sustancias ilegales ni bebidas alcohólicas del exterior.</p>
+                        <p class ="text-justify mb-4">Se requiere portar una entrada válida y un documento de identidad oficial para ingresar al evento. El IIMP se reserva el derecho de admisión y permanencia por motivos de seguridad, conducta inapropiada, o incumplimiento de normas. No se permite el ingreso con armas, objetos peligrosos, sustancias ilegales ni bebidas alcohólicas del exterior.</p>
                         <li class ="font-bold">Uso de Drones</li>
-                        <p class ="text-justify mb-4">Por razones de seguridad, privacidad y cumplimiento normativo, queda prohibido el uso
-                            de drones o vehículos aéreos no tripulados (VANT) dentro del recinto del evento sin
-                            autorización previa y expresa del IIMP. Cualquier operación autorizada deberá cumplir
-                            con la normativa vigente de la Dirección General de Aeronáutica Civil (DGAC) del Perú.
-                            El incumplimiento de esta disposición puede ser sancionado con el retiro inmediato del
-                            evento y la denuncia correspondiente.</p>
-                        <li class ="font-bold">Reembolsos y Cancelación</li>
+                        <p class ="text-justify mb-4">Por razones de seguridad, privacidad y cumplimiento normativo, queda prohibido el uso de drones o vehículos aéreos no tripulados (VANT) dentro del recinto del evento sin autorización previa y expresa del IIMP. Cualquier operación autorizada deberá cumplir con la normativa vigente de la Dirección General de Aeronáutica Civil (DGAC) del Perú. El incumplimiento de esta disposición puede ser sancionado con el retiro inmediato del evento y la denuncia correspondiente.</p>
+                        <!--<li class ="font-bold">Reembolsos y Cancelación</li>
                         <p class ="text-justify mb-4">En caso de cancelación o modificación sustancial del evento por causas de fuerza
                             mayor, caso fortuito o razones operativas, el IIMP informará oportunamente a través de
                             sus canales oficiales. Las políticas de devolución o reprogramación se establecerán
-                            según corresponda en cada caso.</p>
+                            según corresponda en cada caso.</p>-->
                         <li class ="font-bold">Limitación de Responsabilidad</li>
-                        <p class ="text-justify mb-4">El IIMP no será responsable por pérdidas, robos, accidentes o daños personales
-                            ocurridos durante el evento, salvo aquellos que deriven de su actuación dolosa o
-                            negligente.</p>
+                        <p class ="text-justify mb-4">El IIMP no será responsable por pérdidas, robos, accidentes o daños personales ocurridos durante el evento, salvo aquellos que deriven de su actuación dolosa o negligente.</p>
                         <li class ="font-bold">Prohibición de Reventa</li>
-                        <p class ="text-justify mb-4">Está prohibida la reventa no autorizada de entradas. El IIMP no se responsabiliza por
-                            entradas adquiridas fuera de los canales oficiales de venta.</p>
+                        <p class ="text-justify mb-4">Está prohibida la reventa no autorizada de entradas. El IIMP no se responsabiliza por entradas adquiridas fuera de los canales oficiales de venta.</p>
                         <li class ="font-bold">Propiedad Intelectual</li>
-                        <p class ="text-justify mb-4">Las marcas, logotipos, contenidos y diseños vinculados al evento son propiedad del
-                            IIMP o de sus aliados estratégicos. Queda prohibido su uso sin autorización previa y por
-                            escrito.</p>
+                        <p class ="text-justify mb-4">Las marcas, logotipos, contenidos y diseños vinculados al evento son propiedad del IIMP o de sus aliados estratégicos. Queda prohibido su uso sin autorización previa y por escrito.</p>
                         <li class ="font-bold">Jurisdicción y Ley Aplicable</li>
-                        <p class ="text-justify">Estos Términos se rigen por las leyes de la República del Perú. Cualquier controversia
-                            será resuelta por los tribunales competentes de la ciudad de Lima.</p>
+                        <p class ="text-justify">Estos Términos se rigen por las leyes de la República del Perú. Cualquier controversia será resuelta por los tribunales competentes de la ciudad de Lima.</p>
 
                 </ul>
             </div>
