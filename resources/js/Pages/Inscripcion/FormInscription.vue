@@ -64,7 +64,7 @@ const { defineField, errors, handleSubmit, setValues, resetForm ,values  } = use
         apellido_paterno: yup.string().required('Apellido Paterno es requerido'),
         fecha_nacimiento: yup.mixed().required('Fecha de nacimiento es requerida'),
         sexo: yup.mixed().required('Sexo es requerido'),
-        correo: yup.string().required('Correo es requerido'),
+        correo: yup.string().required('Correo es requerido').email('Ingrese un Email válido'),
         celular: yup.string().required('Celular es requerido'),
         pais: yup.mixed().required('Pais es requerido'),
         nacionalidad: yup.mixed().required('Nacionalidad es requerida'),
@@ -77,7 +77,7 @@ const { defineField, errors, handleSubmit, setValues, resetForm ,values  } = use
         direccionEmpresa: yup.string().required('Dirección de empresa es requerida'),
         documentoEmpresa: yup.string().required('Documento de empresa es requerido'),
         responsable: yup.string().required('Nombre en responsable es requerido'),
-        correo_facturador: yup.string().required('Email de Facturación es requerido'),
+        correo_facturador: yup.string().required('Email de Facturación es requerido').email('Ingrese un Email válido'),
         selectTipoPago: yup.string().required('Tipo de pago es requerido'),
         selectTipoDocPago: yup.string().required('Seleccionar tipo de documento de pago es requerido'),
 
