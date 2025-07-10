@@ -28,16 +28,16 @@ class MailInscripcion extends Mailable
             return new Envelope(
                 from: new Address('extemin@iimp.org.pe', config('app.event_name')),
                 subject: config('app.event_name') . " - Confirmación de inscripción",
-                cc: ['sipionibanez.d@gmail.com'],
-                bcc: ['diego.sipion@iimp.org.pe', 'cobranzas@iimp.org.pe']
+                cc: ['sipionibanez.d@gmail.com',$this->inscripcion->facturacion->correo_facturador],
+                bcc: ['diego.sipion@iimp.org.pe']
             );
 
         }else{
             return new Envelope(
                 from: new Address('extemin@iimp.org.pe', config('app.event_name')),
                 subject: config('app.event_name') . " - Confirmación de inscripción",
-                cc: [ 'inscripciones@iimp.org.pe'],
-                bcc: ['diego.sipion@iimp.org.pe','sara.leyton@iimp.org.pe', 'cobranzas@iimp.org.pe']
+                cc: [ 'inscripciones@iimp.org.pe', 'cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
+                bcc: ['diego.sipion@iimp.org.pe','sara.leyton@iimp.org.pe']
             );
         }
 

@@ -26,6 +26,10 @@ const props = defineProps({
 });
 
 const es_socio = ref(false);
+const show_days = ref(false);
+const total = ref(0);
+let current_price = 0;
+
 const generos = computed(() => usePage().props.general.generos);
 const reglamento_inscripciones = computed(() => usePage().props.general.reglamento_inscripciones);
 const nacionalidades = computed(() => usePage().props.general.paises);
@@ -36,7 +40,8 @@ const departamentos = ref();
 const provincias = ref();
 const distritos = ref();
 const visible = ref(false);
-
+const days = { 'lun' : 'Lunes', 'mar' : 'Martes' , 'mie' : 'Miercoles' , 'jue' : 'Jueves' , 'vie' : 'Viernes'};
+const current_days = { 'lun' : false , 'mar' : false , 'mie' : false , 'jue' : false , 'vie' : false };
 
 const { defineField, errors, handleSubmit, setValues, resetForm ,values  } = useForm({
     validationSchema: yup.object({
@@ -72,6 +77,7 @@ const { defineField, errors, handleSubmit, setValues, resetForm ,values  } = use
         direccionEmpresa: yup.string().required('Dirección de empresa es requerida'),
         documentoEmpresa: yup.string().required('Documento de empresa es requerido'),
         responsable: yup.string().required('Nombre en responsable es requerido'),
+        correo_facturador: yup.string().required('Email de Facturación es requerido'),
         selectTipoPago: yup.string().required('Tipo de pago es requerido'),
         selectTipoDocPago: yup.string().required('Seleccionar tipo de documento de pago es requerido'),
 
@@ -102,10 +108,12 @@ const [reglamento, reglamentoAttrs] = defineField('reglamento');
 const [selectTipoDocPago, selectTipoDocPagoAttrs] = defineField('selectTipoDocPago');
 
 const [selected_categoria, selected_categoriaAttrs] = defineField('selected_categoria');
+const [selectedDays, selectedDaysAttrs] = defineField('selectedDays');
 
 const [documentoEmpresa, documentoEmpresaAttrs] = defineField('documentoEmpresa');
 const [razonSocial, razonSocialAttrs] = defineField('razonSocial');
 const [responsable, responsableAttrs] = defineField('responsable');
+const [correo_facturador, correo_facturadorAttrs] = defineField('correo_facturador');
 const [tipoDocumentoEmpresa, tipoDocumentoEmpresaAttrs] = defineField('tipoDocumentoEmpresa');
 const [direccionEmpresa, direccionEmpresaAttrs] = defineField('direccionEmpresa');
 const [selectTipoPago, selectTipoPagoAttrs] = defineField('selectTipoPago');
@@ -146,6 +154,7 @@ watch(() => props.data_persona, (newVal, oldVal) => {
     razonSocial.value = '';
     direccionEmpresa.value = '';
     responsable.value = '';
+    show_days.value = false;
 
      if(typeof props.data_persona.persona != 'undefined' ){
         es_socio.value =  props.data_persona.persona.es_socio;
@@ -155,13 +164,16 @@ watch(() => props.data_persona, (newVal, oldVal) => {
 
                 if(newVal.persona.es_socio && categoria.condicion == 'SO'){
                     selected_categoria.value = categoria.id;
+                    total.value = categoria.precio_disponible.valor;;
                 }
                 if(!newVal.persona.es_socio && categoria.condicion == 'NS'){
                     selected_categoria.value = categoria.id;
+                    total.value = categoria.precio_disponible.valor;;
                 }
             });
         }else{
             selected_categoria.value = props.categorias[0].id;
+            total.value = props.categorias[0].precio_disponible.valor;;
         }
 
         props.data_persona.persona.fecha_nacimiento = Functions.toLocalDateOnly(newVal.persona.fecha_nacimiento);
@@ -219,12 +231,40 @@ function setTipoDocPago(){
     }
 }
 
-function getInscripcion() {
+function changeCategory(id, precio){
+    current_price = precio;
+    if(selected_categoria.value != id){
+        if(id == 9 || id == 10){
 
-    if( (Object.keys(errors._value).length > 0) ){
-        toast.add({ severity: 'error', summary: 'Complete todos los campos requeridos', life: 2000 });
-        return { "validate" : false };
+            total.value = 0;
+            show_days.value = true;
+            selectedDays.value = [];
+
+            for (const key in current_days) {
+                current_days[key] = false;
+            }
+
+        }else{
+            total.value = precio;
+            show_days.value = false;
+        }
     }
+}
+
+function selectDays(id){
+    var cantidad_dias = 0;
+    current_days[id] = !current_days[id];
+    for (const key in current_days) {
+        if(current_days[key] ){
+            cantidad_dias++;
+        }
+    }
+
+    total.value = cantidad_dias * current_price;
+
+}
+
+function getInscripcion() {
 
     if(terminos.value != true){
         toast.add({ severity: 'error', summary: 'Es requerido aceptar los Términos y Condiciones', life: 2000 });
@@ -233,6 +273,11 @@ function getInscripcion() {
 
     if(reglamento.value != true){
         toast.add({ severity: 'error', summary: 'Es requerido aceptar el Reglamento', life: 2000 });
+        return { "validate" : false };
+    }
+
+    if( (Object.keys(errors._value).length > 0) ){
+        toast.add({ severity: 'error', summary: 'Complete todos los campos requeridos', life: 2000 });
         return { "validate" : false };
     }
 
@@ -248,6 +293,11 @@ function getInscripcion() {
         }
     }else{
         toast.add({ severity: 'error', summary: 'Debe ingresar un documento para facturación', life: 2000 });
+        return { "validate" : false };
+    }
+
+    if(total.value == 0){
+        toast.add({ severity: 'error', summary: 'El total debe ser mayor a 0', life: 2000 });
         return { "validate" : false };
     }
 
@@ -448,7 +498,7 @@ defineExpose({
                             <div v-if="categoria.control =='CV'" class="w-full">
                                 <div v-if="es_socio && (categoria.condicion == 'SO')" class="flex items-center w-full" >
                                     <RadioButton  v-model="selected_categoria" v-bind="selected_categoriaAttrs"
-                                                    name="selected_categoria" :value='categoria.id' class="ml-6 radio-green-iimp" />
+                                                    name="selected_categoria" :value='categoria.id' class="ml-6 radio-green-iimp" @click ="changeCategory(categoria.id, categoria.precio_disponible.valor)" />
                                     <div class="flex justify-between w-full ml-6 mr-6" >
                                         <label  class="ml-2">{{  categoria.nombre_es }}</label>
                                         <p class="text-yellow-price">USD  {{  categoria.precio_disponible.valor }}</p>
@@ -456,15 +506,15 @@ defineExpose({
                                 </div>
                                 <div v-if="!es_socio && (categoria.condicion == 'NS')" class="flex items-center  w-full" >
                                     <RadioButton  v-model="selected_categoria" v-bind="selected_categoriaAttrs"
-                                                    name="selected_categoria" :value='categoria.id' class="ml-6 radio-green-iimp" />
+                                                    name="selected_categoria" :value='categoria.id' class="ml-6 radio-green-iimp" @click ="changeCategory(categoria.id, categoria.precio_disponible.valor)" />
                                     <div class="flex justify-between w-full ml-6 mr-6" >
                                         <label  class="ml-2">{{  categoria.nombre_es }}</label>
                                         <p class="text-yellow-price">USD  {{  categoria.precio_disponible.valor }}</p>
                                     </div>
                                 </div>
-                                <div v-if="(categoria.condicion == 'VD')" class="flex items-center w-full" >
+                                <div v-if="(categoria.categoria == 'VD')" class="flex items-center w-full" >
                                     <RadioButton  v-model="selected_categoria" v-bind="selected_categoriaAttrs"
-                                                    name="selected_categoria" :value='categoria.id' class="ml-6 radio-green-iimp" />
+                                                    name="selected_categoria" :value='categoria.id' class="ml-6 radio-green-iimp" @click ="changeCategory(categoria.id, categoria.precio_disponible.valor)" />
                                     <div class="flex justify-between w-full ml-6 mr-6" >
                                         <label  class="ml-2">{{  categoria.nombre_es }}</label>
                                         <p class="text-yellow-price">USD  {{  categoria.precio_disponible.valor }}</p>
@@ -474,7 +524,7 @@ defineExpose({
                             <div v-else class="w-full">
                                 <div class="flex items-center w-full" >
                                     <RadioButton  v-model="selected_categoria" v-bind="selected_categoriaAttrs"
-                                                    name="selected_categoria" :value='categoria.id' class="ml-6 radio-green-iimp" />
+                                                    name="selected_categoria" :value='categoria.id' class="ml-6 radio-green-iimp" @click ="changeCategory(categoria.id, categoria.precio_disponible.valor)" />
                                     <div class="flex justify-between w-full ml-6 mr-6" >
                                         <label  class="ml-2">{{  categoria.nombre_es }}</label>
                                         <p class="text-yellow-price">USD  {{  categoria.precio_disponible.valor }}</p>
@@ -482,6 +532,27 @@ defineExpose({
                                 </div>
                             </div>
                         </div>
+
+                        <Card v-if="show_days" class="m-6">
+                            <template #content>
+                                <div class =" flex justify-around">
+                                    <div  v-for="(day, key) in days" :key="key">
+                                        <Checkbox :inputId="day"
+                                                :value="key"
+                                                v-model="selectedDays" v-bind="selectedDaysAttrs" name="selectedDays" @click ="selectDays(key)" />
+                                                <label :for="day" class =" pl-3">{{ day }}</label>
+                                    </div>
+                                </div>
+                                <div class="flex justify-around mt-6 w-[100%]">
+                                    <div class="text-yellow-price min-w-[150px] flex justify-between">
+                                        <label for="">TOTAL :</label>
+                                        <label for="">USD {{ total }}</label>
+                                    </div>
+                                </div>
+                            </template>
+
+                        </Card>
+
                     </template>
                 </Card>
             </div>
@@ -527,11 +598,11 @@ defineExpose({
 
                         </div>
 
-                        <div class="grid gap-6 m-6 md:grid-cols-2" >
+                        <div class="grid gap-6 m-6 md:grid-cols-3" >
                             <div class="w-full sm:col-span-1">
                                         <label for="direccionEmpresa" class="">Dirección Fiscal *</label>
                                         <InputText name="direccionEmpresa" v-model="direccionEmpresa" v-bind="direccionEmpresaAttrs" class="w-full border-green-iimp"
-                                        />
+                                        autocomplete="nueva-direccion" />
                                         <span class="font-normal text-red-600">{{ errors.direccionEmpresa }}</span>
                             </div>
 
@@ -540,6 +611,13 @@ defineExpose({
                                         <InputText name="responsable" v-model="responsable" v-bind="responsableAttrs" class="w-full border-green-iimp"
                                         />
                                         <span class="font-normal text-red-600">{{ errors.responsable }}</span>
+                            </div>
+
+                            <div class="w-full sm:col-span-1">
+                                        <label for="correo_facturador" class="">Email Facturación *</label>
+                                        <InputText name="correo_facturador" v-model="correo_facturador" v-bind="correo_facturadorAttrs" class="w-full border-green-iimp"
+                                        autocomplete="nuevo-email"/>
+                                        <span class="font-normal text-red-600">{{ errors.correo_facturador }}</span>
                             </div>
 
                         </div>
@@ -603,8 +681,28 @@ defineExpose({
             </div>
             <div class ="pt-[30px] pr-[30px] pl-[30px] pb-[20px] modal-custom-scroll">
                 <ul class="mt-5 mb-5 ml-10 font'bold list-decimal">
+                        <li class ="text-justify mb-4">Al comprar una entrada e ingresar al evento, el comprador declara haber leído,
+                        comprendido y aceptado el Reglamento de Inscripciones publicado en la
+                        página web oficial del evento, así como todos los presentes términos
+                        establecidos.</li>
+                        <li class ="text-justify mb-4">Se autoriza al IIMP a usar gratuitamente la imagen captada del asistente
+                        durante el evento, sin límite de tiempo ni territorio.</li>
+                        <li class ="text-justify mb-4">Los datos personales serán tratados conforme a la ley peruana para fines
+                        administrativos, de seguridad, estadísticos y de comunicación.</li>
+                        <li class ="text-justify mb-4">Para el ingreso y permanencia, se requiere entrada válida y documento de
+                        identidad. No se permite el ingreso con objetos peligrosos, drogas, armas ni
+                        alcohol externo.</li>
+                        <li class ="text-justify mb-4">Prohibido el uso de drones sin autorización expresa del IIMP; se debe cumplir
+                        con la normativa aérea vigente.</li>
+                        <li class ="text-justify mb-4">El IIMP no se responsabiliza por pérdidas, robos o accidentes, salvo en casos
+                        de negligencia o dolo.</li>
+                        <li class ="text-justify mb-4">No se permite la reventa no autorizada de entradas; el IIMP no responde por
+                        boletos comprados fuera de canales oficiales.</li>
+                        <li class ="text-justify mb-4">El uso de marcas, logos o contenidos del evento sin permiso está prohibido.</li>
+                        <li class ="text-justify mb-4">Cualquier conflicto se resolverá según las leyes peruanas, ante tribunales de
+                        Lima.</li>
 
-                        <li class ="font-bold">Aceptación de los Términos</li>
+                        <!--<li class ="font-bold">Aceptación de los Términos</li>
                         <p class ="text-justify mb-4">Al comprar una entrada e ingresar al evento, el comprador declara haber leído, comprendido y aceptado el Reglamento de Inscripciones publicado en la página web oficial del evento, así como todos los presentes términos establecidos.</p>
                         <li class ="font-bold">Uso de Imagen</li>
                         <p class ="text-justify mb-4">El asistente autoriza de forma gratuita, expresa, indefinida y sin limitación territorial, al Instituto de Ingenieros de Minas del Perú (IIMP), a registrar y difundir su imagen personal captada durante el evento, mediante fotografías, videos o cualquier otro medio audiovisual, en publicaciones impresas, medios digitales, redes sociales, transmisiones en vivo u otros formatos de comunicación institucional.</p>
@@ -614,11 +712,11 @@ defineExpose({
                         <p class ="text-justify mb-4">Se requiere portar una entrada válida y un documento de identidad oficial para ingresar al evento. El IIMP se reserva el derecho de admisión y permanencia por motivos de seguridad, conducta inapropiada, o incumplimiento de normas. No se permite el ingreso con armas, objetos peligrosos, sustancias ilegales ni bebidas alcohólicas del exterior.</p>
                         <li class ="font-bold">Uso de Drones</li>
                         <p class ="text-justify mb-4">Por razones de seguridad, privacidad y cumplimiento normativo, queda prohibido el uso de drones o vehículos aéreos no tripulados (VANT) dentro del recinto del evento sin autorización previa y expresa del IIMP. Cualquier operación autorizada deberá cumplir con la normativa vigente de la Dirección General de Aeronáutica Civil (DGAC) del Perú. El incumplimiento de esta disposición puede ser sancionado con el retiro inmediato del evento y la denuncia correspondiente.</p>
-                        <!--<li class ="font-bold">Reembolsos y Cancelación</li>
+                        <li class ="font-bold">Reembolsos y Cancelación</li>
                         <p class ="text-justify mb-4">En caso de cancelación o modificación sustancial del evento por causas de fuerza
                             mayor, caso fortuito o razones operativas, el IIMP informará oportunamente a través de
                             sus canales oficiales. Las políticas de devolución o reprogramación se establecerán
-                            según corresponda en cada caso.</p>-->
+                            según corresponda en cada caso.</p>
                         <li class ="font-bold">Limitación de Responsabilidad</li>
                         <p class ="text-justify mb-4">El IIMP no será responsable por pérdidas, robos, accidentes o daños personales ocurridos durante el evento, salvo aquellos que deriven de su actuación dolosa o negligente.</p>
                         <li class ="font-bold">Prohibición de Reventa</li>
@@ -626,7 +724,7 @@ defineExpose({
                         <li class ="font-bold">Propiedad Intelectual</li>
                         <p class ="text-justify mb-4">Las marcas, logotipos, contenidos y diseños vinculados al evento son propiedad del IIMP o de sus aliados estratégicos. Queda prohibido su uso sin autorización previa y por escrito.</p>
                         <li class ="font-bold">Jurisdicción y Ley Aplicable</li>
-                        <p class ="text-justify">Estos Términos se rigen por las leyes de la República del Perú. Cualquier controversia será resuelta por los tribunales competentes de la ciudad de Lima.</p>
+                        <p class ="text-justify">Estos Términos se rigen por las leyes de la República del Perú. Cualquier controversia será resuelta por los tribunales competentes de la ciudad de Lima.</p>-->
 
                 </ul>
             </div>

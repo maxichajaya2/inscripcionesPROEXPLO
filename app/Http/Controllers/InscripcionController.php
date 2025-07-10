@@ -66,13 +66,32 @@ class InscripcionController extends Controller
     }
 
     public function getForm(Request $request){
-
         $form_data = (Object)$request->form;
 
         $persona = Persona::where('id_tipo_documento',$form_data->id_tipo_documento)->where('documento',$form_data->documento)->firstorNew();
         $ocupacion = Ocupacion::whereRaw("name like '%". $form_data->cargo."%'")->where('isactive',true)->first();
         $categoria = CategoriaInscripcion::find($form_data->selected_categoria);
         $categoria->precio_disponible = $categoria->precio->where('fecha_inicio', '<=', $this->now)->where('fecha_fin', '>=', $this->now)->first();
+
+        $total = $categoria->precio_disponible->valor;
+        $dias = '{"lun":1,"mar":1,"mie":1,"jue":1,"vie":1}';
+
+        if(str_contains($categoria->nombre_es, 'DIA')){
+
+            $total = sizeof($form_data->selectedDays) * $categoria->precio_disponible->valor;
+            $dias = json_decode($dias, true);
+
+            foreach($dias as $key => $dia){
+                $dias[$key] = 0;
+            }
+
+            foreach($form_data->selectedDays as $selected_day){
+                $selected_day = strtolower($selected_day);
+                $dias[ $selected_day] = 1;
+            }
+
+            $dias = json_encode($dias);
+        }
 
         if(!$ocupacion){
             $ocupacion = 2795; //indice ocupacion no especificada o no se encuentra en el listado
@@ -133,7 +152,7 @@ class InscripcionController extends Controller
             $persona->update();
         }
 
-        $IGV = round( ($categoria->precio_disponible->valor * 0.18) , 2);
+        $IGV = round( ($total * 0.18) , 2);
 
         $facturacion = new Facturacion;
         $facturacion->id_tipo_servicio = 4; // servicio inscripciones perumin tabla tipo servicio
@@ -145,16 +164,17 @@ class InscripcionController extends Controller
         $facturacion->nombre_facturador = trim($form_data->razonSocial);
         $facturacion->direccion_facturador = trim( $form_data->direccionEmpresa);
         $facturacion->responsable_facturador = trim( $form_data->responsable);
+        $facturacion->correo_facturador = trim( $form_data->correo_facturador);
         $facturacion->id_comprador = $persona->id;
         $facturacion->tipo_comprador = 'persona';
         $facturacion->IGV = $IGV;
-        $facturacion->sub_total = floatval($categoria->precio_disponible->valor) - $IGV;
+        $facturacion->sub_total = floatval($total) - $IGV;
         $facturacion->detraccion = 0;
-        $facturacion->total = $categoria->precio_disponible->valor;
+        $facturacion->total = $total;
         $facturacion->observacion = trim($form_data->empresa);
         $facturacion->save();
 
-         $informacion = json_decode('{
+        $informacion = json_decode('{
                     "cuota": "1",
                     "valor" : "' . $facturacion->total . '",
                     "porcentaje" : "100",
@@ -179,8 +199,7 @@ class InscripcionController extends Controller
         $inscripcion->observacion = 'registro individual de persona, pendiente de pago';
         $inscripcion->credencial = trim($form_data->credencial);
         $inscripcion->autorizacion_datos = isset($form_data->auth) ? $form_data->auth : false;
-        $inscripcion->dias = '{"lun":1,"mar":1,"mie":1,"jue":1,"vie":1}';
-
+        $inscripcion->dias = $dias;
         $inscripcion->save();
 
         $form = app(\App\Http\Controllers\NiubizController::class)->getForm($persona, $inscripcion, $facturacion, url()->previous() , url()->current() );
@@ -195,7 +214,6 @@ class InscripcionController extends Controller
     }
 
     public function niubizPayment($id, $order){
-
         $facturacion = Facturacion::findOrFail($id);
         $cuota = $facturacion->cuotas->first();
 

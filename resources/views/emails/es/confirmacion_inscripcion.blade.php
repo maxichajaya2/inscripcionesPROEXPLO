@@ -1,4 +1,24 @@
 @php
+    $dias_nombres = [
+            'lun' => 'Lunes',
+            'mar' => 'Martes',
+            'mie' => 'Miercoles',
+            'jue' => 'Jueves',
+            'vie' => 'Viernes'
+            ];
+    $dias_seleccionados = [];
+
+    if(str_contains($inscripcion->categoria_inscripcion->nombre_es, 'DIA')){
+
+        $dias_inscripcion = json_decode($inscripcion->dias, true);
+
+        foreach($dias_inscripcion as $key => $dia){
+            if($dia){
+                $dias_seleccionados[] = $dias_nombres[$key];
+            }
+        }
+    }
+
     $digitos = substr( $pago->card_num ,-8);
 @endphp
 
@@ -64,6 +84,17 @@
                 <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">Categoria:</td>
                 <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">{{ $inscripcion->categoria_inscripcion->nombre_es }}</td>
             </tr>
+            @if(sizeof($dias_seleccionados) > 0)
+                <tr>
+                    <td style = "padding: 8px; border: 1px solid #e2e8f0; width:270px; margin: auto; text-align: center;" colspan="2">
+
+                            @foreach($dias_seleccionados as $dia)
+                                <input type="checkbox" checked style = "padding-right: 5px;" id ='{{ $dia }}'>
+                                <label for="" style = "padding-right: 10px;">{{ $dia }}</label>
+                            @endforeach
+                    </td>
+                </tr>
+            @endif
         </table>
 
         <h3 style="color: #2d3748;">FACTURACIÓN</h3>

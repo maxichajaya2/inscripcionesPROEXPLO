@@ -106,6 +106,36 @@ class WebServiceController extends Controller
             $tipo_pago = TipoPago::find($facturacion->id_tipo_pago);
             $inscripcion->categoria_inscripcion->precio_disponible = $inscripcion->categoria_inscripcion->precio->where('fecha_inicio', '<=', $this->now)->where('fecha_fin', '>=', $this->now)->first();
 
+            $data_ws =[];
+
+            if(str_contains($inscripcion->categoria_inscripcion->nombre_es, 'DIA')){
+                $data_ws['lun'] = 0;
+                $data_ws['mar'] = 0;
+                $data_ws['mie'] = 0;
+                $data_ws['jue'] = 0;
+                $data_ws['vie'] = 0;
+                $data_ws['ficha_condicion'] = '';
+
+                $dias = json_decode($inscripcion->dias, true);
+
+                foreach($dias as $key => $dia){
+                    if($dia){
+                        $data_ws[$key] = 1;
+                        if($data_ws['ficha_condicion'] == ''){
+                            $data_ws['ficha_condicion'] = strtoupper( substr($key ,0,2) );
+                        }
+                    }
+                }
+
+            }else{
+                $data_ws['lun'] = 1;
+                $data_ws['mar'] = 1;
+                $data_ws['mie'] = 1;
+                $data_ws['jue'] = 1;
+                $data_ws['vie'] = 1;
+                $data_ws['ficha_condicion'] = $inscripcion->categoria_inscripcion->condicion;
+            }
+
             $ws['ipAddress'] = config('app.valid_ip');
             $ws['accessKey'] = config('app.valid_pass');
             $ws['serviceKey'] = "ws";
@@ -113,7 +143,6 @@ class WebServiceController extends Controller
             $ws['id_event'] = config('app.id_evento');
             $ws['siecode_event'] = config('app.event_code');
 
-			$data_ws =[];
 			$data_ws['service'] = "inscripcion_register_update";
 			$data_ws['inscrito_idtipodocumento'] = $persona->tipoDocumento->sie_code;
 			$data_ws['inscrito_numerodocumento'] = $persona->documento;
@@ -138,20 +167,15 @@ class WebServiceController extends Controller
             $data_ws['ficha_tipo'] = 2; //inscripciones individuales
 			$data_ws['ficha_control'] = $inscripcion->categoria_inscripcion->control;
 			$data_ws['ficha_categoria'] = $inscripcion->categoria_inscripcion->categoria;
-			$data_ws['ficha_condicion'] = $inscripcion->categoria_inscripcion->condicion;
+
             $data_ws['simbolo_moneda'] = $inscripcion->categoria_inscripcion->precio_disponible->moneda->simbolo;;
 			$data_ws['evento_tipo'] = config('app.event_type');
 			$data_ws['evento_codigo'] = config('app.event_code') ;
 			$data_ws['ficha_id'] = $inscripcion->id;
-			$data_ws['lun'] = 1;
-			$data_ws['mar'] = 1;
-			$data_ws['mie'] = 1;
-			$data_ws['jue'] = 1;
-			$data_ws['vie'] = 1;
 
 			$ws['data'] = $data_ws;
 
-			$response = $this->sendWS($url, json_encode($ws));
+			$response = $this->sendWS($url, json_encode($ws)); dd($response);
 
 			if( strpos( $response->Message, "Success") !== false ){
 				return ['status' => true ];
