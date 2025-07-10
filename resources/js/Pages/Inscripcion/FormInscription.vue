@@ -234,7 +234,7 @@ function setTipoDocPago(){
 function changeCategory(id, precio){
     current_price = precio;
     if(selected_categoria.value != id){
-        if(id == 9 || id == 10){
+        if(id == 12 || id == 13){
 
             total.value = 0;
             show_days.value = true;
