@@ -175,7 +175,7 @@ class WebServiceController extends Controller
 
 			$ws['data'] = $data_ws;
 
-			$response = $this->sendWS($url, json_encode($ws)); dd($response);
+			$response = $this->sendWS($url, json_encode($ws));
 
 			if( strpos( $response->Message, "Success") !== false ){
 				return ['status' => true ];

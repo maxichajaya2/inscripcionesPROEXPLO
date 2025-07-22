@@ -56,6 +56,11 @@ class DocumentApiController extends Controller
 
     public function getPersonData(Request $request) {
 
+        if ( !str_contains($request->headers->get('referer'), 'registro') || (csrf_token() === null ) ){
+            abort(403, 'Unauthorized POST request.');
+            exit;
+        }
+
         $tipo_documento = TipoDocumento::find($request->id_tipo_documento);
         $persona = Persona::where('id_tipo_documento',$request->id_tipo_documento)->where('documento',$request->numero_documento)->first();
         $status = true;

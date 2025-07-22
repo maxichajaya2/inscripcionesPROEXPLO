@@ -15,6 +15,7 @@ import * as yup from 'yup';
 import { usePage, router } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import Functions from '@/Functions';
+import FileUpload from 'primevue/fileupload';
 
 import "../../../css/inscripciones.css";
 
@@ -27,7 +28,10 @@ const props = defineProps({
 
 const es_socio = ref(false);
 const show_days = ref(false);
+const show_document = ref(false);
 const total = ref(0);
+const src = ref(null);
+const maxSize = 520000;
 let current_price = 0;
 
 const generos = computed(() => usePage().props.general.generos);
@@ -118,6 +122,8 @@ const [tipoDocumentoEmpresa, tipoDocumentoEmpresaAttrs] = defineField('tipoDocum
 const [direccionEmpresa, direccionEmpresaAttrs] = defineField('direccionEmpresa');
 const [selectTipoPago, selectTipoPagoAttrs] = defineField('selectTipoPago');
 
+const [uploadDocument, uploadDocumentAttrs] = defineField('uploadDocument');
+
 const today = new Date();
 
 onMounted(() => {
@@ -144,6 +150,28 @@ const loadDistritos = async () => {
     distritos.value = await Functions.loadDistritos(pais.value, departamento.value, provincia.value).then(data => { return data });
 }
 
+const onFileSelect = (event) => {
+  const file = event.files[0];
+  uploadDocument.value = event.files[0];
+
+  if (file.size > maxSize) {
+    toast.add({ severity: 'error', summary: `"${file.name}" supera el tamaño máximo de 500 KB.`, life: 2000 });
+    return;
+  }
+
+  const reader = new FileReader();
+
+    reader.onload = async (e) => {
+        if( file.type == "application/pdf"){
+            src.value = '/images/pdf-file-document.png';
+        }else{
+            src.value = e.target.result;
+        }
+    };
+
+    reader.readAsDataURL(file);
+}
+
 watch(() => props.data_persona, (newVal, oldVal) => {
     empresa.value = '';
     credencial.value = '';
@@ -155,22 +183,34 @@ watch(() => props.data_persona, (newVal, oldVal) => {
     direccionEmpresa.value = '';
     responsable.value = '';
     show_days.value = false;
+    show_document.value = false;
+    src.value = null;
 
-     if(typeof props.data_persona.persona != 'undefined' ){
+    if(typeof props.data_persona.persona != 'undefined' ){
         es_socio.value =  props.data_persona.persona.es_socio;
 
         if(props.categorias[0].control == 'CV'){
-            props.categorias.forEach(categoria => {
+            for(var i = 0; props.categorias.length; i++){
 
-                if(newVal.persona.es_socio && categoria.condicion == 'SO'){
-                    selected_categoria.value = categoria.id;
-                    total.value = categoria.precio_disponible.valor;;
+                if(newVal.persona.es_socio && props.categorias[i].condicion == 'SO'){
+                    selected_categoria.value = props.categorias[i].id;
+                    total.value = props.categorias[i].precio_disponible.valor;
+                    break;
                 }
-                if(!newVal.persona.es_socio && categoria.condicion == 'NS'){
-                    selected_categoria.value = categoria.id;
-                    total.value = categoria.precio_disponible.valor;;
+                if(!newVal.persona.es_socio && props.categorias[i].condicion == 'NS'){
+                    selected_categoria.value = props.categorias[i].id;
+                    total.value = props.categorias[i].precio_disponible.valor;
+                    break;
                 }
-            });
+                if (props.categorias[i].condicion != 'SO' && props.categorias[i].condicion != 'NS'){
+                    selected_categoria.value = props.categorias[i].id;
+                    total.value = props.categorias[i].precio_disponible.valor;
+                    if(props.categorias[i].requiere_documento){
+                        show_document.value = true;
+                    }
+                    break;
+                }
+            }
         }else{
             selected_categoria.value = props.categorias[0].id;
             total.value = props.categorias[0].precio_disponible.valor;;
@@ -185,7 +225,7 @@ watch(() => props.data_persona, (newVal, oldVal) => {
         loadDistritos()
         setValues(newVal.persona );
 
-     }
+    }
 });
 
 const onlyNumberKey = (event) => {
@@ -261,7 +301,6 @@ function selectDays(id){
     }
 
     total.value = cantidad_dias * current_price;
-
 }
 
 function getInscripcion() {
@@ -298,6 +337,11 @@ function getInscripcion() {
 
     if(total.value == 0){
         toast.add({ severity: 'error', summary: 'El total debe ser mayor a 0', life: 2000 });
+        return { "validate" : false };
+    }
+
+    if(show_document.value == true  && uploadDocument.value === null){
+        toast.add({ severity: 'error', summary: 'Debe elegir un documento para su inscripción', life: 2000 });
         return { "validate" : false };
     }
 
@@ -512,7 +556,7 @@ defineExpose({
                                         <p class="text-yellow-price">USD  {{  categoria.precio_disponible.valor }}</p>
                                     </div>
                                 </div>
-                                <div v-if="(categoria.categoria == 'VD')" class="flex items-center w-full" >
+                                <div v-if="(categoria.condicion != 'SO' && categoria.condicion != 'NS')" class="flex items-center w-full" >
                                     <RadioButton  v-model="selected_categoria" v-bind="selected_categoriaAttrs"
                                                     name="selected_categoria" :value='categoria.id' class="ml-6 radio-green-iimp" @click ="changeCategory(categoria.id, categoria.precio_disponible.valor)" />
                                     <div class="flex justify-between w-full ml-6 mr-6" >
@@ -549,6 +593,23 @@ defineExpose({
                                         <label for="">USD {{ total }}</label>
                                     </div>
                                 </div>
+                            </template>
+
+                        </Card>
+
+                        <Card v-if="show_document" class="m-6">
+                            <template #content>
+                                <div class="flex justify-around mb-5">
+                                    <img v-if="src" :src="src" alt="Image" class="shadow-md rounded-l max-w-[350px] max-h-[350px]"/>
+                                </div>
+                                    <FileUpload ref="fileupload" mode="basic"  class="p-button-outlined text-green-iimp"
+                                    :auto="true"
+                                    customUpload
+                                    :chooseLabel="'Elegir Documento'"
+                                    :uploadLabel="'Subir Imagen'"
+                                    @select="onFileSelect"
+                                    accept="image/jpg, image/jpeg, image/png, application/pdf"
+                                    name="uploadDocument" v-model="uploadDocument" v-bind="uploadDocumentAttrs"  />
                             </template>
 
                         </Card>

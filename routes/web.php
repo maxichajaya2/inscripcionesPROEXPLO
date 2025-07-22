@@ -37,6 +37,8 @@ Route::get('/registro/convencionista', [InscripcionController::class, 'convencio
 Route::get('/registro/docente', [InscripcionController::class, 'docente'])->name('inscripcion.docente');
 Route::get('/registro/estudiante', [InscripcionController::class, 'estudiante'])->name('inscripcion.estudiante');
 Route::get('/registro/extemin', [InscripcionController::class, 'extemin'])->name('inscripcion.extemin');
+Route::get('/registro/asociado_sme', [InscripcionController::class, 'asociado_sme'])->name('inscripcion.asociado_sme');
+
 
 Route::post('/pago/getform', [InscripcionController::class, 'getForm'])->name('niubiz.getform');
 Route::post('/pago/getform/niubiz/{id}/{order}', [InscripcionController::class, 'niubizPayment'])->where('id','[0-9]+');

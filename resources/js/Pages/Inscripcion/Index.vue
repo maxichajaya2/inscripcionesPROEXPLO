@@ -33,19 +33,19 @@ import "../../../css/inscripciones.css";
                                 <GreenArrowRight class="block w-auto" />
                             </div>
                         </a>
-                        <a href="https://forms.gle/vBeHVVkHT2RdcPGi7" target ="_blank" class = "container-visitor-border max-w-[400px] cursor-pointer border-green-iimp" >
+                        <a href="/registro/docente" class = "container-visitor-border max-w-[400px] cursor-pointer border-green-iimp" >
                             <div class = "container-title-visitor">
                                 <h5>Docente</h5>
                                 <GreenArrowRight class="block w-auto" />
                             </div>
                         </a>
-                        <a href="https://forms.gle/vBeHVVkHT2RdcPGi7" target ="_blank" class = "container-visitor-border max-w-[400px] cursor-pointer border-green-iimp" >
+                        <a href="/registro/estudiante" class = "container-visitor-border max-w-[400px] cursor-pointer border-green-iimp" >
                             <div class = "container-title-visitor">
                                 <h5>Estudiante</h5>
                                 <GreenArrowRight class="block w-auto" />
                             </div>
                         </a>
-                        <a href="https://forms.gle/vBeHVVkHT2RdcPGi7" target ="_blank" class = "container-visitor-border max-w-[400px] cursor-pointer border-green-iimp">
+                        <a href="/registro/asociado_sme" class = "container-visitor-border max-w-[400px] cursor-pointer border-green-iimp">
                             <div class = "container-title-visitor">
                                 <h5>Asociado SME</h5>
                                 <GreenArrowRight class="block w-auto" />

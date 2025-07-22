@@ -31,7 +31,7 @@ class InscripcionController extends Controller
     }
 
     public function convencionista(){
-        $categorias = CategoriaInscripcion::whereRaw("nombre_es like '%CONVENCIONISTA%'")->where('es_beneficio',false)->orderBy('orden_es','ASC')->get();
+        $categorias = CategoriaInscripcion::whereRaw("nombre_es like '%CONVENCIONISTA%'")->where('es_beneficio',false)->where('isactive',true)->orderBy('orden_es','ASC')->get();
 
         foreach($categorias as $categoria){
             $categoria->precio_disponible = $categoria->precio->where('fecha_inicio', '<=', $this->now)->where('fecha_fin', '>=', $this->now)->first();
@@ -49,7 +49,7 @@ class InscripcionController extends Controller
     }
 
     public function extemin(){
-        $categorias = CategoriaInscripcion::whereRaw("nombre_es like '%EXTEMIN%'")->where('es_beneficio',false)->orderBy('orden_es','ASC')->get();
+        $categorias = CategoriaInscripcion::whereRaw("nombre_es like '%EXTEMIN%'")->where('es_beneficio',false)->where('isactive',true)->orderBy('orden_es','ASC')->get();
 
         foreach($categorias as $categoria){
             $categoria->precio_disponible = $categoria->precio->where('fecha_inicio', '<=', $this->now)->where('fecha_fin', '>=', $this->now)->first();
@@ -65,7 +65,61 @@ class InscripcionController extends Controller
         return Inertia::render('Inscripcion/Inicio', compact('categorias','title','modal_texts'));
     }
 
+    public function docente(){
+        $categorias = CategoriaInscripcion::whereRaw("nombre_es like '%DOCENTE%'")->where('es_beneficio',false)->where('isactive',true)->orderBy('orden_es','ASC')->get();
+
+        foreach($categorias as $categoria){
+            $categoria->precio_disponible = $categoria->precio->where('fecha_inicio', '<=', $this->now)->where('fecha_fin', '>=', $this->now)->first();
+        }
+
+        $title = "Docente";
+
+        $modal_texts = [
+            "Docente Universitario" => "Tarifa preferencial para docentes universitarios de pregrado a tiempo completo. El participante que se inscriba en esta categoría tendrá acceso a las actividades del programa durante la semana del evento y visita a la Exhibición Tecnológica Minera - EXTEMIN. Para acceder a esta tarifa es obligatorio presentar una carta de la institución donde labora. (No aplica a docentes de post grado)."
+        ];
+
+        return Inertia::render('Inscripcion/Inicio', compact('categorias','title','modal_texts'));
+    }
+
+    public function estudiante(){
+        $categorias = CategoriaInscripcion::whereRaw("nombre_es like '%ESTUDIANTE%'")->where('es_beneficio',false)->where('isactive',true)->orderBy('orden_es','ASC')->get();
+
+        foreach($categorias as $categoria){
+            $categoria->precio_disponible = $categoria->precio->where('fecha_inicio', '<=', $this->now)->where('fecha_fin', '>=', $this->now)->first();
+        }
+
+        $title = "Estudiante";
+
+        $modal_texts = [
+            "Estudiante Universitario" => "Beneficio preferencial para los estudiantes universitarios que cursen el 10° ciclo. Para acceder a esta tarifa es obligatorio presentar una constancia de pertenencia al quinto superior. El participante que se inscriba en esta categoría tendrá acceso a las actividades del programa durante la semana del evento y visita a la Exhibición Tecnológica Minera - EXTEMIN. Capacidad limitada: 300."
+        ];
+
+        return Inertia::render('Inscripcion/Inicio', compact('categorias','title','modal_texts'));
+    }
+
+    public function asociado_sme(){
+        $categorias = CategoriaInscripcion::whereRaw("nombre_es like '%SME%'")->where('es_beneficio',false)->where('isactive',true)->orderBy('orden_es','ASC')->get();
+
+        foreach($categorias as $categoria){
+            $categoria->precio_disponible = $categoria->precio->where('fecha_inicio', '<=', $this->now)->where('fecha_fin', '>=', $this->now)->first();
+        }
+
+        $title = "Asociado SME";
+
+        $modal_texts = [
+            "Estudiante Universitario" => "Beneficio exclusivo para los Asociados del SME (al día en su cuota del año en curso). Permite el acceso a todas las actividades del programa durante la semana del evento y visita a la Exhibición Tecnológica Minera - EXTEMIN."
+        ];
+
+        return Inertia::render('Inscripcion/Inicio', compact('categorias','title','modal_texts'));
+    }
+
     public function getForm(Request $request){
+
+        if ( !str_contains($request->headers->get('referer'), 'registro') || (csrf_token() === null ) ){
+            abort(403, 'Unauthorized POST request.');
+            exit;
+        }
+
         $form_data = (Object)$request->form;
 
         $persona = Persona::where('id_tipo_documento',$form_data->id_tipo_documento)->where('documento',$form_data->documento)->firstorNew();
@@ -200,6 +254,26 @@ class InscripcionController extends Controller
         $inscripcion->credencial = trim($form_data->credencial);
         $inscripcion->autorizacion_datos = isset($form_data->auth) ? $form_data->auth : false;
         $inscripcion->dias = $dias;
+
+        if($categoria->requiere_documento){
+
+            $document = $form_data->uploadDocument;
+
+            if (!is_null($document)) {
+
+                $documentName = 'inscripcion_'.time() . '.' . $document->getClientOriginalExtension();
+                $inscripcion->document_type = $document->getClientMimeType();
+
+                if(\App::environment('production')){
+                    $inscripcion->document_path = "https://inscripciones.perumin.com/storage/documents/" . $documentName;
+                }else{
+                    $inscripcion->document_path = "http://127.0.0.1:8000/storage/documents/" . $documentName;
+                }
+
+                $document->move( storage_path('app/public/documents'), $documentName);
+            }
+        }
+
         $inscripcion->save();
 
         $form = app(\App\Http\Controllers\NiubizController::class)->getForm($persona, $inscripcion, $facturacion, url()->previous() , url()->current() );
@@ -332,7 +406,6 @@ class InscripcionController extends Controller
             $persona = Persona::find($inscripcion->id_persona);
 
             $response= app(\App\Http\Controllers\WebServiceController::class)->wsInscripcion_create_update($facturacion, $persona, $inscripcion , $niubiz );
-
             //$response = ['status' => true];
 
             if($response['status']){

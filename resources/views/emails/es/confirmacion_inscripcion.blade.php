@@ -69,10 +69,6 @@
                 <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">{{ $inscripcion->facturacion->observacion }}</td>
             </tr>
             <tr>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">Cargo:</td>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">{{ $inscripcion->persona->ocupacion->name }}</td>
-            </tr>
-            <tr>
                 <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">Autorización para el tratamiento de Datos Personales:</td>
                 <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">{{ $inscripcion->autorizacion_datos ? "Si" : "No" }}</td>
             </tr>

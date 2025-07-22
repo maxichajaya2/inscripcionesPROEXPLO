@@ -74,7 +74,7 @@ const validate = async (value) =>{
                 });
 
                 const form_payment = await axios.post( '/pago/getform',
-                        { form: formDataInscription.value.formInscription } );
+                        { form: formDataInscription.value.formInscription }  ,{ headers: {'Content-Type': 'multipart/form-data' } });
 
                 formDataPayment.value = form_payment.data.formulario;
                 loading.value = false;
