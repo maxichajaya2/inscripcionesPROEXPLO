@@ -253,6 +253,7 @@ class InscripcionController extends Controller
         $inscripcion->observacion = 'registro individual de persona, pendiente de pago';
         $inscripcion->credencial = trim($form_data->credencial);
         $inscripcion->autorizacion_datos = isset($form_data->auth) ? $form_data->auth : false;
+        $inscripcion->texto_cargo = $form_data->cargo;
         $inscripcion->dias = $dias;
 
         if($categoria->requiere_documento){

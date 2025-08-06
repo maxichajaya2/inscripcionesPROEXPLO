@@ -106,6 +106,12 @@ class WebServiceController extends Controller
             $tipo_pago = TipoPago::find($facturacion->id_tipo_pago);
             $inscripcion->categoria_inscripcion->precio_disponible = $inscripcion->categoria_inscripcion->precio->where('fecha_inicio', '<=', $this->now)->where('fecha_fin', '>=', $this->now)->first();
 
+            if( ($persona->id_ocupacion == 2795) && ( strlen($inscripcion->texto_cargo)) > 0 ){ //indice ocupacion no especificada o no se encuentra en el listado
+                $cargo = $inscripcion->texto_cargo;
+            }else {
+                $cargo = $persona->ocupacion->name;
+            }
+
             $data_ws =[];
 
             if(str_contains($inscripcion->categoria_inscripcion->nombre_es, 'DIA')){
@@ -148,7 +154,7 @@ class WebServiceController extends Controller
 			$data_ws['inscrito_numerodocumento'] = $persona->documento;
 
             $data_ws['inscrito_empresa'] = $facturacion->observacion;
-			$data_ws['inscrito_cargo'] = $persona->ocupacion->name;
+			$data_ws['inscrito_cargo'] = $cargo;
 			$data_ws['auth_datos'] = $inscripcion->autorizacion_datos > 0 ? 1 : 0;
 			$data_ws['pago_estado'] = "PAGADO";
 			$data_ws['pago_tipo'] = $tipo_pago->siecode;
@@ -168,7 +174,7 @@ class WebServiceController extends Controller
 			$data_ws['ficha_control'] = $inscripcion->categoria_inscripcion->control;
 			$data_ws['ficha_categoria'] = $inscripcion->categoria_inscripcion->categoria;
 
-            $data_ws['simbolo_moneda'] = $inscripcion->categoria_inscripcion->precio_disponible->moneda->simbolo;;
+            $data_ws['simbolo_moneda'] = $inscripcion->categoria_inscripcion->precio_disponible->moneda->simbolo;
 			$data_ws['evento_tipo'] = config('app.event_type');
 			$data_ws['evento_codigo'] = config('app.event_code') ;
 			$data_ws['ficha_id'] = $inscripcion->id;
