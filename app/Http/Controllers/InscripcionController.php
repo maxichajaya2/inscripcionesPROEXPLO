@@ -201,7 +201,7 @@ class InscripcionController extends Controller
 
         $send = app(\App\Http\Controllers\WebServiceController::class)->wsPersona_create_update($persona);
 
-        if(strlen($persona->sie_code)== 0){
+        if(strlen($persona->sie_code) < 5){
             $persona->sie_code = $send['sie_code'];
             $persona->update();
         }
