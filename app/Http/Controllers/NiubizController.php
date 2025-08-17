@@ -20,8 +20,10 @@ class NiubizController extends Controller
     }
 
     public function filterResponse($data){
-		$info=[];
+        $info=[];
+        $info['transactionId'] = '';
 		$data = json_decode($data);
+
                 if (isset($data->errorCode)) {
                   $info['errorcode']=$data->errorCode;
                   $info['ACTION_CODE']=$data->data->ACTION_CODE;

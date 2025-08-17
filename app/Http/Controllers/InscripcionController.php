@@ -360,19 +360,20 @@ class InscripcionController extends Controller
         $niubiz = new Niubiz;
 
         if (isset($filtered_response['errorcode'])||is_null($filtered_response['transactionId']) || $filtered_response['transactionId']=="") {
-                dd('Error en el pago');
-				// no ejecutadov
-				/*$xx=$modelweb->asignarpago($purchaseNumber,$respuesta,'FALLIDO');
-				$motivodeneg= isset($respuesta->data->ACTION_DESCRIPTION) ? $respuesta->data->ACTION_DESCRIPTION: "Operacion Fallida";
-				$ejecutado=0;
 
-				if($language =="esp"){
-					$msg = "Error en el pago, descripcion: ". $motivodeneg.", numero de ficha: ".$id_ficha. ",";
-				}else{
-					$msg = "Error in payment, description: ". $motivodeneg .", register number: ".$id_ficha;
-				}
+                $niubiz->num_orden = $order;
+                $niubiz->codigo_tipo_pago = 'niubiz_tarjeta';
+                $niubiz->estado = $filtered_response['errorcode'];
+                $niubiz->monto = $facturacion->total;
+                $niubiz->id_evento = config('app.id_evento');
+                $niubiz->id_pasarela = $pasarela->id;
+                $niubiz->id_compra = $cuota->id;
+                $niubiz->detalle = $filtered_response['ACTION_DESCRIPTION'];
+                $niubiz->fecha = "-";
+                $niubiz->hora = "-";
+                $niubiz->save();
 
-				header('Location: ' . $base_urlreturn.'?error='.$msg ); exit();*/
+                return redirect('/pago/error/'. $niubiz->id);
 		}else{
 
             $niubiz->num_orden = $order;

@@ -31,6 +31,7 @@ const show_days = ref(false);
 const show_document = ref(false);
 const total = ref(0);
 const src = ref(null);
+const block_direction = ref(false);
 const maxSize = 520000;
 let current_price = 0;
 
@@ -150,6 +151,51 @@ const loadDistritos = async () => {
     distritos.value = await Functions.loadDistritos(pais.value, departamento.value, provincia.value).then(data => { return data });
 }
 
+const getEmpresaData = async () => {
+    razonSocial.value = '';
+    direccionEmpresa.value = '';
+
+            try {
+                const empresa = await Functions.getEmpresaData(documentoEmpresa.value, tipoDocumentoEmpresa.value);
+                //console.log(empresa);console.log(empresa.status); console.log(empresa.empresa.direccionEmpresa);
+                if (empresa) {
+                    // Autocompleta TODOS los campos desde la BD
+                    razonSocial.value = empresa.empresa.nombre || '';
+                    direccionEmpresa.value = empresa.empresa.direccionEmpresa || '';
+                    console.log(1);
+                    if(empresa.status){
+                        if(tipoDocumentoEmpresa.value == 2){ //ruc
+                            block_direction.value = true;
+                        }
+                        toast.add({
+                            severity: 'success',
+                            summary: 'Datos Encontrados',
+                            life: 2500
+                        })
+
+                    }else{
+                        toast.add({
+                            severity: 'warn',
+                            summary: 'No encontrado',
+                            detail: 'No se encontraron datos. Por favor, complete los campos manualmente.',
+                            life: 3000
+                        })
+                    }
+
+                    return;
+                }
+            } catch (e) {
+                console.log(e);
+                toast.add({
+                            severity: 'warn',
+                            summary: 'No encontrado',
+                            detail: 'Error en la consulta, complete los campos manualmente.',
+                            life: 3000
+                        })
+            }
+
+}
+
 const onFileSelect = (event) => {
   const file = event.files[0];
   uploadDocument.value = event.files[0];
@@ -229,6 +275,7 @@ watch(() => props.data_persona, (newVal, oldVal) => {
 });
 
 const onlyNumberKey = (event) => {
+    block_direction.value = false;
 
     if( tipoDocumentoEmpresa.value == 2 || tipoDocumentoEmpresa.value == 1 ){
         const charCode = event.charCode ? event.charCode : event.keyCode
@@ -263,6 +310,7 @@ function setTipoDocPago(){
     razonSocial.value = "";
     direccionEmpresa.value = "";
     responsable.value = "";
+    block_direction.value = false;
 
     if(tipoDocumentoEmpresa.value == 2){ //ruc
         selectTipoDocPago.value = 1; // factura
@@ -645,7 +693,7 @@ defineExpose({
                                                 <InputText name="documentoEmpresa" v-model="documentoEmpresa" v-bind="documentoEmpresaAttrs"
                                                     class="border-green-iimp " @keypress="onlyNumberKey"  :maxlength="25" />
                                                 <Button icon="pi pi-search"
-                                                    class="border-green-iimp bg-green-iimp" @click=""  style = "display:none;"/>
+                                                    class="border-green-iimp bg-green-iimp" @click="getEmpresaData"  :disabled="!documentoEmpresa"/>
                                             </InputGroup>
                                             <span class="font-normal text-red-600">{{ errors.documentoEmpresa }}</span>
                                     </div>
@@ -663,7 +711,7 @@ defineExpose({
                             <div class="w-full sm:col-span-1">
                                         <label for="direccionEmpresa" class="">Dirección Fiscal *</label>
                                         <InputText name="direccionEmpresa" v-model="direccionEmpresa" v-bind="direccionEmpresaAttrs" class="w-full border-green-iimp"
-                                        autocomplete="nueva-direccion" />
+                                        autocomplete="nueva-direccion" :readonly="block_direction" />
                                         <span class="font-normal text-red-600">{{ errors.direccionEmpresa }}</span>
                             </div>
 

@@ -101,6 +101,26 @@ const loadDistritos = async (id_pais, id_departamento, id_provincia) => {
     return request;
 }
 
+const getEmpresaData = async (documento, tipo_doc ) => {
+    const request = await axios.post('/api/getempresa', {
+        tipo_doc,
+        documento
+    })
+    .then(response => {
+        if (response.status != 200) {
+            throw new Error('Ocurrió un error al obtener los datos.');
+        }
+        return response;
+    })
+    .then(data => {
+        return data.data
+    })
+    .catch(error => {
+        console.error('Error:', error.message);
+    });
+    return request;
+}
+
 const openFile = (file) => {
     window.open('https://ecommerce.perumin.com/storage/' + file, '_blank');
 }
@@ -173,4 +193,5 @@ export default {
     hasPermission,
     getCartCurrency,
     toLocalDateOnly,
+    getEmpresaData,
 }

@@ -43,9 +43,11 @@ Route::get('/registro/asociado_sme', [InscripcionController::class, 'asociado_sm
 Route::post('/pago/getform', [InscripcionController::class, 'getForm'])->name('niubiz.getform');
 Route::post('/pago/getform/niubiz/{id}/{order}', [InscripcionController::class, 'niubizPayment'])->where('id','[0-9]+');
 Route::get('/pago/confirmar/{id}', [InscripcionController::class, 'confirmPayment'])->name('inscripcion.extemin')->where('id','[0-9]+');
+Route::get('/pago/error/{id}', [PadreController::class, 'geterror'])->name('pago.geterror');
 
 Route::post('/api/validatepersonsoc', [DocumentApiController::class, 'validatePersonSoc'])->name('api.validatepersonsoc');
 Route::post('/api/getperson', [DocumentApiController::class, 'getPersonData'])->name('api.getdataperson');
+Route::post('/api/getempresa', [DocumentApiController::class, 'getEmpresaData'])->name('api.getempresa');
 
 Route::post('/api/document', [DocumentApiController::class, 'getData'])->name('api.document');
 

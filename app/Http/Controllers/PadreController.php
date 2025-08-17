@@ -68,8 +68,11 @@ class PadreController extends Controller
         return $moneda;
     }
 
-    // public function getTipoPago(Request $request)
-    // {
-    //     return TipoPago::where('name_code', $request->code)->get();
-    // }
+    public function geterror($id){
+        $error_pago = \App\Models\Niubiz::find($id);
+
+        return Inertia::render('Pago/Error',[
+            'pago' => $error_pago
+        ]);
+    }
 }
