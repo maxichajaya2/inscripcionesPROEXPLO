@@ -157,12 +157,12 @@ const getEmpresaData = async () => {
 
             try {
                 const empresa = await Functions.getEmpresaData(documentoEmpresa.value, tipoDocumentoEmpresa.value);
-                //console.log(empresa);console.log(empresa.status); console.log(empresa.empresa.direccionEmpresa);
+
                 if (empresa) {
                     // Autocompleta TODOS los campos desde la BD
                     razonSocial.value = empresa.empresa.nombre || '';
                     direccionEmpresa.value = empresa.empresa.direccionEmpresa || '';
-                    console.log(1);
+
                     if(empresa.status){
                         if(tipoDocumentoEmpresa.value == 2){ //ruc
                             block_direction.value = true;
@@ -185,7 +185,7 @@ const getEmpresaData = async () => {
                     return;
                 }
             } catch (e) {
-                console.log(e);
+
                 toast.add({
                             severity: 'warn',
                             summary: 'No encontrado',
