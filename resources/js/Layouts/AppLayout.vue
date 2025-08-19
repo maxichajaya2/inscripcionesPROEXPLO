@@ -14,6 +14,15 @@ const toast = useToast();
     <div class="light">
 
     <Head />
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-QQE2KYEGVT"></script>
+        <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-QQE2KYEGVT');
+        </script>
 
         <div class="min-h-screen bg-white-100">
 
