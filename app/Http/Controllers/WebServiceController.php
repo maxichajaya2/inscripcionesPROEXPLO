@@ -167,7 +167,7 @@ class WebServiceController extends Controller
 			$data_ws['facturacion_tipo_documentopago'] = $facturacion->tipoDocumentoPago->siecode;
 			$data_ws['facturacion_persona'] = $facturacion->responsable_facturador;
 			$data_ws['facturacion_telefono'] = $persona->celular;
-			$data_ws['facturacion_email'] = $persona->correo;
+			$data_ws['facturacion_email'] = $facturacion->correo_facturador;
 			$data_ws['facturacion_direccion'] = $facturacion->direccion_facturador;
             $data_ws['facturacion_importe'] = (float)$facturacion->total;
             $data_ws['ficha_tipo'] = 2; //inscripciones individuales
