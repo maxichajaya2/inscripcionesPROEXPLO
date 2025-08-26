@@ -177,6 +177,8 @@ class DocumentApiController extends Controller
             $empresa->nombre = "";
             $empresa->nombre_comercial = "";
             $empresa->web = "";
+
+            $status = false;
         }
 
         if($request->tipo_doc == 1 ){ //dni

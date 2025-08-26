@@ -26,7 +26,7 @@ const schema = yup.object({
                     if (tipo_doc[0] == 1) {
                         return yup.string().matches(/^[0-9]+$/, "El valor debe ser numérico").test('len', 'Debe tener exactamente 8 dígitos', val => val && val.toString().length === 8)
                     } else {
-                        return yup.string().required('Documento es requerido')
+                        return yup.string().matches(/^[a-zA-Z0-9]+$/, "El valor debe ser numéros o letras").required('Documento es requerido')
                     }
                 }
             },
@@ -53,7 +53,19 @@ const onlyNumberKey = (event) => {
             }
 
         }
-    }
+    }else{
+            const key = event.key;
+
+            // Allow navigation and control keys
+            if (["Backspace", "Delete", "Tab", "ArrowLeft", "ArrowRight"].includes(key)) {
+                return;
+            }
+
+            // Block everything that's not a-z, A-Z, 0-9
+            if (!/^[a-zA-Z0-9]$/.test(key)) {
+                event.preventDefault();
+            }
+        }
 }
 
 const getValidacionDoc =  () => {

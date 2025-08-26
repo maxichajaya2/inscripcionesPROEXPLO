@@ -60,7 +60,7 @@ const { defineField, errors, handleSubmit, setValues, resetForm ,values  } = use
                     } else if (tipoDocumentoEmpresa[0] == 1){
                         return yup.number().typeError('El valor debe ser numérico').test('len', 'Debe tener exactamente 8 dígitos', val => val && val.toString().length === 8)
                     }   else {
-                        return yup.string().required('Documento es requerido')
+                        return yup.string().matches(/^[a-zA-Z0-9]$/, "El valor debe ser numéros o letras").required('Documento es requerido')
                     }
                 }
             },
@@ -80,7 +80,6 @@ const { defineField, errors, handleSubmit, setValues, resetForm ,values  } = use
 
         razonSocial: yup.string().required('Razón social es requerido'),
         direccionEmpresa: yup.string().required('Dirección de empresa es requerida'),
-        documentoEmpresa: yup.string().required('Documento de empresa es requerido'),
         responsable: yup.string().required('Nombre en responsable es requerido'),
         correo_facturador: yup.string().required('Email de Facturación es requerido').email('Ingrese un Email válido'),
         selectTipoPago: yup.string().required('Tipo de pago es requerido'),
@@ -293,7 +292,19 @@ const onlyNumberKey = (event) => {
             }
 
         }
-    }
+    }else{
+            const key = event.key;
+
+            // Allow navigation and control keys
+            if (["Backspace", "Delete", "Tab", "ArrowLeft", "ArrowRight"].includes(key)) {
+                return;
+            }
+
+            // Block everything that's not a-z, A-Z, 0-9
+            if (!/^[a-zA-Z0-9]$/.test(key)) {
+                event.preventDefault();
+            }
+        }
 }
 
 const showModal = () => {
@@ -707,7 +718,7 @@ defineExpose({
 
                         </div>
 
-                        <div class="grid gap-6 m-6 md:grid-cols-3" >
+                        <div class="grid gap-6 m-6 md:grid-cols-2" >
                             <div class="w-full sm:col-span-1">
                                         <label for="direccionEmpresa" class="">Dirección Fiscal *</label>
                                         <InputText name="direccionEmpresa" v-model="direccionEmpresa" v-bind="direccionEmpresaAttrs" class="w-full border-green-iimp"
@@ -715,20 +726,22 @@ defineExpose({
                                         <span class="font-normal text-red-600">{{ errors.direccionEmpresa }}</span>
                             </div>
 
-                            <div class="w-full sm:col-span-1">
+                            <div class="grid gap-6 md:grid-cols-2">
+                                <div class="w-full sm:col-span-1">
                                         <label for="responsable" class="">Responsable de Facturación *</label>
                                         <InputText name="responsable" v-model="responsable" v-bind="responsableAttrs" class="w-full border-green-iimp"
                                         />
                                         <span class="font-normal text-red-600">{{ errors.responsable }}</span>
-                            </div>
+                                </div>
 
-                            <div class="w-full sm:col-span-1">
-                                        <label for="correo_facturador" class="">Email Facturación *</label>
-                                        <InputText name="correo_facturador" v-model="correo_facturador" v-bind="correo_facturadorAttrs" class="w-full border-green-iimp"
-                                        autocomplete="nuevo-email"/>
-                                        <span class="font-normal text-red-600">{{ errors.correo_facturador }}</span>
-                            </div>
+                                <div class="w-full sm:col-span-1">
+                                            <label for="correo_facturador" class="">Email Facturación *</label>
+                                            <InputText name="correo_facturador" v-model="correo_facturador" v-bind="correo_facturadorAttrs" class="w-full border-green-iimp"
+                                            autocomplete="nuevo-email"/>
+                                            <span class="font-normal text-red-600">{{ errors.correo_facturador }}</span>
+                                </div>
 
+                            </div>
                         </div>
 
                         <div class="flex justify-around w-full mb-4">
