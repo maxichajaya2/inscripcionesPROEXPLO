@@ -60,7 +60,7 @@ const { defineField, errors, handleSubmit, setValues, resetForm ,values  } = use
                     } else if (tipoDocumentoEmpresa[0] == 1){
                         return yup.number().typeError('El valor debe ser numérico').test('len', 'Debe tener exactamente 8 dígitos', val => val && val.toString().length === 8)
                     }   else {
-                        return yup.string().matches(/^[a-zA-Z0-9]$/, "El valor debe ser numéros o letras").required('Documento es requerido')
+                        return yup.string().required('Documento es requerido')
                     }
                 }
             },
