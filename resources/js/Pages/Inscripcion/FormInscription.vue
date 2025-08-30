@@ -153,6 +153,7 @@ const loadDistritos = async () => {
 const getEmpresaData = async () => {
     razonSocial.value = '';
     direccionEmpresa.value = '';
+    var not_found = 'No se encontraron datos. Por favor, complete los campos manualmente.';
 
             try {
                 const empresa = await Functions.getEmpresaData(documentoEmpresa.value, tipoDocumentoEmpresa.value);
@@ -173,15 +174,33 @@ const getEmpresaData = async () => {
                         })
 
                     }else{
+                        if(tipoDocumentoEmpresa.value == 2){ //ruc
+                            not_found = "No se encontraron datos. Verifique el RUC ingresado";
+                        }
+
                         toast.add({
                             severity: 'warn',
                             summary: 'No encontrado',
-                            detail: 'No se encontraron datos. Por favor, complete los campos manualmente.',
+                            detail: not_found,
                             life: 3000
                         })
                     }
 
                     return;
+                }else{
+                    if(tipoDocumentoEmpresa.value == 2){ //ruc
+                            not_found = "No se encontraron datos. Verifique el RUC ingresado";
+                        }
+
+                        toast.add({
+                            severity: 'warn',
+                            summary: 'No encontrado',
+                            detail: not_found,
+                            life: 3000
+                        })
+
+                    return;
+
                 }
             } catch (e) {
 
@@ -230,6 +249,7 @@ watch(() => props.data_persona, (newVal, oldVal) => {
     show_days.value = false;
     show_document.value = false;
     src.value = null;
+    block_direction.value = true;
 
     if(typeof props.data_persona.persona != 'undefined' ){
         es_socio.value =  props.data_persona.persona.es_socio;
@@ -274,7 +294,12 @@ watch(() => props.data_persona, (newVal, oldVal) => {
 });
 
 const onlyNumberKey = (event) => {
-    block_direction.value = false;
+    if(tipoDocumentoEmpresa.value == 2){
+        block_direction.value = true;
+    }else{
+        block_direction.value = false;
+    }
+
 
     if( tipoDocumentoEmpresa.value == 2 || tipoDocumentoEmpresa.value == 1 ){
         const charCode = event.charCode ? event.charCode : event.keyCode
@@ -316,6 +341,17 @@ const acceptModal = () => {
     terminos.value = true;
 };
 
+const check_fact = () =>{
+    if( tipoDocumentoEmpresa.value == 2){
+                toast.add({
+                                severity: 'warn',
+                                summary: 'Atencion',
+                                detail: 'Datos automaticos con la busqueda de RUC',
+                                life: 3000
+                            })
+            }
+    }
+
 function setTipoDocPago(){
     documentoEmpresa.value = "";
     razonSocial.value = "";
@@ -325,6 +361,7 @@ function setTipoDocPago(){
 
     if(tipoDocumentoEmpresa.value == 2){ //ruc
         selectTipoDocPago.value = 1; // factura
+        block_direction.value = true;
     }else{
         selectTipoDocPago.value = 2; //boleta
     }
@@ -712,7 +749,7 @@ defineExpose({
                                 <div class="w-full sm:col-span-1">
                                         <label for="razonSocial" class="">Nombre o Razón Social *</label>
                                         <InputText name="razonSocial" v-model="razonSocial" v-bind="razonSocialAttrs" class="w-full border-green-iimp"
-                                        />
+                                        :readonly="block_direction"  @click="check_fact" />
                                         <span class="font-normal text-red-600">{{ errors.razonSocial }}</span>
                                 </div>
 
@@ -722,7 +759,7 @@ defineExpose({
                             <div class="w-full sm:col-span-1">
                                         <label for="direccionEmpresa" class="">Dirección Fiscal *</label>
                                         <InputText name="direccionEmpresa" v-model="direccionEmpresa" v-bind="direccionEmpresaAttrs" class="w-full border-green-iimp"
-                                        autocomplete="nueva-direccion" :readonly="block_direction" />
+                                        autocomplete="nueva-direccion" :readonly="block_direction"  @click="check_fact" />
                                         <span class="font-normal text-red-600">{{ errors.direccionEmpresa }}</span>
                             </div>
 
