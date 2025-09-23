@@ -45,7 +45,7 @@ const departamentos = ref();
 const provincias = ref();
 const distritos = ref();
 const visible = ref(false);
-const days = { 'lun' : 'Lunes', 'mar' : 'Martes' , 'mie' : 'Miercoles' , 'jue' : 'Jueves' , 'vie' : 'Viernes'};
+const days = { 'mar' : 'Martes' , 'mie' : 'Miercoles' , 'jue' : 'Jueves' , 'vie' : 'Viernes'};//'lun' : 'Lunes',
 const current_days = { 'lun' : false , 'mar' : false , 'mie' : false , 'jue' : false , 'vie' : false };
 
 const { defineField, errors, handleSubmit, setValues, resetForm ,values  } = useForm({
