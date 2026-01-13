@@ -66,8 +66,11 @@ class DocumentApiController extends Controller
             exit;
         }
 
+        /***  1. Validamos que se encuentre registrado ***/
         $tipo_documento = TipoDocumento::find($request->id_tipo_documento);
-        $persona = Persona::where('id_tipo_documento',$request->id_tipo_documento)->where('documento',$request->numero_documento)->first();
+        $persona = Persona::where('id_tipo_documento',$request->id_tipo_documento)
+                    ->where('documento',$request->numero_documento)
+                    ->first();
         $status = true;
 
         if($persona){
@@ -115,7 +118,8 @@ class DocumentApiController extends Controller
 
         }
 
-        $persona->es_socio = app(\App\Http\Controllers\WebServiceController::class)->validatePersonMember($tipo_documento->sie_code, $request->numero_documento);
+        $persona->es_socio = app(\App\Http\Controllers\WebServiceController::class)
+        ->validatePersonMember($tipo_documento->sie_code, $request->numero_documento);
 
         return json_encode(['persona' => $persona , 'status' => $status ]);
 

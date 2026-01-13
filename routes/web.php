@@ -33,15 +33,16 @@ Route::post('/padre/departamentos', [PadreController::class, 'getDepartamentos']
 Route::post('/padre/provincias', [PadreController::class, 'getProvincias'])->name('padre.provincias');
 Route::post('/padre/distritos', [PadreController::class, 'getDistritos'])->name('padre.distritos');
 
-Route::get('/registro/convencionista', [InscripcionController::class, 'convencionista'])->name('inscripcion.convencionista');
+Route::get('/registro/autor', [InscripcionController::class, 'autor'])->name('inscripcion.autor');
 Route::get('/registro/docente', [InscripcionController::class, 'docente'])->name('inscripcion.docente');
 Route::get('/registro/estudiante', [InscripcionController::class, 'estudiante'])->name('inscripcion.estudiante');
-Route::get('/registro/extemin', [InscripcionController::class, 'extemin'])->name('inscripcion.extemin');
+Route::get('/registro/participante', [InscripcionController::class, 'participante'])->name('inscripcion.participante');
 Route::get('/registro/asociado_sme', [InscripcionController::class, 'asociado_sme'])->name('inscripcion.asociado_sme');
 
 
 Route::post('/pago/getform', [InscripcionController::class, 'getForm'])->name('niubiz.getform');
 Route::post('/pago/getform/niubiz/{id}/{order}', [InscripcionController::class, 'niubizPayment'])->where('id','[0-9]+');
+
 Route::get('/pago/confirmar/{id}', [InscripcionController::class, 'confirmPayment'])->name('inscripcion.extemin')->where('id','[0-9]+');
 Route::get('/pago/error/{id}', [PadreController::class, 'geterror'])->name('pago.geterror');
 
@@ -51,4 +52,9 @@ Route::post('/api/getempresa', [DocumentApiController::class, 'getEmpresaData'])
 
 Route::post('/api/document', [DocumentApiController::class, 'getData'])->name('api.document');
 
+Route::get('/niubiz/test', [NiubizController::class, 'index'])->name('niubiz.payment');
 
+// Ruta "dummy" para que Niubiz no de error 404 visual si intenta redireccionar solo
+Route::post('/niubiz-respuesta', function () {
+    return response()->noContent();
+})->name('niubiz.dummy');

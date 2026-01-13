@@ -24,8 +24,6 @@ class WebServiceController extends Controller
 
     }
 
-
-
     public function validatePersonMember($id_sie_documento, $numero_documento){
 
         $data_ws = [
@@ -209,19 +207,16 @@ class WebServiceController extends Controller
                 if(is_null($headername)){
                     $headername = "Authorization";
                 }
-
                 $content = array(
                     $headername .': '.$header,
                     'Content-Type: application/json',
                     'Content-Length: '.strlen($data)
                 );
-
             }else{
                 $content = array(
                     'Content-Type: application/json',
                     'Content-Length: '.strlen($data)
                 );
-
             }
 
             $ch = curl_init($url);

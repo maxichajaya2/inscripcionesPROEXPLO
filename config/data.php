@@ -2,7 +2,7 @@
 
 return [
     'generos' => [
-        array("value" => "M", "label" => "MASCULINO"),
-        array("value" => "F", "label" => "FEMENINO")
+        array("value" => "M", "label" => "MALE"),
+        array("value" => "F", "label" => "FEMALE")
     ],
 ];

@@ -13,5 +13,8 @@ class VerifyCsrfToken extends Middleware
      */
     protected $except = [
         '/pago/getform/niubiz/*',
+        'pago/getform/niubiz/*',
+          '/niubiz-respuesta',
+          'niubiz-respuesta',
     ];
 }

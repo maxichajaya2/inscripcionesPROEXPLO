@@ -24,8 +24,7 @@ const page = usePage();
 const toast = useToast();
 const props = defineProps({
     data_persona: Object,
-    categorias: Object,
-    saved_values: Object
+    categorias: Object
 });
 
 const es_socio = ref(false);
@@ -37,7 +36,7 @@ const total = ref(0);
 const src = ref(null);
 const block_direction = ref(false);
 const fileErrors = ref([]);
-const maxSize = 6291;
+const maxSize = 6291456;
 // Definimos los tipos permitidos (Coincidiendo con tu accept)
 const allowedTypes = [
     'application/pdf',
@@ -47,7 +46,7 @@ const allowedTypes = [
 ];
 
 let current_price = 0;
-const billingMessage = ref(null);
+
 const generos = computed(() => usePage().props.general.generos);
 const reglamento_inscripciones = computed(() => usePage().props.general.reglamento_inscripciones);
 const nacionalidades = computed(() => usePage().props.general.paises);
@@ -58,48 +57,25 @@ const departamentos = ref();
 const provincias = ref();
 const distritos = ref();
 const visible = ref(false);
-const days = {
-    'mar': 'Tuesday',
-    'mie': 'Wednesday',
-    'jue': 'Thursday',
-    'vie': 'Friday'
-};
-
+const days = { 'mar': 'Martes', 'mie': 'Miercoles', 'jue': 'Jueves', 'vie': 'Viernes' };//'lun' : 'Lunes',
 const current_days = { 'lun': false, 'mar': false, 'mie': false, 'jue': false, 'vie': false };
-const formManualErrors = ref({
-    reglamento: null,
-    total: null,
-    uploadDocument: null
-});
-
 
 const { defineField, errors, handleSubmit, setValues, resetForm, values } = useForm({
     validationSchema: yup.object({
-        tipoDocumentoEmpresa: yup.mixed().required('Company document type is required'),
-        documentoEmpresa: yup.string().when(
+        tipoDocumentoEmpresa: yup.mixed().required('Tipo documento de Empresa es requerido'),
+        documentoEmpresa: yup.number().when(
             'tipoDocumentoEmpresa',
-            (tipoDocumentoEmpresa, schema) => {
-                if (typeof tipoDocumentoEmpresa[0] !== 'undefined') {
-                    const type = tipoDocumentoEmpresa[0];
-
-                    if (type == 2) { // RUC
-                        return yup.string()
-                            .matches(/^\d+$/, 'The value must be numeric')
-                            .length(11, 'Must be exactly 11 digits')
-                            .required('Tax ID (RUC) is required');
-                    } else if (type == 1) { // DNI
-                        return yup.string()
-                            .matches(/^\d+$/, 'The value must be numeric')
-                            .length(8, 'Must be exactly 8 digits')
-                            .required('Document number is required');
-                    } else { // Others (Passport, etc.)
-                        return yup.string()
-                            .matches(/^[a-zA-Z0-9]+$/, "The value must contain only letters or numbers")
-                            .required('Document number is required');
+            (tipoDocumentoEmpresa) => {
+                if (typeof tipoDocumentoEmpresa[0] != 'undefined') {
+                    if (tipoDocumentoEmpresa[0] == 2) {
+                        return yup.number().typeError('El valor debe ser numérico').test('len', 'Debe tener exactamente 11 dígitos', val => val && val.toString().length === 11)
+                    } else if (tipoDocumentoEmpresa[0] == 1) {
+                        return yup.number().typeError('El valor debe ser numérico').test('len', 'Debe tener exactamente 8 dígitos', val => val && val.toString().length === 8)
+                    } else {
+                        return yup.string().matches(/^[a-zA-Z0-9]+$/, "El valor debe ser numéros o letras").required('Documento es requerido')
                     }
                 }
-                return schema;
-            }
+            },
         ),
         nombres: yup.string().required('Name is required'),
         apellido_paterno: yup.string().required('Last name is required'),
@@ -160,52 +136,13 @@ const [uploadDocument, uploadDocumentAttrs] = defineField('uploadDocument');
 
 const today = new Date();
 
-// onMounted(() => {
-
-//     tipoDocumentoEmpresa.value = 1;
-//     // selectTipoDocPago.value = 3;
-//     selectTipoDocPago.value = 2;
-//     selectTipoPago.value = 3;
-// })
-
 onMounted(() => {
-    // 1. Configuraciones iniciales
+
     tipoDocumentoEmpresa.value = 1;
+    // selectTipoDocPago.value = 3;
     selectTipoDocPago.value = 2;
     selectTipoPago.value = 3;
-
-    // 2. PRIORIDAD: Si hay datos guardados (porque dimos Back), los usamos
-    if (props.saved_values) {
-        console.log("Restaurando datos del formulario...", props.saved_values);
-
-        // Restauramos los valores del formulario
-        setValues(props.saved_values);
-
-        // Restauramos variables reactivas locales que no son del form directamente
-        // pero controlan la UI (como uploadDocument, días, etc)
-
-        // Restaurar categoría para lógica visual
-        if (props.saved_values.selected_categoria) {
-            const cat = props.categorias.find(c => c.id === props.saved_values.selected_categoria);
-            if (cat) changeCategory(cat.id, cat.precio_disponible?.valor || 0);
-        }
-
-        // Restaurar lógica de facturación si había RUC
-        if (props.saved_values.tipoDocumentoEmpresa == 2) {
-            block_direction.value = true;
-        }
-
-    } else if (props.data_persona && props.data_persona.persona) {
-        // 3. Si no hay datos guardados, usamos los datos frescos de la API (Paso 1)
-        // (Tu lógica original)
-        es_socio.value = props.data_persona.persona.es_socio;
-        // ... tu lógica de selección automática de categoría ...
-
-        props.data_persona.persona.fecha_nacimiento = Functions.toLocalDateOnly(props.data_persona.persona.fecha_nacimiento);
-        setValues(props.data_persona.persona);
-        loadDepartamentos(); // etc...
-    }
-});
+})
 
 const loadDepartamentos = async () => {
     departamento.value = undefined;
@@ -225,120 +162,73 @@ const loadDistritos = async () => {
     distritos.value = await Functions.loadDistritos(pais.value, departamento.value, provincia.value).then(data => { return data });
 }
 
-// const getEmpresaData = async () => {
-//     // 1. Reseteamos campos y mensajes previos
-//     razonSocial.value = '';
-//     direccionEmpresa.value = '';
-//     loading_doc.value = true;
-//     billingMessage.value = null; // Limpia la alerta anterior antes de buscar
-
-//     try {
-//         const empresa = await Functions.getEmpresaData(documentoEmpresa.value, tipoDocumentoEmpresa.value);
-
-//         if (empresa) {
-//             // Autocompleta los campos
-//             razonSocial.value = empresa.empresa.nombre || '';
-//             direccionEmpresa.value = empresa.empresa.direccionEmpresa || '';
-
-//             if (empresa.status) {
-//                 // Lógica de bloqueo para RUC
-//                 if (tipoDocumentoEmpresa.value == 2) {
-//                     block_direction.value = true;
-//                 }
-
-//                 // EXITO: Seteamos el mensaje verde
-//                 billingMessage.value = {
-//                     type: 'success',
-//                     text: 'Datos Encontrados / Data Found'
-//                 };
-
-//             } else {
-//                 // NO ENCONTRADO (API responde pero sin datos válidos)
-//                 let msg = 'No se encontraron datos. Por favor, complete los campos manualmente.';
-//                 if (tipoDocumentoEmpresa.value == 2) {
-//                     msg = "No se encontraron datos. Verifique el RUC ingresado.";
-//                 }
-
-//                 // ADVERTENCIA: Seteamos el mensaje amarillo
-//                 billingMessage.value = { type: 'warn', text: msg };
-//             }
-//         } else {
-//             // RESPUESTA VACÍA
-//             let msg = 'No se encontraron datos. Por favor, complete los campos manualmente.';
-//             if (tipoDocumentoEmpresa.value == 2) {
-//                 msg = "No se encontraron datos. Verifique el RUC ingresado.";
-//             }
-
-//             // ADVERTENCIA
-//             billingMessage.value = { type: 'warn', text: msg };
-//         }
-//     } catch (e) {
-//         // ERROR DE CONEXIÓN O SERVIDOR
-//         billingMessage.value = {
-//             type: 'error',
-//             text: 'Error en la consulta. Por favor complete los campos manualmente.'
-//         };
-//     } finally {
-//         loading_doc.value = false;
-//     }
-// }
-
-// Agrega esta referencia arriba junto a tus otros refs si no la tienes
-
 const getEmpresaData = async () => {
-    // 1. Reset fields and messages
     razonSocial.value = '';
     direccionEmpresa.value = '';
-    billingMessage.value = null;
+    var not_found = 'No se encontraron datos. Por favor, complete los campos manualmente.';
     loading_doc.value = true;
-
-    // 8-second timeout to handle slow server responses
-    const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('timeout')), 8000)
-    );
-
     try {
-        // Race between the actual request and the timeout
-        const empresa = await Promise.race([
-            Functions.getEmpresaData(documentoEmpresa.value, tipoDocumentoEmpresa.value),
-            timeout
-        ]);
+        const empresa = await Functions.getEmpresaData(documentoEmpresa.value, tipoDocumentoEmpresa.value);
 
         if (empresa) {
+            // Autocompleta TODOS los campos desde la BD
             razonSocial.value = empresa.empresa.nombre || '';
             direccionEmpresa.value = empresa.empresa.direccionEmpresa || '';
 
             if (empresa.status) {
-                // SUCCESS: Data found
-                if (tipoDocumentoEmpresa.value == 2) block_direction.value = true;
-                billingMessage.value = {
-                    type: 'success',
-                    text: 'Data found successfully.'
-                };
+                if (tipoDocumentoEmpresa.value == 2) { //ruc
+                    block_direction.value = true;
+                }
+                toast.add({
+                    severity: 'success',
+                    summary: 'Datos Encontrados',
+                    life: 2500
+                })
+
             } else {
-                // WARNING: Request finished but no data was found
-                let msg = tipoDocumentoEmpresa.value == 2
-                    ? "Tax ID (RUC) not found. Please verify the number."
-                    : "Document not found. Please complete the fields manually.";
-                billingMessage.value = { type: 'warn', text: msg };
+                if (tipoDocumentoEmpresa.value == 2) { //ruc
+                    not_found = "No se encontraron datos. Verifique el RUC ingresado";
+                }
+
+                toast.add({
+                    severity: 'warn',
+                    summary: 'No encontrado',
+                    detail: not_found,
+                    life: 3000
+                })
             }
+
+            return;
+        } else {
+            if (tipoDocumentoEmpresa.value == 2) { //ruc
+                not_found = "No se encontraron datos. Verifique el RUC ingresado";
+            }
+
+            toast.add({
+                severity: 'warn',
+                summary: 'No encontrado',
+                detail: not_found,
+                life: 3000
+            })
+
+            return;
+
         }
     } catch (e) {
-        // ERROR: Server fail or Timeout
-        let errorMsg = 'An error occurred during the search. Please fill in the details manually.';
 
-        if (e.message === 'timeout') {
-            errorMsg = 'The server is taking too long to respond. Please complete the fields manually.';
-        }
-
-        billingMessage.value = {
-            type: 'error',
-            text: errorMsg
-        };
+        toast.add({
+            severity: 'warn',
+            summary: 'No encontrado',
+            detail: 'Error en la consulta, complete los campos manualmente.',
+            life: 3000
+        })
     } finally {
         loading_doc.value = false;
     }
+
 }
+
+// Agrega esta referencia arriba junto a tus otros refs si no la tienes
 const fileupload = ref(null);
 
 const onFileSelect = (event) => {
@@ -502,13 +392,13 @@ const acceptModal = () => {
 };
 
 const check_fact = () => {
-    if (tipoDocumentoEmpresa.value == 2) { // 2 = RUC (Tax ID)
+    if (tipoDocumentoEmpresa.value == 2) {
         toast.add({
             severity: 'warn',
-            summary: 'Attention',
-            detail: 'Data is automatically populated based on Tax ID (RUC) search.',
-            life: 10000
-        });
+            summary: 'Atencion',
+            detail: 'Datos automaticos con la busqueda de RUC',
+            life: 3000
+        })
     }
 }
 
@@ -526,6 +416,26 @@ function setTipoDocPago() {
         selectTipoDocPago.value = 2; //boleta
     }
 }
+
+// function changeCategory(id, precio) {
+//     current_price = precio;
+//     if (selected_categoria.value != id) {
+//         if (id == 12 || id == 13) {
+
+//             total.value = 0;
+//             show_days.value = true;
+//             selectedDays.value = [];
+
+//             for (const key in current_days) {
+//                 current_days[key] = false;
+//             }
+
+//         } else {
+//             total.value = precio;
+//             show_days.value = false;
+//         }
+//     }
+// }
 
 function changeCategory(id, precio) {
     current_price = precio;
@@ -603,110 +513,58 @@ function selectDays(id) {
     total.value = cantidad_dias * current_price;
 }
 
-// function getInscripcion() {
-
-//     if (terminos.value != true) {
-//         toast.add({ severity: 'error', summary: 'Es requerido aceptar los Términos y Condiciones', life: 2000 });
-//         return { "validate": false };
-//     }
-
-//     if (reglamento.value != true) {
-//         toast.add({ severity: 'error', summary: 'Es requerido aceptar el Reglamento', life: 2000 });
-//         return { "validate": false };
-//     }
-
-//     if ((Object.keys(errors._value).length > 0)) {
-//         toast.add({ severity: 'error', summary: 'Complete todos los campos requeridos', life: 2000 });
-//         return { "validate": false };
-//     }
-
-//     if (typeof documentoEmpresa.value != 'undefined') {
-//         if (documentoEmpresa.value.length != 11 && tipoDocumentoEmpresa.value == 2) {
-//             toast.add({ severity: 'error', summary: 'El RUC debe ser de 11 caracteres', life: 2000 });
-//             return { "validate": false };
-//         }
-
-//         if (documentoEmpresa.value.length != 8 && tipoDocumentoEmpresa.value == 1) {
-//             toast.add({ severity: 'error', summary: 'El DNI debe ser de 8 caracteres', life: 2000 });
-//             return { "validate": false };
-//         }
-//     } else {
-//         toast.add({ severity: 'error', summary: 'Debe ingresar un documento para facturación', life: 2000 });
-//         return { "validate": false };
-//     }
-
-//     if (total.value == 0) {
-//         toast.add({ severity: 'error', summary: 'El total debe ser mayor a 0', life: 2000 });
-//         return { "validate": false };
-//     }
-
-//     if (show_document.value == true && uploadDocument.value === null) {
-//         toast.add({ severity: 'error', summary: 'Debe elegir un documento para su inscripción', life: 2000 });
-//         return { "validate": false };
-//     }
-
-//     if (props.data_persona.persona.nombres.length == 0 || props.data_persona.persona.apellido_paterno.length == 0) {
-//         props.data_persona.persona.nombres = nombres.value;
-//         props.data_persona.persona.apellido_paterno = apellido_paterno.value;
-//     }
-
-//     return {
-//         "validate": true,
-//         "formInscription": values
-//     };
-
-// }
-
-
-// Agrega esto cerca de tus otros refs
-
 function getInscripcion() {
-    // Reiniciamos errores manuales
-    formManualErrors.value = { reglamento: null, total: null, uploadDocument: null };
-    let hasError = false;
 
-    // 1. Reglamento
-    if (reglamento.value !== true) {
-        formManualErrors.value.reglamento = "You must accept the Terms and Conditions.";
-        hasError = true;
-    }
-
-    // 2. Errores de vee-validate (Inputs normales)
-    if (Object.keys(errors._value).length > 0) {
-        hasError = true;
-    }
-
-    // 3. Documento de Facturación (Validación manual de longitud)
-    // Nota: Vee-validate ya debería manejar esto por el esquema Yup,
-    // pero si necesitas forzar el scroll o alerta extra:
-    if (!documentoEmpresa.value) {
-        hasError = true;
-    }
-
-    // 4. Total (Días o Categoría)
-    if (total.value <= 0) {
-        formManualErrors.value.total = "The total amount must be greater than 0. Please select a category or specific days.";
-        hasError = true;
-    }
-
-    // 5. Carga de archivo
-    if (show_document.value === true && !uploadDocument.value) {
-        formManualErrors.value.uploadDocument = "Please upload the required documentation for your category.";
-        hasError = true;
-    }
-
-    if (hasError) {
-        toast.add({ severity: 'error', summary: 'ATTENTION: ACTION REQUIRED', detail: 'Please complete all required fields marked in red before proceeding.', life: 10000 });
+    if (terminos.value != true) {
+        toast.add({ severity: 'error', summary: 'Es requerido aceptar los Términos y Condiciones', life: 2000 });
         return { "validate": false };
     }
 
-    // Sync names if empty
-    if (props.data_persona.persona.nombres.length === 0 || props.data_persona.persona.apellido_paterno.length === 0) {
+    if (reglamento.value != true) {
+        toast.add({ severity: 'error', summary: 'Es requerido aceptar el Reglamento', life: 2000 });
+        return { "validate": false };
+    }
+
+    if ((Object.keys(errors._value).length > 0)) {
+        toast.add({ severity: 'error', summary: 'Complete todos los campos requeridos', life: 2000 });
+        return { "validate": false };
+    }
+
+    if (typeof documentoEmpresa.value != 'undefined') {
+        if (documentoEmpresa.value.length != 11 && tipoDocumentoEmpresa.value == 2) {
+            toast.add({ severity: 'error', summary: 'El RUC debe ser de 11 caracteres', life: 2000 });
+            return { "validate": false };
+        }
+
+        if (documentoEmpresa.value.length != 8 && tipoDocumentoEmpresa.value == 1) {
+            toast.add({ severity: 'error', summary: 'El DNI debe ser de 8 caracteres', life: 2000 });
+            return { "validate": false };
+        }
+    } else {
+        toast.add({ severity: 'error', summary: 'Debe ingresar un documento para facturación', life: 2000 });
+        return { "validate": false };
+    }
+
+    if (total.value == 0) {
+        toast.add({ severity: 'error', summary: 'El total debe ser mayor a 0', life: 2000 });
+        return { "validate": false };
+    }
+
+    if (show_document.value == true && uploadDocument.value === null) {
+        toast.add({ severity: 'error', summary: 'Debe elegir un documento para su inscripción', life: 2000 });
+        return { "validate": false };
+    }
+
+    if (props.data_persona.persona.nombres.length == 0 || props.data_persona.persona.apellido_paterno.length == 0) {
         props.data_persona.persona.nombres = nombres.value;
         props.data_persona.persona.apellido_paterno = apellido_paterno.value;
     }
 
-    return { "validate": true, "formInscription": values };
+    return {
+        "validate": true,
+        "formInscription": values
+    };
+
 }
 
 defineExpose({
@@ -721,215 +579,280 @@ defineExpose({
         <!--         DETALLES PERSONALES             -->
         <!-- ======================================== -->
         <div class="text-green-iimp font-bold p-4">
-            <Card class="mt-5 overflow-hidden shadow-lg border border-gray-200">
-
-                <template #header>
-                    <div class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc">
-                        Personal Details
-                    </div>
-                </template>
-
-                <template #content>
-                    <div class="p-2">
-
-                        <div class="grid gap-6 m-6 md:grid-cols-2">
-                            <div class="w-full">
-                                <label for="nombres" class="">First Name <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <InputText name="nombres" v-model="nombres" v-bind="nombresAttrs"
-                                    class="w-full border-green-iimp" />
-                                <span class="font-normal text-red-600">{{ errors.nombres }}</span>
-                            </div>
-                            <div class="w-full">
+            <div class="text-green-iimp font-bold text-center p-4">
+                <span class="text-3xl">Personal Details</span>
+            </div>
+            <Divider />
+            <div class="col-span-1 sm:col-span-1 p-4">
+                <div>
+                    <div class="grid gap-6 m-6 md:grid-cols-2">
+                        <div class="w-full sm:col-span-1">
+                            <label for="nombres" class="">First Name <span
+                                    class="font-normal text-red-600">*</span></label>
+                            <InputText name="nombres" v-model="nombres" v-bind="nombresAttrs"
+                                class="w-full border-green-iimp" />
+                            <span class="font-normal text-red-600">{{ errors.nombres }}</span>
+                        </div>
+                        <div class="w-full sm:col-span-1">
+                            <div class="col-span-3 sm:col-span-1">
                                 <label for="apellido_paterno" class="">Last Name <span
                                         class="font-normal text-red-600">*</span></label>
                                 <InputText name="apellido_paterno" v-model="apellido_paterno"
                                     v-bind="apellido_paternoAttrs" class="w-full border-green-iimp" />
                                 <span class="font-normal text-red-600">{{ errors.apellido_paterno }}</span>
-                            </div>
-                        </div>
 
-                        <div class="grid gap-6 m-6 grid-cols-1 md:grid-cols-4">
-                            <div class="w-full">
-                                <label for="pais" class="">Country <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <Select name="pais" v-model="pais" v-bind="paisAttrs" optionLabel="name"
-                                    optionValue="id" placeholder="Select" showClear filter @change="loadDepartamentos"
-                                    :options="paises" class="w-full border-green-iimp" />
-                                <span class="font-normal text-red-600">{{ errors.pais }}</span>
                             </div>
-                            <div class="w-full">
-                                <label for="departamento" class="">State <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <Select name="departamento" v-model="departamento" v-bind="departamentoAttrs" filter
-                                    @change="loadProvincias" :options="departamentos" optionLabel="name"
-                                    optionValue="id_departamento" placeholder="Select" showClear
-                                    class="w-full border-green-iimp" />
-                                <span class="font-normal text-red-600">{{ errors.departamento }}</span>
-                            </div>
-                            <div class="w-full">
-                                <label for="provincia" class="">Province <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <Select name="provincia" v-model="provincia" v-bind="provinciaAttrs" filter
-                                    @change="loadDistritos" :options="provincias" optionLabel="name"
-                                    optionValue="id_provincia" placeholder="Select" showClear
-                                    class="w-full border-green-iimp" />
-                                <span class="font-normal text-red-600">{{ errors.provincia }}</span>
-                            </div>
-                            <div class="w-full">
-                                <label for="distrito" class="">District <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <Select name="distrito" v-model="distrito" v-bind="distritoAttrs" filter
-                                    :options="distritos" optionLabel="name" optionValue="id_distrito"
-                                    placeholder="Select" showClear class="w-full border-green-iimp" />
-                                <span class="font-normal text-red-600">{{ errors.distrito }}</span>
-                            </div>
-                        </div>
-
-                        <div class="grid gap-6 m-6 md:grid-cols-2">
-                            <div class="grid gap-6 md:grid-cols-2">
-                                <div class="w-full">
-                                    <label for="correo" class="">Email Address <span
-                                            class="font-normal text-red-600">*</span></label>
-                                    <InputText name="correo" v-model="correo" v-bind="correoAttrs"
-                                        class="w-full border-green-iimp" />
-                                    <span class="font-normal text-red-600">{{ errors.correo }}</span>
-                                </div>
-                                <div class="w-full">
-                                    <label for="celular" class="">Phone Number <span
-                                            class="font-normal text-red-600">*</span></label>
-                                    <InputText name="celular" v-model="celular" v-bind="celularAttrs"
-                                        class="w-full border-green-iimp" />
-                                    <span class="font-normal text-red-600">{{ errors.id_tipo_celular }}</span>
-                                </div>
-                            </div>
-                            <div class="w-full">
-                                <label for="direccionPersona" class="">Address <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <InputText name="direccionPersona" v-model="direccionPersona"
-                                    v-bind="direccionPersonaAttrs" class="w-full border-green-iimp" />
-                                <span class="font-normal text-red-600">{{ errors.direccionPersona }}</span>
-                            </div>
-                        </div>
-
-                        <div class="grid gap-6 m-6 md:grid-cols-3">
-                            <div class="w-full">
-                                <label for="fecha_nacimiento" class="">Date of Birth <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <InputGroup class="w-full h-[42px]">
-                                    <InputGroupAddon class="border-green-iimp border-r-0 bg-white text-green-iimp">
-                                        <i class="pi pi-calendar"></i>
-                                    </InputGroupAddon>
-
-                                    <Calendar name="fecha_nacimiento" v-model="fecha_nacimiento"
-                                        v-bind="fecha_nacimientoAttrs" :maxDate="today" dateFormat="yy-mm-dd"
-                                        :showTime="false" placeholder="YYYY-MM-DD" class="w-full"
-                                        inputClass="w-full border-green-iimp border-l-0 shadow-none outline-none bg-white" />
-                                </InputGroup>
-                                <span class="font-normal text-red-600">{{ errors.fecha_nacimiento }}</span>
-                            </div>
-
-                            <div class="w-full">
-                                <label for="empresa" class="">Company <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <InputText name="empresa" v-model="empresa" v-bind="empresaAttrs"
-                                    class="w-full border-green-iimp" />
-                                <span class="font-normal text-red-600">{{ errors.empresa }}</span>
-                            </div>
-                            <div class="w-full">
-                                <label for="cargo" class="">Job Title <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <InputText name="cargo" v-model="cargo" v-bind="cargoAttrs"
-                                    class="w-full border-green-iimp" />
-                                <span class="font-normal text-red-600">{{ errors.cargo }}</span>
-                            </div>
-                        </div>
-
-                        <div class="grid gap-6 m-6 md:grid-cols-2">
-                            <div class="grid gap-6 md:grid-cols-2">
-                                <div class="w-full">
-                                    <label for="sexo" class="">Sex <span
-                                            class="font-normal text-red-600">*</span></label>
-                                    <Select name="sexo" v-model="sexo" v-bind="sexoAttrs" optionLabel="label"
-                                        optionValue="value" placeholder="Elegir" showClear checkmark :options="generos"
-                                        class="w-full border-green-iimp" />
-                                    <span class="font-normal text-red-600">{{ errors.sexo }}</span>
-                                </div>
-                                <div class="w-full">
-                                    <label for="nacionalidad" class="">Nationality <span
-                                            class="font-normal text-red-600">*</span></label>
-                                    <Select name="nacionalidad" v-model="nacionalidad" v-bind="nacionalidadAttrs" filter
-                                        :options="nacionalidades" optionLabel="name" optionValue="id"
-                                        placeholder="Elegir" showClear class="w-full border-green-iimp" />
-                                    <span class="font-normal text-red-600">{{ errors.nacionalidad }}</span>
-                                </div>
-                            </div>
-                            <div class="w-full">
-                                <label for="credencial" class="">Credential Name
-                                    <span class="text-xs text-gray-400">(Short name for credential)</span>
-                                    <span class="font-normal text-red-600">*</span>
-                                </label>
-                                <InputText name="credencial" v-model="credencial" v-bind="credencialAttrs"
-                                    class="w-full border-green-iimp" />
-                                <span class="font-normal text-red-600">{{ errors.credencial }}</span>
-                            </div>
+                            <!-- <div class="col-span-3 sm:col-span-1">
+                                <label for="apellido_materno" class="">Apellido Materno</label>
+                                <InputText name="apellido_materno" v-model="apellido_materno"
+                                    v-bind="apellido_maternoAttrs" class="w-full border-green-iimp" />
+                                <span class="font-normal text-red-600">{{ errors.apellido_materno }}</span>
+                            </div> -->
                         </div>
 
                     </div>
-                </template>
-            </Card>
+
+                    <div class="grid gap-6 m-6 grid-cols-1 md:grid-cols-4">
+
+                        <div class="w-full">
+                            <label for="pais" class="">Country <span class="font-normal text-red-600">*</span></label>
+                            <Select name="pais" v-model="pais" v-bind="paisAttrs" optionLabel="name" optionValue="id"
+                                placeholder="Elegir" showClear filter @change="loadDepartamentos" :options="paises"
+                                class="w-full border-green-iimp" />
+                            <span class="font-normal text-red-600">{{ errors.pais }}</span>
+                        </div>
+
+                        <div class="w-full">
+                            <label for="departamento" class="">State <span
+                                    class="font-normal text-red-600">*</span></label>
+                            <Select name="departamento" v-model="departamento" v-bind="departamentoAttrs" filter
+                                @change="loadProvincias" :options="departamentos" optionLabel="name"
+                                optionValue="id_departamento" placeholder="Elegir" showClear
+                                class="w-full border-green-iimp" />
+                            <span class="font-normal text-red-600">{{ errors.departamento }}</span>
+                        </div>
+
+                        <div class="w-full">
+                            <label for="provincia" class="">Province <span
+                                    class="font-normal text-red-600">*</span></label>
+                            <Select name="provincia" v-model="provincia" v-bind="provinciaAttrs" filter
+                                @change="loadDistritos" :options="provincias" optionLabel="name"
+                                optionValue="id_provincia" placeholder="Elegir" showClear
+                                class="w-full border-green-iimp" />
+                            <span class="font-normal text-red-600">{{ errors.provincia }}</span>
+                        </div>
+
+                        <div class="w-full">
+                            <label for="distrito" class="">District <span
+                                    class="font-normal text-red-600">*</span></label>
+                            <Select name="distrito" v-model="distrito" v-bind="distritoAttrs" filter
+                                :options="distritos" optionLabel="name" optionValue="id_distrito" placeholder="Elegir"
+                                showClear class="w-full border-green-iimp" />
+                            <span class="font-normal text-red-600">{{ errors.distrito }}</span>
+                        </div>
+
+                    </div>
+
+                    <div class="grid gap-6 m-6 md:grid-cols-2">
+                        <div class="grid gap-6 md:grid-cols-2">
+                            <div class="col-span-3 sm:col-span-1">
+                                <label for="correo" class="">Email Address <span
+                                        class="font-normal text-red-600">*</span></label>
+                                <InputText name="correo" v-model="correo" v-bind="correoAttrs"
+                                    class="w-full border-green-iimp" />
+                                <span class="font-normal text-red-600">{{ errors.correo }}</span>
+                            </div>
+                            <div class="col-span-3 sm:col-span-1">
+                                <label for="celular" class="">Phone Number <span
+                                        class="font-normal text-red-600">*</span></label>
+                                <InputText name="celular" v-model="celular" v-bind="celularAttrs"
+                                    class="w-full border-green-iimp" />
+                                <span class="font-normal text-red-600">{{ errors.id_tipo_celular }}</span>
+
+                            </div>
+
+                        </div>
+                        <div class="w-full sm:col-span-1">
+                            <label for="direccionPersona" class="">Address <span
+                                    class="font-normal text-red-600">*</span></label>
+                            <InputText name="direccionPersona" v-model="direccionPersona" v-bind="direccionPersonaAttrs"
+                                class="w-full border-green-iimp" />
+                            <span class="font-normal text-red-600">{{ errors.direccionPersona }}</span>
+                        </div>
+
+                    </div>
+
+                    <div class="grid gap-6 m-6 md:grid-cols-3">
+
+                        <div class="w-full sm:col-span-1">
+                            <label for="fecha_nacimiento" class="">Date of Birth <span
+                                    class="font-normal text-red-600">*</span></label>
+
+                            <InputGroup>
+                                <InputGroupAddon class="border-green-iimp border-r-0 bg-white text-green-iimp">
+                                    <i class="pi pi-calendar"></i>
+                                </InputGroupAddon>
+
+                                <Calendar name="fecha_nacimiento" v-model="fecha_nacimiento"
+                                    v-bind="fecha_nacimientoAttrs" :maxDate="today" dateFormat="yy-mm-dd"
+                                    :showTime="false" placeholder="YYYY-MM-DD"
+                                    class="w-full border-green-iimp border-l-0"
+                                    inputClass="w-full border-none shadow-none outline-none" />
+                            </InputGroup>
+
+                            <span class="font-normal text-red-600">{{ errors.fecha_nacimiento }}</span>
+                        </div>
+
+                        <div class="w-full sm:col-span-1">
+                            <label for="empresa" class="">Company <span
+                                    class="font-normal text-red-600">*</span></label>
+                            <InputText name="empresa" v-model="empresa" v-bind="empresaAttrs"
+                                class="w-full border-green-iimp" />
+                            <span class="font-normal text-red-600">{{ errors.empresa }}</span>
+                        </div>
+                        <div class="w-full sm:col-span-1">
+                            <label for="cargo" class="">Job Title <span
+                                    class="font-normal text-red-600">*</span></label>
+                            <InputText name="cargo" v-model="cargo" v-bind="cargoAttrs"
+                                class="w-full border-green-iimp" />
+                            <span class="font-normal text-red-600">{{ errors.cargo }}</span>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-6 m-6 md:grid-cols-2">
+                        <div class="grid gap-6 md:grid-cols-2">
+                            <div class="col-span-3 sm:col-span-1">
+                                <label for="sexo" class="">Sex <span class="font-normal text-red-600">*</span></label>
+                                <Select name="sexo" v-model="sexo" v-bind="sexoAttrs" optionLabel="label"
+                                    optionValue="value" placeholder="Elegir" showClear checkmark :options="generos"
+                                    class="w-full border-green-iimp" />
+                                <span class="font-normal text-red-600">{{ errors.sexo }}</span>
+
+                            </div>
+                            <div class="col-span-3 sm:col-span-1">
+                                <label for="nacionalidad" class="">Nationality <span
+                                        class="font-normal text-red-600">*</span></label>
+                                <Select name="nacionalidad" v-model="nacionalidad" v-bind="nacionalidadAttrs" filter
+                                    :options="nacionalidades" optionLabel="name" optionValue="id" placeholder="Elegir"
+                                    showClear class="w-full border-green-iimp" />
+                                <span class="font-normal text-red-600">{{ errors.nacionalidad }}</span>
+                            </div>
+                        </div>
+                        <div class="w-full sm:col-span-1">
+                            <label for="credencial" class="">Credential Name <span class="text-xs text-gray-400">(Short
+                                    name for the printed credential)</span><span class="font-normal text-red-600">
+                                    *</span></label>
+                            <InputText name="credencial" v-model="credencial" v-bind="credencialAttrs"
+                                class="w-full border-green-iimp" />
+                            <span class="font-normal text-red-600">{{ errors.credencial }}</span>
+                        </div>
+                    </div>
+
+
+
+                    <!-- <div class="gap-6 m-6 bg-lightgreen-iimp p-4 rounded-lg mt-[50px] bg-lightblue-wmc border-blue-wmc">
+                        <div class="p-2">
+                            Autorización para el tratamiento de Datos Personales
+                        </div>
+                        <div class="font-normal p-2">
+                            <p>De conformidad con lo dispuesto en la Ley N° 29733, Ley de Protección de Datos Personales
+                                y su Reglamento aprobado por Decreto Supremo N° 003-2013-JUS, a través del presente
+                                documento, otorgo mi consentimiento para que el Instituto de Ingenieros de Minas del
+                                Perú (en adelante, "IIMP") pueda efectuar el tratamiento de mis datos personales
+                                consignados en la presente ficha de inscripción y otros documentos oficiales de
+                                "PERUMIN 37" (en adelante, el "Evento"), tales como: nombres y apellidos, número de
+                                documento de identidad, dirección, sexo, profesión, entre otros datos, así como de toda
+                                aquella información registrada durante mi participación en el Evento, tales como: imagen
+                                física, fotografía, grabación en audio y/o video, entre otros; con la finalidad de que
+                                el IIMP pueda usarlos y/o reproducirlos libremente para fines de promoción del Evento
+                                y/o de posteriores ediciones, promoción de programas educativos o institucionales,
+                                eventos similares y otros permitidos por Ley.</p>
+                            <p>Este material podrá difundirse a través de spots televisivos y/o radiales, avisos en
+                                prensa escrita, afiches, volantes, encartes, folletos, banners impresos, sitios web,
+                                aplicativos (APP) del Evento y/o del IIMP, redes sociales, merchandising y cualquier
+                                otro tipo de material de soporte audio-.visual, ya sea en formato físico o digital.
+                                Suscribo esta autorización en señal de conformidad en todos sus extremos, la cual se
+                                otorga por tiempo indefinido y sin restricción geográfica.</p>
+                        </div>
+                        <div class="flex font-normal p-2 w-full justify-end">
+                            <Checkbox :binary="true" v-model="auth" v-bind="authAttrs" name="auth" />
+                            <label for="auth" class="pl-2">Autorización para compartir Datos Personales</label>
+
+                        </div>
+
+                    </div> -->
+                </div>
+
+            </div>
         </div>
         <!--          CATEGORIAS                      -->
         <!-- ======================================== -->
         <div class="text-green-iimp font-bold p-4">
-            <Card class="mt-5 overflow-hidden shadow-lg border border-gray-200">
+            <Card class="mt-5 overflow-hidden">
                 <template #header>
-                    <div
-                        class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc text-blue-900">
+                    <div class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc">
                         Category
                     </div>
                 </template>
-
                 <template #content>
-                    <div class="px-2">
-                        <div v-for="(categoria) in categorias" :key="categoria.id"
-                            class="w-full border-b border-gray-100 last:border-0 py-3 px-3 rounded-lg transition-colors duration-200"
-                            :class="{
-                                'bg-blue-50 border border-blue-200 shadow-sm': selected_categoria === categoria.id,
-                                'hover:bg-gray-50': selected_categoria !== categoria.id
-                            }">
-
-                            <div class="flex items-start w-full">
-                                <div class="flex-none pt-1">
-                                    <RadioButton v-model="selected_categoria" v-bind="selected_categoriaAttrs"
-                                        name="selected_categoria" :value='categoria.id' class="radio-green-iimp"
-                                        @click="changeCategory(categoria.id, categoria.precio_disponible.valor)" />
+                    <div class="flex items-center  w-full" v-for="(categoria) in categorias">
+                        <div v-if="categoria.control == 'CV'" class="w-full">
+                            <div v-if="es_socio && (categoria.condicion == 'SO')" class="flex items-center w-full">
+                                <RadioButton v-model="selected_categoria" v-bind="selected_categoriaAttrs"
+                                    name="selected_categoria" :value='categoria.id' class="ml-6 radio-green-iimp"
+                                    @click="changeCategory(categoria.id, categoria.precio_disponible.valor)" />
+                                <div class="flex justify-between w-full ml-6 mr-6">
+                                    <label class="ml-2">{{ categoria.nombre_en }}</label>
+                                    <!-- <p class="text-yellow-price">USD  {{  categoria.precio_disponible.valor }}</p> -->
+                                    <p class="text-yellow-price">
+                                        USD {{ categoria.precio_disponible?.valor ?? '0.00' }}
+                                    </p>
                                 </div>
-
-                                <div class="flex flex-col sm:flex-row sm:justify-between w-full pl-3 cursor-pointer"
-                                    @click="changeCategory(categoria.id, categoria.precio_disponible.valor)">
-                                    <label
-                                        class="text-sm sm:text-base text-gray-700 leading-tight mb-1 sm:mb-0 cursor-pointer"
-                                        :class="{ 'font-bold text-blue-900': selected_categoria === categoria.id }">
-                                        {{ es_socio || categoria.condicion == 'NS' ? categoria.nombre_es :
-                                            categoria.nombre_en }}
-                                    </label>
-                                    <p
-                                        class="text-yellow-price font-bold text-sm sm:text-base whitespace-nowrap sm:pl-4">
+                            </div>
+                            <div v-if="!es_socio && (categoria.condicion == 'NS')" class="flex items-center  w-full">
+                                <RadioButton v-model="selected_categoria" v-bind="selected_categoriaAttrs"
+                                    name="selected_categoria" :value='categoria.id' class="ml-6 radio-green-iimp"
+                                    @click="changeCategory(categoria.id, categoria.precio_disponible.valor)" />
+                                <div class="flex justify-between w-full ml-6 mr-6">
+                                    <label class="ml-2">{{ categoria.nombre_es }}</label>
+                                    <!-- <p class="text-yellow-price">USD {{ categoria.precio_disponible.valor }}</p> -->
+                                    <p class="text-yellow-price">
+                                        USD {{ categoria.precio_disponible?.valor ?? '0.00' }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div v-if="(categoria.condicion != 'SO' && categoria.condicion != 'NS')"
+                                class="flex items-center w-full">
+                                <RadioButton v-model="selected_categoria" v-bind="selected_categoriaAttrs"
+                                    name="selected_categoria" :value='categoria.id' class="ml-6 radio-green-iimp"
+                                    @click="changeCategory(categoria.id, categoria.precio_disponible.valor)" />
+                                <div class="flex justify-between w-full ml-6 mr-6">
+                                    <label class="ml-2">{{ categoria.nombre_en }}</label>
+                                    <!-- <p class="text-yellow-price">USD {{ categoria.precio_disponible.valor }}</p> -->
+                                    <p class="text-yellow-price">
                                         USD {{ categoria.precio_disponible?.valor ?? '0.00' }}
                                     </p>
                                 </div>
                             </div>
                         </div>
-
+                        <div v-else class="w-full">
+                            <div class="flex items-center w-full">
+                                <RadioButton v-model="selected_categoria" v-bind="selected_categoriaAttrs"
+                                    name="selected_categoria" :value='categoria.id' class="ml-6 radio-green-iimp"
+                                    @click="changeCategory(categoria.id, categoria.precio_disponible.valor)" />
+                                <div class="flex justify-between w-full ml-6 mr-6">
+                                    <label class="ml-2">{{ categoria.nombre_en }}</label>
+                                    <!-- <p class="text-yellow-price">USD {{ categoria.precio_disponible.valor }}</p> -->
+                                    <p class="text-yellow-price">
+                                        USD {{ categoria.precio_disponible?.valor ?? '0.00' }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
                     <Card v-if="show_days" class="m-6">
                         <template #content>
-                            <div v-if="formManualErrors.total"
-                                class="mt-4 flex items-center gap-3 rounded border-l-4 border-red-500 bg-red-50 px-4 py-2 text-red-800 shadow-sm animate-fade-in">
-                                <i class="pi pi-times-circle"></i>
-                                <span class="text-xs font-bold">{{ formManualErrors.total }}</span>
-                            </div>
                             <div class=" flex justify-around">
                                 <div v-for="(day, key) in days" :key="key">
                                     <Checkbox :inputId="day" :value="key" v-model="selectedDays"
@@ -962,11 +885,6 @@ defineExpose({
 
                             <div class="flex flex-col items-center justify-center w-full">
 
-                                <div v-if="formManualErrors.uploadDocument"
-                                    class="w-full mb-4 flex items-center gap-3 rounded border-l-4 border-red-500 bg-red-50 px-4 py-2 text-red-800 shadow-sm animate-fade-in">
-                                    <i class="pi pi-times-circle"></i>
-                                    <span class="text-xs font-bold">{{ formManualErrors.uploadDocument }}</span>
-                                </div>
                                 <div v-if="fileErrors.length > 0"
                                     class="w-full md:w-3/4 mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-center mx-auto">
                                     <div v-for="(error, index) in fileErrors" :key="index"
@@ -975,7 +893,6 @@ defineExpose({
                                         <span class="text-sm">{{ error }}</span>
                                     </div>
                                 </div>
-
 
                                 <div class="flex justify-center items-center w-full text-center">
                                     <FileUpload ref="fileupload" mode="basic"
@@ -997,6 +914,7 @@ defineExpose({
 
                         </template>
                     </Card>
+
                 </template>
             </Card>
         </div>
@@ -1025,22 +943,6 @@ defineExpose({
                 </template>
 
                 <template #content>
-                    <div v-if="billingMessage"
-                        class="mt-3 flex items-center gap-3 rounded border-l-4 px-4 py-2 shadow-sm animate-fade-in"
-                        :class="{
-                            'bg-green-50 border-green-500 text-green-800': billingMessage.type === 'success',
-                            'bg-orange-50 border-orange-500 text-orange-800': billingMessage.type === 'warn',
-                            'bg-red-50 border-red-500 text-red-800': billingMessage.type === 'error'
-                        }">
-
-                        <i class="pi" :class="{
-                            'pi-check-circle': billingMessage.type === 'success',
-                            'pi-exclamation-triangle': billingMessage.type === 'warn',
-                            'pi-times-circle': billingMessage.type === 'error'
-                        }"></i>
-
-                        <span class="text-xs font-bold">{{ billingMessage.text }}</span>
-                    </div>
                     <div class="grid gap-6 m-6 md:grid-cols-2">
                         <div class="grid gap-6 md:grid-cols-2">
                             <div class="col-span-3 sm:col-span-1">
@@ -1055,19 +957,17 @@ defineExpose({
                             </div>
 
                             <div class="col-span-3 sm:col-span-1">
-                                <label for="documentoEmpresa">Document Number <span
-                                        class="text-red-600">*</span></label>
+                                <label for="documentoEmpresa" class="">Document Number <span
+                                        class="font-normal text-red-600">*</span></label>
                                 <InputGroup>
                                     <InputText name="documentoEmpresa" v-model="documentoEmpresa"
-                                        v-bind="documentoEmpresaAttrs" class="border-green-iimp"
+                                        v-bind="documentoEmpresaAttrs" class="border-green-iimp "
                                         @keypress="onlyNumberKey" :maxlength="25" />
                                     <Button icon="pi pi-search" class="border-green-iimp bg-green-iimp"
                                         @click="getEmpresaData" :disabled="!documentoEmpresa || loading_doc"
                                         :loading="loading_doc" />
                                 </InputGroup>
                                 <span class="font-normal text-red-600">{{ errors.documentoEmpresa }}</span>
-
-
                             </div>
                         </div>
                         <div class="w-full sm:col-span-1">
@@ -1112,22 +1012,19 @@ defineExpose({
                     </div>
 
                     <div class="flex justify-around w-full mb-4">
-                        <Card
-                            class="gap-3 text-center w-full md:w-auto md:min-w-[450px] shadow-lg border border-gray-200">
+                        <Card class="gap-3 text-center min-w-[450px]">
                             <template #content>
                                 <div class="text-lg font-semibold m-4">Payment Document</div>
 
                                 <div class="flex flex-wrap justify-center gap-3">
-                                    <div class="flex items-center" v-for="tipodocpago in tipoDocumentoPago"
-                                        :key="tipodocpago.id">
+                                    <div class="flex items-center" v-for="tipodocpago in tipoDocumentoPago">
                                         <RadioButton v-model="selectTipoDocPago" v-bind="selectTipoDocPagoAttrs"
                                             :inputId="tipodocpago.nombre" name="tipodocpago" :value="tipodocpago.id"
                                             @click="$event.preventDefault()" />
-                                        <label :for="tipodocpago.nombre" class="ml-2 cursor-pointer">{{
-                                            tipodocpago.nombre }}</label>
+                                        <label :for="tipodocpago.nombre" class="ml-2">{{ tipodocpago.nombre }}</label>
                                     </div>
                                 </div>
-                                <span class="font-normal text-red-600 block mt-2">{{ errors.selectTipoDocPago }}</span>
+                                <span class="font-normal text-red-600">{{ errors.selectTipoDocPago }}</span>
                             </template>
                         </Card>
                         <!-- <Card class="gap-3 text-center min-w-[450px]">
@@ -1153,15 +1050,15 @@ defineExpose({
         </div>
         <!--      TERMINOS Y REGLAS DE PARTICIPACION  -->
         <!-- ======================================== -->
-        <!-- <div class="text-green-iimp font-bold p-4 flex justify-between">
+        <div class="text-green-iimp font-bold p-4 flex justify-between">
             <div class="">
                 <Checkbox :binary="true" v-model="terminos" v-bind="terminosAttrs" name="terminos" />
                 <label for="terminos" class="pl-2 cursor-pointer" @click="showModal">Terms and Conditions of
                     Participation <span class="font-normal text-red-600">*</span></label>
 
-            </div> -->
+            </div>
 
-        <!-- <div class="">
+            <!-- <div class="">
                 <Checkbox :binary="true" v-model="reglamento" v-bind="reglamentoAttrs" name="reglamento" />
                 <a :href="reglamento_inscripciones" target="_blank" rel="noopener noreferrer" title="Ver reglamento">
                     <label for="reglamento" class="pl-2 cursor-pointer">Term and Conditions<span
@@ -1169,54 +1066,12 @@ defineExpose({
                 </a>
             </div> -->
 
-        <!-- </div> -->
-        <div class="text-green-iimp font-bold p-4">
-            <Card class="mt-5 overflow-hidden shadow-lg border border-gray-200">
-
-                <template #header>
-                    <div class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc">
-                        Terms and Conditions
-                    </div>
-                </template>
-
-                <template #content>
-                    <div v-if="formManualErrors.reglamento"
-                        class="mb-4 flex items-center gap-3 rounded border-l-4 border-red-500 bg-red-50 px-4 py-2 text-red-800 shadow-sm animate-fade-in">
-                        <i class="pi pi-times-circle"></i>
-                        <span class="text-xs font-bold">{{ formManualErrors.reglamento }}</span>
-                    </div>
-                    <div
-                        class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-800 font-normal text-sm text-justify rounded-r">
-                        <p>
-                            It is mandatory to read and accept the Terms and Conditions to proceed with the registration
-                            process.
-                            Please mark the checkbox below to confirm your agreement. We appreciate your participation.
-                        </p>
-                    </div>
-
-                    <div class="flex flex-col items-center justify-center">
-                        <div class="flex items-center">
-
-                            <Checkbox :binary="true" v-model="reglamento" v-bind="reglamentoAttrs" name="reglamento" />
-                            <a :href="reglamento_inscripciones" target="_blank" rel="noopener noreferrer"
-                                title="Ver reglamento">
-                                <label for="reglamento" class="pl-2 cursor-pointer"> I have read and accept the Terms
-                                    and Conditions of
-                                    Participation<span class="font-normal text-red-600">*</span></label>
-                            </a>
-                        </div>
-
-                        <span class="font-normal text-red-600 text-sm mt-2">{{ errors.terminos }}</span>
-                    </div>
-                </template>
-            </Card>
         </div>
-
     </div>
 
     <!--      MODAL DE TERMINOS Y CONDICIONES     -->
     <!-- ======================================== -->
-    <!-- <Dialog v-model:visible="visible" modal :style="{ border: 'none' }"
+    <Dialog v-model:visible="visible" modal :style="{ border: 'none' }"
         class="modal-green max-w-[750px] modal-custom-scroll m-[5px]"
         :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
         <div class="modal-head-title font-bold">
@@ -1263,6 +1118,6 @@ defineExpose({
                 </button>
             </div>
         </div>
-    </Dialog> -->
+    </Dialog>
 
 </template>

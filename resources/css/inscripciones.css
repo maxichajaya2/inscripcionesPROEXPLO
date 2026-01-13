@@ -1,42 +1,86 @@
 :root {
-  --primary-color: #004F59; /* green-500 */
-  --primary-color-text: #004F59;
+
+
+    --primary-color: #004f59; /* green-500 */
+    --primary-color-text: #004f59;
 }
 
-.text-green-iimp{
-  color: #004F59 !important;
+.text-green-iimp {
+    color: #004f59 !important;
 }
 
-.text-yellow-price{
-  color: #F2A900 !important;
+.text-yellow-price {
+    color: #f2a900 !important;
 }
 
-.bg-green-iimp{
-    background-color: #004F59 !important;
-  }
-
-.border-green-iimp{
-  border-color: #004F59 !important;
+.text-white-price {
+    color: black !important;
+    border-radius: 20px !important;
 }
 
-.p-radiobutton-checked .p-radiobutton-box  {
-  background-color: #004F59 !important; /* green-500 */
-  border-color: #004F59 !important;
+.text-black-price {
+    color: #ffffff !important;
+    border-radius: 20px !important;
+}
+.bg-green-iimp {
+    background-color: #004f59 !important;
 }
 
-.border-rounded-full{
+.bg-degradient {
+    background: linear-gradient(
+        to bottom right,
+        #00b3dc 0%,
+        #0124e0 50%,
+        #00023f 100%
+    ) !important;
+}
+
+.bg-card-option {
+    background: linear-gradient(145deg, #ffffff 0%, #f7f7f7 40%, #e8e8e8 100%);
+    border-radius: 14px;
+    backdrop-filter: blur(4px);
+}
+
+.border-green-iimp {
+    border-color: #004f59 !important;
+}
+
+.shadow-wmc {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.9);
+    transition: box-shadow 0.3s ease;
+}
+.shadow-wmc:hover {
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+/* .bg-gradient-wmc {
+  background: linear-gradient(to bottom right, #00b3dc, #0124e0, #00023f);
+} */
+
+.bg-gradient-wmc {
+    background-image: url("/images/fondo-wmc.png");
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.p-radiobutton-checked .p-radiobutton-box {
+    background-color: #004f59 !important; /* green-500 */
+    border-color: #004f59 !important;
+}
+
+.border-rounded-full {
     border-radius: 9999px !important;
 }
 
-.bg-lightgreen-iimp{
-   background-color: rgba(196, 212, 214, 0.5) !important;
+.bg-lightgreen-iimp {
+    background-color: rgba(196, 212, 214, 0.5) !important;
 }
 
-.border-lightgreen-iimp{
-   border-color: rgba(196, 212, 214, 0.5) !important;
+.border-lightgreen-iimp {
+    border-color: rgba(196, 212, 214, 0.5) !important;
 }
 
-.container-title-visitor{
+.container-title-visitor {
     display: flex;
     width: 100%;
     -webkit-box-pack: justify;
@@ -45,7 +89,7 @@
     padding: 12px 8px 12px 40px;
 }
 
-.container-visitor-border{
+.container-visitor-border {
     border-width: 1px;
     border-radius: 8px;
     border-style: solid;
@@ -55,30 +99,30 @@
 }
 
 .container-visitor-border:hover {
-  color: #fff;
-  background-color: #004F59;
+    color: #fff;
+    background-color: #004f59;
 }
 
-.modal-green{
-  color: #fff !important;
-  background-color: #004F59 !important;
+.modal-green {
+    color: #fff !important;
+    background-color: #004f59 !important;
 }
 
-.modal-head-title{
+.modal-head-title {
     font-size: 22px;
     font-weight: bold;
     text-align: center;
 }
 
-.modal-green .p-button{
-  color: #fff !important;
+.modal-green .p-button {
+    color: #fff !important;
 }
 
-.modal-green .p-button:hover{
-  color: #004F59 !important;
+.modal-green .p-button:hover {
+    color: #004f59 !important;
 }
 
-.modal-green .p-dialog-header{
+.modal-green .p-dialog-header {
     max-height: 55px;
     margin-left: auto;
 }
@@ -87,14 +131,13 @@
     overflow-y: auto;
 }
 
-
 .modal-custom-scroll::-webkit-scrollbar {
     width: 4px;
 }
 
 .modal-custom-scroll::-webkit-scrollbar-thumb {
-  background-color: #888;
-  border-radius: 4px;
+    background-color: #888;
+    border-radius: 4px;
 }
 
 .modal-custom-scroll::-webkit-scrollbar-track {
@@ -102,84 +145,160 @@
     border-radius: 40px;
 }
 
-.modal-cancel-button{
+.modal-cancel-button {
     color: #fff !important;
-    background-color: #004F59 !important;
+    background-color: #004f59 !important;
     border-color: #fff !important;
 }
 
-.modal-continue-button{
-    color: #004F59 !important;
+.modal-continue-button {
+    color: #004f59 !important;
     background-color: #fff !important;
     border: none;
 }
 
-.head-tarif{
+.head-tarif {
     text-align: center;
-    background-color: #F2A900;
+    background-color: #f2a900;
     border-radius: 15px 15px 0px 0px;
 }
 
-.body-tarif{
-    color: #F2A900;
-    border-right: 2px solid #F2A900;
-    border-left: 2px solid #F2A900;
+.body-tarif {
+    color: #f2a900;
+    border-right: 2px solid #f2a900;
+    border-left: 2px solid #f2a900;
 }
 
-.foot-tarif{
+.foot-tarif {
     border-top: 2px solid #296b74;
 }
 
-.p-step-active .p-step-title{
-    color: #004F59 !important;
+.p-step-active .p-step-title {
+    color: #fff  !important;
     font-weight: bold;
 }
 
 .p-step-active .p-step-number {
-    color: #004F59 !important;
+    color: #004f59 !important;
     font-weight: bold;
 }
 
-.p-step:has(~ .p-step-active) .p-stepper-separator
- {
-    background: #004F59 !important;
+.p-step:has(~ .p-step-active) .p-stepper-separator {
+    background: #004f59 !important;
 }
 
-.p-datepicker:has(.p-datepicker-input-icon-container) .p-datepicker-input{
-    border-color: #004F59 !important;
+.p-datepicker:has(.p-datepicker-input-icon-container) .p-datepicker-input {
+    border-color: #004f59 !important;
 }
 
 .custom-checkbox.p-checkbox .p-checkbox-box.p-highlight {
-  background-color: #004F59;
-  border-color: #004F59;
+    background-color: #004f59;
+    border-color: #004f59;
 }
 
 .p-button .p-component {
-    background-color: #004F59 !important;
+    background-color: #004f59 !important;
 }
 
-.p-datepicker-input-icon-container{
-    color: #004F59 !important;
+.p-datepicker-input-icon-container {
+    color: #004f59 !important;
 }
 
-.section-conditions{
+.section-conditions {
     padding: 24px;
     border-radius: 8px;
     background-color: rgba(196, 212, 214, 0.5);
 }
 
-.table-celd{
-    border-color: #004F59 !important;
+.table-celd {
+    border-color: #004f59 !important;
     border-width: 3px;
     border-radius: 10px;
     border-style: solid;
 }
 
-  table {
+table {
     border-collapse: separate; /* IMPORTANT */
-   /* border-spacing: 0;
+    /* border-spacing: 0;
     border: 1px solid #ccc;
     border-radius: 8px;
     overflow: hidden;  for clipping */
-  }
+}
 
+
+/* ========================================================
+   2. NUEVAS OPCIONES: ESTILO AZUL DEGRADADO (TIPO PAY BUTTON)
+   (Usa estas clases si quieres aplicar el estilo azul)
+   ======================================================== */
+
+/* Fondo Degradado Azul -> Cyan (Igual al botón) */
+.bg-blue-wmc {
+    background: linear-gradient(90deg, #1d4ed8 0%, #2563eb 50%, #06b6d4 100%) !important;
+    color: #fff !important;
+}
+
+/* Fondo Azul Claro (Para reemplazar bg-lightgreen-iimp si quisieras) */
+.bg-lightblue-wmc {
+    background: linear-gradient(90deg, rgba(29, 78, 216, 0.1) 0%, rgba(6, 182, 212, 0.15) 100%) !important;
+}
+
+/* Texto Azul Oscuro */
+.text-blue-wmc {
+    color: #1d4ed8 !important;
+}
+
+/* Bordes Azules */
+.border-blue-wmc {
+    border-color: #06b6d4 !important;
+}
+
+/* Radio Buttons estilo Azul */
+.radio-blue-wmc .p-radiobutton-box.p-highlight {
+    background-color: #06b6d4 !important;
+    border-color: #1d4ed8 !important;
+}
+
+/* =======================================================
+   HACK PARA AGRANDAR EL MODAL DE NIUBIZ
+   ======================================================= */
+
+/* Solo aplicamos esto en pantallas grandes (PC/Laptop)
+   para no romper la vista en celulares */
+@media (min-width: 1024px) {
+
+    /* Buscamos cualquier iframe que venga de vnforapps (Niubiz) */
+    iframe[src*="vnforapps"] {
+        /* Hacemos un Zoom del 15% más grande */
+        transform: scale(1.15) !important;
+
+        /* Ajustamos el origen para que crezca desde el centro hacia abajo */
+        transform-origin: center 80px !important;
+
+        /* Opcional: Si se ve borroso, intenta esto */
+        backface-visibility: hidden;
+    }
+}
+
+/* Opcional: Si el contenedor del modal tiene un ID específico
+   (A veces Niubiz usa estos IDs, por si el de arriba no funciona) */
+#div-micuenta-web-iframe,
+#visanet_iframe_container {
+    transform: scale(1.15) !important;
+    transform-origin: center 50px !important;
+}
+
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in-down {
+    animation: fadeInDown 0.8s ease-out;
+}

@@ -45,10 +45,16 @@ class HandleInertiaRequests extends Middleware
 
         $sharedData['general.paises'] = Pais::where('isactive', true)->get();
         $sharedData['general.tipDocPer'] = TipoDocumento::where('isactive', true)
+                ->whereIn('sie_code', [1, 7])
                 ->whereJsonContains('tipo', 'persona')->get();
         $sharedData['general.tipoDocumentoPago'] = TipoDocumentoPago::where('isactive', true)->get();
         $sharedData['general.tipDocEmp'] = TipoDocumento::where('isactive', true)
-                ->whereJsonContains('tipo', 'empresa')->orWhere('name_es', '=','DNI')->get(); // se agrego dni como documento para el pago
+                // ->whereJsonContains('tipo', 'empresa')
+                ->orWhere('name_en', '=','DNI')
+                ->orWhere('name_en', '=','PASSPORT')
+                ->orWhere('name_en', '=','RUT')
+                ->orWhere('name_en', '=','RUC')
+                ->get(); // se agrego dni como documento para el pago
         $sharedData['general.tipoServicios'] = TipoServicio::where('isactive', true)->get();
         $sharedData['general.generos'] = config('data.generos');
         $sharedData['general.reglamento_inscripciones'] = config('app.reglamento_inscripciones');
@@ -57,11 +63,14 @@ class HandleInertiaRequests extends Middleware
             'error' => $request->session()->get('error'),
             'warning' => $request->session()->get('warning'),
             'info' => $request->session()->get('info'),
+            // LÍNEA PARA EL ALERT DE NIUBIZ
+            'payment_error_code' => $request->session()->get('payment_error_code'),
         ];
 
         $sharedData['data'] = [
             'response' => $request->session()->get('response'),
         ];
+
 
 
         return $sharedData;

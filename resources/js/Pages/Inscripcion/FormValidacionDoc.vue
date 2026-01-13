@@ -14,83 +14,98 @@ const visible = ref(true);
 const toast = useToast();
 
 const page = usePage();
-const props = defineProps({});
+// const props = defineProps({});
 const tipoDocumento = computed(() => usePage().props.general.tipDocPer);
 
-const schema = yup.object({
-  tipo_doc: yup.mixed().required('Tipo documento es requerido'),
-  documento: yup.string().when(
-            'tipo_doc',
-            (tipo_doc) => {
-                if (typeof tipo_doc[0] != 'undefined') {
-                    if (tipo_doc[0] == 1) {
-                        return yup.string().matches(/^[0-9]+$/, "El valor debe ser numérico").test('len', 'Debe tener exactamente 8 dígitos', val => val && val.toString().length === 8)
-                    } else {
-                        return yup.string().matches(/^[a-zA-Z0-9]+$/, "El valor debe ser numéros o letras").required('Documento es requerido')
-                    }
-                }
-            },
-        ),
+const props = defineProps({
+    saved_values: Object // <--- Recibir
 });
 
-const { defineField, errors, handleSubmit, setValues, resetForm ,values } = useForm({
-        validationSchema: schema,
- });
+const schema = yup.object({
+    tipo_doc: yup.mixed().required('Document type is required'),
+    documento: yup.string().when(
+        'tipo_doc',
+        (tipo_doc) => {
+            if (typeof tipo_doc[0] != 'undefined') {
+                if (tipo_doc[0] == 1) {
+                    // Validación para DNI (Solo números y 8 dígitos)
+                    return yup.string()
+                        .matches(/^[0-9]+$/, "The value must be numeric")
+                        .test('len', 'Must be exactly 8 digits', val => val && val.toString().length === 8)
+                } else {
+                    // Validación para Pasaporte/Otros (Alfanumérico)
+                    return yup.string()
+                        .matches(/^[a-zA-Z0-9]+$/, "The value must be numbers or letters")
+                        .required('Document number is required')
+                }
+            }
+        },
+    ),
+});
+
+const { defineField, errors, handleSubmit, setValues, resetForm, values } = useForm({
+    validationSchema: schema,
+});
 
 const [tipo_doc, tipo_docAttrs] = defineField('tipo_doc');
 const [documento, documentoAttrs] = defineField('documento');
 
 const onlyNumberKey = (event) => {
-    if( tipo_doc.value == 1 ){
+    if (tipo_doc.value == 1) {
         const charCode = event.charCode ? event.charCode : event.keyCode
         if (charCode < 48 || charCode > 57) {
             event.preventDefault()
-        }else{
-            if(typeof documento.value != 'undefined' ){
-                if(documento.value.length == 8){
+        } else {
+            if (typeof documento.value != 'undefined') {
+                if (documento.value.length == 8) {
                     event.preventDefault()
                 }
             }
 
         }
-    }else{
-            const key = event.key;
+    } else {
+        const key = event.key;
 
-            // Allow navigation and control keys
-            if (["Backspace", "Delete", "Tab", "ArrowLeft", "ArrowRight"].includes(key)) {
-                return;
-            }
-
-            // Block everything that's not a-z, A-Z, 0-9
-            if (!/^[a-zA-Z0-9]$/.test(key)) {
-                event.preventDefault();
-            }
+        // Allow navigation and control keys
+        if (["Backspace", "Delete", "Tab", "ArrowLeft", "ArrowRight"].includes(key)) {
+            return;
         }
+
+        // Block everything that's not a-z, A-Z, 0-9
+        if (!/^[a-zA-Z0-9]$/.test(key)) {
+            event.preventDefault();
+        }
+    }
 }
 
-const getValidacionDoc =  () => {
+const getValidacionDoc = () => {
 
-    if(typeof documento.value == 'undefined' ){
-        toast.add({ severity: 'error', summary: 'Ingresa un número de documento', life: 2000 });
-         return { "validate" : false };
+    if (typeof documento.value == 'undefined') {
+        toast.add({ severity: 'error', summary: 'Document number is required', life: 2000 });
+        return { "validate": false };
     }
 
     if (tipo_doc.value == 1) {
-        if ( documento.value.length != 8) {
-            toast.add({ severity: 'error', summary: 'El DNI debe tener 8 dígitos', life: 2000 });
-            return { "validate" : false };
+        if (documento.value.length != 8) {
+            toast.add({ severity: 'error', summary: 'The DNI must have 8 digits', life: 2000 });
+            return { "validate": false };
         }
     }
 
-    if(Object.keys(errors._value).length == 0 && tipo_doc.value > 0){
-        return { "validate" : true ,
+    if (Object.keys(errors._value).length == 0 && tipo_doc.value > 0) {
+        return {
+            "validate": true,
             "formValidacionDoc": values
         };
 
-    }else{
-         return { "validate" : false };
+    } else {
+        return { "validate": false };
     }
 
+    return {
+        validate: true,
+        formValidacionDoc: values
+    }
 
 }
 
@@ -102,36 +117,43 @@ onMounted(() => {
     tipo_doc.value = 1;
 })
 
+// onMounted(() => {
+//     if (props.saved_values) {
+//         setValues(props.saved_values);
+//     }else{
+//          tipo_doc.value = 1;
+//     }
+// });
+
 defineExpose({
-  getValidacionDoc
+    getValidacionDoc
 });
 
 </script>
 
 <template>
     <form id="FormValidacionDoc">
-        <div class="flex gap-6 p-6 w-full justify-around">
-            <div class ="text-green-iimp font-bold  max-w-[450px] p-4">
-                <div class ="text-green-iimp font-bold text-center p-4">
-                    Estamos a punto de validar tu información. Por favor, completa tus datos
+        <div class="flex gap-6 p-6 w-full justify-around ">
+            <div class="text-green-iimp font-bold  max-w-[450px] p-4">
+                <div class="text-green-iimp font-bold text-center p-4">
+                    We are about to validate your information. Please fill in your details.
                 </div>
                 <div class="col-span-3 sm:col-span-1 p-4">
 
-                    <label for="tipo_doc" class="">Tipo de documento*</label>
-                    <Select name="tipo_doc" v-model="tipo_doc" v-bind="tipo_docAttrs" :options="tipoDocumento" @change="clearDocument"
-                    optionLabel="name_es" optionValue="id" placeholder="Seleccione Documento" showClear checkmark
-                    class="w-full border-green-iimp" />
+                    <label for="tipo_doc" class="">Document Type*</label>
+                    <Select name="tipo_doc" v-model="tipo_doc" v-bind="tipo_docAttrs" :options="tipoDocumento"
+                        @change="clearDocument" optionLabel="name_en" optionValue="id" placeholder="Select Document"
+                        showClear checkmark class="w-full border-green-iimp" />
                     <span class="font-normal text-red-600">{{ errors.tipo_doc }}</span>
 
                 </div>
                 <div class="col-span-3 sm:col-span-1 p-4">
-                        <label for="documento"  class="">Número de documento*</label>
-                        <InputText name="documento" v-model="documento" v-bind="documentoAttrs" class="w-full border-green-iimp"
-                         @keypress="onlyNumberKey" :maxlength="25" />
-                        <span class="font-normal text-red-600">{{ errors.documento }}</span>
+                    <label for="documento" class="">Document Number*</label>
+                    <InputText name="documento" v-model="documento" v-bind="documentoAttrs"
+                        class="w-full border-green-iimp" @keypress="onlyNumberKey" :maxlength="25" />
+                    <span class="font-normal text-red-600">{{ errors.documento }}</span>
                 </div>
             </div>
         </div>
     </form>
 </template>
-

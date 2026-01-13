@@ -16,16 +16,26 @@ return [
     |
     */
 
-    'event_name'=> "PERUMIN 37",
-    'id_evento'=> "2",
-    'event_type'=> "2",
-    'event_code'=> "16",
-    'evento'=> "perumin",
+    'event_name'=> "WORLD MINING CONGRESS 2026",
+
+    //WCMC 2026
+    // 'id_evento'=> "5",
+    // 'event_type'=> "13",
+    // 'evento'=> "wmc2026",
+    // 'event_code'=> "1",
+
+    // PERUMIN
+    // 'id_evento'=> "2",
+    // 'event_type'=> "2",
+    // 'event_code'=> "16",
+    // 'evento'=> "perumin",
+
+
     'valid_ip'=> "200.37.185.4",
     'valid_pass' => "$2y$10EoqWZuIEQ4vnwtm2IU3bruqmBD9yDiLrdIGNTHnSIRgAAatpBE9YK",
     "reglamento_es"=>"https://ecommerce.perumin.com/files_perumin/reglamentos/es/REGLAMENTOS_DE_EXHIBICION.pdf",
     "reglamento_proveedores_es"=>"https://ecommerce.perumin.com/files_perumin/reglamentos/es/REGLAMENTO_DE_PROVEEDOR.pdf",
-    "reglamento_inscripciones" => "https://perumin.com/perumin37/public/uploads/shares/documents/pdf/REGLAMENTOS_DE_INSCRIPCIONES_ESP.pdf",
+    "reglamento_inscripciones" => "http://127.0.0.1:8000/documents/reglamento.pdf",
     "mapa"=>"https://ecommerce.perumin.com/files_perumin/mapa/PERUMIN%2037.pdf",
     "url_logo_niubiz" => "https://cms.iimp.org.pe/images/logo.svg",
     "cache_duration"=>43200,//12 horas

@@ -1,17 +1,15 @@
 @php
     $dias_nombres = [
-            'lun' => 'Lunes',
-            'mar' => 'Martes',
-            'mie' => 'Miercoles',
-            'jue' => 'Jueves',
-            'vie' => 'Viernes'
-            ];
+        'lun' => 'Monday',
+        'mar' => 'Tuesday',
+        'mie' => 'Wednesday',
+        'jue' => 'Thursday',
+        'vie' => 'Friday'
+    ];
     $dias_seleccionados = [];
 
     if(str_contains($inscripcion->categoria_inscripcion->nombre_es, 'DIA')){
-
         $dias_inscripcion = json_decode($inscripcion->dias, true);
-
         foreach($dias_inscripcion as $key => $dia){
             if($dia){
                 $dias_seleccionados[] = $dias_nombres[$key];
@@ -19,125 +17,114 @@
         }
     }
 
-    $digitos = substr( $pago->card_num ,-8);
+    $digitos = substr($pago->card_num, -4); // Generalmente se muestran los últimos 4
 @endphp
 
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Confirmación de Inscripción </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Confirmation - WMC</title>
 </head>
-<body style="font-family: Arial, sans-serif; background: #f7f7f7; padding: 30px;">
-    <div style="max-width: 600px; margin: auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #e0e0e0; padding: 30px;">
-        <div>
-            <div  style ="display: flex; justify-content: space-around; text-align:center;">
-                <img src="https://perumin.com/perumin37/public/uploads/shares/Home/LOGO_PERUMIN_37.png" alt="" width="340px" style= "max-width: 340px; margin: auto;">
-            </div>
-            <div  style ="display: flex; justify-content: space-around; text-align:center;">
-                <h2 style="color: #1a202c; margin: auto;">{{ config('app.event_name') }} - Confirmación de Inscripción</h2>
-            </div>
-        </div>
-        <p>Nos complace informarte que tu inscripción como <strong> {{ $inscripcion->categoria_inscripcion->nombre_es }}</strong> ha sido </strong>confirmada exitosamente
-           para el evento <strong>{{ config('app.event_name') }}</strong>.</p>
+<body style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f7f9; margin: 0; padding: 0; -webkit-font-smoothing: antialiased;">
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f4f7f9; padding: 40px 10px;">
+        <tr>
+            <td align="center">
+                <table width="100%" max-width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border-top: 8px solid #1d4ed8;">
 
-        <h3 style="color: #2d3748; margin-top: 30px;">DATOS DEL PARTICIPANTE</h3>
+                    <tr>
+                        <td style="padding: 40px 40px 20px 40px; text-align: center;">
+                            <img src="https://papers.wmc2026.org/logo-wmc.png" alt="WMC Logo" width="280" style="display: block; margin: 0 auto 25px auto;">
+                            <h1 style="color: #1e3a8a; font-size: 24px; font-weight: 800; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Registration Confirmed</h1>
+                            <div style="width: 60px; height: 4px; background-color: #2563eb; margin: 15px auto;"></div>
+                        </td>
+                    </tr>
 
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-            <tr>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">Nombre completo:</td>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">{{ $inscripcion->persona->nombres }} {{ $inscripcion->persona->apellido_paterno }} {{ $inscripcion->persona->apellido_materno }}</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">{{ $inscripcion->persona->tipoDocumento->name_es }}:</td>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">{{ $inscripcion->persona->documento }}</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">Email: </td>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">{{ $inscripcion->persona->correo }}</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">Direccion:</td>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">{{ $inscripcion->persona->direccion->direccion }}</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">Telefono:</td>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">{{ $inscripcion->persona->celular }}</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">Empresa:</td>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">{{ $inscripcion->facturacion->observacion }}</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">Autorización para el tratamiento de Datos Personales:</td>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">{{ $inscripcion->autorizacion_datos ? "Si" : "No" }}</td>
-            </tr>
-        </table>
+                    <tr>
+                        <td style="padding: 0 40px 30px 40px; text-align: center; color: #4b5563; line-height: 1.6;">
+                            <p style="font-size: 16px; margin: 0;">Dear <strong>{{ $inscripcion->persona->nombres }}</strong>,</p>
+                            <p style="font-size: 15px; margin: 10px 0 0 0;">We are pleased to inform you that your registration for <strong>{{ config('app.event_name') }}</strong> has been successfully processed.</p>
+                        </td>
+                    </tr>
 
-        <h3 style="color: #2d3748;">INSCRIPCIÓN</h3>
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-            <tr>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">Categoria:</td>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">{{ $inscripcion->categoria_inscripcion->nombre_es }}</td>
-            </tr>
-            @if(sizeof($dias_seleccionados) > 0)
-                <tr>
-                    <td style = "padding: 8px; border: 1px solid #e2e8f0; width:270px; margin: auto; text-align: center;" colspan="2">
+                    <tr>
+                        <td style="padding: 0 40px;">
+                            <div style="background-color: #f8fafc; border-radius: 12px; padding: 25px; border: 1px solid #e2e8f0;">
+                                <h3 style="color: #1d4ed8; font-size: 14px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Participant Details</h3>
 
-                            @foreach($dias_seleccionados as $dia)
-                                <input type="checkbox" checked style = "padding-right: 5px;" id ='{{ $dia }}'>
-                                <label for="" style = "padding-right: 10px;">{{ $dia }}</label>
-                            @endforeach
-                    </td>
-                </tr>
-            @endif
-        </table>
+                                <table width="100%" style="font-size: 14px; color: #334155;">
+                                    <tr>
+                                        <td style="padding: 5px 0; color: #64748b; width: 40%;">Full Name:</td>
+                                        <td style="padding: 5px 0; font-weight: 600;">{{ $inscripcion->persona->nombres }} {{ $inscripcion->persona->apellido_paterno }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 5px 0; color: #64748b;">{{ $inscripcion->persona->tipoDocumento->name_en }}:</td>
+                                        <td style="padding: 5px 0; font-weight: 600;">{{ $inscripcion->persona->documento }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 5px 0; color: #64748b;">Category:</td>
+                                        <td style="padding: 5px 0; font-weight: 700; color: #1e3a8a;">{{ $inscripcion->categoria_inscripcion->nombre_en }}</td>
+                                    </tr>
+                                    @if(count($dias_seleccionados) > 0)
+                                    <tr>
+                                        <td style="padding: 5px 0; color: #64748b;">Selected Days:</td>
+                                        <td style="padding: 5px 0;">
+                                            @foreach($dias_seleccionados as $dia)
+                                                <span style="background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-right: 4px;">{{ $dia }}</span>
+                                            @endforeach
+                                        </td>
+                                    </tr>
+                                    @endif
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
 
-        <h3 style="color: #2d3748;">FACTURACIÓN</h3>
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-            <tr>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">Factura a nombre de:</td>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">{{ $inscripcion->facturacion->nombre_facturador }}</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">{{ $inscripcion->facturacion->tipoDocumentoFacturador->name_es }}:</td>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">{{ $inscripcion->facturacion->numero_doc_facturador }}</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">Dirección:</td>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">{{ $inscripcion->facturacion->direccion_facturador }}</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">Persona de Contacto:</td>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">{{ $inscripcion->facturacion->responsable_facturador }}</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">Forma de pago:</td>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">{{ $inscripcion->facturacion->tipoPago->name }}</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">Tipo de comprobante de Pago:</td>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">{{ $inscripcion->facturacion->tipoDocumentoPago->nombre }}</td>
-            </tr>
+                    <tr>
+                        <td style="padding: 20px 40px 40px 40px;">
+                            <div style="background-color: #1e3a8a; border-radius: 12px; padding: 25px; color: #ffffff;">
+                                <h3 style="color: #93c5fd; font-size: 14px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">Billing Summary</h3>
 
-            <tr>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">N° TRANSACCION::</td>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">{{ $pago->idtransaccion }}</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">Ulitmos Dígitos de Tarjeta:</td>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">{{ $digitos }}</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">TOTAL:</td>
-                <td style="padding: 8px; border: 1px solid #e2e8f0; width:270px;">USD {{ $inscripcion->facturacion->total }}</td>
-            </tr>
-        </table>
+                                <table width="100%" style="font-size: 14px;">
+                                    <tr>
+                                        <td style="padding: 5px 0; color: #bfdbfe;">Company / Tax Name:</td>
+                                        <td style="padding: 5px 0; font-weight: 500; text-align: right;">{{ $inscripcion->facturacion->nombre_facturador }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 5px 0; color: #bfdbfe;">Transaction ID:</td>
+                                        <td style="padding: 5px 0; font-weight: 500; text-align: right;">#{{ $pago->idtransaccion }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 5px 0; color: #bfdbfe;">Card:</td>
+                                        <td style="padding: 5px 0; font-weight: 500; text-align: right;">•••• {{ $digitos }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 20px 0 0 0; font-size: 18px; font-weight: 800;">TOTAL PAID:</td>
+                                        <td style="padding: 20px 0 0 0; font-size: 22px; font-weight: 900; text-align: right; color: #60a5fa;">USD {{ number_format($inscripcion->facturacion->total, 2) }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
 
-        <p style="margin-top: 30px;">Si tienes alguna consulta, puedes responder a este correo o comunicarte con nosotros.</p>
-        <p style="color: #4a5568;">¡Gracias por participar en {{ config('app.event_name') }}!</p>
-        <hr style="margin: 30px 0;">
-        <p style="font-size: 12px; color: #a0aec0;">Este correo es informativo y ha sido generado automáticamente. Por favor, no responder a este mensaje.</p>
-    </div>
+                    <tr>
+                        <td style="padding: 0 40px 40px 40px; text-align: center; font-size: 13px; color: #94a3b8; line-height: 1.5;">
+                            <p>Thank you for being part of <strong>{{ config('app.event_name') }}</strong>.</p>
+                            <p style="margin-top: 15px; font-size: 11px; color: #cbd5e1;">This is an automated message. Please do not reply to this email. If you have questions, contact our support team.</p>
+                        </td>
+                    </tr>
+                </table>
+
+                <table width="100%" max-width="600" style="max-width: 600px; margin-top: 20px;">
+                    <tr>
+                        <td style="text-align: center; font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">
+                            &copy; {{ date('Y') }} {{ config('app.event_name') }}. All rights reserved.
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>

@@ -35,10 +35,10 @@ import 'primeicons/primeicons.css'
             <div class="container mx-auto max-w-[20%]">
             </div>
         </div>
-        <div style="position: fixed; z-index: 10;  right: 2rem;   bottom: 2rem;">
+        <!-- <div style="position: fixed; z-index: 10;  right: 2rem;   bottom: 2rem;">
             <a href="https://api.whatsapp.com/send/?phone=16395272389&amp;text&amp;app_absent=0" target="_blank" rel="noopener noreferrer">
                 <img alt="Contactar por Whatsapp" title="Contactar por Whatsapp" loading="lazy" style="color:transparent; width:70px;" src="https://perumin.com/perumin37/public/uploads/shares/imagenes/wsp.png">
             </a>
-        </div>
+        </div> -->
     </footer>
 </template>
