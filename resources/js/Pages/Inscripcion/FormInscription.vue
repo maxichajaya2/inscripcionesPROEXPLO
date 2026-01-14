@@ -1004,19 +1004,6 @@ defineExpose({
         <!-- ======================================== -->
         <div class="text-green-iimp font-bold p-4">
 
-            <div class="px-6">
-                <div
-                    class="mb-4 flex items-start gap-2 rounded-md border border-sky-300 bg-sky-50 px-4 py-3 text-sm text-sky-800">
-                    <i class="pi pi-info-circle mt-0.5"></i>
-                    <p class="text-left font-normal">
-                        Participants registering with <strong>PASSPORT</strong>, <strong>DNI</strong> or
-                        <strong>RUT</strong>
-                        can
-                        request a <strong>Boleta</strong> only. <strong>Factura</strong> is available exclusively for
-                        <strong>RUC</strong>.
-                    </p>
-                </div>
-            </div>
             <Card class="mt-5 overflow-hidden">
 
                 <template #header>
@@ -1024,22 +1011,48 @@ defineExpose({
                         Billing Information</div>
                 </template>
 
+
                 <template #content>
                     <div v-if="billingMessage"
-                        class="mt-3 flex items-center gap-3 rounded border-l-4 px-4 py-2 shadow-sm animate-fade-in"
+                        class=" flex items-start gap-2 rounded border-l-4 px-2 py-3 shadow-sm animate-fade-in"
                         :class="{
                             'bg-green-50 border-green-500 text-green-800': billingMessage.type === 'success',
                             'bg-orange-50 border-orange-500 text-orange-800': billingMessage.type === 'warn',
                             'bg-red-50 border-red-500 text-red-800': billingMessage.type === 'error'
                         }">
 
-                        <i class="pi" :class="{
+                        <i class="pi mt-0.5" :class="{
                             'pi-check-circle': billingMessage.type === 'success',
                             'pi-exclamation-triangle': billingMessage.type === 'warn',
                             'pi-times-circle': billingMessage.type === 'error'
                         }"></i>
 
-                        <span class="text-xs font-bold">{{ billingMessage.text }}</span>
+                        <span class="text-sm font-normal text-left">{{ billingMessage.text }}</span>
+                    </div>
+                    <div class="py-2">
+                        <div
+                            class=" flex items-start gap-2 rounded-md border border-sky-300 bg-sky-50 px-2 py-3 text-sm text-sky-800">
+                            <i class="pi pi-info-circle mt-0.5"></i>
+                            <p class="text-left font-normal">
+                                Participants registering with <strong>PASSPORT</strong>, <strong>DNI</strong> or
+                                <strong>RUT</strong>
+                                can
+                                request a <strong>Boleta</strong> only. <strong>Factura</strong> is available
+                                exclusively for
+                                <strong>RUC</strong>.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div
+                        class=" flex items-start gap-2 rounded-md border border-sky-300 bg-sky-50 px-2 py-2 text-sm text-sky-800">
+                        <i class="pi pi-exclamation-triangle mt-0.5"></i>
+                        <div class="text-left font-normal">
+                            <p class="mb-1">
+                                <strong>Note:</strong> Only Peruvian companies have a <strong>RUC</strong>. Please
+                                ensure you enter the data correctly to avoid errors in your receipt.
+                            </p>
+                        </div>
                     </div>
                     <div class="grid gap-6 m-6 md:grid-cols-2">
                         <div class="grid gap-6 md:grid-cols-2">

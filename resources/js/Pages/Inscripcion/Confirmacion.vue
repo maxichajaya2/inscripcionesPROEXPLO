@@ -21,11 +21,6 @@ const goStart = () => {
     router.get(route('inscripcion.index'));
 };
 
-onMounted(() => {
-    // BORRAR LA MEMORIA AL TERMINAR CON ÉXITO
-    sessionStorage.removeItem('wmc_inscripcion_data');
-    sessionStorage.removeItem('wmc_inscripcion_step');
-})
 </script>
 
 <template>
@@ -53,16 +48,14 @@ onMounted(() => {
                         </div>
 
                         <div class="flex flex-col">
-                            <span class="text-xs font-bold text-blue-500 uppercase tracking-widest mb-1">{{
-                                documento_persona.name_en || documento_persona.name_es }}</span>
+                            <span class="text-xs font-bold text-blue-500 uppercase tracking-widest mb-1">{{ documento_persona.name_en}}</span>
                             <span class="text-lg text-gray-800 font-semibold">{{ persona.documento }}</span>
                         </div>
 
                         <div class="flex flex-col">
                             <span class="text-xs font-bold text-blue-600 uppercase tracking-widest mb-1">Selected
                                 Category</span>
-                            <span class="text-xl text-blue-900 font-bold">{{ categoria.nombre_en || categoria.nombre_es
-                                }}</span>
+                            <span class="text-xl text-blue-900 font-bold">{{ categoria.nombre_en}}</span>
                         </div>
 
                         <div class="flex flex-col">
@@ -80,7 +73,7 @@ onMounted(() => {
                         <div v-if="pago?.digitos" class="flex flex-col">
                             <span class="text-xs font-bold text-blue-500 uppercase tracking-widest mb-1">Card
                                 Used</span>
-                            <span class="text-gray-800 font-semibold">•••• •••• •••• {{ pago.digitos }}</span>
+                            <span class="text-gray-800 font-semibold">{{ pago.digitos }}</span>
                         </div>
                     </div>
 

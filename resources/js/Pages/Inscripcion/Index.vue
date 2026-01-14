@@ -20,27 +20,13 @@ import "../../../css/inscripciones.css";
                     World Mining Congress <span class="text-white">2026</span>
                 </h1>
                 <h3 class="text-xl md:text-2xl text-cyan-50 font-medium opacity-90 mb-4">
-                    ¿Qué tipo de participante es?
+                    What type of participant are you?
                 </h3>
                 <colorbar class="block w-48 h-1.5 rounded-full" />
             </div>
 
             <div class="flex flex-col md:flex-row gap-8 items-start">
                 <div class="w-full md:w-1/2 space-y-4">
-
-                    <a href="/registro/autor"
-                        class="group relative flex items-center justify-between p-6 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/20 hover:border-[#06b6d4] hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all duration-300">
-                        <div class="flex flex-col">
-                            <span
-                                class="text-xs uppercase tracking-widest text-cyan-400 font-bold mb-1">Registration</span>
-                            <h5 class="text-2xl font-black text-white group-hover:text-cyan-400 transition-colors">
-                                AUTHOR SPECIAL</h5>
-                        </div>
-                        <div class="bg-white/10 p-3 rounded-xl group-hover:bg-[#06b6d4] transition-all duration-300">
-                            <GreenArrowRight
-                                class="w-6 h-6 invert brightness-200 group-hover:translate-x-1 transition-transform" />
-                        </div>
-                    </a>
 
                     <a href="/registro/participante"
                         class="group relative flex items-center justify-between p-6 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/20 hover:border-[#1d4ed8] hover:shadow-[0_0_20px_rgba(29,78,216,0.3)] transition-all duration-300">
@@ -55,7 +41,19 @@ import "../../../css/inscripciones.css";
                                 class="w-6 h-6 invert brightness-200 group-hover:translate-x-1 transition-transform" />
                         </div>
                     </a>
-
+                    <a href="/registro/autor"
+                        class="group relative flex items-center justify-between p-6 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/20 hover:border-[#06b6d4] hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all duration-300">
+                        <div class="flex flex-col">
+                            <span
+                                class="text-xs uppercase tracking-widest text-cyan-400 font-bold mb-1">Registration</span>
+                            <h5 class="text-2xl font-black text-white group-hover:text-cyan-400 transition-colors">
+                                AUTHOR SPECIAL</h5>
+                        </div>
+                        <div class="bg-white/10 p-3 rounded-xl group-hover:bg-[#06b6d4] transition-all duration-300">
+                            <GreenArrowRight
+                                class="w-6 h-6 invert brightness-200 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                    </a>
                 </div>
 
                 <div class="w-full md:w-1/2 mt-8 md:mt-0">

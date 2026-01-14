@@ -66,7 +66,7 @@ const cerrarSoporte = () => mostrarModalSoporte.value = false;
                                     Technical issues, platform navigation, buttons or system errors.
                                 </p>
                                 <span
-                                    class="text-[10px] text-blue-600 font-semibold mt-1 block">wmc.itsupport@iimp.org.pe</span>
+                                    class="text-[10px] text-blue-600 font-semibold mt-1 block">inscripciones.wmc@iimp.org.pe</span>
                             </div>
                         </a>
 
