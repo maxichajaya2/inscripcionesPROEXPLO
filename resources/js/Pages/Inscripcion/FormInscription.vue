@@ -62,7 +62,7 @@ const days = {
     'mar': 'Tuesday',
     'mie': 'Wednesday',
     'jue': 'Thursday',
-    'vie': 'Friday'
+    // 'vie': 'Friday'
 };
 
 const current_days = { 'lun': false, 'mar': false, 'mie': false, 'jue': false, 'vie': false };
