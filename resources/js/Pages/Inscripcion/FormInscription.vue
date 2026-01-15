@@ -37,7 +37,7 @@ const total = ref(0);
 const src = ref(null);
 const block_direction = ref(false);
 const fileErrors = ref([]);
-const maxSize = 6291;
+const maxSize = 6291456;
 // Definimos los tipos permitidos (Coincidiendo con tu accept)
 const allowedTypes = [
     'application/pdf',
@@ -1060,7 +1060,7 @@ defineExpose({
                                 <label for="tipoDocumentoEmpresa" class="">Document Type <span
                                         class="font-normal text-red-600">*</span></label>
                                 <Select name="tipoDocumentoEmpresa" v-model="tipoDocumentoEmpresa"
-                                    v-bind="tipoDocumentoEmpresaAttrs" :options="tipoDocumento" optionLabel="name_es"
+                                    v-bind="tipoDocumentoEmpresaAttrs" :options="tipoDocumento" optionLabel="name_en"
                                     optionValue="id" placeholder="Elegir" showClear checkmark
                                     class="w-full border-green-iimp" @change="setTipoDocPago" />
                                 <span class="font-normal text-red-600">{{ errors.tipoDocumentoEmpresa }}</span>

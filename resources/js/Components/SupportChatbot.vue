@@ -84,7 +84,7 @@ const cerrarSoporte = () => mostrarModalSoporte.value = false;
                                     Definitions (Author/Associate), categories, pricing and terms.
                                 </p>
                                 <span
-                                    class="text-[10px] text-green-700 font-semibold mt-1 block">wmc2026authors@iimp.org.pe</span>
+                                    class="text-[10px] text-green-700 font-semibold mt-1 block">inscripciones.wmc@iimp.org.pe</span>
                             </div>
                         </a>
 
