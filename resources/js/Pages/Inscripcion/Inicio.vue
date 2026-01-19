@@ -45,17 +45,13 @@ const validate = async (value) => {
     switch (value) {
         case "Documento":
             loading.value = true;
-            formDataValidacionDoc.value = childFormValidacionDoc.value.getValidacionDoc();
-            if (formDataValidacionDoc.value.validate) {
-                const response = await axios.post('/api/getperson',
-                    { id_tipo_documento: formDataValidacionDoc.value.formValidacionDoc.tipo_doc, numero_documento: formDataValidacionDoc.value.formValidacionDoc.documento });
+            // Esto ejecuta el validate() de vee-validate en el hijo
+            formDataValidacionDoc.value = await childFormValidacionDoc.value.getValidacionDoc();
 
-                data_persona.value = response.data;
+            if (formDataValidacionDoc.value.validate) {
+                // Guardamos los datos actuales para el siguiente paso
+                data_persona.value = formDataValidacionDoc.value.formValidacionDoc;
                 loading.value = false;
-                if (response.data.status == false) {
-                    toast.add({ severity: 'error', summary: 'Document number not found', life: 2000 });
-                    return false;
-                }
                 return true;
             } else {
                 loading.value = false;
@@ -124,7 +120,7 @@ const goStart = () => {
                         <StepPanel v-slot="{ activateCallback }" value="1"
                             class="rounded-2xl border-2 border-green-iimp bg-white-price shadow-wmc">
                             <FormValidacionDoc ref="childFormValidacionDoc"
-                                :nacionalidadPrevia="nacionalidadSeleccionada" />
+                                :nacionalidadPrevia="nacionalidadSeleccionada" :tipo_origen="tipo_origen" />
                             <div class="flex p-6 justify-end">
                                 <Button label="Validate" icon="pi pi-arrow-right" iconPos="right"
                                     @click="async () => await validate('Documento') ? activateCallback('2') : false"
@@ -200,7 +196,7 @@ const goStart = () => {
                 <div class="p-8 md:p-12 bg-slate-50 px-0">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-                        <button @click="seleccionarOrigen('peruano',1)"
+                        <button @click="seleccionarOrigen('peruano', 1)"
                             class="group relative h-auto rounded-2xl bg-white border border-slate-200 shadow-lg hover:shadow-2xl hover:shadow-red-900/20 transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-2">
 
                             <div class="h-1 w-full bg-red-600"></div>
@@ -235,7 +231,7 @@ const goStart = () => {
                             </div>
                         </button>
 
-                        <button @click="seleccionarOrigen('extranjero',2)"
+                        <button @click="seleccionarOrigen('extranjero', 2)"
                             class="group relative h-auto rounded-2xl bg-white border border-slate-200 shadow-lg hover:shadow-2xl hover:shadow-blue-900/20 transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-2">
 
                             <div class="h-1 w-full bg-blue-600"></div>

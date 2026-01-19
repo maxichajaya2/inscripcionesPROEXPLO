@@ -23,8 +23,10 @@ const categoriasVisibles = computed(() => {
 });
 
 const irAlFormulario = (categoriaId) => {
-    router.get(route('registro.formulario'), { category: categoriaId });
+    // Redirige siempre a la ruta de autor pasando el ID de la categoría seleccionada
+    router.get(route('inscripcion.autor'), { category: categoriaId });
 };
+
 </script>
 
 <template>

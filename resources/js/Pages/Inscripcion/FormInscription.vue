@@ -594,169 +594,7 @@ defineExpose({
 <template>
 
     <div class="gap-6 p-6 w-full justify-around overflow-visible">
-        <!--         DETALLES PERSONALES             -->
-        <!-- ======================================== -->
-        <div class="text-green-iimp font-bold p-4">
-            <Card class="mt-5 overflow-hidden shadow-lg border border-gray-200">
 
-                <template #header>
-                    <div class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc">
-                        Personal Details
-                    </div>
-                </template>
-
-                <template #content>
-                    <div class="p-2">
-
-                        <div class="grid gap-6 m-6 md:grid-cols-2">
-                            <div class="w-full">
-                                <label for="nombres" class="">First Name <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <InputText name="nombres" v-model="nombres" v-bind="nombresAttrs"
-                                    class="w-full border-green-iimp" />
-                                <span class="font-normal text-red-600">{{ errors.nombres }}</span>
-                            </div>
-                            <div class="w-full">
-                                <label for="apellido_paterno" class="">Last Name <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <InputText name="apellido_paterno" v-model="apellido_paterno"
-                                    v-bind="apellido_paternoAttrs" class="w-full border-green-iimp" />
-                                <span class="font-normal text-red-600">{{ errors.apellido_paterno }}</span>
-                            </div>
-                        </div>
-
-                        <div class="grid gap-6 m-6 grid-cols-1 md:grid-cols-4">
-                            <div class="w-full">
-                                <label for="pais" class="">Country <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <Select name="pais" v-model="pais" v-bind="paisAttrs" optionLabel="name"
-                                    optionValue="id" placeholder="Select" showClear filter @change="loadDepartamentos"
-                                    :options="paises" class="w-full border-green-iimp" />
-                                <span class="font-normal text-red-600">{{ errors.pais }}</span>
-                            </div>
-                            <div class="w-full">
-                                <label for="departamento" class="">State <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <Select name="departamento" v-model="departamento" v-bind="departamentoAttrs" filter
-                                    @change="loadProvincias" :options="departamentos" optionLabel="name"
-                                    optionValue="id_departamento" placeholder="Select" showClear
-                                    class="w-full border-green-iimp" />
-                                <span class="font-normal text-red-600">{{ errors.departamento }}</span>
-                            </div>
-                            <div class="w-full">
-                                <label for="fecha_nacimiento" class="">Date of Birth <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <InputGroup class="w-full h-[42px]">
-                                    <InputGroupAddon class="border-green-iimp border-r-0 bg-white text-green-iimp">
-                                        <i class="pi pi-calendar"></i>
-                                    </InputGroupAddon>
-
-                                    <Calendar name="fecha_nacimiento" v-model="fecha_nacimiento"
-                                        v-bind="fecha_nacimientoAttrs" :maxDate="today" dateFormat="yy-mm-dd"
-                                        :showTime="false" placeholder="YYYY-MM-DD" class="w-full"
-                                        inputClass="w-full border-green-iimp border-l-0 shadow-none outline-none bg-white" />
-                                </InputGroup>
-                                <span class="font-normal text-red-600">{{ errors.fecha_nacimiento }}</span>
-                            </div>
-                            <div class="w-full">
-                                <label for="sexo" class="">Sex <span class="font-normal text-red-600">*</span></label>
-                                <Select name="sexo" v-model="sexo" v-bind="sexoAttrs" optionLabel="label"
-                                    optionValue="value" placeholder="Elegir" showClear checkmark :options="generos"
-                                    class="w-full border-green-iimp" />
-                                <span class="font-normal text-red-600">{{ errors.sexo }}</span>
-                            </div>
-                            <!-- <div class="w-full">
-                                <label for="provincia" class="">Province <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <Select name="provincia" v-model="provincia" v-bind="provinciaAttrs" filter
-                                    @change="loadDistritos" :options="provincias" optionLabel="name"
-                                    optionValue="id_provincia" placeholder="Select" showClear
-                                    class="w-full border-green-iimp" />
-                                <span class="font-normal text-red-600">{{ errors.provincia }}</span>
-                            </div>
-                            <div class="w-full">
-                                <label for="distrito" class="">District <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <Select name="distrito" v-model="distrito" v-bind="distritoAttrs" filter
-                                    :options="distritos" optionLabel="name" optionValue="id_distrito"
-                                    placeholder="Select" showClear class="w-full border-green-iimp" />
-                                <span class="font-normal text-red-600">{{ errors.distrito }}</span>
-                            </div> -->
-                        </div>
-
-                        <div class="grid gap-6 m-6 md:grid-cols-2">
-                            <div class="grid gap-6 md:grid-cols-2">
-
-                                <!-- <div class="w-full">
-                                    <label for="celular" class="">Phone Number <span
-                                            class="font-normal text-red-600">*</span></label>
-                                    <InputText name="celular" v-model="celular" v-bind="celularAttrs"
-                                        class="w-full border-green-iimp" />
-                                    <span class="font-normal text-red-600">{{ errors.id_tipo_celular }}</span>
-                                </div> -->
-                            </div>
-                            <!-- <div class="w-full">
-                                <label for="direccionPersona" class="">Address <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <InputText name="direccionPersona" v-model="direccionPersona"
-                                    v-bind="direccionPersonaAttrs" class="w-full border-green-iimp" />
-                                <span class="font-normal text-red-600">{{ errors.direccionPersona }}</span>
-                            </div> -->
-                        </div>
-
-                        <div class="grid gap-6 m-6 md:grid-cols-3">
-
-                            <div class="w-full">
-                                <label for="correo" class="">Email Address <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <InputText name="correo" v-model="correo" v-bind="correoAttrs"
-                                    class="w-full border-green-iimp" />
-                                <span class="font-normal text-red-600">{{ errors.correo }}</span>
-                            </div>
-
-                            <div class="w-full">
-                                <label for="empresa" class="">Company <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <InputText name="empresa" v-model="empresa" v-bind="empresaAttrs"
-                                    class="w-full border-green-iimp" />
-                                <span class="font-normal text-red-600">{{ errors.empresa }}</span>
-                            </div>
-                            <div class="w-full">
-                                <label for="cargo" class="">Job Title <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <InputText name="cargo" v-model="cargo" v-bind="cargoAttrs"
-                                    class="w-full border-green-iimp" />
-                                <span class="font-normal text-red-600">{{ errors.cargo }}</span>
-                            </div>
-                        </div>
-
-                        <div class="grid gap-6 m-6 md:grid-cols-2">
-                            <div class="grid gap-6 md:grid-cols-2">
-
-                                <!-- <div class="w-full">
-                                    <label for="nacionalidad" class="">Nationality <span
-                                            class="font-normal text-red-600">*</span></label>
-                                    <Select name="nacionalidad" v-model="nacionalidad" v-bind="nacionalidadAttrs" filter
-                                        :options="nacionalidades" optionLabel="name" optionValue="id"
-                                        placeholder="Elegir" showClear class="w-full border-green-iimp" />
-                                    <span class="font-normal text-red-600">{{ errors.nacionalidad }}</span>
-                                </div> -->
-                            </div>
-                            <!-- <div class="w-full">
-                                <label for="credencial" class="">Credential Name
-                                    <span class="text-xs text-gray-400">(Short name for credential)</span>
-                                    <span class="font-normal text-red-600">*</span>
-                                </label>
-                                <InputText name="credencial" v-model="credencial" v-bind="credencialAttrs"
-                                    class="w-full border-green-iimp" />
-                                <span class="font-normal text-red-600">{{ errors.credencial }}</span>
-                            </div> -->
-                        </div>
-
-                    </div>
-                </template>
-            </Card>
-        </div>
         <!--          CATEGORIAS                      -->
         <!-- ======================================== -->
         <div class="text-green-iimp font-bold p-4">
@@ -1002,7 +840,7 @@ defineExpose({
                     </div>
 
                     <div class="flex justify-around w-full mb-4">
-                        <Card
+                        <!-- <Card
                             class="gap-3 text-center w-full md:w-auto md:min-w-[450px] shadow-lg border border-gray-200">
                             <template #content>
                                 <div class="text-lg font-semibold m-4">Payment Document</div>
@@ -1019,7 +857,7 @@ defineExpose({
                                 </div>
                                 <span class="font-normal text-red-600 block mt-2">{{ errors.selectTipoDocPago }}</span>
                             </template>
-                        </Card>
+                        </Card> -->
                         <!-- <Card class="gap-3 text-center min-w-[450px]">
                             <template #content>
                                 <div class="text-lg font-semibold m-4">Payment Method</div>
@@ -1041,25 +879,6 @@ defineExpose({
 
             </Card>
         </div>
-        <!--      TERMINOS Y REGLAS DE PARTICIPACION  -->
-        <!-- ======================================== -->
-        <!-- <div class="text-green-iimp font-bold p-4 flex justify-between">
-            <div class="">
-                <Checkbox :binary="true" v-model="terminos" v-bind="terminosAttrs" name="terminos" />
-                <label for="terminos" class="pl-2 cursor-pointer" @click="showModal">Terms and Conditions of
-                    Participation <span class="font-normal text-red-600">*</span></label>
-
-            </div> -->
-
-        <!-- <div class="">
-                <Checkbox :binary="true" v-model="reglamento" v-bind="reglamentoAttrs" name="reglamento" />
-                <a :href="reglamento_inscripciones" target="_blank" rel="noopener noreferrer" title="Ver reglamento">
-                    <label for="reglamento" class="pl-2 cursor-pointer">Term and Conditions<span
-                            class="font-normal text-red-600">*</span></label>
-                </a>
-            </div> -->
-
-        <!-- </div> -->
         <div class="text-green-iimp font-bold p-4">
             <Card class="mt-5 overflow-hidden shadow-lg border border-gray-200">
 

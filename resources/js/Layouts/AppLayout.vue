@@ -36,6 +36,6 @@ const toast = useToast();
             <!-- <Footer /> -->
         </div>
         <Toast />
-        <SupportChatbot />
+        <!-- <SupportChatbot /> -->
     </div>
 </template>
