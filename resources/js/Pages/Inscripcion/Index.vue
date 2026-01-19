@@ -8,8 +8,6 @@ import { ref, computed } from 'vue';
 // Estilos globales
 import "../../../css/inscripciones.css";
 
-// 1. Recibimos las categorías desde el Controlador (InscripcionController)
-// Recuerda que en tu controlador debes estar enviando: compact('categorias')
 const props = defineProps({
     categorias: {
         type: Array,
@@ -17,16 +15,13 @@ const props = defineProps({
     }
 });
 
-// 2. Controlamos qué grupo está seleccionado (null = ninguno, muestra la nota)
 const grupoSeleccionado = ref(null);
 
-// 3. Filtramos las categorías según la selección
 const categoriasVisibles = computed(() => {
     if (!grupoSeleccionado.value) return [];
     return props.categorias.filter(cat => cat.grupo === grupoSeleccionado.value);
 });
 
-// 4. Función para ir al formulario
 const irAlFormulario = (categoriaId) => {
     router.get(route('registro.formulario'), { category: categoriaId });
 };
@@ -48,44 +43,52 @@ const irAlFormulario = (categoriaId) => {
 
             <div class="flex flex-col lg:flex-row gap-8 items-start">
 
-                <div class="w-full lg:w-5/12 space-y-4">
+                <div class="w-full lg:w-5/12 space-y-6">
 
-                    <button
-                        @click="grupoSeleccionado = 'participante'"
+                    <button @click="grupoSeleccionado = 'participante'"
                         :class="grupoSeleccionado === 'participante'
-                            ? 'bg-white/20 border-[#1d4ed8] shadow-[0_0_25px_rgba(29,78,216,0.4)] scale-[1.02]'
-                            : 'bg-white/10 border-white/20 hover:bg-white/20 hover:border-[#1d4ed8]'"
-                        class="w-full group relative flex items-center justify-between p-6 backdrop-blur-md border rounded-2xl transition-all duration-300 text-left">
+                            ? 'bg-blue-900/40 border-blue-400 shadow-[0_0_35px_rgba(59,130,246,0.6)] scale-105 ring-1 ring-blue-300'
+                            : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]'"
+                        class="w-full group relative flex items-center justify-between p-6 backdrop-blur-md border rounded-3xl transition-all duration-300 ease-out text-left">
 
-                        <div class="flex flex-col">
-                            <span class="text-xs uppercase tracking-widest text-blue-400 font-bold mb-1">Registration</span>
-                            <h5 class="text-2xl font-black text-white group-hover:text-blue-400 transition-colors">
+                        <div class="flex flex-col z-10">
+                            <span :class="grupoSeleccionado === 'participante' ? 'text-blue-200' : 'text-blue-400'"
+                                class="text-xs uppercase tracking-widest font-bold mb-1 transition-colors">
+                                Registration
+                            </span>
+                            <h5 class="text-2xl font-black text-white group-hover:text-blue-200 transition-colors">
                                 GENERAL PARTICIPANT
                             </h5>
                         </div>
 
-                        <div :class="grupoSeleccionado === 'participante' ? 'bg-[#1d4ed8]' : 'bg-white/10 group-hover:bg-[#1d4ed8]'"
-                             class="p-3 rounded-xl transition-all duration-300">
+                        <div :class="grupoSeleccionado === 'participante'
+                            ? 'bg-blue-600 shadow-lg scale-110 rotate-0'
+                            : 'bg-white/10 group-hover:bg-blue-600 group-hover:rotate-[-45deg]'"
+                            class="p-4 rounded-2xl transition-all duration-300">
                             <GreenArrowRight class="w-6 h-6 invert brightness-200" />
                         </div>
                     </button>
 
-                    <button
-                        @click="grupoSeleccionado = 'autor'"
+                    <button @click="grupoSeleccionado = 'autor'"
                         :class="grupoSeleccionado === 'autor'
-                            ? 'bg-white/20 border-[#06b6d4] shadow-[0_0_25px_rgba(6,182,212,0.4)] scale-[1.02]'
-                            : 'bg-white/10 border-white/20 hover:bg-white/20 hover:border-[#06b6d4]'"
-                        class="w-full group relative flex items-center justify-between p-6 backdrop-blur-md border rounded-2xl transition-all duration-300 text-left">
+                            ? 'bg-cyan-900/40 border-cyan-400 shadow-[0_0_35px_rgba(34,211,238,0.6)] scale-105 ring-1 ring-cyan-300'
+                            : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-cyan-500 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]'"
+                        class="w-full group relative flex items-center justify-between p-6 backdrop-blur-md border rounded-3xl transition-all duration-300 ease-out text-left">
 
-                        <div class="flex flex-col">
-                            <span class="text-xs uppercase tracking-widest text-cyan-400 font-bold mb-1">Registration</span>
-                            <h5 class="text-2xl font-black text-white group-hover:text-cyan-400 transition-colors">
+                        <div class="flex flex-col z-10">
+                            <span :class="grupoSeleccionado === 'autor' ? 'text-cyan-200' : 'text-cyan-400'"
+                                class="text-xs uppercase tracking-widest font-bold mb-1 transition-colors">
+                                Registration
+                            </span>
+                            <h5 class="text-2xl font-black text-white group-hover:text-cyan-200 transition-colors">
                                 AUTHOR SPECIAL
                             </h5>
                         </div>
 
-                        <div :class="grupoSeleccionado === 'autor' ? 'bg-[#06b6d4]' : 'bg-white/10 group-hover:bg-[#06b6d4]'"
-                             class="p-3 rounded-xl transition-all duration-300">
+                        <div :class="grupoSeleccionado === 'autor'
+                            ? 'bg-cyan-600 shadow-lg scale-110 rotate-0'
+                            : 'bg-white/10 group-hover:bg-cyan-600 group-hover:rotate-[-45deg]'"
+                            class="p-4 rounded-2xl transition-all duration-300">
                             <GreenArrowRight class="w-6 h-6 invert brightness-200" />
                         </div>
                     </button>
@@ -93,54 +96,83 @@ const irAlFormulario = (categoriaId) => {
 
                 <div class="w-full lg:w-7/12 mt-8 lg:mt-0 relative min-h-[300px]">
 
-                    <div v-if="grupoSeleccionado" class="flex flex-col gap-4 animate-fade-in-right">
+                    <div v-if="grupoSeleccionado" class="flex flex-col gap-5 animate-fade-in-right">
 
-                        <div v-for="cat in categoriasVisibles" :key="cat.id"
-                             @click="irAlFormulario(cat.id)"
-                             class="w-full cursor-pointer group relative flex flex-row items-center justify-between p-6 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl hover:bg-white/15 hover:border-yellow-price/50 hover:shadow-[0_0_15px_rgba(250,204,21,0.2)] transition-all duration-300">
+                        <div class="flex items-center justify-between px-2 mb-1">
+                            <h6 class="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em]">
+                                SELECT CATEGORY
+                            </h6>
+                        </div>
 
-                            <div class="flex-1 pr-4">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-white/70">
+                        <div v-for="cat in categoriasVisibles" :key="cat.id" @click="irAlFormulario(cat.id)"
+                            class="w-full cursor-pointer group relative flex flex-row items-center justify-between p-6 rounded-3xl
+                                    bg-white/5 backdrop-blur-xl border border-white/10
+                                    transition-all duration-300 ease-out overflow-hidden
+                                    hover:bg-gradient-to-r hover:from-yellow-900/40 hover:to-transparent
+                                    hover:border-yellow-400/80 hover:shadow-[0_0_35px_rgba(234,179,8,0.4)] hover:scale-[1.02] hover:-translate-y-1">
+
+                            <div
+                                class="absolute inset-0 bg-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl">
+                            </div>
+
+                            <div class="relative z-10 flex-1 pr-6">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span
+                                        class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white/10 text-white/60 group-hover:bg-yellow-500/20 group-hover:text-yellow-200 transition-colors">
                                         {{ cat.grupo === 'autor' ? 'Author Rate' : 'Attendee Rate' }}
                                     </span>
                                 </div>
-                                <h4 class="text-lg md:text-xl font-bold text-white leading-tight group-hover:text-yellow-price transition-colors">
+                                <h4
+                                    class="text-lg md:text-xl font-bold text-white leading-tight group-hover:text-yellow-100 transition-colors">
                                     {{ cat.nombre_en }}
                                 </h4>
-                                <p class="text-xs text-gray-400 mt-1">
-                                   {{ cat.categoria_description }}
+                                <p
+                                    class="text-xs text-gray-400 mt-1 line-clamp-2 group-hover:text-yellow-100/70 transition-colors">
+                                    {{ cat.categoria_description }}
                                 </p>
                             </div>
 
-                            <div class="text-right flex flex-col items-end">
-                                <span class="text-2xl md:text-3xl font-black text-yellow-price">
-                                    {{ cat.precio_disponible?.moneda?.simbolo || '$' }}{{ cat.precio_disponible?.valor || '0' }}
+                            <div
+                                class="relative z-10 text-right flex flex-col items-end border-l border-white/10 pl-6 group-hover:border-yellow-500/30 transition-colors">
+                                <span
+                                    class="text-2xl md:text-4xl font-black text-yellow-price drop-shadow-[0_2px_10px_rgba(234,179,8,0.3)] group-hover:scale-110 transition-transform duration-300 origin-right">
+                                    {{ cat.precio_disponible?.moneda?.simbolo || '$' }}{{ cat.precio_disponible?.valor
+                                        || '0' }}
                                 </span>
-                                <span class="text-[10px] uppercase text-gray-400 font-bold mb-2 block">
+                                <span class="text-[9px] uppercase text-gray-400 font-bold mb-3 block tracking-wider">
                                     + TAX / IVA
                                 </span>
-                                <div class="text-xs font-bold text-cyan-400 group-hover:text-white flex items-center transition-colors">
-                                    Select <GreenArrowRight class="w-3 h-3 ml-1 invert brightness-150" />
+
+                                <div
+                                    class="px-4 py-2 rounded-full flex items-center gap-2 text-xs font-bold transition-all duration-300
+                                            border border-yellow-500/30 text-yellow-400 bg-yellow-500/5
+                                            group-hover:bg-yellow-500 group-hover:text-black group-hover:shadow-[0_0_15px_rgba(234,179,8,0.6)]">
+                                    Select
+                                    <GreenArrowRight
+                                        class="w-3 h-3 transition-all duration-300 group-hover:invert group-hover:brightness-0" />
                                 </div>
                             </div>
                         </div>
 
                     </div>
 
-                    <div v-else class="h-full flex flex-col justify-center p-8 bg-black/20 backdrop-blur-sm border-l-4 border-yellow-price rounded-r-2xl animate-fade-in">
-                        <h6 class="text-yellow-price font-bold uppercase tracking-tighter mb-2">Important Note</h6>
-                        <p class="text-white/80 text-sm leading-relaxed">
-                            The World Mining Congress 2026 registration system is designed to manage participant
-                            registrations and payment processing.
-                            <br><br>
-                            <strong>Please select your profile on the left</strong> (General or Author) to reveal the available categories and prices list.
-                            <br><br>
-                            For any questions or technical issues related to the system or paper submissions, please
-                            contact
-                            <span class="text-cyan-400 font-bold underline">wmc.itsupport@iimp.org.pe</span>
-                            for assistance.
-                        </p>
+
+                    <div v-else class="w-full  mt-8 md:mt-0">
+                        <div class="p-8 bg-black/20 backdrop-blur-sm border-l-4 border-yellow-price rounded-r-2xl">
+                            <h6 class="text-yellow-price font-bold uppercase tracking-tighter mb-2">Important Note
+                            </h6>
+                            <p class="text-white/80 text-sm leading-relaxed">
+                                The World Mining Congress 2026 registration system is designed to manage participant
+                                registrations and payment processing.
+                                <br><br>
+                                For any questions or technical issues related to the system or paper submissions,
+                                please
+                                contact
+                                <span class="text-cyan-400 font-bold underline">wmc.itsupport@iimp.org.pe</span>
+                                for assistance.
+                            </p>
+
+                        </div>
                     </div>
 
                 </div>
@@ -150,28 +182,33 @@ const irAlFormulario = (categoriaId) => {
 </template>
 
 <style scoped>
-/* Animación de entrada para la lista derecha */
 .animate-fade-in-right {
-    animation: fadeInRight 0.4s ease-out forwards;
+    animation: fadeInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes fadeInRight {
     from {
         opacity: 0;
-        transform: translateX(10px);
+        transform: translateX(20px);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
     }
 }
 
-/* Animación simple de fade */
 .animate-fade-in {
-    animation: fadeIn 0.5s ease-out;
+    animation: fadeIn 0.8s ease-out;
 }
+
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 </style>

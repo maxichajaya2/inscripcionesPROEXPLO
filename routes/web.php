@@ -37,8 +37,6 @@ Route::get('/registro/autor', [InscripcionController::class, 'autor'])->name('in
 Route::get('/registro/docente', [InscripcionController::class, 'docente'])->name('inscripcion.docente');
 Route::get('/registro/estudiante', [InscripcionController::class, 'estudiante'])->name('inscripcion.estudiante');
 Route::get('/registro/participante', [InscripcionController::class, 'participante'])->name('inscripcion.participante');
-Route::get('/registro/asociado_sme', [InscripcionController::class, 'asociado_sme'])->name('inscripcion.asociado_sme');
-
 
 Route::post('/pago/getform', [InscripcionController::class, 'getForm'])->name('niubiz.getform');
 Route::post('/pago/getform/niubiz/{id}/{order}', [InscripcionController::class, 'niubizPayment'])->where('id','[0-9]+');
