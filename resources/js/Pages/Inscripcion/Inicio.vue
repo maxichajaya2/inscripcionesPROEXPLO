@@ -18,7 +18,6 @@ import Step from 'primevue/step';
 
 import "../../../css/inscripciones.css";
 
-const page = usePage();
 const visible = ref(true);
 const loading = ref(false);
 const toast = useToast();
@@ -27,7 +26,7 @@ const props = defineProps({
     categorias: Object,
     modal_texts: Object,
 })
-const step = ref(1);
+
 const formDataValidacionDoc = ref(null);
 const formDataInscription = ref(null);
 const formDataPayment = ref(null);

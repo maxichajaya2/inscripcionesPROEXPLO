@@ -114,16 +114,8 @@ const clearDocument = () => {
 }
 
 onMounted(() => {
-    tipo_doc.value = 1;
+    tipo_doc.value = 5;
 })
-
-// onMounted(() => {
-//     if (props.saved_values) {
-//         setValues(props.saved_values);
-//     }else{
-//          tipo_doc.value = 1;
-//     }
-// });
 
 defineExpose({
     getValidacionDoc

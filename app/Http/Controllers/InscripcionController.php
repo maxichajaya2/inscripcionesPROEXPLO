@@ -28,9 +28,41 @@ class InscripcionController extends Controller
         $this->now = Carbon::now()->format('Y-m-d');
     }
 
+    // public function index()
+    // {
+    //     return Inertia::render('Inscripcion/Index');
+    // }
+
     public function index()
     {
-        return Inertia::render('Inscripcion/Index');
+        $categorias = CategoriaInscripcion::query()
+            ->where('isactive', true)
+            ->where(function ($query) {
+                $query->where('nombre_en', 'LIKE', '%AUTHOR%')
+                    ->orWhere('nombre_en', 'LIKE', '%GENERAL ATTENDEE%');
+            })
+            ->orderBy('orden_es', 'ASC')
+            ->get();
+
+        foreach ($categorias as $categoria) {
+
+            $categoria->precio_disponible = $categoria->precio
+                ->where('fecha_inicio', '<=', $this->now)
+                ->where('fecha_fin', '>=', $this->now)
+                ->first();
+
+            if (str_contains(strtoupper($categoria->nombre_en), 'AUTHOR')) {
+                $categoria->grupo = 'autor';
+            }
+            // Si no, asumimos que es del grupo 'participante' (GENERAL ATTENDEE)
+            else {
+                $categoria->grupo = 'participante';
+            }
+        }
+
+        $title = "Registration WMC 2026";
+
+        return Inertia::render('Inscripcion/Index', compact('categorias', 'title'));
     }
 
     public function autor()

@@ -160,14 +160,6 @@ const [uploadDocument, uploadDocumentAttrs] = defineField('uploadDocument');
 
 const today = new Date();
 
-// onMounted(() => {
-
-//     tipoDocumentoEmpresa.value = 1;
-//     // selectTipoDocPago.value = 3;
-//     selectTipoDocPago.value = 2;
-//     selectTipoPago.value = 3;
-// })
-
 onMounted(() => {
     // 1. Configuraciones iniciales
     tipoDocumentoEmpresa.value = 1;
@@ -224,66 +216,6 @@ const loadDistritos = async () => {
     distrito.value = undefined;
     distritos.value = await Functions.loadDistritos(pais.value, departamento.value, provincia.value).then(data => { return data });
 }
-
-// const getEmpresaData = async () => {
-//     // 1. Reseteamos campos y mensajes previos
-//     razonSocial.value = '';
-//     direccionEmpresa.value = '';
-//     loading_doc.value = true;
-//     billingMessage.value = null; // Limpia la alerta anterior antes de buscar
-
-//     try {
-//         const empresa = await Functions.getEmpresaData(documentoEmpresa.value, tipoDocumentoEmpresa.value);
-
-//         if (empresa) {
-//             // Autocompleta los campos
-//             razonSocial.value = empresa.empresa.nombre || '';
-//             direccionEmpresa.value = empresa.empresa.direccionEmpresa || '';
-
-//             if (empresa.status) {
-//                 // Lógica de bloqueo para RUC
-//                 if (tipoDocumentoEmpresa.value == 2) {
-//                     block_direction.value = true;
-//                 }
-
-//                 // EXITO: Seteamos el mensaje verde
-//                 billingMessage.value = {
-//                     type: 'success',
-//                     text: 'Datos Encontrados / Data Found'
-//                 };
-
-//             } else {
-//                 // NO ENCONTRADO (API responde pero sin datos válidos)
-//                 let msg = 'No se encontraron datos. Por favor, complete los campos manualmente.';
-//                 if (tipoDocumentoEmpresa.value == 2) {
-//                     msg = "No se encontraron datos. Verifique el RUC ingresado.";
-//                 }
-
-//                 // ADVERTENCIA: Seteamos el mensaje amarillo
-//                 billingMessage.value = { type: 'warn', text: msg };
-//             }
-//         } else {
-//             // RESPUESTA VACÍA
-//             let msg = 'No se encontraron datos. Por favor, complete los campos manualmente.';
-//             if (tipoDocumentoEmpresa.value == 2) {
-//                 msg = "No se encontraron datos. Verifique el RUC ingresado.";
-//             }
-
-//             // ADVERTENCIA
-//             billingMessage.value = { type: 'warn', text: msg };
-//         }
-//     } catch (e) {
-//         // ERROR DE CONEXIÓN O SERVIDOR
-//         billingMessage.value = {
-//             type: 'error',
-//             text: 'Error en la consulta. Por favor complete los campos manualmente.'
-//         };
-//     } finally {
-//         loading_doc.value = false;
-//     }
-// }
-
-// Agrega esta referencia arriba junto a tus otros refs si no la tienes
 
 const getEmpresaData = async () => {
     // 1. Reset fields and messages
@@ -603,62 +535,6 @@ function selectDays(id) {
     total.value = cantidad_dias * current_price;
 }
 
-// function getInscripcion() {
-
-//     if (terminos.value != true) {
-//         toast.add({ severity: 'error', summary: 'Es requerido aceptar los Términos y Condiciones', life: 2000 });
-//         return { "validate": false };
-//     }
-
-//     if (reglamento.value != true) {
-//         toast.add({ severity: 'error', summary: 'Es requerido aceptar el Reglamento', life: 2000 });
-//         return { "validate": false };
-//     }
-
-//     if ((Object.keys(errors._value).length > 0)) {
-//         toast.add({ severity: 'error', summary: 'Complete todos los campos requeridos', life: 2000 });
-//         return { "validate": false };
-//     }
-
-//     if (typeof documentoEmpresa.value != 'undefined') {
-//         if (documentoEmpresa.value.length != 11 && tipoDocumentoEmpresa.value == 2) {
-//             toast.add({ severity: 'error', summary: 'El RUC debe ser de 11 caracteres', life: 2000 });
-//             return { "validate": false };
-//         }
-
-//         if (documentoEmpresa.value.length != 8 && tipoDocumentoEmpresa.value == 1) {
-//             toast.add({ severity: 'error', summary: 'El DNI debe ser de 8 caracteres', life: 2000 });
-//             return { "validate": false };
-//         }
-//     } else {
-//         toast.add({ severity: 'error', summary: 'Debe ingresar un documento para facturación', life: 2000 });
-//         return { "validate": false };
-//     }
-
-//     if (total.value == 0) {
-//         toast.add({ severity: 'error', summary: 'El total debe ser mayor a 0', life: 2000 });
-//         return { "validate": false };
-//     }
-
-//     if (show_document.value == true && uploadDocument.value === null) {
-//         toast.add({ severity: 'error', summary: 'Debe elegir un documento para su inscripción', life: 2000 });
-//         return { "validate": false };
-//     }
-
-//     if (props.data_persona.persona.nombres.length == 0 || props.data_persona.persona.apellido_paterno.length == 0) {
-//         props.data_persona.persona.nombres = nombres.value;
-//         props.data_persona.persona.apellido_paterno = apellido_paterno.value;
-//     }
-
-//     return {
-//         "validate": true,
-//         "formInscription": values
-//     };
-
-// }
-
-
-// Agrega esto cerca de tus otros refs
 
 function getInscripcion() {
     // Reiniciamos errores manuales
@@ -768,6 +644,28 @@ defineExpose({
                                 <span class="font-normal text-red-600">{{ errors.departamento }}</span>
                             </div>
                             <div class="w-full">
+                                <label for="fecha_nacimiento" class="">Date of Birth <span
+                                        class="font-normal text-red-600">*</span></label>
+                                <InputGroup class="w-full h-[42px]">
+                                    <InputGroupAddon class="border-green-iimp border-r-0 bg-white text-green-iimp">
+                                        <i class="pi pi-calendar"></i>
+                                    </InputGroupAddon>
+
+                                    <Calendar name="fecha_nacimiento" v-model="fecha_nacimiento"
+                                        v-bind="fecha_nacimientoAttrs" :maxDate="today" dateFormat="yy-mm-dd"
+                                        :showTime="false" placeholder="YYYY-MM-DD" class="w-full"
+                                        inputClass="w-full border-green-iimp border-l-0 shadow-none outline-none bg-white" />
+                                </InputGroup>
+                                <span class="font-normal text-red-600">{{ errors.fecha_nacimiento }}</span>
+                            </div>
+                            <div class="w-full">
+                                <label for="sexo" class="">Sex <span class="font-normal text-red-600">*</span></label>
+                                <Select name="sexo" v-model="sexo" v-bind="sexoAttrs" optionLabel="label"
+                                    optionValue="value" placeholder="Elegir" showClear checkmark :options="generos"
+                                    class="w-full border-green-iimp" />
+                                <span class="font-normal text-red-600">{{ errors.sexo }}</span>
+                            </div>
+                            <!-- <div class="w-full">
                                 <label for="provincia" class="">Province <span
                                         class="font-normal text-red-600">*</span></label>
                                 <Select name="provincia" v-model="provincia" v-bind="provinciaAttrs" filter
@@ -783,50 +681,37 @@ defineExpose({
                                     :options="distritos" optionLabel="name" optionValue="id_distrito"
                                     placeholder="Select" showClear class="w-full border-green-iimp" />
                                 <span class="font-normal text-red-600">{{ errors.distrito }}</span>
-                            </div>
+                            </div> -->
                         </div>
 
                         <div class="grid gap-6 m-6 md:grid-cols-2">
                             <div class="grid gap-6 md:grid-cols-2">
-                                <div class="w-full">
-                                    <label for="correo" class="">Email Address <span
-                                            class="font-normal text-red-600">*</span></label>
-                                    <InputText name="correo" v-model="correo" v-bind="correoAttrs"
-                                        class="w-full border-green-iimp" />
-                                    <span class="font-normal text-red-600">{{ errors.correo }}</span>
-                                </div>
-                                <div class="w-full">
+
+                                <!-- <div class="w-full">
                                     <label for="celular" class="">Phone Number <span
                                             class="font-normal text-red-600">*</span></label>
                                     <InputText name="celular" v-model="celular" v-bind="celularAttrs"
                                         class="w-full border-green-iimp" />
                                     <span class="font-normal text-red-600">{{ errors.id_tipo_celular }}</span>
-                                </div>
+                                </div> -->
                             </div>
-                            <div class="w-full">
+                            <!-- <div class="w-full">
                                 <label for="direccionPersona" class="">Address <span
                                         class="font-normal text-red-600">*</span></label>
                                 <InputText name="direccionPersona" v-model="direccionPersona"
                                     v-bind="direccionPersonaAttrs" class="w-full border-green-iimp" />
                                 <span class="font-normal text-red-600">{{ errors.direccionPersona }}</span>
-                            </div>
+                            </div> -->
                         </div>
 
                         <div class="grid gap-6 m-6 md:grid-cols-3">
-                            <div class="w-full">
-                                <label for="fecha_nacimiento" class="">Date of Birth <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <InputGroup class="w-full h-[42px]">
-                                    <InputGroupAddon class="border-green-iimp border-r-0 bg-white text-green-iimp">
-                                        <i class="pi pi-calendar"></i>
-                                    </InputGroupAddon>
 
-                                    <Calendar name="fecha_nacimiento" v-model="fecha_nacimiento"
-                                        v-bind="fecha_nacimientoAttrs" :maxDate="today" dateFormat="yy-mm-dd"
-                                        :showTime="false" placeholder="YYYY-MM-DD" class="w-full"
-                                        inputClass="w-full border-green-iimp border-l-0 shadow-none outline-none bg-white" />
-                                </InputGroup>
-                                <span class="font-normal text-red-600">{{ errors.fecha_nacimiento }}</span>
+                            <div class="w-full">
+                                <label for="correo" class="">Email Address <span
+                                        class="font-normal text-red-600">*</span></label>
+                                <InputText name="correo" v-model="correo" v-bind="correoAttrs"
+                                    class="w-full border-green-iimp" />
+                                <span class="font-normal text-red-600">{{ errors.correo }}</span>
                             </div>
 
                             <div class="w-full">
@@ -847,24 +732,17 @@ defineExpose({
 
                         <div class="grid gap-6 m-6 md:grid-cols-2">
                             <div class="grid gap-6 md:grid-cols-2">
-                                <div class="w-full">
-                                    <label for="sexo" class="">Sex <span
-                                            class="font-normal text-red-600">*</span></label>
-                                    <Select name="sexo" v-model="sexo" v-bind="sexoAttrs" optionLabel="label"
-                                        optionValue="value" placeholder="Elegir" showClear checkmark :options="generos"
-                                        class="w-full border-green-iimp" />
-                                    <span class="font-normal text-red-600">{{ errors.sexo }}</span>
-                                </div>
-                                <div class="w-full">
+
+                                <!-- <div class="w-full">
                                     <label for="nacionalidad" class="">Nationality <span
                                             class="font-normal text-red-600">*</span></label>
                                     <Select name="nacionalidad" v-model="nacionalidad" v-bind="nacionalidadAttrs" filter
                                         :options="nacionalidades" optionLabel="name" optionValue="id"
                                         placeholder="Elegir" showClear class="w-full border-green-iimp" />
                                     <span class="font-normal text-red-600">{{ errors.nacionalidad }}</span>
-                                </div>
+                                </div> -->
                             </div>
-                            <div class="w-full">
+                            <!-- <div class="w-full">
                                 <label for="credencial" class="">Credential Name
                                     <span class="text-xs text-gray-400">(Short name for credential)</span>
                                     <span class="font-normal text-red-600">*</span>
@@ -872,7 +750,7 @@ defineExpose({
                                 <InputText name="credencial" v-model="credencial" v-bind="credencialAttrs"
                                     class="w-full border-green-iimp" />
                                 <span class="font-normal text-red-600">{{ errors.credencial }}</span>
-                            </div>
+                            </div> -->
                         </div>
 
                     </div>
@@ -1014,8 +892,7 @@ defineExpose({
 
                 <template #content>
                     <div v-if="billingMessage"
-                        class=" flex items-start gap-2 rounded border-l-4 px-2 py-3 shadow-sm animate-fade-in"
-                        :class="{
+                        class=" flex items-start gap-2 rounded border-l-4 px-2 py-3 shadow-sm animate-fade-in" :class="{
                             'bg-green-50 border-green-500 text-green-800': billingMessage.type === 'success',
                             'bg-orange-50 border-orange-500 text-orange-800': billingMessage.type === 'warn',
                             'bg-red-50 border-red-500 text-red-800': billingMessage.type === 'error'
