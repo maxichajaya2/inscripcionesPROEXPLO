@@ -2,8 +2,8 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import colorbar from '@/Components/colorbar.vue';
 import GreenArrowRight from '@/Components/GreenArrowRight.vue';
-import { router } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { router, usePage } from '@inertiajs/vue3';
+import { ref, computed,onMounted } from 'vue';
 
 // Estilos globales
 import "../../../css/inscripciones.css";
@@ -22,10 +22,18 @@ const categoriasVisibles = computed(() => {
     return props.categorias.filter(cat => cat.grupo === grupoSeleccionado.value);
 });
 
-const irAlFormulario = (categoriaId) => {
-    // Redirige siempre a la ruta de autor pasando el ID de la categoría seleccionada
-    router.get(route('inscripcion.autor'), { category: categoriaId });
+const irAlFormulario = (id) => {
+    // Buscamos la categoría para saber su grupo
+    const categoria = props.categorias.find(c => c.id === id);
+
+    if (categoria.grupo === 'autor') {
+        router.get(route('inscripcion.autor'), { category: id });
+    } else {
+        router.get(route('inscripcion.participante'), { category: id });
+    }
 };
+
+
 
 </script>
 

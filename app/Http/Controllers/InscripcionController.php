@@ -62,6 +62,7 @@ class InscripcionController extends Controller
 
         $title = "Registration WMC 2026";
 
+
         return Inertia::render('Inscripcion/Index', compact('categorias', 'title'));
     }
 

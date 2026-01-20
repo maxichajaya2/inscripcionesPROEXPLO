@@ -55,7 +55,7 @@ class HandleInertiaRequests extends Middleware
                 // ->whereJsonContains('tipo', 'empresa')
                 ->orWhere('name_en', '=','DNI')
                 ->orWhere('name_en', '=','PASSPORT')
-                ->orWhere('name_en', '=','RUT')
+                // ->orWhere('name_en', '=','RUT')
                 ->orWhere('name_en', '=','RUC')
                 ->get(); // se agrego dni como documento para el pago
         $sharedData['general.tipoServicios'] = TipoServicio::where('isactive', true)->get();

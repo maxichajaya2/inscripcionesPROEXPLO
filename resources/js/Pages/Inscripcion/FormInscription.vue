@@ -9,7 +9,7 @@ import Checkbox from 'primevue/checkbox';
 import RadioButton from 'primevue/radiobutton';
 import Card from 'primevue/card';
 import InputGroup from 'primevue/inputgroup';
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed, watch, nextTick } from 'vue'; // Agregado nextTick
 import { useForm } from 'vee-validate';
 import * as yup from 'yup';
 import { usePage, router } from '@inertiajs/vue3';
@@ -38,69 +38,26 @@ const src = ref(null);
 const block_direction = ref(false);
 const fileErrors = ref([]);
 const maxSize = 6291456;
-// Definimos los tipos permitidos (Coincidiendo con tu accept)
-const allowedTypes = [
-    'application/pdf',
-    'image/png',
-    'image/jpg',
-    'image/jpeg'
-];
+const allowedTypes = ['application/pdf', 'image/png', 'image/jpg', 'image/jpeg'];
+// Agregamos un estado para controlar si el usuario puede editar manualmente
+const isEditingBilling = ref(false);
 
 let current_price = 0;
 const billingMessage = ref(null);
-const generos = computed(() => usePage().props.general.generos);
-const reglamento_inscripciones = computed(() => usePage().props.general.reglamento_inscripciones);
-const nacionalidades = computed(() => usePage().props.general.paises);
-const paises = computed(() => usePage().props.general.paises);
 const tipoDocumentoPago = computed(() => page.props.general.tipoDocumentoPago);
 const tipoDocumento = computed(() => page.props.general.tipDocEmp)
+const reglamento_inscripciones = computed(() => usePage().props.general.reglamento_inscripciones);
+
 const departamentos = ref();
-const provincias = ref();
-const distritos = ref();
-const visible = ref(false);
-const days = {
-    'mar': 'Tuesday',
-    'mie': 'Wednesday',
-    'jue': 'Thursday',
-    // 'vie': 'Friday'
-};
-
+const days = { 'mar': 'Tuesday', 'mie': 'Wednesday', 'jue': 'Thursday' };
 const current_days = { 'lun': false, 'mar': false, 'mie': false, 'jue': false, 'vie': false };
-const formManualErrors = ref({
-    reglamento: null,
-    total: null,
-    uploadDocument: null
-});
 
+const formManualErrors = ref({ reglamento: null, total: null, uploadDocument: null });
 
-const { defineField, errors, handleSubmit, setValues, resetForm, values } = useForm({
+const { defineField, errors, setValues, values } = useForm({
     validationSchema: yup.object({
         tipoDocumentoEmpresa: yup.mixed().required('Company document type is required'),
-        documentoEmpresa: yup.string().when(
-            'tipoDocumentoEmpresa',
-            (tipoDocumentoEmpresa, schema) => {
-                if (typeof tipoDocumentoEmpresa[0] !== 'undefined') {
-                    const type = tipoDocumentoEmpresa[0];
-
-                    if (type == 2) { // RUC
-                        return yup.string()
-                            .matches(/^\d+$/, 'The value must be numeric')
-                            .length(11, 'Must be exactly 11 digits')
-                            .required('Tax ID (RUC) is required');
-                    } else if (type == 1) { // DNI
-                        return yup.string()
-                            .matches(/^\d+$/, 'The value must be numeric')
-                            .length(8, 'Must be exactly 8 digits')
-                            .required('Document number is required');
-                    } else { // Others (Passport, etc.)
-                        return yup.string()
-                            .matches(/^[a-zA-Z0-9]+$/, "The value must contain only letters or numbers")
-                            .required('Document number is required');
-                    }
-                }
-                return schema;
-            }
-        ),
+        documentoEmpresa: yup.string().required('Document number is required'),
         nombres: yup.string().required('Name is required'),
         apellido_paterno: yup.string().required('Last name is required'),
         fecha_nacimiento: yup.mixed().required('Date of birth is required'),
@@ -108,12 +65,9 @@ const { defineField, errors, handleSubmit, setValues, resetForm, values } = useF
         correo: yup.string().required('Email is required').email('Enter a valid email'),
         celular: yup.string().required('Mobile phone is required'),
         pais: yup.mixed().required('Country is required'),
-        nacionalidad: yup.mixed().required('Nationality is required'),
         direccionPersona: yup.string().required('Address is required'),
         empresa: yup.string().required('Company is required'),
-        cargo: yup.string().required('Job title is required'),
         credencial: yup.string().required('Credential name is required'),
-
         razonSocial: yup.string().required('Business name is required'),
         direccionEmpresa: yup.string().required('Company address is required'),
         responsable: yup.string().required('Responsible party name is required'),
@@ -124,471 +78,269 @@ const { defineField, errors, handleSubmit, setValues, resetForm, values } = useF
     })
 })
 
-const [nombres, nombresAttrs] = defineField('nombres');
-const [apellido_paterno, apellido_paternoAttrs] = defineField('apellido_paterno');
-const [apellido_materno, apellido_maternoAttrs] = defineField('apellido_materno');
-const [fecha_nacimiento, fecha_nacimientoAttrs] = defineField('fecha_nacimiento');
-const [sexo, sexoAttrs] = defineField('sexo');
-const [correo, correoAttrs] = defineField('correo');
-const [celular, celularAttrs] = defineField('celular');
-const [nacionalidad, nacionalidadAttrs] = defineField('nacionalidad');
-const [pais, paisAttrs] = defineField('pais');
-const [departamento, departamentoAttrs] = defineField('departamento');
-const [provincia, provinciaAttrs] = defineField('provincia');
-const [distrito, distritoAttrs] = defineField('distrito');
-const [direccionPersona, direccionPersonaAttrs] = defineField('direccionPersona');
-const [empresa, empresaAttrs] = defineField('empresa');
-const [cargo, cargoAttrs] = defineField('cargo');
-const [credencial, credencialAttrs] = defineField('credencial');
-const [auth, authAttrs] = defineField('auth');
-const [terminos, terminosAttrs] = defineField('terminos');
-const [reglamento, reglamentoAttrs] = defineField('reglamento');
-const [selectTipoDocPago, selectTipoDocPagoAttrs] = defineField('selectTipoDocPago');
-
+const [nombres] = defineField('nombres');
+const [apellido_paterno] = defineField('apellido_paterno');
+const [documentoEmpresa] = defineField('documentoEmpresa');
+const [razonSocial] = defineField('razonSocial');
+const [responsable] = defineField('responsable');
+const [correo_facturador] = defineField('correo_facturador');
+const [tipoDocumentoEmpresa] = defineField('tipoDocumentoEmpresa');
+const [direccionEmpresa] = defineField('direccionEmpresa');
+const [selectTipoPago] = defineField('selectTipoPago');
+const [reglamento] = defineField('reglamento');
+const [selectTipoDocPago] = defineField('selectTipoDocPago');
 const [selected_categoria, selected_categoriaAttrs] = defineField('selected_categoria');
 const [selectedDays, selectedDaysAttrs] = defineField('selectedDays');
+const [uploadDocument] = defineField('uploadDocument');
+const [pais] = defineField('pais');
 
-const [documentoEmpresa, documentoEmpresaAttrs] = defineField('documentoEmpresa');
-const [razonSocial, razonSocialAttrs] = defineField('razonSocial');
-const [responsable, responsableAttrs] = defineField('responsable');
-const [correo_facturador, correo_facturadorAttrs] = defineField('correo_facturador');
-const [tipoDocumentoEmpresa, tipoDocumentoEmpresaAttrs] = defineField('tipoDocumentoEmpresa');
-const [direccionEmpresa, direccionEmpresaAttrs] = defineField('direccionEmpresa');
-const [selectTipoPago, selectTipoPagoAttrs] = defineField('selectTipoPago');
 
-const [uploadDocument, uploadDocumentAttrs] = defineField('uploadDocument');
+const is_category_fixed = ref(false);
 
-const today = new Date();
+// --- LÓGICA PRINCIPAL ---
+function changeCategory(id, precio) {
+    if (!id) return;
+    current_price = precio;
+    const categoria = props.categorias.find(c => c.id === id);
 
-onMounted(() => {
-    // 1. Configuraciones iniciales
-    tipoDocumentoEmpresa.value = 1;
-    selectTipoDocPago.value = 2;
-    selectTipoPago.value = 3;
+    if (categoria) {
+        nextTick(() => {
+            // Documentos
+            show_document.value = Boolean(categoria.requiere_documento);
+            if (show_document.value) {
+                const nombre = categoria.nombre_en.toUpperCase();
+                if (nombre.includes('STUDENT') || nombre.includes('ESTUDIANTE')) {
+                    upload_instruction.value = "Rate applicable to undergraduate students, presentation of enrollment proof required.";
+                } else if (nombre.includes('FACULTY') || nombre.includes('DOCENTE')) {
+                    upload_instruction.value = "Special rate for faculty members, valid proof required.";
+                } else {
+                    upload_instruction.value = "Please upload the required document for this category.";
+                }
+            }
 
-    // 2. PRIORIDAD: Si hay datos guardados (porque dimos Back), los usamos
-    if (props.saved_values) {
-        console.log("Restaurando datos del formulario...", props.saved_values);
+            // Días
+            const nomEs = categoria.nombre_es.toUpperCase();
+            const nomEn = categoria.nombre_en.toUpperCase();
 
-        // Restauramos los valores del formulario
-        setValues(props.saved_values);
-
-        // Restauramos variables reactivas locales que no son del form directamente
-        // pero controlan la UI (como uploadDocument, días, etc)
-
-        // Restaurar categoría para lógica visual
-        if (props.saved_values.selected_categoria) {
-            const cat = props.categorias.find(c => c.id === props.saved_values.selected_categoria);
-            if (cat) changeCategory(cat.id, cat.precio_disponible?.valor || 0);
-        }
-
-        // Restaurar lógica de facturación si había RUC
-        if (props.saved_values.tipoDocumentoEmpresa == 2) {
-            block_direction.value = true;
-        }
-
-    } else if (props.data_persona && props.data_persona.persona) {
-        // 3. Si no hay datos guardados, usamos los datos frescos de la API (Paso 1)
-        // (Tu lógica original)
-        es_socio.value = props.data_persona.persona.es_socio;
-        // ... tu lógica de selección automática de categoría ...
-
-        props.data_persona.persona.fecha_nacimiento = Functions.toLocalDateOnly(props.data_persona.persona.fecha_nacimiento);
-        setValues(props.data_persona.persona);
-        loadDepartamentos(); // etc...
-    }
-});
-
-const loadDepartamentos = async () => {
-    departamento.value = undefined;
-    provincia.value = undefined;
-    distrito.value = undefined;
-    departamentos.value = await Functions.loadDepartamentos(pais.value).then(data => { return data });
-}
-
-const loadProvincias = async () => {
-    provincia.value = undefined;
-    distrito.value = undefined;
-    provincias.value = await Functions.loadProvincias(pais.value, departamento.value).then(data => { return data });
-}
-
-const loadDistritos = async () => {
-    distrito.value = undefined;
-    distritos.value = await Functions.loadDistritos(pais.value, departamento.value, provincia.value).then(data => { return data });
-}
-
-const getEmpresaData = async () => {
-    // 1. Reset fields and messages
-    razonSocial.value = '';
-    direccionEmpresa.value = '';
-    billingMessage.value = null;
-    loading_doc.value = true;
-
-    // 8-second timeout to handle slow server responses
-    const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('timeout')), 8000)
-    );
-
-    try {
-        // Race between the actual request and the timeout
-        const empresa = await Promise.race([
-            Functions.getEmpresaData(documentoEmpresa.value, tipoDocumentoEmpresa.value),
-            timeout
-        ]);
-
-        if (empresa) {
-            razonSocial.value = empresa.empresa.nombre || '';
-            direccionEmpresa.value = empresa.empresa.direccionEmpresa || '';
-
-            if (empresa.status) {
-                // SUCCESS: Data found
-                if (tipoDocumentoEmpresa.value == 2) block_direction.value = true;
-                billingMessage.value = {
-                    type: 'success',
-                    text: 'Data found successfully.'
-                };
+            if (nomEs.includes("DIA") || nomEn.includes("DAY")) {
+                show_days.value = true;
+                total.value = total.value > 0 ? total.value : 0;
             } else {
-                // WARNING: Request finished but no data was found
-                let msg = tipoDocumentoEmpresa.value == 2
-                    ? "Tax ID (RUC) not found. Please verify the number."
-                    : "Document not found. Please complete the fields manually.";
-                billingMessage.value = { type: 'warn', text: msg };
+                show_days.value = false;
+                total.value = precio;
             }
-        }
-    } catch (e) {
-        // ERROR: Server fail or Timeout
-        let errorMsg = 'An error occurred during the search. Please fill in the details manually.';
-
-        if (e.message === 'timeout') {
-            errorMsg = 'The server is taking too long to respond. Please complete the fields manually.';
-        }
-
-        billingMessage.value = {
-            type: 'error',
-            text: errorMsg
-        };
-    } finally {
-        loading_doc.value = false;
-    }
-}
-const fileupload = ref(null);
-
-const onFileSelect = (event) => {
-    // 1. Verificamos que haya archivo
-    if (!event.files || event.files.length === 0) return;
-
-    const file = event.files[0];
-
-    // 2. Reiniciamos errores y variables
-    fileErrors.value = [];
-    uploadDocument.value = file;
-    src.value = null;
-
-    // --- VALIDACIÓN 1: FORMATO ---
-    if (!allowedTypes.includes(file.type)) {
-        // OPCIÓN 1: Español (Con el detalle que pediste)
-        // fileErrors.value.push("Formato de archivo no válido. Solo se permiten archivos PDF o Imágenes (PNG, JPG, JPEG).");
-        // OPCIÓN 2: Inglés Formal WMC (Si prefieres mantener todo el formulario en inglés)
-        fileErrors.value.push("Invalid file format. Only PDF documents or Images (PNG, JPG, JPEG) are accepted.");
-    }
-
-    // --- VALIDACIÓN 2: TAMAÑO ---
-    if (file.size > maxSize) { // Recuerda: maxSize debe ser 6291456 para 6MB
-        // Español
-        // fileErrors.value.push("El archivo excede el límite permitido. El máximo es 6MB.");
-        // Inglés
-        fileErrors.value.push("File size exceeds the limit. Maximum allowed is 6MB.");
-    }
-
-    // 5. Si hay errores, limpiamos todo
-    if (fileErrors.value.length > 0) {
-        uploadDocument.value = null;
-
-        if (fileupload.value) {
-            fileupload.value.clear();
-            fileupload.value.files = [];
-        }
-        return;
-    }
-
-    // 6. Vista previa
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-        if (file.type == "application/pdf") {
-            src.value = '/images/pdf-file-document.png';
-        } else {
-            src.value = e.target.result;
-        }
-    };
-    reader.readAsDataURL(file);
-}
-watch(() => props.data_persona, (newVal, oldVal) => {
-    empresa.value = '';
-    credencial.value = '';
-    // tipoDocumentoEmpresa.value = 2;
-    // selectTipoDocPago.value = 1;
-    tipoDocumentoEmpresa.value = 1; // 1 para que sea DNI.
-    selectTipoDocPago.value = 2;    // 2 para que sea BOLETA.
-    selectTipoPago.value = 3;
-    documentoEmpresa.value = '';
-    razonSocial.value = '';
-    direccionEmpresa.value = '';
-    responsable.value = '';
-    show_days.value = false;
-    show_document.value = false;
-    src.value = null;
-    block_direction.value = true;
-
-    if (typeof props.data_persona.persona != 'undefined') {
-        es_socio.value = props.data_persona.persona.es_socio;
-
-        if (props.categorias[0].control == 'CV') {
-            for (var i = 0; props.categorias.length; i++) {
-
-                if (newVal.persona.es_socio && props.categorias[i].condicion == 'SO') {
-                    selected_categoria.value = props.categorias[i].id;
-                    // total.value = props.categorias[i].precio_disponible.valor;
-                    // Usa ?.valor y un valor por defecto (0) si no existe
-                    total.value = props.categorias[i].precio_disponible?.valor || 0;
-                    break;
-                }
-                if (!newVal.persona.es_socio && props.categorias[i].condicion == 'NS') {
-                    selected_categoria.value = props.categorias[i].id;
-                    // total.value = props.categorias[i].precio_disponible.valor;
-                    total.value = props.categorias[i].precio_disponible?.valor || 0;
-                    break;
-                }
-                if (props.categorias[i].condicion != 'SO' && props.categorias[i].condicion != 'NS') {
-                    selected_categoria.value = props.categorias[i].id;
-                    // total.value = props.categorias[i].precio_disponible.valor;
-                    total.value = props.categorias[i].precio_disponible?.valor || 0;
-                    if (props.categorias[i].requiere_documento) {
-                        show_document.value = true;
-                    }
-                    break;
-                }
-            }
-        } else {
-            selected_categoria.value = props.categorias[0].id;
-            total.value = props.categorias[0].precio_disponible.valor;;
-        }
-
-        props.data_persona.persona.fecha_nacimiento = Functions.toLocalDateOnly(newVal.persona.fecha_nacimiento);
-        setValues(newVal.persona);
-        loadDepartamentos()
-        setValues(newVal.persona);
-        loadProvincias()
-        setValues(newVal.persona);
-        loadDistritos()
-        setValues(newVal.persona);
-
-    }
-});
-
-const onlyNumberKey = (event) => {
-    if (tipoDocumentoEmpresa.value == 2) {
-        block_direction.value = true;
-    } else {
-        block_direction.value = false;
-    }
-
-
-    if (tipoDocumentoEmpresa.value == 2 || tipoDocumentoEmpresa.value == 1) {
-        const charCode = event.charCode ? event.charCode : event.keyCode
-        if (charCode < 48 || charCode > 57) {
-            event.preventDefault()
-        } else {
-            if (typeof documentoEmpresa.value != 'undefined') {
-                if (documentoEmpresa.value.length == 11 && tipoDocumentoEmpresa.value == 2) {
-                    event.preventDefault()
-                }
-
-                if (documentoEmpresa.value.length == 8 && tipoDocumentoEmpresa.value == 1) {
-                    event.preventDefault()
-                }
-            }
-
-        }
-    } else {
-        const key = event.key;
-
-        // Allow navigation and control keys
-        if (["Backspace", "Delete", "Tab", "ArrowLeft", "ArrowRight"].includes(key)) {
-            return;
-        }
-
-        // Block everything that's not a-z, A-Z, 0-9
-        if (!/^[a-zA-Z0-9]$/.test(key)) {
-            event.preventDefault();
-        }
-    }
-}
-
-const showModal = () => {
-    visible.value = !visible.value;
-};
-
-const acceptModal = () => {
-    visible.value = !visible.value;
-    terminos.value = true;
-};
-
-const check_fact = () => {
-    if (tipoDocumentoEmpresa.value == 2) { // 2 = RUC (Tax ID)
-        toast.add({
-            severity: 'warn',
-            summary: 'Attention',
-            detail: 'Data is automatically populated based on Tax ID (RUC) search.',
-            life: 10000
         });
     }
 }
 
-function setTipoDocPago() {
-    documentoEmpresa.value = "";
-    razonSocial.value = "";
-    direccionEmpresa.value = "";
-    responsable.value = "";
-    block_direction.value = false;
 
-    if (tipoDocumentoEmpresa.value == 2) { //ruc
-        selectTipoDocPago.value = 1; // factura
-        block_direction.value = true;
-    } else {
-        selectTipoDocPago.value = 2; //boleta
+onMounted(() => {
+    // Configuraciones iniciales
+    tipoDocumentoEmpresa.value = 1;
+    selectTipoDocPago.value = 2;
+    selectTipoPago.value = 3;
+
+    // 1. Si los datos ya están presentes al montar, llenar facturación
+    if (props.data_persona?.persona) {
+        fillBillingData(props.data_persona.persona);
+        es_socio.value = props.data_persona.persona.es_socio;
+        loadDepartamentos();
+    }
+
+    // 2. Lógica de URL y categorías
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoryIdFromUrl = urlParams.get('category');
+    let targetCategoryId = null;
+
+    if (props.saved_values && props.saved_values.selected_categoria) {
+        targetCategoryId = props.saved_values.selected_categoria;
+        setValues(props.saved_values);
+    } else if (categoryIdFromUrl) {
+        targetCategoryId = parseInt(categoryIdFromUrl);
+        is_category_fixed.value = true;
+    }
+
+    if (targetCategoryId) {
+        selected_categoria.value = targetCategoryId;
+        const cat = props.categorias.find(c => c.id === targetCategoryId);
+        setTimeout(() => {
+            changeCategory(targetCategoryId, cat?.precio_disponible?.valor || 0);
+        }, 150);
+    }
+});
+
+watch(() => props.data_persona, (newVal) => {
+    if (newVal && newVal.persona) {
+        fillBillingData(newVal.persona);
+    }
+}, { immediate: true, deep: true });
+
+// Watcher para asegurar que si el valor de la categoría cambia, la UI responda (Días/Documentos)
+watch(selected_categoria, (newId) => {
+    const cat = props.categorias.find(c => c.id === newId);
+    if (cat) changeCategory(newId, cat.precio_disponible?.valor || 0);
+});
+const loadDepartamentos = async () => {
+    departamentos.value = await Functions.loadDepartamentos(pais.value);
+}
+
+const getEmpresaData = async () => {
+    loading_doc.value = true;
+    try {
+        const empresaData = await Functions.getEmpresaData(documentoEmpresa.value, tipoDocumentoEmpresa.value);
+        if (empresaData?.empresa) {
+            razonSocial.value = empresaData.empresa.nombre;
+            direccionEmpresa.value = empresaData.empresa.direccionEmpresa;
+            billingMessage.value = { type: 'success', text: 'Data found successfully.' };
+        }
+    } catch (e) {
+        billingMessage.value = { type: 'error', text: 'Error searching for company data.' };
+    } finally {
+        loading_doc.value = false;
     }
 }
 
-function changeCategory(id, precio) {
-    current_price = precio;
-
-    // 1. Buscamos la categoría completa
-    const categoria = props.categorias.find(c => c.id === id);
-
-
-    if (categoria) {
-        // --- A. LÓGICA DE DOCUMENTOS ---
-        show_document.value = categoria.requiere_documento ? true : false;
-        upload_instruction.value = '';
-
-        if (!show_document.value) {
-            uploadDocument.value = null;
-            src.value = null;
-        } else {
-            // <--- 2. LÓGICA PARA ASIGNAR EL TEXTO SEGÚN EL NOMBRE DE LA CATEGORÍA --->
-            const nombre = categoria.nombre_en.toUpperCase();
-
-            // CASO 1: DOCENTE AUTOR (Faculty member Author)
-            if ((nombre.includes('AUTHOR') || nombre.includes('AUTOR')) && (nombre.includes('FACULTY') || nombre.includes('DOCENTE'))) {
-                upload_instruction.value = "Special rate for undergraduate faculty members whose work has been selected, upon presentation of valid proof of their status.";
-            }
-            // CASO 2: ESTUDIANTE AUTOR (Student Author)
-            else if ((nombre.includes('AUTHOR') || nombre.includes('AUTOR')) && (nombre.includes('STUDENT') || nombre.includes('ESTUDIANTE'))) {
-                upload_instruction.value = "Rate for undergraduate students with selected papers, upon presentation of an updated proof of enrollment.";
-            }
-            // CASO 3: DOCENTE ASISTENTE GENERAL (General Attendee – Faculty member)
-            else if (nombre.includes('FACULTY') || nombre.includes('DOCENTE')) {
-                upload_instruction.value = "Special rate for undergraduate faculty members, who must present valid proof of their status.";
-            }
-            // CASO 4: ESTUDIANTE ASISTENTE GENERAL (General Attendee – Student)
-            else if (nombre.includes('STUDENT') || nombre.includes('ESTUDIANTE')) {
-                upload_instruction.value = "Rate applicable to undergraduate students in their 9th or 10th semester, upon presentation of an updated proof of enrollment.";
-            }
-            // CASO POR DEFECTO
-            else {
-                upload_instruction.value = "Please upload the required document for this category.";
-            }
-        }
-
-        // --- B. LÓGICA DE DÍAS  ---
-        const nombreMayus = categoria.nombre_es.toUpperCase();
-
-        // CAMBIO AQUÍ: Usamos Regex para buscar la PALABRA EXACTA "DIA"
-        // \b significa "borde de palabra". Así evitamos que detecte "MEDIA"
-        if (/\bDIA\b/.test(nombreMayus)) {
-
-            total.value = 0;
-            show_days.value = true;
-            selectedDays.value = [];
-
-            for (const key in current_days) {
-                current_days[key] = false;
-            }
-
-        } else {
-            // Es una categoría normal (Estudiante, Socio Full, etc.)
-            total.value = precio;
-            show_days.value = false;
-        }
-    }
+const onFileSelect = (event) => {
+    const file = event.files[0];
+    if (file.size > maxSize) return;
+    uploadDocument.value = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        src.value = file.type === "application/pdf" ? '/images/pdf-file-document.png' : e.target.result;
+    };
+    reader.readAsDataURL(file);
 }
 
 function selectDays(id) {
-    var cantidad_dias = 0;
     current_days[id] = !current_days[id];
-    for (const key in current_days) {
-        if (current_days[key]) {
-            cantidad_dias++;
-        }
-    }
-
-    total.value = cantidad_dias * current_price;
+    let count = Object.values(current_days).filter(v => v).length;
+    total.value = count * current_price;
 }
-
 
 function getInscripcion() {
-    // Reiniciamos errores manuales
     formManualErrors.value = { reglamento: null, total: null, uploadDocument: null };
     let hasError = false;
+    if (reglamento.value !== true) { formManualErrors.value.reglamento = "Required"; hasError = true; }
+    if (total.value <= 0) { formManualErrors.value.total = "Select days"; hasError = true; }
+    if (show_document.value && !uploadDocument.value) { formManualErrors.value.uploadDocument = "Upload file"; hasError = true; }
 
-    // 1. Reglamento
-    if (reglamento.value !== true) {
-        formManualErrors.value.reglamento = "You must accept the Terms and Conditions.";
-        hasError = true;
-    }
-
-    // 2. Errores de vee-validate (Inputs normales)
-    if (Object.keys(errors._value).length > 0) {
-        hasError = true;
-    }
-
-    // 3. Documento de Facturación (Validación manual de longitud)
-    // Nota: Vee-validate ya debería manejar esto por el esquema Yup,
-    // pero si necesitas forzar el scroll o alerta extra:
-    if (!documentoEmpresa.value) {
-        hasError = true;
-    }
-
-    // 4. Total (Días o Categoría)
-    if (total.value <= 0) {
-        formManualErrors.value.total = "The total amount must be greater than 0. Please select a category or specific days.";
-        hasError = true;
-    }
-
-    // 5. Carga de archivo
-    if (show_document.value === true && !uploadDocument.value) {
-        formManualErrors.value.uploadDocument = "Please upload the required documentation for your category.";
-        hasError = true;
-    }
-
-    if (hasError) {
-        toast.add({ severity: 'error', summary: 'ATTENTION: ACTION REQUIRED', detail: 'Please complete all required fields marked in red before proceeding.', life: 10000 });
-        return { "validate": false };
-    }
-
-    // Sync names if empty
-    if (props.data_persona.persona.nombres.length === 0 || props.data_persona.persona.apellido_paterno.length === 0) {
-        props.data_persona.persona.nombres = nombres.value;
-        props.data_persona.persona.apellido_paterno = apellido_paterno.value;
-    }
-
-    return { "validate": true, "formInscription": values };
+    return hasError ? { validate: false } : { validate: true, formInscription: values };
 }
 
-defineExpose({
-    getInscripcion
+function setTipoDocPago() {
+    if (tipoDocumentoEmpresa.value == 2) {
+        selectTipoDocPago.value = 1;
+        block_direction.value = true;
+    } else {
+        selectTipoDocPago.value = 2;
+        block_direction.value = false;
+    }
+}
+
+const onlyNumberKey = (event) => {
+    const charCode = event.which ? event.which : event.keyCode;
+    if (charCode > 31 && (charCode < 48 || charCode > 57)) event.preventDefault();
+}
+
+const enableManualEdit = () => {
+    isEditingBilling.value = true;
+    block_direction.value = false; // Desbloqueamos dirección para edición manual
+    toast.add({
+        severity: 'info',
+        summary: 'Manual Edit Enabled',
+        detail: 'You can now modify the billing information fields.',
+        life: 3000
+    });
+};
+
+const fillBillingData = (p) => {
+    if (!p) return;
+
+    console.log("--- DEBUG LLENADO FACTURACIÓN ---");
+    console.log("Data cruda recibida:", p);
+    console.log("Documento capturado:", p.documento);
+    console.log("Tipo Doc capturado:", p.tipo_doc || p.id_tipo_documento);
+
+    const nombreCompleto = `${p.nombres || ''} ${p.apellido_paterno || ''}`.trim();
+    const docTipo = p.id_tipo_documento || p.tipo_doc || 1;
+    const docNum = p.documento || '';
+
+    tipoDocumentoEmpresa.value = docTipo;
+    documentoEmpresa.value = docNum;
+    razonSocial.value = nombreCompleto;
+    direccionEmpresa.value = p.direccionPersona || p.direccion || '';
+    responsable.value = nombreCompleto;
+    correo_facturador.value = p.correo || '';
+
+    setValues({
+        tipoDocumentoEmpresa: docTipo,
+        documentoEmpresa: docNum,
+        razonSocial: nombreCompleto,
+        direccionEmpresa: direccionEmpresa.value,
+        responsable: nombreCompleto,
+        correo_facturador: p.correo || '',
+        selectTipoDocPago: docTipo == 2 ? 1 : 2,
+        selectTipoPago: 3
+    });
+
+    block_direction.value = (docTipo == 2);
+};
+
+watch(() => props.data_persona, (newVal) => {
+    if (newVal) {
+        // Intentamos con newVal.persona o con newVal directamente
+        const data = newVal.persona ? newVal.persona : newVal;
+        fillBillingData(data);
+    }
+}, { immediate: true, deep: true });
+
+// const filteredDocTypes = computed(() => {
+//     // Verificamos si es peruano por ID de país o por texto de nacionalidad
+//     const esPeruano = props.data_persona?.persona?.id_pais == 1 ||
+//         props.data_persona?.persona?.nacionalidad?.toLowerCase() === 'peruano';
+
+//     if (esPeruano && tipoDocumento.value) {
+//         // Filtramos para mostrar solo DNI (1) y RUC (2)
+//         return tipoDocumento.value.filter(d => d.id == 1 || d.id == 2);
+//     }
+//     return tipoDocumento.value;
+// });
+
+const filteredDocTypes = computed(() => {
+    const p = props.data_persona?.persona || props.data_persona;
+
+    // --- LOGS DE CONTROL ---
+    console.log("--- DEBUG NACIONALIDAD ---");
+    console.log("ID País recibido:", p?.pais);
+    console.log("Tipo Doc recibido:", p?.tipo_doc);
+
+    // LÓGICA CORREGIDA:
+    // Es peruano si el país es 1
+    // O si ya trae un tipo_doc 1 (DNI) o 2 (RUC) aunque el ID de país diga otra cosa
+    const esPeruano = p?.pais == 1 ||
+                      p?.id_pais == 1 ||
+                      p?.tipo_doc == 1 ||
+                      p?.tipo_doc == 2 ||
+                      p?.nacionalidad?.toLowerCase() === 'peruano';
+
+    console.log("¿Es detectado como Peruano?:", esPeruano);
+
+    if (!tipoDocumento.value) return [];
+
+    if (esPeruano) {
+        // Retorna SOLO DNI (1) y RUC (2)
+        const filtrados = tipoDocumento.value.filter(d => d.id == 1 || d.id == 2);
+        console.log("Documentos para Peruano:", filtrados);
+        return filtrados;
+    } else {
+        // Retorna PASAPORTE, CE, etc. (quita DNI y RUC)
+        const filtrados = tipoDocumento.value.filter(d => d.id != 1 && d.id != 2);
+        console.log("Documentos para Extranjero:", filtrados);
+        return filtrados;
+    }
 });
 
+defineExpose({ getInscripcion });
 </script>
 
 <template>
@@ -602,68 +354,92 @@ defineExpose({
                 <template #header>
                     <div
                         class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc text-blue-900">
-                        Category
+                        Category Details
                     </div>
                 </template>
 
                 <template #content>
                     <div class="px-2">
-                        <div v-for="(categoria) in categorias" :key="categoria.id"
-                            class="w-full border-b border-gray-100 last:border-0 py-3 px-3 rounded-lg transition-colors duration-200"
-                            :class="{
-                                'bg-blue-50 border border-blue-200 shadow-sm': selected_categoria === categoria.id,
-                                'hover:bg-gray-50': selected_categoria !== categoria.id
-                            }">
 
-                            <div class="flex items-start w-full">
-                                <div class="flex-none pt-1">
-                                    <RadioButton v-model="selected_categoria" v-bind="selected_categoriaAttrs"
-                                        name="selected_categoria" :value='categoria.id' class="radio-green-iimp"
-                                        @click="changeCategory(categoria.id, categoria.precio_disponible.valor)" />
-                                </div>
-
-                                <div class="flex flex-col sm:flex-row sm:justify-between w-full pl-3 cursor-pointer"
-                                    @click="changeCategory(categoria.id, categoria.precio_disponible.valor)">
-                                    <label
-                                        class="text-sm sm:text-base text-gray-700 leading-tight mb-1 sm:mb-0 cursor-pointer"
-                                        :class="{ 'font-bold text-blue-900': selected_categoria === categoria.id }">
-                                        {{ es_socio || categoria.condicion == 'NS' ? categoria.nombre_es :
-                                            categoria.nombre_en }}
-                                    </label>
-                                    <p
-                                        class="text-yellow-price font-bold text-sm sm:text-base whitespace-nowrap sm:pl-4">
-                                        USD {{ categoria.precio_disponible?.valor ?? '0.00' }}
-                                    </p>
-                                </div>
+                        <div v-if="is_category_fixed"
+                            class="w-full p-4 bg-blue-50 border border-blue-200 rounded-xl shadow-sm flex justify-between items-center">
+                            <div class="flex flex-col">
+                                <span class="text-[10px] uppercase text-blue-400 font-black tracking-widest">Selected
+                                    Profile</span>
+                                <h4 class="text-lg font-bold text-blue-900 leading-tight">
+                                    {{categorias.find(c => c.id === selected_categoria)?.nombre_en}}
+                                </h4>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-yellow-price font-black text-xl">
+                                    USD {{categorias.find(c => c.id === selected_categoria)?.precio_disponible?.valor
+                                        || '0.00'}}
+                                </p>
                             </div>
                         </div>
 
+                        <div v-else>
+                            <div v-for="(categoria) in categorias" :key="categoria.id"
+                                class="w-full border-b border-gray-100 last:border-0 py-3 px-3 rounded-lg transition-colors duration-200"
+                                :class="{
+                                    'bg-blue-50 border border-blue-200 shadow-sm': selected_categoria === categoria.id,
+                                    'hover:bg-gray-50': selected_categoria !== categoria.id
+                                }">
+                                <div class="flex items-start w-full">
+                                    <div class="flex-none pt-1">
+                                        <RadioButton v-model="selected_categoria" v-bind="selected_categoriaAttrs"
+                                            name="selected_categoria" :value='categoria.id' class="radio-green-iimp"
+                                            @click="changeCategory(categoria.id, categoria.precio_disponible.valor)" />
+                                    </div>
+                                    <div class="flex flex-col sm:flex-row sm:justify-between w-full pl-3 cursor-pointer"
+                                        @click="changeCategory(categoria.id, categoria.precio_disponible.valor)">
+                                        <label
+                                            class="text-sm sm:text-base text-gray-700 leading-tight mb-1 sm:mb-0 cursor-pointer"
+                                            :class="{ 'font-bold text-blue-900': selected_categoria === categoria.id }">
+                                            {{ es_socio || categoria.condicion == 'NS' ? categoria.nombre_es :
+                                                categoria.nombre_en }}
+                                        </label>
+                                        <p
+                                            class="text-yellow-price font-bold text-sm sm:text-base whitespace-nowrap sm:pl-4">
+                                            USD {{ categoria.precio_disponible?.valor ?? '0.00' }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <Card v-if="show_days" class="m-6">
+
+                    <Card v-if="show_days" class="mt-6 border border-dashed border-blue-300 bg-blue-50/30">
                         <template #content>
                             <div v-if="formManualErrors.total"
-                                class="mt-4 flex items-center gap-3 rounded border-l-4 border-red-500 bg-red-50 px-4 py-2 text-red-800 shadow-sm animate-fade-in">
+                                class="mb-4 flex items-center gap-3 rounded border-l-4 border-red-500 bg-red-50 px-4 py-2 text-red-800 shadow-sm">
                                 <i class="pi pi-times-circle"></i>
                                 <span class="text-xs font-bold">{{ formManualErrors.total }}</span>
                             </div>
-                            <div class=" flex justify-around">
-                                <div v-for="(day, key) in days" :key="key">
+
+                            <p class="text-sm text-blue-800 font-bold mb-4 text-center">
+                                <i class="pi pi-calendar-plus mr-2"></i>Select the specific days of attendance:
+                            </p>
+
+                            <div class="flex justify-around flex-wrap gap-4">
+                                <div v-for="(day, key) in days" :key="key" class="flex items-center">
                                     <Checkbox :inputId="day" :value="key" v-model="selectedDays"
                                         v-bind="selectedDaysAttrs" name="selectedDays" @click="selectDays(key)" />
-                                    <label :for="day" class=" pl-3">{{ day }}</label>
+                                    <label :for="day" class="pl-2 text-sm text-gray-700 font-semibold cursor-pointer">{{
+                                        day }}</label>
                                 </div>
                             </div>
-                            <div class="flex justify-around mt-6 w-[100%]">
-                                <div class="text-yellow-price min-w-[150px] flex justify-between">
-                                    <label for="">TOTAL :</label>
-                                    <label for="">USD {{ total }}</label>
+
+                            <div class="flex justify-center mt-6 pt-4 border-t border-blue-200">
+                                <div class="text-blue-900 font-black flex items-center gap-4">
+                                    <span class="text-sm uppercase tracking-wider">Subtotal:</span>
+                                    <span class="text-2xl text-yellow-price">USD {{ total }}</span>
                                 </div>
                             </div>
                         </template>
-
                     </Card>
 
-                    <Card v-if="show_document" class="m-6">
+                    <Card v-if="show_document" class="mt-6 border border-dashed border-green-300">
                         <template #content>
                             <div v-if="upload_instruction"
                                 class="mb-4 p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-700">
@@ -672,47 +448,28 @@ defineExpose({
                             </div>
 
                             <div class="flex justify-center mb-4 w-full">
-                                <img v-if="src" :src="src" alt="Vista previa"
+                                <img v-if="src" :src="src" alt="Preview"
                                     class="shadow-md rounded-lg border border-gray-200 max-w-[200px] max-h-[200px] object-contain" />
                             </div>
 
                             <div class="flex flex-col items-center justify-center w-full">
-
                                 <div v-if="formManualErrors.uploadDocument"
-                                    class="w-full mb-4 flex items-center gap-3 rounded border-l-4 border-red-500 bg-red-50 px-4 py-2 text-red-800 shadow-sm animate-fade-in">
+                                    class="w-full mb-4 flex items-center gap-3 rounded border-l-4 border-red-500 bg-red-50 px-4 py-2 text-red-800 shadow-sm">
                                     <i class="pi pi-times-circle"></i>
                                     <span class="text-xs font-bold">{{ formManualErrors.uploadDocument }}</span>
                                 </div>
-                                <div v-if="fileErrors.length > 0"
-                                    class="w-full md:w-3/4 mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-center mx-auto">
-                                    <div v-for="(error, index) in fileErrors" :key="index"
-                                        class="flex items-center justify-center gap-2 text-red-600 font-bold mb-1 last:mb-0">
-                                        <i class="pi pi-exclamation-triangle"></i>
-                                        <span class="text-sm">{{ error }}</span>
-                                    </div>
-                                </div>
 
+                                <FileUpload ref="fileupload" mode="basic"
+                                    class="p-button-outlined text-green-iimp mx-auto" :auto="true" customUpload
+                                    :chooseLabel="'Upload Document'" @select="onFileSelect" name="uploadDocument" />
 
-                                <div class="flex justify-center items-center w-full text-center">
-                                    <FileUpload ref="fileupload" mode="basic"
-                                        class="p-button-outlined text-green-iimp mx-auto" :auto="true" customUpload
-                                        :chooseLabel="'Choose File'" :uploadLabel="'Cargar'" @select="onFileSelect"
-                                        name="uploadDocument" v-model="uploadDocument" v-bind="uploadDocumentAttrs" />
-                                </div>
-
-                                <small
-                                    class="text-slate-500 mt-3 font-medium text-center block w-full text-xs leading-5">
-                                    <i class="pi pi-file-check mr-1"></i>
-                                    <span>Accepted formats: </span>
-                                    <span class="font-bold text-slate-600">PDF, Image(JPG, JPEG, PNG)</span>.
-                                    <br>
-                                    <span>Max size: </span>
-                                    <span class="font-bold text-slate-600">6MB</span>.
+                                <small class="text-slate-500 mt-3 text-center block text-xs">
+                                    Accepted: PDF, JPG, PNG (Max 6MB)
                                 </small>
                             </div>
-
                         </template>
                     </Card>
+
                 </template>
             </Card>
         </div>
@@ -721,165 +478,74 @@ defineExpose({
         <div class="text-green-iimp font-bold p-4">
 
             <Card class="mt-5 overflow-hidden">
-
                 <template #header>
                     <div class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc">
-                        Billing Information</div>
+                        Billing Information
+                    </div>
                 </template>
-
 
                 <template #content>
-                    <div v-if="billingMessage"
-                        class=" flex items-start gap-2 rounded border-l-4 px-2 py-3 shadow-sm animate-fade-in" :class="{
-                            'bg-green-50 border-green-500 text-green-800': billingMessage.type === 'success',
-                            'bg-orange-50 border-orange-500 text-orange-800': billingMessage.type === 'warn',
-                            'bg-red-50 border-red-500 text-red-800': billingMessage.type === 'error'
-                        }">
-
-                        <i class="pi mt-0.5" :class="{
-                            'pi-check-circle': billingMessage.type === 'success',
-                            'pi-exclamation-triangle': billingMessage.type === 'warn',
-                            'pi-times-circle': billingMessage.type === 'error'
-                        }"></i>
-
-                        <span class="text-sm font-normal text-left">{{ billingMessage.text }}</span>
-                    </div>
-                    <div class="py-2">
-                        <div
-                            class=" flex items-start gap-2 rounded-md border border-sky-300 bg-sky-50 px-2 py-3 text-sm text-sky-800">
-                            <i class="pi pi-info-circle mt-0.5"></i>
-                            <p class="text-left font-normal">
-                                Participants registering with <strong>PASSPORT</strong>, <strong>DNI</strong> or
-                                <strong>RUT</strong>
-                                can
-                                request a <strong>Boleta</strong> only. <strong>Factura</strong> is available
-                                exclusively for
-                                <strong>RUC</strong>.
-                            </p>
-                        </div>
+                    <div class="flex justify-end px-6 mb-2">
+                        <Button v-if="!isEditingBilling" icon="pi pi-pencil" label="Edit Info"
+                            class="p-button-text p-button-sm text-blue-600" @click="enableManualEdit" />
+                        <Button v-else icon="pi pi-lock" label="Finish Editing"
+                            class="p-button-text p-button-sm text-green-600" @click="isEditingBilling = false" />
                     </div>
 
-                    <div
-                        class=" flex items-start gap-2 rounded-md border border-sky-300 bg-sky-50 px-2 py-2 text-sm text-sky-800">
-                        <i class="pi pi-exclamation-triangle mt-0.5"></i>
-                        <div class="text-left font-normal">
-                            <p class="mb-1">
-                                <strong>Note:</strong> Only Peruvian companies have a <strong>RUC</strong>. Please
-                                ensure you enter the data correctly to avoid errors in your receipt.
-                            </p>
-                        </div>
-                    </div>
                     <div class="grid gap-6 m-6 md:grid-cols-2">
                         <div class="grid gap-6 md:grid-cols-2">
                             <div class="col-span-3 sm:col-span-1">
-                                <label for="tipoDocumentoEmpresa" class="">Document Type <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <Select name="tipoDocumentoEmpresa" v-model="tipoDocumentoEmpresa"
-                                    v-bind="tipoDocumentoEmpresaAttrs" :options="tipoDocumento" optionLabel="name_en"
-                                    optionValue="id" placeholder="Elegir" showClear checkmark
-                                    class="w-full border-green-iimp" @change="setTipoDocPago" />
-                                <span class="font-normal text-red-600">{{ errors.tipoDocumentoEmpresa }}</span>
-
+                                <label class="block mb-1">Document Type <span class="text-red-600">*</span></label>
+                                <Select v-model="tipoDocumentoEmpresa" :options="filteredDocTypes" optionLabel="name_en"
+                                    optionValue="id" :disabled="!isEditingBilling" class="w-full border-green-iimp"
+                                    @change="setTipoDocPago" />
                             </div>
 
                             <div class="col-span-3 sm:col-span-1">
-                                <label for="documentoEmpresa">Document Number <span
-                                        class="text-red-600">*</span></label>
+                                <label class="block mb-1">Document Number <span class="text-red-600">*</span></label>
                                 <InputGroup>
-                                    <InputText name="documentoEmpresa" v-model="documentoEmpresa"
-                                        v-bind="documentoEmpresaAttrs" class="border-green-iimp"
-                                        @keypress="onlyNumberKey" :maxlength="25" />
-                                    <Button icon="pi pi-search" class="border-green-iimp bg-green-iimp"
-                                        @click="getEmpresaData" :disabled="!documentoEmpresa || loading_doc"
-                                        :loading="loading_doc" />
+                                    <InputText v-model="documentoEmpresa" :readonly="!isEditingBilling"
+                                        class="border-green-iimp" @keypress="onlyNumberKey" />
+                                    <Button icon="pi pi-search" class="bg-green-iimp"
+                                        :disabled="!isEditingBilling && tipoDocumentoEmpresa != 2"
+                                        @click="getEmpresaData" />
                                 </InputGroup>
-                                <span class="font-normal text-red-600">{{ errors.documentoEmpresa }}</span>
-
-
                             </div>
                         </div>
-                        <div class="w-full sm:col-span-1">
-                            <label for="razonSocial" class="">Business Name <span
-                                    class="font-normal text-red-600">*</span></label>
-                            <InputText name="razonSocial" v-model="razonSocial" v-bind="razonSocialAttrs"
-                                class="w-full border-green-iimp" :readonly="block_direction" @click="check_fact" />
-                            <span class="font-normal text-red-600">{{ errors.razonSocial }}</span>
-                        </div>
 
+                        <div class="w-full sm:col-span-1">
+                            <label class="block mb-1">Business Name / Full Name <span
+                                    class="text-red-600">*</span></label>
+                            <InputText v-model="razonSocial" class="w-full border-green-iimp"
+                                :readonly="!isEditingBilling || block_direction" />
+                        </div>
                     </div>
 
                     <div class="grid gap-6 m-6 md:grid-cols-2">
                         <div class="w-full sm:col-span-1">
-                            <label for="direccionEmpresa" class="">Company Address <span
-                                    class="font-normal text-red-600">*</span></label>
-                            <InputText name="direccionEmpresa" v-model="direccionEmpresa" v-bind="direccionEmpresaAttrs"
-                                class="w-full border-green-iimp" autocomplete="nueva-direccion"
-                                :readonly="block_direction" @click="check_fact" />
-                            <span class="font-normal text-red-600">{{ errors.direccionEmpresa }}</span>
+                            <label class="block mb-1">Address <span class="text-red-600">*</span></label>
+                            <InputText v-model="direccionEmpresa" class="w-full border-green-iimp"
+                                :readonly="!isEditingBilling || block_direction" />
                         </div>
 
                         <div class="grid gap-6 md:grid-cols-2">
                             <div class="w-full sm:col-span-1">
-                                <label for="responsable" class="">Billing Contact <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <InputText name="responsable" v-model="responsable" v-bind="responsableAttrs"
+                                <label class="block mb-1">Billing Contact <span class="text-red-600">*</span></label>
+                                <InputText v-model="responsable" :readonly="!isEditingBilling"
                                     class="w-full border-green-iimp" />
-                                <span class="font-normal text-red-600">{{ errors.responsable }}</span>
                             </div>
 
                             <div class="w-full sm:col-span-1">
-                                <label for="correo_facturador" class="">Billing Email <span
-                                        class="font-normal text-red-600">*</span></label>
-                                <InputText name="correo_facturador" v-model="correo_facturador"
-                                    v-bind="correo_facturadorAttrs" class="w-full border-green-iimp"
-                                    autocomplete="nuevo-email" />
-                                <span class="font-normal text-red-600">{{ errors.correo_facturador }}</span>
+                                <label class="block mb-1">Billing Email <span class="text-red-600">*</span></label>
+                                <InputText v-model="correo_facturador" :readonly="!isEditingBilling"
+                                    class="w-full border-green-iimp" />
                             </div>
-
                         </div>
                     </div>
-
-                    <div class="flex justify-around w-full mb-4">
-                        <!-- <Card
-                            class="gap-3 text-center w-full md:w-auto md:min-w-[450px] shadow-lg border border-gray-200">
-                            <template #content>
-                                <div class="text-lg font-semibold m-4">Payment Document</div>
-
-                                <div class="flex flex-wrap justify-center gap-3">
-                                    <div class="flex items-center" v-for="tipodocpago in tipoDocumentoPago"
-                                        :key="tipodocpago.id">
-                                        <RadioButton v-model="selectTipoDocPago" v-bind="selectTipoDocPagoAttrs"
-                                            :inputId="tipodocpago.nombre" name="tipodocpago" :value="tipodocpago.id"
-                                            @click="$event.preventDefault()" />
-                                        <label :for="tipodocpago.nombre" class="ml-2 cursor-pointer">{{
-                                            tipodocpago.nombre }}</label>
-                                    </div>
-                                </div>
-                                <span class="font-normal text-red-600 block mt-2">{{ errors.selectTipoDocPago }}</span>
-                            </template>
-                        </Card> -->
-                        <!-- <Card class="gap-3 text-center min-w-[450px]">
-                            <template #content>
-                                <div class="text-lg font-semibold m-4">Payment Method</div>
-
-                                <div class="flex flex-wrap justify-center gap-3">
-                                    <div class="flex items-center">
-                                        <RadioButton v-model="selectTipoPago" v-bind="selectTipoPagoAttrs"
-                                            name="tipodocfac" :value="3" class="radio-green-iimp "
-                                            @click="$event.preventDefault()" />
-                                        <label class="ml-2">Card</label>
-                                    </div>
-                                </div>
-                                <span class="font-normal text-red-600">{{ errors.selectTipoPago }}</span>
-                            </template>
-                        </Card> -->
-                    </div>
-
                 </template>
-
             </Card>
         </div>
-        <div class="text-green-iimp font-bold p-4">
+        <!-- <div class="text-green-iimp font-bold p-4">
             <Card class="mt-5 overflow-hidden shadow-lg border border-gray-200">
 
                 <template #header>
@@ -919,7 +585,7 @@ defineExpose({
                     </div>
                 </template>
             </Card>
-        </div>
+        </div> -->
 
     </div>
 

@@ -2,14 +2,14 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import colorbar from '@/Components/colorbar.vue';
 import { router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import Dialog from 'primevue/dialog';
 import FormValidacionDoc from './FormValidacionDoc.vue';
 import FormInscription from './FormInscription.vue';
 import FormPayment from './FormPayment.vue';
 import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
-
+import Card from 'primevue/card';
 import Stepper from 'primevue/stepper';
 import StepList from 'primevue/steplist';
 import StepPanels from 'primevue/steppanels';
@@ -32,13 +32,25 @@ const formDataValidacionDoc = ref(null);
 const formDataInscription = ref(null);
 const formDataPayment = ref(null);
 const data_persona = ref({});
-const categoria_seleccionada = ref({});
+
 const nacionalidadSeleccionada = ref(null);
 
 const childFormValidacionDoc = ref();
 const childFormInscription = ref(null);
 const childFormPayment = ref(null);
 const tipo_origen = ref(0);
+const categoria_seleccionada = ref({}); // Esto debe empezar vacío
+
+const resumen_dinamico = ref({
+    total: 0,
+    dias_seleccionados: [],
+    requiere_doc: false,
+    tiene_doc: false
+});
+
+const actualizarResumen = (datos) => {
+    resumen_dinamico.value = { ...resumen_dinamico.value, ...datos };
+};
 
 // --- LÓGICA DE VALIDACIÓN ---
 const validate = async (value) => {
@@ -99,56 +111,137 @@ const seleccionarOrigen = (origen, id_numerico) => {
 const goStart = () => {
     router.get(route('inscripcion.index'));
 };
+
+const activeStep = ref("1"); // Control del paso actual
+
+
+// Modificamos el computed del total para que use el del formulario si existe
+const total_final = computed(() => {
+    // Si el formulario nos está enviando un total (por días), usamos ese.
+    // Si no, usamos el precio base de la categoría seleccionada.
+    return resumen_dinamico.value.total > 0
+           ? resumen_dinamico.value.total
+           : (categoria_seleccionada.value?.precio_disponible?.valor || '0.00');
+});
+
+onMounted(() => {
+    // 1. Leer el ID de la URL (ej: ?category=5)
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoryId = urlParams.get('category');
+
+    if (categoryId && props.categorias) {
+        // 2. Buscar en la lista de categorías que mandó el controlador
+        // Convertimos a array por si viene como objeto indexado de PHP
+        const listaCategorias = Object.values(props.categorias);
+        const encontrada = listaCategorias.find(c => c.id == categoryId);
+
+        if (encontrada) {
+            // 3. SE ASIGNA AL REF QUE USA EL RESUMEN
+            categoria_seleccionada.value = encontrada;
+            console.log("Resumen actualizado con:", encontrada.nombre_en);
+        }
+    }
+});
+
 </script>
 
 <template>
     <AppLayout title="Inscripciones" class="bg-gradient-wmc">
 
-        <div class=" px-3 mx-auto max-w-7xl md:px-6 lg:px-8 font-(family-name:Roboto)">
+
+        <div class="px-3 mx-auto max-w-7xl md:px-6 lg:px-8 relative">
+
             <div id="titulo_inicial" class="mt-8 mb-8">
                 <h1 class="text-3xl text-green-iimp font-bold mb-2 text-yellow-price">{{ props.title }}</h1>
                 <colorbar class="block w-auto" />
             </div>
-            <div class="flex justify-around mt-6 mb-6">
-                <Stepper value="1" class="w-full">
+
+            <div class="mt-6 mb-6">
+                <Stepper v-model:value="activeStep" class="w-full">
                     <StepList class="text-black-price bg-degradient">
-                        <Step value="1" :disabled="true" class="text-black-price">Data Validation</Step>
-                        <Step value="2" :disabled="true">Personal Details</Step>
-                        <Step value="3" :disabled="true">Payment Process</Step>
+                        <Step value="1">Data Validation</Step>
+                        <Step value="2">Personal Details</Step>
+                        <Step value="3">Payment Process</Step>
                     </StepList>
+
                     <StepPanels>
                         <StepPanel v-slot="{ activateCallback }" value="1"
                             class="rounded-2xl border-2 border-green-iimp bg-white-price shadow-wmc">
-                            <FormValidacionDoc ref="childFormValidacionDoc"
-                                :nacionalidadPrevia="nacionalidadSeleccionada" :tipo_origen="tipo_origen" />
+                            <FormValidacionDoc ref="childFormValidacionDoc" :tipo_origen="tipo_origen" />
                             <div class="flex p-6 justify-end">
                                 <Button label="Validate" icon="pi pi-arrow-right" iconPos="right"
                                     @click="async () => await validate('Documento') ? activateCallback('2') : false"
                                     class="bg-degradient border-rounded-full" :loading="loading" />
                             </div>
                         </StepPanel>
-                        <StepPanel v-slot="{ activateCallback }" value="2">
+
+                        <StepPanel v-slot="{ activateCallback }" value="2"
+                            class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
                             <FormInscription ref="childFormInscription" :data_persona="data_persona"
                                 :categorias="props.categorias" />
                             <div class="flex justify-between p-6">
                                 <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
-                                    @click="activateCallback('1')" class="border-rounded-full" />
+                                    @click="activateCallback('1')" />
                                 <Button label="Register" icon="pi pi-arrow-right" iconPos="right"
                                     @click="async () => await validate('Inscripcion') ? activateCallback('3') : false"
                                     class="bg-green-iimp border-rounded-full" :loading="loading" />
                             </div>
                         </StepPanel>
-                        <StepPanel v-slot="{ activateCallback }" value="3">
+
+                        <StepPanel v-slot="{ activateCallback }" value="3"
+                            class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
                             <FormPayment ref="childFormPayment" :data_persona="data_persona"
                                 :formulario="formDataPayment" :categoria_seleccionada="categoria_seleccionada" />
                             <div class="flex justify-between p-6">
                                 <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
-                                    @click="activateCallback('2')" class="border-rounded-full" />
+                                    @click="activateCallback('2')" />
                             </div>
                         </StepPanel>
                     </StepPanels>
                 </Stepper>
             </div>
+
+            <aside class="hidden xl:block absolute top-32 -right-64 w-60">
+                <Card class="shadow-2xl border-t-4 border-yellow-price bg-white">
+                    <template #title>
+                        <div class="text-sm font-bold text-slate-700 flex items-center gap-2">
+                            <i class="pi pi-shopping-cart text-green-iimp"></i> RESUMEN
+                        </div>
+                    </template>
+                    <template #content>
+                        <div class="flex flex-col gap-3">
+                            <div v-if="categoria_seleccionada.id">
+                                <span
+                                    class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Categoría</span>
+                                <p class="text-xs font-bold text-blue-900 uppercase">
+                                    {{ categoria_seleccionada.nombre_en }}
+                                </p>
+                                <p class="text-[10px] text-slate-500 italic">
+                                    {{ categoria_seleccionada.precio_disponible?.nombre_en }}
+                                </p>
+                            </div>
+
+                            <div v-if="data_persona.nombres">
+                                <span
+                                    class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Participante</span>
+                                <p class="text-xs font-semibold text-slate-700 leading-tight">
+                                    {{ data_persona.nombres }} {{ data_persona.apellido_paterno }}
+                                </p>
+                            </div>
+
+                            <div class="pt-2 border-t border-gray-100">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs font-bold text-slate-600">TOTAL:</span>
+                                    <span class="text-xl font-black text-green-iimp">
+                                        {{ categoria_seleccionada.precio_disponible?.moneda?.simbolo || '$' }} {{
+                                            total_final }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </Card>
+            </aside>
         </div>
 
         <Dialog v-model:visible="visible" modal :showHeader="false" :closable="false" :style="{ width: '900px' }"
