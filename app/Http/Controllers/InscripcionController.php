@@ -131,180 +131,349 @@ class InscripcionController extends Controller
     /***************  PRODUCCION **************** */
     /** ==================================== */
 
+    // public function getForm(Request $request)
+    // {
+
+    //     if (!str_contains($request->headers->get('referer'), 'registro') || (csrf_token() === null)) {
+    //         abort(403, 'Unauthorized POST request.');
+    //         exit;
+    //     }
+
+    //     $form_data = (object)$request->form;
+
+    //     $persona = Persona::where('id_tipo_documento', $form_data->id_tipo_documento)->where('documento', $form_data->documento)->firstorNew();
+    //     $ocupacion = Ocupacion::whereRaw("name like '%" . $form_data->cargo . "%'")->where('isactive', true)->first();
+    //     $categoria = CategoriaInscripcion::find($form_data->selected_categoria);
+    //     $categoria->precio_disponible = $categoria->precio->where('fecha_inicio', '<=', $this->now)->where('fecha_fin', '>=', $this->now)->first();
+
+    //     $total = $categoria->precio_disponible->valor;
+    //     $dias = '{"lun":1,"mar":1,"mie":1,"jue":1,"vie":1}';
+
+    //     if (str_contains($categoria->nombre_es, 'DIA')) {
+
+    //         $total = sizeof($form_data->selectedDays) * $categoria->precio_disponible->valor;
+    //         $dias = json_decode($dias, true);
+
+    //         foreach ($dias as $key => $dia) {
+    //             $dias[$key] = 0;
+    //         }
+
+    //         foreach ($form_data->selectedDays as $selected_day) {
+    //             $selected_day = strtolower($selected_day);
+    //             $dias[$selected_day] = 1;
+    //         }
+
+    //         $dias = json_encode($dias);
+    //     }
+
+    //     if (!$ocupacion) {
+    //         $ocupacion = 2795; //indice ocupacion no especificada o no se encuentra en el listado
+    //     } else {
+    //         $ocupacion = $ocupacion->id;
+    //     }
+
+    //     if (isset($persona->id_direccion)) {
+
+    //         $persona->direccion->id_pais = $form_data->pais;
+    //         $persona->direccion->id_departamento = isset($form_data->departamento) ? $form_data->departamento : 0;
+    //         $persona->direccion->id_provincia = isset($form_data->provincia) ? $form_data->provincia : 0;
+    //         $persona->direccion->id_distrito = isset($form_data->distrito) ? $form_data->distrito : 0;
+    //         $persona->direccion->direccion = $form_data->direccionPersona;
+    //         $persona->direccion->update();
+    //     } else {
+    //         $direccion = new Direccion;
+    //         $direccion->id_pais = $form_data->pais;
+    //         $direccion->id_departamento = isset($form_data->departamento) ? $form_data->departamento : 0;
+    //         $direccion->id_provincia = isset($form_data->provincia) ? $form_data->provincia : 0;
+    //         $direccion->id_distrito = isset($form_data->distrito) ? $form_data->distrito : 0;
+    //         $direccion->direccion = trim($form_data->direccionPersona);
+    //         $direccion->save();
+
+    //         $persona->id_direccion = $direccion->id;
+    //     }
+
+    //     $persona->nombres = trim($form_data->nombres);
+    //     $persona->apellido_paterno = trim($form_data->apellido_paterno);
+    //     $persona->apellido_materno = isset($form_data->apellido_materno) ? trim($form_data->apellido_materno) : "";
+    //     $persona->correo = trim($form_data->correo);
+    //     $persona->celular = trim($form_data->celular);
+    //     $persona->sexo = $form_data->sexo;
+    //     $persona->id_ocupacion = $ocupacion;
+    //     $persona->id_nacionalidad = $form_data->nacionalidad;
+    //     $persona->fecha_nacimiento = Carbon::parse($form_data->fecha_nacimiento)->subDay()->format('Y-m-d');
+
+    //     if (isset($persona->id)) {
+    //         /*$fecha_nacimiento_actual = Carbon::parse($persona->fecha_nacimiento)->format('Y-m-d');
+
+    //         if($fecha_nacimiento_actual != $fecha_nacimiento_nueva){
+    //             $persona->fecha_nacimiento = $fecha_nacimiento_nueva;
+    //         }*/
+
+    //         $persona->update();
+    //     } else {
+    //         $persona->id_tipo_documento = $form_data->id_tipo_documento;
+    //         $persona->documento = trim($form_data->documento);
+
+    //         $persona->save();
+    //     }
+
+    //     $send = app(\App\Http\Controllers\WebServiceController::class)->wsPersona_create_update($persona);
+
+    //     if (strlen($persona->sie_code) < 5) {
+    //         $persona->sie_code = $send['sie_code'];
+    //         $persona->update();
+    //     }
+
+    //     $IGV = round(($total * 0.18), 2);
+
+    //     $facturacion = new Facturacion;
+    //     $facturacion->id_tipo_servicio = 4; // servicio inscripciones perumin tabla tipo servicio
+    //     $facturacion->id_moneda = $categoria->precio_disponible->moneda->id;
+    //     $facturacion->id_tipo_pago = $form_data->selectTipoPago;
+    //     $facturacion->tipo_doc_pago = $form_data->selectTipoDocPago;
+    //     $facturacion->id_tipo_doc_facturador = $form_data->tipoDocumentoEmpresa;
+    //     $facturacion->numero_doc_facturador = trim($form_data->documentoEmpresa);
+    //     $facturacion->nombre_facturador = trim($form_data->razonSocial);
+    //     $facturacion->direccion_facturador = trim($form_data->direccionEmpresa);
+    //     $facturacion->responsable_facturador = trim($form_data->responsable);
+    //     $facturacion->correo_facturador = trim($form_data->correo_facturador);
+    //     $facturacion->id_comprador = $persona->id;
+    //     $facturacion->tipo_comprador = 'persona';
+    //     $facturacion->IGV = $IGV;
+    //     $facturacion->sub_total = floatval($total) - $IGV;
+    //     $facturacion->detraccion = 0;
+    //     $facturacion->total = $total;
+    //     $facturacion->observacion = trim($form_data->empresa);
+    //     $facturacion->save();
+
+    //     $informacion = json_decode('{
+    //                 "cuota": "1",
+    //                 "valor" : "' . $facturacion->total . '",
+    //                 "porcentaje" : "100",
+    //                 "estado_pago" : false
+    //             }');
+
+    //     $cuota = new Cuota;
+    //     $cuota->informacion = $informacion;
+    //     $cuota->isactive = true;
+    //     $cuota->created_at = Carbon::now();
+    //     $cuota->updated_at = Carbon::now();
+    //     $cuota->id_facturacion = $facturacion->id;
+    //     $cuota->estado_pago = 'PENDIENTE';
+    //     $cuota->save();
+
+    //     $inscripcion = new Inscripcion;
+    //     $inscripcion->id_persona = $persona->id;
+    //     $inscripcion->id_categoria_inscripcion = $form_data->selected_categoria;
+    //     $inscripcion->id_facturacion = $facturacion->id;
+    //     $inscripcion->usuario_creacion = $persona->id;
+    //     $inscripcion->origen = 'web';
+    //     $inscripcion->observacion = 'registro individual de persona, pendiente de pago';
+    //     $inscripcion->credencial = trim($form_data->credencial);
+    //     $inscripcion->autorizacion_datos = isset($form_data->auth) ? $form_data->auth : false;
+    //     $inscripcion->texto_cargo = $form_data->cargo;
+    //     $inscripcion->dias = $dias;
+
+    //     if ($categoria->requiere_documento) {
+
+    //         $document = $form_data->uploadDocument;
+
+    //         if (!is_null($document)) {
+
+    //             $documentName = 'inscripcion_' . time() . '.' . $document->getClientOriginalExtension();
+    //             $inscripcion->document_type = $document->getClientMimeType();
+
+    //             if (\App::environment('production')) {
+    //                 $inscripcion->document_path = "https://inscripciones.wmc2026.org/storage/documents/" . $documentName;
+    //             } else {
+    //                 $inscripcion->document_path = "http://127.0.0.1:8000/storage/documents/" . $documentName;
+    //             }
+
+    //             $document->move(storage_path('app/public/documents'), $documentName);
+    //         }
+    //     }
+
+    //     $inscripcion->save();
+
+    //     $form = app(\App\Http\Controllers\NiubizController::class)->getForm($persona, $inscripcion, $facturacion, url()->previous(), url()->current());
+
+    //     $cuota->respuesta_api = $form->k;
+    //     $cuota->update();
+
+    //     $formulario = json_decode(base64_decode($form->frm));
+
+    //     return json_encode(['status' => true, 'formulario' => $formulario]);
+    // }
+
     public function getForm(Request $request)
     {
-
+        // 1. Seguridad básica
         if (!str_contains($request->headers->get('referer'), 'registro') || (csrf_token() === null)) {
             abort(403, 'Unauthorized POST request.');
-            exit;
         }
 
-        $form_data = (object)$request->form;
+        // 2. Captura de datos iniciales
+        $id_tipo_documento = $request->input('id_tipo_documento') ?? $request->input('tipo_doc');
+        $documento = trim($request->input('documento') ?? '');
 
-        $persona = Persona::where('id_tipo_documento', $form_data->id_tipo_documento)->where('documento', $form_data->documento)->firstorNew();
-        $ocupacion = Ocupacion::whereRaw("name like '%" . $form_data->cargo . "%'")->where('isactive', true)->first();
-        $categoria = CategoriaInscripcion::find($form_data->selected_categoria);
-        $categoria->precio_disponible = $categoria->precio->where('fecha_inicio', '<=', $this->now)->where('fecha_fin', '>=', $this->now)->first();
+        if (empty($id_tipo_documento) || empty($documento)) {
+            return response()->json(['status' => false, 'message' => 'Document info missing'], 400);
+        }
 
-        $total = $categoria->precio_disponible->valor;
+        // 3. Procesar Persona
+        $persona = Persona::where('id_tipo_documento', $id_tipo_documento)
+            ->where('documento', $documento)
+            ->firstOrNew();
+
+        // 4. Procesar Ocupación y Categoría
+        $cargo = $request->input('cargo', '');
+        $ocupacion_obj = Ocupacion::whereRaw("name like '%" . $cargo . "%'")
+            ->where('isactive', true)
+            ->first();
+
+        $id_ocupacion = $ocupacion_obj ? $ocupacion_obj->id : 2795;
+
+        $categoria = CategoriaInscripcion::findOrFail($request->input('selected_categoria'));
+        $precio_disponible = $categoria->precio
+            ->where('fecha_inicio', '<=', $this->now)
+            ->where('fecha_fin', '>=', $this->now)
+            ->first();
+
+        $total = $precio_disponible->valor;
         $dias = '{"lun":1,"mar":1,"mie":1,"jue":1,"vie":1}';
 
-        if (str_contains($categoria->nombre_es, 'DIA')) {
+        // 5. Lógica de One Day (CORREGIDA para evitar error de count())
+        if (str_contains(strtoupper($categoria->nombre_en), 'DAY') || str_contains(strtoupper($categoria->nombre_es), 'DIA')) {
+            $selectedDays = $request->input('selectedDays', []);
 
-            $total = sizeof($form_data->selectedDays) * $categoria->precio_disponible->valor;
-            $dias = json_decode($dias, true);
-
-            foreach ($dias as $key => $dia) {
-                $dias[$key] = 0;
+            // Convertir string "mar,mie" a array si es necesario (FormData lo envía así aveces)
+            if (is_string($selectedDays)) {
+                $selectedDays = explode(',', $selectedDays);
             }
 
-            foreach ($form_data->selectedDays as $selected_day) {
-                $selected_day = strtolower($selected_day);
-                $dias[$selected_day] = 1;
+            $total = count($selectedDays) * $precio_disponible->valor;
+            $dias_array = ["lun" => 0, "mar" => 0, "mie" => 0, "jue" => 0, "vie" => 0];
+
+            foreach ($selectedDays as $sd) {
+                $dia_key = strtolower(trim($sd));
+                if (array_key_exists($dia_key, $dias_array)) {
+                    $dias_array[$dia_key] = 1;
+                }
             }
-
-            $dias = json_encode($dias);
+            $dias = json_encode($dias_array);
         }
 
-        if (!$ocupacion) {
-            $ocupacion = 2795; //indice ocupacion no especificada o no se encuentra en el listado
-        } else {
-            $ocupacion = $ocupacion->id;
+        // 6. Guardar Dirección
+        $direccion = ($persona->id_direccion > 0) ? Direccion::find($persona->id_direccion) : new Direccion;
+        $direccion->id_pais = $request->input('pais');
+        $direccion->id_departamento = $request->input('departamento', 0);
+        $direccion->id_provincia = $request->input('provincia', 0);
+        $direccion->id_distrito = $request->input('distrito', 0);
+        $direccion->direccion = trim($request->input('direccionPersona', ''));
+        $direccion->save();
+
+        // 7. Guardar Persona
+        $persona->id_direccion = $direccion->id;
+        $persona->nombres = trim($request->input('nombres'));
+        $persona->apellido_paterno = trim($request->input('apellido_paterno'));
+        $persona->apellido_materno = $request->input('apellido_materno', '');
+        $persona->correo = trim($request->input('correo'));
+        $persona->celular = trim($request->input('celular'));
+        $persona->sexo = $request->input('sexo');
+        $persona->id_ocupacion = $id_ocupacion;
+        $persona->id_nacionalidad = $request->input('nacionalidad', $request->input('pais')); // Fallback al país si no hay nacionalidad
+
+        if ($request->filled('fecha_nacimiento')) {
+            try {
+                $persona->fecha_nacimiento = Carbon::parse($request->input('fecha_nacimiento'))->format('Y-m-d');
+            } catch (\Exception $e) {
+                Log::error("Error parseando fecha: " . $e->getMessage());
+            }
         }
 
-        if (isset($persona->id_direccion)) {
-
-            $persona->direccion->id_pais = $form_data->pais;
-            $persona->direccion->id_departamento = isset($form_data->departamento) ? $form_data->departamento : 0;
-            $persona->direccion->id_provincia = isset($form_data->provincia) ? $form_data->provincia : 0;
-            $persona->direccion->id_distrito = isset($form_data->distrito) ? $form_data->distrito : 0;
-            $persona->direccion->direccion = $form_data->direccionPersona;
-            $persona->direccion->update();
-        } else {
-            $direccion = new Direccion;
-            $direccion->id_pais = $form_data->pais;
-            $direccion->id_departamento = isset($form_data->departamento) ? $form_data->departamento : 0;
-            $direccion->id_provincia = isset($form_data->provincia) ? $form_data->provincia : 0;
-            $direccion->id_distrito = isset($form_data->distrito) ? $form_data->distrito : 0;
-            $direccion->direccion = trim($form_data->direccionPersona);
-            $direccion->save();
-
-            $persona->id_direccion = $direccion->id;
+        if (!$persona->exists) {
+            $persona->id_tipo_documento = $id_tipo_documento;
+            $persona->documento = $documento;
         }
+        $persona->save();
 
-        $persona->nombres = trim($form_data->nombres);
-        $persona->apellido_paterno = trim($form_data->apellido_paterno);
-        $persona->apellido_materno = isset($form_data->apellido_materno) ? trim($form_data->apellido_materno) : "";
-        $persona->correo = trim($form_data->correo);
-        $persona->celular = trim($form_data->celular);
-        $persona->sexo = $form_data->sexo;
-        $persona->id_ocupacion = $ocupacion;
-        $persona->id_nacionalidad = $form_data->nacionalidad;
-        $persona->fecha_nacimiento = Carbon::parse($form_data->fecha_nacimiento)->subDay()->format('Y-m-d');
-
-        if (isset($persona->id)) {
-            /*$fecha_nacimiento_actual = Carbon::parse($persona->fecha_nacimiento)->format('Y-m-d');
-
-            if($fecha_nacimiento_actual != $fecha_nacimiento_nueva){
-                $persona->fecha_nacimiento = $fecha_nacimiento_nueva;
-            }*/
-
-            $persona->update();
-        } else {
-            $persona->id_tipo_documento = $form_data->id_tipo_documento;
-            $persona->documento = trim($form_data->documento);
-
-            $persona->save();
-        }
-
-        $send = app(\App\Http\Controllers\WebServiceController::class)->wsPersona_create_update($persona);
-
-        if (strlen($persona->sie_code) < 5) {
-            $persona->sie_code = $send['sie_code'];
-            $persona->update();
-        }
-
+        // 8. Crear Facturación
         $IGV = round(($total * 0.18), 2);
 
         $facturacion = new Facturacion;
-        $facturacion->id_tipo_servicio = 4; // servicio inscripciones perumin tabla tipo servicio
-        $facturacion->id_moneda = $categoria->precio_disponible->moneda->id;
-        $facturacion->id_tipo_pago = $form_data->selectTipoPago;
-        $facturacion->tipo_doc_pago = $form_data->selectTipoDocPago;
-        $facturacion->id_tipo_doc_facturador = $form_data->tipoDocumentoEmpresa;
-        $facturacion->numero_doc_facturador = trim($form_data->documentoEmpresa);
-        $facturacion->nombre_facturador = trim($form_data->razonSocial);
-        $facturacion->direccion_facturador = trim($form_data->direccionEmpresa);
-        $facturacion->responsable_facturador = trim($form_data->responsable);
-        $facturacion->correo_facturador = trim($form_data->correo_facturador);
+        $facturacion->id_tipo_servicio = 4;
+        $facturacion->id_moneda = $precio_disponible->moneda->id;
+        $facturacion->id_tipo_pago = $request->input('selectTipoPago');
+        $facturacion->tipo_doc_pago = $request->input('selectTipoDocPago');
+        $facturacion->id_tipo_doc_facturador = $request->input('tipoDocumentoEmpresa');
+        $facturacion->numero_doc_facturador = trim($request->input('documentoEmpresa'));
+        $facturacion->nombre_facturador = trim($request->input('razonSocial'));
+        $facturacion->direccion_facturador = trim($request->input('direccionEmpresa'));
+        $facturacion->responsable_facturador = trim($request->input('responsable'));
+        $facturacion->correo_facturador = trim($request->input('correo_facturador'));
         $facturacion->id_comprador = $persona->id;
         $facturacion->tipo_comprador = 'persona';
         $facturacion->IGV = $IGV;
         $facturacion->sub_total = floatval($total) - $IGV;
         $facturacion->detraccion = 0;
         $facturacion->total = $total;
-        $facturacion->observacion = trim($form_data->empresa);
+        $facturacion->observacion = trim($request->input('empresa', ''));
         $facturacion->save();
 
-        $informacion = json_decode('{
-                    "cuota": "1",
-                    "valor" : "' . $facturacion->total . '",
-                    "porcentaje" : "100",
-                    "estado_pago" : false
-                }');
-
+        // 9. Crear Cuota (Agregado isactive para evitar error SQL)
         $cuota = new Cuota;
-        $cuota->informacion = $informacion;
-        $cuota->isactive = true;
-        $cuota->created_at = Carbon::now();
-        $cuota->updated_at = Carbon::now();
         $cuota->id_facturacion = $facturacion->id;
         $cuota->estado_pago = 'PENDIENTE';
+        $cuota->isactive = true;
+        $cuota->informacion = json_encode([
+            "cuota" => "1",
+            "valor" => (string)$total,
+            "porcentaje" => "100",
+            "estado_pago" => false
+        ]);
         $cuota->save();
 
+        // 10. Crear Inscripción
         $inscripcion = new Inscripcion;
         $inscripcion->id_persona = $persona->id;
-        $inscripcion->id_categoria_inscripcion = $form_data->selected_categoria;
+        $inscripcion->id_categoria_inscripcion = $categoria->id;
         $inscripcion->id_facturacion = $facturacion->id;
         $inscripcion->usuario_creacion = $persona->id;
         $inscripcion->origen = 'web';
-        $inscripcion->observacion = 'registro individual de persona, pendiente de pago';
-        $inscripcion->credencial = trim($form_data->credencial);
-        $inscripcion->autorizacion_datos = isset($form_data->auth) ? $form_data->auth : false;
-        $inscripcion->texto_cargo = $form_data->cargo;
+        $inscripcion->texto_cargo = $cargo;
         $inscripcion->dias = $dias;
+        $inscripcion->autorizacion_datos = $request->input('auth', false);
 
-        if ($categoria->requiere_documento) {
-
-            $document = $form_data->uploadDocument;
-
-            if (!is_null($document)) {
-
-                $documentName = 'inscripcion_' . time() . '.' . $document->getClientOriginalExtension();
-                $inscripcion->document_type = $document->getClientMimeType();
-
-                if (\App::environment('production')) {
-                    $inscripcion->document_path = "https://inscripciones.wmc2026.org/storage/documents/" . $documentName;
-                } else {
-                    $inscripcion->document_path = "http://127.0.0.1:8000/storage/documents/" . $documentName;
-                }
-
-                $document->move(storage_path('app/public/documents'), $documentName);
-            }
+        if ($request->hasFile('uploadDocument')) {
+            $file = $request->file('uploadDocument');
+            $name = 'insc_' . time() . '.' . $file->getClientOriginalExtension();
+            $file->move(storage_path('app/public/documents'), $name);
+            $inscripcion->document_path = asset('storage/documents/' . $name);
         }
-
         $inscripcion->save();
 
-        $form = app(\App\Http\Controllers\NiubizController::class)->getForm($persona, $inscripcion, $facturacion, url()->previous(), url()->current());
+        // 11. Generar formulario de Niubiz
+        try {
+            $formNiubiz = app(\App\Http\Controllers\NiubizController::class)->getForm(
+                $persona,
+                $inscripcion,
+                $facturacion,
+                url()->previous(),
+                url()->current()
+            );
 
-        $cuota->respuesta_api = $form->k;
-        $cuota->update();
+            $cuota->respuesta_api = $formNiubiz->k;
+            $cuota->update();
 
-        $formulario = json_decode(base64_decode($form->frm));
-
-        return json_encode(['status' => true, 'formulario' => $formulario]);
+            return response()->json([
+                'status' => true,
+                'formulario' => json_decode(base64_decode($formNiubiz->frm))
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Error en Niubiz: " . $e->getMessage());
+            return response()->json(['status' => false, 'message' => 'Error al contactar pasarela'], 500);
+        }
     }
-
 
     public function niubizPayment($id, $order)
     {

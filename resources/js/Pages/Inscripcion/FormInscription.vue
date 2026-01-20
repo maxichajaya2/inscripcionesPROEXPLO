@@ -81,11 +81,11 @@ const formManualErrors = ref({ reglamento: null, total: null, uploadDocument: nu
 const { defineField, errors, setValues, values, validate } = useForm({
     validationSchema: yup.object({
         tipoDocumentoEmpresa: yup.mixed().required('Required'),
-        documentoEmpresa: yup.string().required('Required'),
-        razonSocial: yup.string().required('Required'),
-        direccionEmpresa: yup.string().required('Required'),
-        responsable: yup.string().required('Required'),
-        correo_facturador: yup.string().email('Invalid email').required('Required'),
+        // documentoEmpresa: yup.string().required('Required'),
+        // razonSocial: yup.string().required('Required'),
+        // direccionEmpresa: yup.string().required('Required'),
+        // responsable: yup.string().required('Required'),
+        // correo_facturador: yup.string().email('Invalid email').required('Required'),
     })
 })
 
@@ -282,44 +282,22 @@ function selectDays(id) {
 // }
 // Agrega el async aquí para que 'validate()' funcione
 // UBICACIÓN: FormInscription.vue
-async function getInscripcion() {
-    // 1. FORZAMOS la validación de Vee-Validate
-    const result = await validate();
+const getInscripcion = async () => {
+    const result = await validate(); // Validación de vee-validate
 
-    // Reiniciamos errores manuales
-    formManualErrors.value = { reglamento: null, total: null, uploadDocument: null };
-    let hasError = false;
-
-    // 2. Tu lógica de errores manuales (Reglamento, Total, etc.)
-    if (reglamento.value !== true) {
-        formManualErrors.value.reglamento = "You must accept the Terms and Conditions.";
-        hasError = true;
+    // Agrega aquí tus validaciones manuales (reglamento, total, etc.)
+    if (!result.valid || total.value <= 0 || (show_document.value && !uploadDocument.value)) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Please fill all fields' });
+        return { validate: false };
     }
 
-    // 3. Revisamos si Vee-Validate encontró errores en los campos
-    if (!result.valid) {
-        hasError = true;
-    }
+    return {
+        validate: true,
+        formInscription: values // "values" viene de vee-validate
+    };
+};
 
-    if (total.value <= 0) {
-        formManualErrors.value.total = "The total amount must be greater than 0.";
-        hasError = true;
-    }
 
-    if (show_document.value === true && !uploadDocument.value) {
-        formManualErrors.value.uploadDocument = "Please upload the required documentation.";
-        hasError = true;
-    }
-
-    // 4. SI HAY ERROR, CORTE AQUÍ
-    if (hasError) {
-        toast.add({ severity: 'error', summary: 'ATTENTION', detail: 'Complete required fields.', life: 3000 });
-        return { "validate": false };
-    }
-
-    // 5. SI TODO ESTÁ BIEN
-    return { "validate": true, "formInscription": values };
-}
 
 function setTipoDocPago() {
     if (tipoDocumentoEmpresa.value == 2) {
