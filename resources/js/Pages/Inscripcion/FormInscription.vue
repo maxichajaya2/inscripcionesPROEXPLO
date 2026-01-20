@@ -39,6 +39,7 @@ const block_direction = ref(false);
 const fileErrors = ref([]);
 const maxSize = 6291456;
 const allowedTypes = ['application/pdf', 'image/png', 'image/jpg', 'image/jpeg'];
+const fileupload = ref(null);
 // Agregamos un estado para controlar si el usuario puede editar manualmente
 const isEditingBilling = ref(false);
 
@@ -54,32 +55,42 @@ const current_days = { 'lun': false, 'mar': false, 'mie': false, 'jue': false, '
 
 const formManualErrors = ref({ reglamento: null, total: null, uploadDocument: null });
 
-const { defineField, errors, setValues, values } = useForm({
+// const { defineField, errors, setValues, values } = useForm({
+//     validationSchema: yup.object({
+//         tipoDocumentoEmpresa: yup.mixed().required('Company document type is required'),
+//         documentoEmpresa: yup.string().required('Document number is required'),
+//         nombres: yup.string().required('Name is required'),
+//         apellido_paterno: yup.string().required('Last name is required'),
+//         fecha_nacimiento: yup.mixed().required('Date of birth is required'),
+//         sexo: yup.mixed().required('Gender is required'),
+//         correo: yup.string().required('Email is required').email('Enter a valid email'),
+//         celular: yup.string().required('Mobile phone is required'),
+//         pais: yup.mixed().required('Country is required'),
+//         direccionPersona: yup.string().required('Address is required'),
+//         empresa: yup.string().required('Company is required'),
+//         credencial: yup.string().required('Credential name is required'),
+//         razonSocial: yup.string().required('Business name is required'),
+//         direccionEmpresa: yup.string().required('Company address is required'),
+//         responsable: yup.string().required('Responsible party name is required'),
+//         correo_facturador: yup.string().required('Billing email is required').email('Enter a valid email'),
+//         selectTipoPago: yup.string().required('Payment type is required'),
+//         selectTipoDocPago: yup.string().required('Payment document type is required'),
+//         reglamento: yup.string().required('You must accept the Regulations'),
+//     })
+// })
+const { defineField, errors, setValues, values, validate } = useForm({
     validationSchema: yup.object({
-        tipoDocumentoEmpresa: yup.mixed().required('Company document type is required'),
-        documentoEmpresa: yup.string().required('Document number is required'),
-        nombres: yup.string().required('Name is required'),
-        apellido_paterno: yup.string().required('Last name is required'),
-        fecha_nacimiento: yup.mixed().required('Date of birth is required'),
-        sexo: yup.mixed().required('Gender is required'),
-        correo: yup.string().required('Email is required').email('Enter a valid email'),
-        celular: yup.string().required('Mobile phone is required'),
-        pais: yup.mixed().required('Country is required'),
-        direccionPersona: yup.string().required('Address is required'),
-        empresa: yup.string().required('Company is required'),
-        credencial: yup.string().required('Credential name is required'),
-        razonSocial: yup.string().required('Business name is required'),
-        direccionEmpresa: yup.string().required('Company address is required'),
-        responsable: yup.string().required('Responsible party name is required'),
-        correo_facturador: yup.string().required('Billing email is required').email('Enter a valid email'),
-        selectTipoPago: yup.string().required('Payment type is required'),
-        selectTipoDocPago: yup.string().required('Payment document type is required'),
-        reglamento: yup.string().required('You must accept the Regulations'),
+        tipoDocumentoEmpresa: yup.mixed().required('Required'),
+        documentoEmpresa: yup.string().required('Required'),
+        razonSocial: yup.string().required('Required'),
+        direccionEmpresa: yup.string().required('Required'),
+        responsable: yup.string().required('Required'),
+        correo_facturador: yup.string().email('Invalid email').required('Required'),
     })
 })
 
-const [nombres] = defineField('nombres');
-const [apellido_paterno] = defineField('apellido_paterno');
+// const [nombres] = defineField('nombres');
+// const [apellido_paterno] = defineField('apellido_paterno');
 const [documentoEmpresa] = defineField('documentoEmpresa');
 const [razonSocial] = defineField('razonSocial');
 const [responsable] = defineField('responsable');
@@ -92,7 +103,7 @@ const [selectTipoDocPago] = defineField('selectTipoDocPago');
 const [selected_categoria, selected_categoriaAttrs] = defineField('selected_categoria');
 const [selectedDays, selectedDaysAttrs] = defineField('selectedDays');
 const [uploadDocument] = defineField('uploadDocument');
-const [pais] = defineField('pais');
+// const [pais] = defineField('pais');
 
 
 const is_category_fixed = ref(false);
@@ -185,28 +196,71 @@ const loadDepartamentos = async () => {
 }
 
 const getEmpresaData = async () => {
+    // 1. Activamos el estado de carga
     loading_doc.value = true;
+    billingMessage.value = null; // Limpiamos mensajes previos
+
     try {
         const empresaData = await Functions.getEmpresaData(documentoEmpresa.value, tipoDocumentoEmpresa.value);
+
         if (empresaData?.empresa) {
             razonSocial.value = empresaData.empresa.nombre;
             direccionEmpresa.value = empresaData.empresa.direccionEmpresa;
-            billingMessage.value = { type: 'success', text: 'Data found successfully.' };
+
+            // Si el status es true significa que encontró datos en API o BD
+            if (empresaData.status) {
+                toast.add({ severity: 'success', summary: 'Success', detail: 'Data loaded', life: 3000 });
+            } else {
+                toast.add({ severity: 'warn', summary: 'Info', detail: 'Record not found, please fill manually', life: 3000 });
+            }
         }
     } catch (e) {
-        billingMessage.value = { type: 'error', text: 'Error searching for company data.' };
+        console.error(e);
+        toast.add({ severity: 'error', summary: 'Error', detail: 'External service unavailable', life: 3000 });
     } finally {
+        // 2. Desactivamos el estado de carga siempre (aunque falle o funcione)
         loading_doc.value = false;
     }
 }
 
 const onFileSelect = (event) => {
+    // 1. Verificamos que haya archivo
+    if (!event.files || event.files.length === 0) return;
+
     const file = event.files[0];
-    if (file.size > maxSize) return;
+
+    // 2. Reiniciamos errores y variables
+    fileErrors.value = [];
     uploadDocument.value = file;
+    src.value = null;
+
+    // --- VALIDACIÓN 1: FORMATO ---
+    if (!allowedTypes.includes(file.type)) {
+        fileErrors.value.push("Invalid file format. Only PDF documents or Images (PNG, JPG, JPEG) are accepted.");
+    }
+
+    // --- VALIDACIÓN 2: TAMAÑO (6MB) ---
+    if (file.size > maxSize) {
+        fileErrors.value.push("File size exceeds the limit. Maximum allowed is 6MB.");
+    }
+
+    // 3. Si hay errores, limpiamos la selección para que el usuario deba elegir otro
+    if (fileErrors.value.length > 0) {
+        uploadDocument.value = null;
+        if (fileupload.value) {
+            fileupload.value.clear(); // Limpia el componente visualmente
+        }
+        return;
+    }
+
+    // 4. Si todo está OK, generar vista previa
     const reader = new FileReader();
     reader.onload = (e) => {
-        src.value = file.type === "application/pdf" ? '/images/pdf-file-document.png' : e.target.result;
+        if (file.type === "application/pdf") {
+            src.value = '/images/pdf-file-document.png'; // Icono para PDFs
+        } else {
+            src.value = e.target.result; // Imagen real para PNG/JPG
+        }
     };
     reader.readAsDataURL(file);
 }
@@ -217,14 +271,54 @@ function selectDays(id) {
     total.value = count * current_price;
 }
 
-function getInscripcion() {
+// function getInscripcion() {
+//     formManualErrors.value = { reglamento: null, total: null, uploadDocument: null };
+//     let hasError = false;
+//     if (reglamento.value !== true) { formManualErrors.value.reglamento = "Required"; hasError = true; }
+//     if (total.value <= 0) { formManualErrors.value.total = "Select days"; hasError = true; }
+//     if (show_document.value && !uploadDocument.value) { formManualErrors.value.uploadDocument = "Upload file"; hasError = true; }
+
+//     return hasError ? { validate: false } : { validate: true, formInscription: values };
+// }
+// Agrega el async aquí para que 'validate()' funcione
+// UBICACIÓN: FormInscription.vue
+async function getInscripcion() {
+    // 1. FORZAMOS la validación de Vee-Validate
+    const result = await validate();
+
+    // Reiniciamos errores manuales
     formManualErrors.value = { reglamento: null, total: null, uploadDocument: null };
     let hasError = false;
-    if (reglamento.value !== true) { formManualErrors.value.reglamento = "Required"; hasError = true; }
-    if (total.value <= 0) { formManualErrors.value.total = "Select days"; hasError = true; }
-    if (show_document.value && !uploadDocument.value) { formManualErrors.value.uploadDocument = "Upload file"; hasError = true; }
 
-    return hasError ? { validate: false } : { validate: true, formInscription: values };
+    // 2. Tu lógica de errores manuales (Reglamento, Total, etc.)
+    if (reglamento.value !== true) {
+        formManualErrors.value.reglamento = "You must accept the Terms and Conditions.";
+        hasError = true;
+    }
+
+    // 3. Revisamos si Vee-Validate encontró errores en los campos
+    if (!result.valid) {
+        hasError = true;
+    }
+
+    if (total.value <= 0) {
+        formManualErrors.value.total = "The total amount must be greater than 0.";
+        hasError = true;
+    }
+
+    if (show_document.value === true && !uploadDocument.value) {
+        formManualErrors.value.uploadDocument = "Please upload the required documentation.";
+        hasError = true;
+    }
+
+    // 4. SI HAY ERROR, CORTE AQUÍ
+    if (hasError) {
+        toast.add({ severity: 'error', summary: 'ATTENTION', detail: 'Complete required fields.', life: 3000 });
+        return { "validate": false };
+    }
+
+    // 5. SI TODO ESTÁ BIEN
+    return { "validate": true, "formInscription": values };
 }
 
 function setTipoDocPago() {
@@ -294,17 +388,7 @@ watch(() => props.data_persona, (newVal) => {
     }
 }, { immediate: true, deep: true });
 
-// const filteredDocTypes = computed(() => {
-//     // Verificamos si es peruano por ID de país o por texto de nacionalidad
-//     const esPeruano = props.data_persona?.persona?.id_pais == 1 ||
-//         props.data_persona?.persona?.nacionalidad?.toLowerCase() === 'peruano';
 
-//     if (esPeruano && tipoDocumento.value) {
-//         // Filtramos para mostrar solo DNI (1) y RUC (2)
-//         return tipoDocumento.value.filter(d => d.id == 1 || d.id == 2);
-//     }
-//     return tipoDocumento.value;
-// });
 
 const filteredDocTypes = computed(() => {
     const p = props.data_persona?.persona || props.data_persona;
@@ -318,10 +402,10 @@ const filteredDocTypes = computed(() => {
     // Es peruano si el país es 1
     // O si ya trae un tipo_doc 1 (DNI) o 2 (RUC) aunque el ID de país diga otra cosa
     const esPeruano = p?.pais == 1 ||
-                      p?.id_pais == 1 ||
-                      p?.tipo_doc == 1 ||
-                      p?.tipo_doc == 2 ||
-                      p?.nacionalidad?.toLowerCase() === 'peruano';
+        p?.id_pais == 1 ||
+        p?.tipo_doc == 1 ||
+        p?.tipo_doc == 2 ||
+        p?.nacionalidad?.toLowerCase() === 'peruano';
 
     console.log("¿Es detectado como Peruano?:", esPeruano);
 
@@ -344,7 +428,14 @@ defineExpose({ getInscripcion });
 </script>
 
 <template>
-
+    <div v-if="Object.keys(errors).length > 0" class="bg-black text-white p-4 fixed top-0 left-0 z-[9999] w-full">
+        <p class="font-bold text-red-500">CAMPOS QUE BLOQUEAN EL PASO:</p>
+        <ul>
+            <li v-for="(msg, field) in errors" :key="field">
+                <strong>{{ field }}</strong>: {{ msg }}
+            </li>
+        </ul>
+    </div>
     <div class="gap-6 p-6 w-full justify-around overflow-visible">
 
         <!--          CATEGORIAS                      -->
@@ -408,7 +499,8 @@ defineExpose({ getInscripcion });
                             </div>
                         </div>
                     </div>
-
+                    <!-- =========== POR DIAS  ========== -->
+                    <!-- ================================ -->
                     <Card v-if="show_days" class="mt-6 border border-dashed border-blue-300 bg-blue-50/30">
                         <template #content>
                             <div v-if="formManualErrors.total"
@@ -438,7 +530,8 @@ defineExpose({ getInscripcion });
                             </div>
                         </template>
                     </Card>
-
+                    <!-- =========== CARGAR DOCUMENTO  ========== -->
+                    <!-- ================================= -->
                     <Card v-if="show_document" class="mt-6 border border-dashed border-green-300">
                         <template #content>
                             <div v-if="upload_instruction"
@@ -453,12 +546,19 @@ defineExpose({ getInscripcion });
                             </div>
 
                             <div class="flex flex-col items-center justify-center w-full">
-                                <div v-if="formManualErrors.uploadDocument"
+                                <!-- <div v-if="formManualErrors.uploadDocument"
                                     class="w-full mb-4 flex items-center gap-3 rounded border-l-4 border-red-500 bg-red-50 px-4 py-2 text-red-800 shadow-sm">
                                     <i class="pi pi-times-circle"></i>
                                     <span class="text-xs font-bold">{{ formManualErrors.uploadDocument }}</span>
+                                </div> -->
+                                <div v-if="fileErrors.length > 0"
+                                    class="w-full md:w-3/4 mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-center mx-auto animate-fade-in">
+                                    <div v-for="(error, index) in fileErrors" :key="index"
+                                        class="flex items-center justify-center gap-2 text-red-600 font-bold mb-1 last:mb-0">
+                                        <i class="pi pi-exclamation-triangle"></i>
+                                        <span class="text-sm">{{ error }}</span>
+                                    </div>
                                 </div>
-
                                 <FileUpload ref="fileupload" mode="basic"
                                     class="p-button-outlined text-green-iimp mx-auto" :auto="true" customUpload
                                     :chooseLabel="'Upload Document'" @select="onFileSelect" name="uploadDocument" />
@@ -476,7 +576,6 @@ defineExpose({ getInscripcion });
         <!--         DATOS DE FACTURACION             -->
         <!-- ======================================== -->
         <div class="text-green-iimp font-bold p-4">
-
             <Card class="mt-5 overflow-hidden">
                 <template #header>
                     <div class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc">
@@ -485,13 +584,17 @@ defineExpose({ getInscripcion });
                 </template>
 
                 <template #content>
-                    <div class="flex justify-end px-6 mb-2">
-                        <Button v-if="!isEditingBilling" icon="pi pi-pencil" label="Edit Info"
-                            class="p-button-text p-button-sm text-blue-600" @click="enableManualEdit" />
-                        <Button v-else icon="pi pi-lock" label="Finish Editing"
-                            class="p-button-text p-button-sm text-green-600" @click="isEditingBilling = false" />
+                    <div class="flex justify-center md:justify-end px-6 mb-6">
+                        <Button v-if="!isEditingBilling" icon="pi pi-exclamation-circle"
+                            label="The information is incorrect? Click here to modify"
+                            class="p-button-raised p-button-warning font-bold p-4 shadow-md w-full md:w-auto"
+                            style="background-color: #f59e0b; border-color: #d97706; color: #ffffff;"
+                            @click="enableManualEdit" />
+                        <Button v-else icon="pi pi-check-circle" label="I'm done editing, save changes"
+                            class="p-button-raised p-button-success font-bold p-4 shadow-md w-full md:w-auto"
+                            style="background-color: #10b981; border-color: #059669; color: #ffffff;"
+                            @click="isEditingBilling = false" />
                     </div>
-
                     <div class="grid gap-6 m-6 md:grid-cols-2">
                         <div class="grid gap-6 md:grid-cols-2">
                             <div class="col-span-3 sm:col-span-1">
@@ -499,17 +602,21 @@ defineExpose({ getInscripcion });
                                 <Select v-model="tipoDocumentoEmpresa" :options="filteredDocTypes" optionLabel="name_en"
                                     optionValue="id" :disabled="!isEditingBilling" class="w-full border-green-iimp"
                                     @change="setTipoDocPago" />
+                                <small class="text-red-600" v-if="errors.tipoDocumentoEmpresa">{{
+                                    errors.tipoDocumentoEmpresa }}</small>
                             </div>
 
                             <div class="col-span-3 sm:col-span-1">
                                 <label class="block mb-1">Document Number <span class="text-red-600">*</span></label>
                                 <InputGroup>
                                     <InputText v-model="documentoEmpresa" :readonly="!isEditingBilling"
-                                        class="border-green-iimp" @keypress="onlyNumberKey" />
-                                    <Button icon="pi pi-search" class="bg-green-iimp"
-                                        :disabled="!isEditingBilling && tipoDocumentoEmpresa != 2"
-                                        @click="getEmpresaData" />
+                                        class="border-green-iimp" @keypress="onlyNumberKey"
+                                        :disabled="!isEditingBilling" />
+                                    <Button icon="pi pi-search" class="bg-green-iimp" @click="getEmpresaData"
+                                        :loading="loading_doc" :disabled="!isEditingBilling || !documentoEmpresa" />
                                 </InputGroup>
+                                <small class="text-red-600" v-if="errors.documentoEmpresa">{{ errors.documentoEmpresa
+                                }}</small>
                             </div>
                         </div>
 
@@ -517,7 +624,9 @@ defineExpose({ getInscripcion });
                             <label class="block mb-1">Business Name / Full Name <span
                                     class="text-red-600">*</span></label>
                             <InputText v-model="razonSocial" class="w-full border-green-iimp"
+                                :disabled="!isEditingBilling || loading_doc"
                                 :readonly="!isEditingBilling || block_direction" />
+                            <small class="text-red-600" v-if="errors.razonSocial">{{ errors.razonSocial }}</small>
                         </div>
                     </div>
 
@@ -525,24 +634,33 @@ defineExpose({ getInscripcion });
                         <div class="w-full sm:col-span-1">
                             <label class="block mb-1">Address <span class="text-red-600">*</span></label>
                             <InputText v-model="direccionEmpresa" class="w-full border-green-iimp"
-                                :readonly="!isEditingBilling || block_direction" />
+                                :readonly="!isEditingBilling || block_direction"
+                                :disabled="!isEditingBilling || loading_doc" />
+                            <small class="text-red-600" v-if="errors.direccionEmpresa">{{ errors.direccionEmpresa
+                            }}</small>
                         </div>
 
                         <div class="grid gap-6 md:grid-cols-2">
                             <div class="w-full sm:col-span-1">
                                 <label class="block mb-1">Billing Contact <span class="text-red-600">*</span></label>
                                 <InputText v-model="responsable" :readonly="!isEditingBilling"
-                                    class="w-full border-green-iimp" />
+                                    class="w-full border-green-iimp" :disabled="!isEditingBilling || loading_doc" />
+                                <small class="text-red-600" v-if="errors.responsable">{{ errors.responsable }}</small>
                             </div>
 
                             <div class="w-full sm:col-span-1">
                                 <label class="block mb-1">Billing Email <span class="text-red-600">*</span></label>
                                 <InputText v-model="correo_facturador" :readonly="!isEditingBilling"
-                                    class="w-full border-green-iimp" />
+                                    class="w-full border-green-iimp" :disabled="!isEditingBilling || loading_doc" />
+                                <small class="text-red-600" v-if="errors.correo_facturador">{{ errors.correo_facturador
+                                }}</small>
                             </div>
                         </div>
                     </div>
                 </template>
+                <pre class="bg-red-100 text-red-700 p-4">
+            Errores actuales: {{ errors }}
+        </pre>
             </Card>
         </div>
         <!-- <div class="text-green-iimp font-bold p-4">

@@ -245,11 +245,11 @@ watch(() => props.tipo_origen, (newOrigen) => {
         <Card class="mt-5 overflow-hidden shadow-lg border border-gray-200">
             <template #header>
                 <div class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc">
-                    Search
+                    {{ esPeruano ? 'Search' : 'Identification' }}
                 </div>
             </template>
             <template #content>
-                <div class="flex gap-6 p-2 w-full justify-around ">
+                <div class="flex gap-6 p-2 w-full justify-around">
                     <div
                         class="text-green-iimp font-bold max-w-[650px] w-full p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
 
@@ -259,20 +259,25 @@ watch(() => props.tipo_origen, (newOrigen) => {
                                 :options="tiposDocumentoFiltrados" @change="clearDocument" optionLabel="name_en"
                                 optionValue="id" placeholder="Select Document" showClear checkmark
                                 class="w-full border-green-iimp" :disabled="esPeruano"
-                                :class="{ 'bg-gray-200 opacity-70': esPeruano }" />
+                                :class="{ 'bg-gray-100 opacity-70': esPeruano }" />
                             <small class="text-red-600">{{ errors.tipo_doc }}</small>
                         </div>
 
                         <div class="col-span-1">
-                            <label for="documento">Document Number <span class="text-red-600">*</span></label>
+                            <label for="documento">
+                                {{ esPeruano ? 'Document Number' : 'Identity Card / Passport Number' }}
+                                <span class="text-red-600">*</span>
+                            </label>
 
-                            <InputGroup>
+                            <InputGroup v-if="esPeruano">
                                 <InputText name="documento" v-model="documento" v-bind="documentoAttrs"
                                     class="w-full border-green-iimp" @keypress="onlyNumberKey" :maxlength="25" />
-
                                 <Button icon="pi pi-search" severity="info" @click="searchPerson"
                                     :loading="loadingSearch" label="Search" />
                             </InputGroup>
+
+                            <InputText v-else name="documento" v-model="documento" v-bind="documentoAttrs"
+                                class="w-full border-green-iimp" :maxlength="25" placeholder="Enter number" />
 
                             <small class="text-red-600">{{ errors.documento }}</small>
                         </div>
@@ -385,3 +390,15 @@ watch(() => props.tipo_origen, (newOrigen) => {
         </Card>
     </div>
 </template>
+<style>
+:deep(.p-select.p-disabled) {
+    background-color: #f3f4f6 !important;
+    /* Un gris suave */
+    opacity: 1;
+}
+
+:deep(.p-select.p-disabled .p-select-label) {
+    color: #4b5563 !important;
+    /* Texto un poco más oscuro para que se lea bien */
+}
+</style>

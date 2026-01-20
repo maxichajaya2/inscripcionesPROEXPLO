@@ -53,51 +53,124 @@ const actualizarResumen = (datos) => {
 };
 
 // --- LÓGICA DE VALIDACIÓN ---
+// const validate = async (value) => {
+//     switch (value) {
+//         case "Documento":
+//             loading.value = true;
+//             // Esto ejecuta el validate() de vee-validate en el hijo
+//             formDataValidacionDoc.value = await childFormValidacionDoc.value.getValidacionDoc();
+
+//             if (formDataValidacionDoc.value.validate) {
+//                 // Guardamos los datos actuales para el siguiente paso
+//                 data_persona.value = formDataValidacionDoc.value.formValidacionDoc;
+//                 loading.value = false;
+//                 return true;
+//             } else {
+//                 loading.value = false;
+//                 return false;
+//             }
+//             break;
+
+//         case "Inscripcion":
+//             loading.value = true;
+//             formDataInscription.value = childFormInscription.value.getInscripcion();
+
+//             if (formDataInscription.value.validate) {
+//                 props.categorias.forEach(categoria => {
+//                     if (categoria.id == formDataInscription.value.formInscription.selected_categoria) {
+//                         categoria_seleccionada.value = categoria;
+//                     }
+//                 });
+
+//                 const form_payment = await axios.post('/pago/getform',
+//                     { form: formDataInscription.value.formInscription }, { headers: { 'Content-Type': 'multipart/form-data' } });
+
+//                 formDataPayment.value = form_payment.data.formulario;
+//                 loading.value = false;
+//                 return true;
+
+//             } else {
+//                 loading.value = false;
+//                 return false;
+//             }
+//             break;
+//     }
+//     return false;
+// }
+
+// --- LÓGICA DE VALIDACIÓN COMPLETA EN INICIO.VUE ---
 const validate = async (value) => {
     switch (value) {
         case "Documento":
             loading.value = true;
-            // Esto ejecuta el validate() de vee-validate en el hijo
+            // Esperamos la respuesta del Paso 1
             formDataValidacionDoc.value = await childFormValidacionDoc.value.getValidacionDoc();
 
             if (formDataValidacionDoc.value.validate) {
-                // Guardamos los datos actuales para el siguiente paso
                 data_persona.value = formDataValidacionDoc.value.formValidacionDoc;
                 loading.value = false;
-                return true;
+                return true; // Permite avanzar al paso 2
             } else {
                 loading.value = false;
                 return false;
             }
-            break;
 
         case "Inscripcion":
             loading.value = true;
-            formDataInscription.value = childFormInscription.value.getInscripcion();
 
-            if (formDataInscription.value.validate) {
-                props.categorias.forEach(categoria => {
-                    if (categoria.id == formDataInscription.value.formInscription.selected_categoria) {
-                        categoria_seleccionada.value = categoria;
+            // 1. Llamamos al hijo y ESPERAMOS (await) que valide Vee-Validate y sus reglas manuales
+            const respuestaHijo = await childFormInscription.value.getInscripcion();
+            formDataInscription.value = respuestaHijo;
+
+            if (respuestaHijo.validate) {
+                // 2. Buscamos la categoría seleccionada para el objeto global
+                const idCat = respuestaHijo.formInscription.selected_categoria;
+                const encontrada = props.categorias.find(c => c.id == idCat);
+                if (encontrada) {
+                    categoria_seleccionada.value = encontrada;
+                }
+
+                try {
+                    // 3. Enviamos los datos al servidor para generar la sesión de pago
+                    // Usamos FormData por si hay archivos (documentos de estudiante, etc.)
+                    const payload = new FormData();
+                    // Metemos todos los valores del formulario al FormData
+                    Object.keys(respuestaHijo.formInscription).forEach(key => {
+                        payload.append(key, respuestaHijo.formInscription[key]);
+                    });
+
+                    const responsePago = await axios.post('/pago/getform', payload, {
+                        headers: { 'Content-Type': 'multipart/form-data' }
+                    });
+
+                    // 4. Si el servidor responde bien, guardamos los datos del formulario de pago (Niubiz/etc)
+                    if (responsePago.data.formulario) {
+                        formDataPayment.value = responsePago.data.formulario;
+                        loading.value = false;
+                        return true; // <--- AQUÍ ES DONDE DARÁ EL "OK" PARA PASAR AL PASO 3
+                    } else {
+                        throw new Error("No se recibió el formulario de pago");
                     }
-                });
 
-                const form_payment = await axios.post('/pago/getform',
-                    { form: formDataInscription.value.formInscription }, { headers: { 'Content-Type': 'multipart/form-data' } });
-
-                formDataPayment.value = form_payment.data.formulario;
-                loading.value = false;
-                return true;
-
+                } catch (error) {
+                    console.error("Error en el proceso de pago:", error);
+                    toast.add({
+                        severity: 'error',
+                        summary: 'Error de Red',
+                        detail: 'No se pudo generar el formulario de pago. Intente nuevamente.',
+                        life: 5000
+                    });
+                    loading.value = false;
+                    return false;
+                }
             } else {
+                // Si el hijo devuelve validate: false, los errores ya se muestran en su vista
                 loading.value = false;
                 return false;
             }
-            break;
     }
     return false;
 }
-
 // --- FUNCIÓN MODIFICADA PARA RECIBIR EL ID ---
 const seleccionarOrigen = (origen, id_numerico) => {
     nacionalidadSeleccionada.value = origen; // Guarda el texto 'peruano'/'extranjero'
@@ -120,8 +193,8 @@ const total_final = computed(() => {
     // Si el formulario nos está enviando un total (por días), usamos ese.
     // Si no, usamos el precio base de la categoría seleccionada.
     return resumen_dinamico.value.total > 0
-           ? resumen_dinamico.value.total
-           : (categoria_seleccionada.value?.precio_disponible?.valor || '0.00');
+        ? resumen_dinamico.value.total
+        : (categoria_seleccionada.value?.precio_disponible?.valor || '0.00');
 });
 
 onMounted(() => {
@@ -182,9 +255,10 @@ onMounted(() => {
                             <div class="flex justify-between p-6">
                                 <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
                                     @click="activateCallback('1')" />
-                                <Button label="Register" icon="pi pi-arrow-right" iconPos="right"
-                                    @click="async () => await validate('Inscripcion') ? activateCallback('3') : false"
-                                    class="bg-green-iimp border-rounded-full" :loading="loading" />
+                                <Button label="Register" icon="pi pi-arrow-right" iconPos="right" @click="async () => {
+                                    const ok = await validate('Inscripcion');
+                                    if (ok) activateCallback('3');
+                                }" class="bg-green-iimp border-rounded-full" :loading="loading" />
                             </div>
                         </StepPanel>
 

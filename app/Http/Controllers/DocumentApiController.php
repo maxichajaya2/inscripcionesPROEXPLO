@@ -130,96 +130,178 @@ class DocumentApiController extends Controller
         return json_encode(['persona' => $persona, 'status' => $status]);
     }
 
+    // public function getEmpresaData(Request $request)
+    // {
+    //     $direccion = "";
+    //     $status = true;
+
+    //     if ($request->tipo_doc == 1) {
+    //         $empresa = Persona::where('id_tipo_documento', $request->tipo_doc)->where('documento', $request->documento)->first();
+    //     } else {
+    //         $empresa = Empresa::where('id_tipo_documento', $request->tipo_doc)->where('documento', $request->documento)->first();
+    //     }
+
+    //     if ($empresa) {
+
+    //         if (is_null($empresa->direccion)) {
+    //             return response()->json([
+    //                 'message' => "Empresa no cuenta con direccion registrada",
+    //             ]);
+    //         }
+
+    //         $empresa->pais = $empresa->direccion->id_pais;
+    //         $empresa->departamento  = intval($empresa->direccion->id_departamento) > 0 ? $empresa->direccion->id_departamento : 0;
+    //         $empresa->provincia  = intval($empresa->direccion->id_provincia) > 0 ? $empresa->direccion->id_provincia : 0;
+    //         $empresa->distrito  = intval($empresa->direccion->id_distrito) > 0 ? $empresa->direccion->id_distrito : 0;
+
+    //         if ($empresa instanceof Persona) {
+    //             $empresa->nombre = trim($empresa->nombres . " " . $empresa->apellido_paterno . " " . $empresa->apellido_materno);
+    //             $empresa->telefono = $empresa->celular;
+    //         }
+
+    //         $departamento = Departamento::where('id_pais', intval($empresa->pais))->where('id_departamento', intval($empresa->departamento))->first();
+    //         $departamento = ($departamento) ? $departamento->name : '';
+
+    //         $provincia = Provincia::where('id_pais', intval($empresa->pais))->where('id_departamento', intval($empresa->departamento))
+    //             ->where('id_provincia', intval($empresa->provincia))->first();
+    //         $provincia = ($provincia) ? $provincia->name : '';
+
+    //         $distrito = Distrito::where('id_pais', intval($empresa->pais))->where('id_departamento', intval($empresa->departamento))
+    //             ->where('id_provincia', intval($empresa->provincia))->where('id_distrito', intval($empresa->distrito))->first();
+    //         $distrito = ($distrito) ? $distrito->name : '';
+
+    //         $direccion = trim($empresa->direccion->direccion . " " . $departamento . " - " . $provincia . " - " . $distrito);
+    //     } else {
+    //         $empresa = new \stdClass();
+    //         $empresa->id_tipo_documento = $request->id_tipo_documento;
+    //         $empresa->documento = $request->numero_documento;
+    //         $empresa->pais = 0;
+    //         $empresa->departamento  = 0;
+    //         $empresa->provincia  = 0;
+    //         $empresa->distrito  = 0;
+    //         $empresa->direccionEmpresa  = "";
+    //         $empresa->telefono = "";
+    //         $empresa->correo = "";
+    //         $empresa->nombre = "";
+    //         $empresa->nombre_comercial = "";
+    //         $empresa->web = "";
+
+    //         $status = false;
+    //     }
+
+    //     if ($request->tipo_doc == 1) { //dni
+
+    //         $api_empresa = $this->getData('dni', $request->documento);
+
+    //         if ($api_empresa['status']) {
+    //             $api_empresa = $api_empresa['persona'];
+    //             $empresa->nombre = trim($api_empresa->nombres . " " . $api_empresa->apellidoPaterno . " " . $api_empresa->apellidoMaterno);
+    //         } else {
+    //             $status = false;
+    //         }
+    //     }
+
+    //     if ($request->tipo_doc == 2) { //ruc
+
+    //         $api_empresa = $this->getData('ruc', $request->documento);
+
+    //         if ($api_empresa['status']) {
+    //             $api_empresa = $api_empresa['empresa'];
+
+    //             $empresa->nombre = $api_empresa->razonSocial;
+    //             $direccion = trim($api_empresa->direccion . " " . $api_empresa->departamento . " - " . $api_empresa->provincia . " - " . $api_empresa->distrito);
+    //         } else {
+    //             $status = false;
+    //         }
+    //     }
+
+    //     $empresa->direccionEmpresa = $direccion;
+
+    //     return json_encode(['empresa' => $empresa, 'status' => $status]);
+    // }
+
     public function getEmpresaData(Request $request)
     {
         $direccion = "";
         $status = true;
 
-        if ($request->tipo_doc == 1) {
-            $empresa = Persona::where('id_tipo_documento', $request->tipo_doc)->where('documento', $request->documento)->first();
-        } else {
-            $empresa = Empresa::where('id_tipo_documento', $request->tipo_doc)->where('documento', $request->documento)->first();
+        // 1. Intentar buscar primero en nuestra base de datos local
+        if ($request->tipo_doc == 1) { // DNI
+            $empresa = Persona::where('id_tipo_documento', $request->tipo_doc)
+                ->where('documento', $request->documento)
+                ->first();
+        } else { // RUC o Otros
+            $empresa = Empresa::where('id_tipo_documento', $request->tipo_doc)
+                ->where('documento', $request->documento)
+                ->first();
         }
 
+        // 2. Si existe localmente, preparamos la dirección y datos básicos
         if ($empresa) {
+            if (!is_null($empresa->direccion)) {
+                $empresa->pais = $empresa->direccion->id_pais;
+                $empresa->departamento = intval($empresa->direccion->id_departamento) > 0 ? $empresa->direccion->id_departamento : 0;
+                $empresa->provincia = intval($empresa->direccion->id_provincia) > 0 ? $empresa->direccion->id_provincia : 0;
+                $empresa->distrito = intval($empresa->direccion->id_distrito) > 0 ? $empresa->direccion->id_distrito : 0;
 
-            if (is_null($empresa->direccion)) {
-                return response()->json([
-                    'message' => "Empresa no cuenta con direccion registrada",
-                ]);
+                if ($empresa instanceof Persona) {
+                    $empresa->nombre = trim($empresa->nombres . " " . $empresa->apellido_paterno . " " . $empresa->apellido_materno);
+                    $empresa->telefono = $empresa->celular;
+                }
+
+                // Obtener nombres de ubicación para la cadena de dirección completa
+                $dep = Departamento::where('id_pais', intval($empresa->pais))->where('id_departamento', intval($empresa->departamento))->first();
+                $prov = Provincia::where('id_pais', intval($empresa->pais))->where('id_departamento', intval($empresa->departamento))->where('id_provincia', intval($empresa->provincia))->first();
+                $dist = Distrito::where('id_pais', intval($empresa->pais))->where('id_departamento', intval($empresa->departamento))->where('id_provincia', intval($empresa->provincia))->where('id_distrito', intval($empresa->distrito))->first();
+
+                $direccion = trim($empresa->direccion->direccion . " " . ($dep ? $dep->name : '') . " - " . ($prov ? $prov->name : '') . " - " . ($dist ? $dist->name : ''));
             }
-
-            $empresa->pais = $empresa->direccion->id_pais;
-            $empresa->departamento  = intval($empresa->direccion->id_departamento) > 0 ? $empresa->direccion->id_departamento : 0;
-            $empresa->provincia  = intval($empresa->direccion->id_provincia) > 0 ? $empresa->direccion->id_provincia : 0;
-            $empresa->distrito  = intval($empresa->direccion->id_distrito) > 0 ? $empresa->direccion->id_distrito : 0;
-
-            if ($empresa instanceof Persona) {
-                $empresa->nombre = trim($empresa->nombres . " " . $empresa->apellido_paterno . " " . $empresa->apellido_materno);
-                $empresa->telefono = $empresa->celular;
-            }
-
-            $departamento = Departamento::where('id_pais', intval($empresa->pais))->where('id_departamento', intval($empresa->departamento))->first();
-            $departamento = ($departamento) ? $departamento->name : '';
-
-            $provincia = Provincia::where('id_pais', intval($empresa->pais))->where('id_departamento', intval($empresa->departamento))
-                ->where('id_provincia', intval($empresa->provincia))->first();
-            $provincia = ($provincia) ? $provincia->name : '';
-
-            $distrito = Distrito::where('id_pais', intval($empresa->pais))->where('id_departamento', intval($empresa->departamento))
-                ->where('id_provincia', intval($empresa->provincia))->where('id_distrito', intval($empresa->distrito))->first();
-            $distrito = ($distrito) ? $distrito->name : '';
-
-            $direccion = trim($empresa->direccion->direccion . " " . $departamento . " - " . $provincia . " - " . $distrito);
         } else {
+            // Inicializamos objeto vacío si no hay registro local
             $empresa = new \stdClass();
-            $empresa->id_tipo_documento = $request->id_tipo_documento;
-            $empresa->documento = $request->numero_documento;
-            $empresa->pais = 0;
-            $empresa->departamento  = 0;
-            $empresa->provincia  = 0;
-            $empresa->distrito  = 0;
-            $empresa->direccionEmpresa  = "";
-            $empresa->telefono = "";
-            $empresa->correo = "";
+            $empresa->id_tipo_documento = $request->tipo_doc;
+            $empresa->documento = $request->documento;
             $empresa->nombre = "";
-            $empresa->nombre_comercial = "";
-            $empresa->web = "";
-
-            $status = false;
+            $status = false; // Cambiará a true si la API externa lo encuentra
         }
 
-        if ($request->tipo_doc == 1) { //dni
+        // 3. CONSULTA A API EXTERNA (Solo para DNI y RUC)
+        // Esto corrige el error de "Argument #1 ($request) must be of type Request"
+        if ($request->tipo_doc == 1) { // DNI
+            $fakeRequest = new \Illuminate\Http\Request();
+            $fakeRequest->merge(['tipo_doc' => 1, 'documento' => $request->documento]);
 
-            $api_empresa = $this->getData('dni', $request->documento);
+            $api_res = $this->getData($fakeRequest);
 
-            if ($api_empresa['status']) {
-                $api_empresa = $api_empresa['persona'];
-                $empresa->nombre = trim($api_empresa->nombres . " " . $api_empresa->apellidoPaterno . " " . $api_empresa->apellidoMaterno);
-            } else {
-                $status = false;
+            if ($api_res['status']) {
+                $p = $api_res['persona'];
+                $empresa->nombre = trim($p->nombres . " " . $p->apellidoPaterno . " " . $p->apellidoMaterno);
+                $status = true;
             }
         }
 
-        if ($request->tipo_doc == 2) { //ruc
+        if ($request->tipo_doc == 2) { // RUC
+            $fakeRequest = new \Illuminate\Http\Request();
+            $fakeRequest->merge(['tipo_doc' => 2, 'documento' => $request->documento]);
 
-            $api_empresa = $this->getData('ruc', $request->documento);
+            $api_res = $this->getData($fakeRequest);
 
-            if ($api_empresa['status']) {
-                $api_empresa = $api_empresa['empresa'];
-
-                $empresa->nombre = $api_empresa->razonSocial;
-                $direccion = trim($api_empresa->direccion . " " . $api_empresa->departamento . " - " . $api_empresa->provincia . " - " . $api_empresa->distrito);
-            } else {
-                $status = false;
+            if ($api_res['status']) {
+                $e = $api_res['empresa'];
+                $empresa->nombre = $e->razonSocial;
+                // Construir dirección desde la API
+                $direccion = trim($e->direccion . " " . $e->departamento . " - " . $e->provincia . " - " . $e->distrito);
+                $status = true;
             }
         }
 
         $empresa->direccionEmpresa = $direccion;
 
-        return json_encode(['empresa' => $empresa, 'status' => $status]);
+        return response()->json([
+            'empresa' => $empresa,
+            'status' => $status
+        ]);
     }
-
     public function validatePersonSoc(Request $request)
     {
 
