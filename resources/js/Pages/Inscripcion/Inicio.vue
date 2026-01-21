@@ -260,10 +260,10 @@ onMounted(() => {
                             </div> -->
                             <div class="flex justify-between p-6">
                                 <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
-                                    @click="prevCallback" />
+                                    @click="activateCallback('1')" />
 
-                                <Button label="Register"  iconPos="right" icon="pi pi-arrow-right"
-                                    @click="handleInscripcionClick "  class="bg-degradient border-rounded-full" />
+                                <Button label="Register" iconPos="right" icon="pi pi-arrow-right"
+                                    @click="handleInscripcionClick" class="bg-degradient border-rounded-full" />
                             </div>
                         </StepPanel>
 

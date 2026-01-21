@@ -41,7 +41,6 @@ const props = defineProps({
 const schema = yup.object({
     tipo_doc: yup.mixed().required('Document type is required'),
     documento: yup.string().required('Document number is required'),
-    // Agregamos las validaciones para los campos de abajo
     nombres: yup.string().required('First Name is required'),
     apellido_paterno: yup.string().required('Last Name is required'),
     pais: yup.mixed().required('Country is required'),
@@ -49,7 +48,8 @@ const schema = yup.object({
     correo: yup.string().email().required('Email is required'),
     celular: yup.string().required('Phone is required'),
     sexo: yup.string().required('Sex is required'),
-    // fecha_nacimiento: yup.date().required('Date of Birth is required'),
+    fecha_nacimiento: yup.date().required('Date of Birth is required'),
+    empresa: yup.string().required('Company is required'),
 });
 
 const { defineField, errors, values, setValues, validate } = useForm({
