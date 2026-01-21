@@ -25,15 +25,15 @@ class MailInscripcion extends Mailable
 
     public function envelope(): Envelope
     {
-         if(\App::environment('local')){
-            if( strlen($this->inscripcion->facturacion->correo_facturador) > 0){
+        if (\App::environment('local')) {
+            if (strlen($this->inscripcion->facturacion->correo_facturador) > 0) {
                 return new Envelope(
                     from: new Address('inscripciones.wmc@iimp.org.pe', config('app.event_name')),
                     subject: config('app.event_name') . " - Confirmación de inscripción World Mining Congress 2026",
                     // cc: ['inscripciones.wmc@iimp.org.pe','cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
                     bcc: ['wmc.itsupport@iimp.org.pe']
                 );
-            }else{
+            } else {
                 return new Envelope(
                     from: new Address('inscripciones.wmc@iimp.org.pe', config('app.event_name')),
                     subject: config('app.event_name') . " - Confirmación de inscripción World Mining Congress 2026",
@@ -41,56 +41,78 @@ class MailInscripcion extends Mailable
                     bcc: ['wmc.itsupport@iimp.org.pe']
                 );
             }
-        }else{
-            if( strlen($this->inscripcion->facturacion->correo_facturador) > 0){
+        } else {
+            if (strlen($this->inscripcion->facturacion->correo_facturador) > 0) {
                 return new Envelope(
                     from: new Address('inscripciones.wmc@iimp.org.pe', config('app.event_name')),
                     subject: config('app.event_name') . " - Confirmación de inscripción World Mining Congress 2026",
                     // cc: ['inscripciones.wmc@iimp.org.pe','cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
                     bcc: ['wmc.itsupport@iimp.org.pe']
                 );
-            }else{
+            } else {
                 return new Envelope(
-                     from: new Address('inscripciones.wmc@iimp.org.pe', config('app.event_name')),
+                    from: new Address('inscripciones.wmc@iimp.org.pe', config('app.event_name')),
                     subject: config('app.event_name') . " - Confirmación de inscripción World Mining Congress 2026",
                     // cc: ['inscripciones.wmc@iimp.org.pe','cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
                     bcc: ['wmc.itsupport@iimp.org.pe']
                 );
             }
-
         }
     }
 
     public function content(): Content
     {
 
-            return new Content(
-                view: 'emails.es.confirmacion_inscripcion',
-                with: [
-                    'inscripcion' => $this->inscripcion,
-                    'pago' => $this->pago,
-                ],
-            );
-
+        return new Content(
+            view: 'emails.es.confirmacion_inscripcion',
+            with: [
+                'inscripcion' => $this->inscripcion,
+                'pago' => $this->pago,
+            ],
+        );
     }
+
+    // public function attachments(): array
+    // {
+    //     if($this->inscripcion->categoria_inscripcion->requiere_documento){
+
+    //         $file_name = $this->inscripcion->document_path;
+    //         $file_name = explode("/", $file_name);
+    //         $file_name = $file_name[(sizeof($file_name) -1)] ;
+
+    //         $file = file_get_contents( storage_path('app/public/documents'). "/".$file_name );
+
+    //         return [
+    //             Attachment::fromPath( storage_path('app/public/documents'). "/".$file_name )
+    //                 ->withMime($this->inscripcion->categoria_inscripcion->document_type),
+    //         ];
+
+    //     }else{
+    //         return [];
+    //     }
+    // }
 
     public function attachments(): array
     {
-        if($this->inscripcion->categoria_inscripcion->requiere_documento){
+        // 1. Verificar si la categoría requiere documento
+        if ($this->inscripcion->categoria_inscripcion->requiere_documento) {
 
-            $file_name = $this->inscripcion->document_path;
-            $file_name = explode("/", $file_name);
-            $file_name = $file_name[(sizeof($file_name) -1)] ;
+            $path = $this->inscripcion->document_path;
 
-            $file = file_get_contents( storage_path('app/public/documents'). "/".$file_name );
+            // 2. Extraer solo el nombre del archivo de forma segura
+            $file_name = basename($path);
+            $full_path = storage_path('app/public/documents/' . $file_name);
 
-            return [
-                Attachment::fromPath( storage_path('app/public/documents'). "/".$file_name )
-                    ->withMime($this->inscripcion->categoria_inscripcion->document_type),
-            ];
-
-        }else{
-            return [];
+            // 3. Validar si el archivo existe y NO es un directorio
+            if ($file_name != "" && file_exists($full_path) && !is_dir($full_path)) {
+                return [
+                    Attachment::fromPath($full_path)
+                        ->as($file_name) // Nombre con el que se verá en el correo
+                        ->withMime($this->inscripcion->categoria_inscripcion->document_type),
+                ];
+            }
         }
+
+        return [];
     }
 }
