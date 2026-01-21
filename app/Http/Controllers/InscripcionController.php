@@ -552,6 +552,32 @@ class InscripcionController extends Controller
     //     return redirect('/');
     // }
 
+	public function filterResponse($data){
+		$info=[];
+		$data = json_decode($data);
+                if (isset($data->errorCode)) {
+                  $info['errorcode']=$data->errorCode;
+                  $info['ACTION_CODE']=$data->data->ACTION_CODE;
+                  $info['ACTION_DESCRIPTION']=$data->data->ACTION_DESCRIPTION;
+                }else{
+                  $info['transactionDate'] = $data->dataMap->TRANSACTION_DATE;
+                  $info['transactionDate']=str_split($info['transactionDate'],2);
+                  for ($c=2; $c >=0; $c--) {
+                          $date[$c]=$info['transactionDate'][$c];
+                        }
+                  for ($c=3; $c < 6; $c++) {
+                          $time[$c]=$info['transactionDate'][$c];
+                        }
+                  $info['date']=implode("/", $date);
+                  $info['time']=implode(":", $time);
+                  $info['transactionId']=$data->order->transactionId;
+                  $info['CARD']=$data->dataMap->CARD;
+                }
+
+    	return $info;
+    }
+
+
     public function niubizPayment($id, $order)
     {
         $facturacion = Facturacion::findOrFail($id);
