@@ -136,15 +136,52 @@ const goStart = () => {
 
 const activeStep = ref("1"); // Control del paso actual
 
+// const handleInscripcionClick = async () => {
+//     // 1. Validar el formulario del hijo primero
+//     const resIns = await childFormInscription.value.getInscripcion();
+
+//     if (resIns.validate) {
+//         // Guardamos los datos para usarlos luego si acepta
+//         tempResIns.value = resIns;
+//         // 2. Mostrar el modal de requisitos
+//         showRequisitosModal.value = true;
+//     }
+// };
+
+// --- Busca esto en tu Inicio.vue ---
+// const handleInscripcionClick = async () => {
+//     // 1. Validar el formulario del hijo primero
+//     const resIns = await childFormInscription.value.getInscripcion();
+
+//     if (resIns.validate) {
+//         // Guardamos los datos para usarlos luego
+//         tempResIns.value = resIns;
+
+//         // --- EL CAMBIO: ---
+//         // showRequisitosModal.value = true; // COMENTA ESTA LÍNEA
+//         confirmarYProcesar();               // AGREGA ESTA LÍNEA (Llama directo al proceso)
+
+//         console.log("Puenteando modal: Saltando directo a confirmarYProcesar");
+//     }
+// };
+
+
 const handleInscripcionClick = async () => {
+    // ACTIVAMOS EL SPINNER
+    loading.value = true;
+
     // 1. Validar el formulario del hijo primero
     const resIns = await childFormInscription.value.getInscripcion();
 
     if (resIns.validate) {
-        // Guardamos los datos para usarlos luego si acepta
+        // Guardamos los datos para usarlos luego
         tempResIns.value = resIns;
-        // 2. Mostrar el modal de requisitos
-        showRequisitosModal.value = true;
+
+        // Llamamos al proceso de envío (esta función ya tiene su propio try/catch/finally)
+        confirmarYProcesar();
+    } else {
+        // SI NO VALIDA, APAGAMOS EL SPINNER PARA QUE EL USUARIO CORRIJA
+        loading.value = false;
     }
 };
 
@@ -262,7 +299,9 @@ onMounted(() => {
                                 <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
                                     @click="activateCallback('1')" />
 
-                                <Button label="Register" iconPos="right" icon="pi pi-arrow-right"
+                                <!-- <Button label="Register" iconPos="right" icon="pi pi-arrow-right"
+                                    @click="handleInscripcionClick" class="bg-degradient border-rounded-full" /> -->
+                                <Button label="Register" iconPos="right" icon="pi pi-arrow-right" :loading="loading"
                                     @click="handleInscripcionClick" class="bg-degradient border-rounded-full" />
                             </div>
                         </StepPanel>
@@ -455,7 +494,7 @@ onMounted(() => {
             </div>
         </Dialog>
 
-        <Dialog v-model:visible="showRequisitosModal" modal header="Requirements and Conditions"
+        <Dialog v-if="false" v-model:visible="showRequisitosModal" modal header="Requirements and Conditions"
             :style="{ width: '50vw' }" :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
             <div class="flex flex-col gap-4">
                 <p class="text-gray-600">Please review the requirements before proceeding to payment.</p>

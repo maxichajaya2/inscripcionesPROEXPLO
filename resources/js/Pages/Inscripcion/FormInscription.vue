@@ -271,17 +271,7 @@ function selectDays(id) {
     total.value = count * current_price;
 }
 
-// function getInscripcion() {
-//     formManualErrors.value = { reglamento: null, total: null, uploadDocument: null };
-//     let hasError = false;
-//     if (reglamento.value !== true) { formManualErrors.value.reglamento = "Required"; hasError = true; }
-//     if (total.value <= 0) { formManualErrors.value.total = "Select days"; hasError = true; }
-//     if (show_document.value && !uploadDocument.value) { formManualErrors.value.uploadDocument = "Upload file"; hasError = true; }
 
-//     return hasError ? { validate: false } : { validate: true, formInscription: values };
-// }
-// Agrega el async aquí para que 'validate()' funcione
-// UBICACIÓN: FormInscription.vue
 const getInscripcion = async () => {
     const result = await validate(); // Validación de vee-validate
 
