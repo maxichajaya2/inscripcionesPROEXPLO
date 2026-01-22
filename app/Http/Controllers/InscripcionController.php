@@ -547,33 +547,6 @@ class InscripcionController extends Controller
     //     return redirect('/');
     // }
 
-    public function filterResponse($data)
-    {
-        $info = [];
-        $data = json_decode($data);
-        if (isset($data->errorCode)) {
-            $info['errorcode'] = $data->errorCode;
-            $info['ACTION_CODE'] = $data->data->ACTION_CODE;
-            $info['ACTION_DESCRIPTION'] = $data->data->ACTION_DESCRIPTION;
-        } else {
-            $info['transactionDate'] = $data->dataMap->TRANSACTION_DATE;
-            $info['transactionDate'] = str_split($info['transactionDate'], 2);
-            for ($c = 2; $c >= 0; $c--) {
-                $date[$c] = $info['transactionDate'][$c];
-            }
-            for ($c = 3; $c < 6; $c++) {
-                $time[$c] = $info['transactionDate'][$c];
-            }
-            $info['date'] = implode("/", $date);
-            $info['time'] = implode(":", $time);
-            $info['transactionId'] = $data->order->transactionId;
-            $info['CARD'] = $data->dataMap->CARD;
-        }
-
-        return $info;
-    }
-
-
     // public function niubizPayment($id, $order)
     // {
     //     $facturacion = Facturacion::findOrFail($id);
@@ -657,7 +630,6 @@ class InscripcionController extends Controller
     //     return redirect('/');
     // }
 
-
     public function niubizPayment($id, $order)
     {
         $facturacion = Facturacion::findOrFail($id);
@@ -675,8 +647,10 @@ class InscripcionController extends Controller
         $pasarela = Pasarela::where('id_evento', config('app.id_evento'))->where('codigo_tipo_pago', 'niubiz_tarjeta')->first();
         $niubiz = new Niubiz;
 
+        // dd($filtered_response);
         // --- BLOQUE DE ERROR O DENEGADO ---
         if (isset($filtered_response['errorcode']) || is_null($filtered_response['transactionId']) || $filtered_response['transactionId'] == "") {
+
 
             $niubiz->num_orden = $order;
             $niubiz->codigo_tipo_pago = 'niubiz_tarjeta';
@@ -744,6 +718,106 @@ class InscripcionController extends Controller
             return redirect('/pago/confirmar/' . $inscripcion->id);
         }
     }
+
+
+    // public function niubizPayment($id, $order)
+    // {
+    //     // 1. Cargar datos base
+    //     $facturacion = Facturacion::findOrFail($id);
+    //     $cuota = $facturacion->cuotas->first();
+
+    //     // 2. Seguridad: Validar Token
+    //     $transactiontoken = $_POST['transactionToken'] ?? null;
+    //     if (!$transactiontoken) {
+    //         return redirect('/')->with('error', 'Token de transacción no encontrado.');
+    //     }
+
+    //     // 3. Llamada a la Pasarela
+    //     $niubizCtrl = app(\App\Http\Controllers\NiubizController::class);
+    //     $respuesta = $niubizCtrl->authorization($cuota->respuesta_api, $facturacion->total, $transactiontoken, $order);
+    //     $filtered_response = $niubizCtrl->filterResponse($respuesta);
+
+    //     // 4. Buscar Pasarela (IMPORTANTE: Definir antes de usar)
+    //     $pasarela = Pasarela::where('id_evento', config('app.id_evento'))
+    //         ->where('codigo_tipo_pago', 'niubiz_tarjeta')
+    //         ->first();
+
+    //     // Si por alguna razón no existe la configuración de pasarela, usamos un ID por defecto o fallamos
+    //     $id_pasarela = $pasarela ? $pasarela->id : 5;
+
+    //     $niubiz = new Niubiz;
+    //     $niubiz->num_orden = $order;
+    //     $niubiz->monto = $facturacion->total;
+    //     $niubiz->id_evento = config('app.id_evento');
+    //     $niubiz->id_pasarela = $id_pasarela;
+    //     $niubiz->id_compra = $cuota->id;
+    //     $niubiz->codigo_tipo_pago = 'niubiz_tarjeta';
+
+    //     // 5. LÓGICA DE VALIDACIÓN (Diferenciar Éxito de Error)
+    //     $error_api = $filtered_response['errorcode'] ?? null;
+    //     $transactionId = $filtered_response['transactionId'] ?? null;
+
+    //     if (!is_null($error_api) || empty($transactionId)) {
+    //         // --- BLOQUE DE ERROR O DENEGADO ---
+
+    //         // Guardamos el ACTION_CODE (si no existe, usamos el errorcode o '666')
+    //         $niubiz->estado = $filtered_response['ACTION_CODE'] ?? ($error_api ?? '666');
+
+    //         // Detalle del error literal
+    //         $niubiz->detalle = $filtered_response['ACTION_DESCRIPTION'] ?? "Transaction declined / Error en pasarela";
+    //         $niubiz->fecha = date('Y-m-d');
+    //         $niubiz->hora = date('H:i:s');
+    //         $niubiz->save();
+
+    //         return redirect('/pago/error/' . $niubiz->id);
+    //     } else {
+    //         // --- BLOQUE DE ÉXITO ---
+    //         $niubiz->card_num = $filtered_response['CARD'] ?? '****';
+    //         $niubiz->idtransaccion = $transactionId;
+    //         $niubiz->fecha = $filtered_response['date'] ?? date('Y-m-d');
+    //         $niubiz->hora = $filtered_response['time'] ?? date('H:i:s');
+
+    //         // Intentar capturar el código de autorización real del JSON original
+    //         $res_original = json_decode($respuesta);
+    //         $niubiz->detalle = $res_original->dataMap->AUTHORIZATION_CODE ?? ($filtered_response['BRAND'] ?? 'Aprobado');
+
+    //         $niubiz->estado = 'pagado';
+    //         $niubiz->save();
+
+    //         // Actualizar Cuota
+    //         $cuota->informacion = json_encode([
+    //             "cuota" => "1",
+    //             "valor" => (string)$facturacion->total,
+    //             "porcentaje" => "100",
+    //             "estado_pago" => true
+    //         ]);
+    //         $cuota->estado_pago = 'PAGADO';
+    //         $cuota->update();
+
+    //         // Actualizar Inscripción
+    //         $inscripcion = Inscripcion::where('id_facturacion', $facturacion->id)->first();
+    //         if ($inscripcion) {
+    //             $inscripcion->observacion = "Pagada Niubiz ID: " . $niubiz->id;
+    //             $inscripcion->update();
+
+    //             $persona = Persona::find($inscripcion->id_persona);
+
+    //             // Enviar Correo
+    //             try {
+    //                 if ($persona && $persona->correo) {
+    //                     Mail::to($persona->correo)->send(new \App\Mail\MailInscripcion($inscripcion, $niubiz));
+    //                 }
+    //             } catch (\Exception $e) {
+    //                 Log::error("Error enviando correo: " . $e->getMessage());
+    //             }
+
+    //             return redirect('/pago/confirmar/' . $inscripcion->id);
+    //         }
+    //     }
+
+    //     return redirect('/')->with('error', 'Ocurrió un error inesperado en el flujo de pago.');
+    // }
+
 
     public function confirmPayment($id)
     {
