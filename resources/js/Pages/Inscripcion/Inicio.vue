@@ -2,7 +2,7 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import colorbar from '@/Components/colorbar.vue';
 import { router } from '@inertiajs/vue3';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import Dialog from 'primevue/dialog';
 import FormValidacionDoc from './FormValidacionDoc.vue';
 import FormInscription from './FormInscription.vue';
@@ -15,7 +15,6 @@ import StepList from 'primevue/steplist';
 import StepPanels from 'primevue/steppanels';
 import StepPanel from 'primevue/steppanel';
 import Step from 'primevue/step';
-
 import "../../../css/inscripciones.css";
 
 const visible = ref(true);
@@ -57,6 +56,21 @@ const actualizarResumen = (datos) => {
     resumen_dinamico.value = { ...resumen_dinamico.value, ...datos };
 };
 
+onMounted(() => {
+    window.addEventListener('beforeunload', handleBeforeUnload);
+});
+onUnmounted(() => {
+    // Es vital remover el evento para no afectar otras partes del sitio
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+});
+
+const handleBeforeUnload = (event) => {
+    // Solo mostrar alerta si ya pasó al paso 2 o si ya ingresó nombres
+    if (activeStep.value !== "1" || data_persona.value.nombres) {
+        event.preventDefault();
+        event.returnValue = '';
+    }
+};
 
 // --- LÓGICA DE VALIDACIÓN COMPLETA EN INICIO.VUE ---
 const validate = async (value) => {

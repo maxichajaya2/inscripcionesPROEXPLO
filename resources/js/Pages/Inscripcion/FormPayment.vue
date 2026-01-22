@@ -128,7 +128,7 @@ const scriptData = computed(() => {
                                 <label for="check_terms"
                                     class="text-xs text-gray-700 leading-tight cursor-pointer select-none">
                                     I accept the
-                                    <a href="/documents/reglamento.pdf" target="_blank"
+                                    <a href="/documents/reglamento2.pdf" target="_blank"
                                         class="text-blue-700 font-bold underline">Terms and Conditions</a> of WMC 2026.
                                 </label>
                             </div>
