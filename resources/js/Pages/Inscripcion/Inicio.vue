@@ -248,6 +248,20 @@ onMounted(() => {
     }
 });
 
+
+const resetToNationality = () => {
+    // 1. Volvemos a mostrar el modal de selección
+    visible.value = true;
+
+    // 2. Opcional: Limpiamos los datos que se hayan podido cargar
+    tipo_origen.value = 0;
+    nacionalidadSeleccionada.value = null;
+    data_persona.value = {};
+
+    // 3. Opcional: Aseguramos que el Stepper vuelva al paso 1
+    activeStep.value = "1";
+};
+
 </script>
 
 <template>
@@ -273,10 +287,20 @@ onMounted(() => {
                         <StepPanel v-slot="{ activateCallback }" value="1"
                             class="rounded-2xl border-2 border-green-iimp bg-white-price shadow-wmc">
                             <FormValidacionDoc ref="childFormValidacionDoc" :tipo_origen="tipo_origen" />
-                            <div class="flex p-6 justify-end">
+                            <div class="flex p-6 justify-between items-center">
+                                <Button label="Home" icon="pi pi-home" variant="text"
+                                    class="p-button-secondary p-button-text font-bold text-gray-500 hover:text-green-iimp"
+                                    @click="resetToNationality" />
+
                                 <Button label="Validate" icon="pi pi-arrow-right" iconPos="right"
-                                    @click="async () => await validate('Documento') ? activateCallback('2') : false"
-                                    class="bg-degradient border-rounded-full" :loading="loading" />
+                                    class="bg-degradient border-rounded-full" :loading="loading"
+                                    :disabled="childFormValidacionDoc?.hasSearched && !childFormValidacionDoc?.esSocio"
+                                    @click="async () => {
+                                        const isValid = await validate('Documento');
+                                        if (isValid && childFormValidacionDoc?.esSocio) {
+                                            activateCallback('2');
+                                        }
+                                    }" />
                             </div>
                         </StepPanel>
 
@@ -319,14 +343,14 @@ onMounted(() => {
                 </Stepper>
             </div>
 
-            <aside class="hidden xl:block absolute top-32 -right-64 w-60">
+            <!-- <aside class="hidden xl:block absolute top-32 -right-64 w-60">
                 <Card class="shadow-2xl border-t-4 border-yellow-price bg-white">
                     <template #title>
                         <div class="text-sm font-bold text-slate-700 flex items-center gap-2">
                             <i class="pi pi-shopping-cart text-green-iimp"></i> RESUMEN
                         </div>
                     </template>
-                    <template #content>
+<template #content>
                         <div class="flex flex-col gap-3">
                             <div v-if="categoria_seleccionada.id">
                                 <span
@@ -358,8 +382,8 @@ onMounted(() => {
                             </div>
                         </div>
                     </template>
-                </Card>
-            </aside>
+</Card>
+</aside> -->
         </div>
 
         <Dialog v-model:visible="visible" modal :showHeader="false" :closable="false" :style="{ width: '900px' }"

@@ -78,6 +78,8 @@ class DocumentApiController extends Controller
             ->first();
         $status = true;
 
+        // dd($persona);
+
         if ($persona) {
             $persona->pais = $persona->direccion->id_pais;
             $persona->departamento  = $persona->direccion->id_departamento;
@@ -124,101 +126,17 @@ class DocumentApiController extends Controller
             }
         }
 
+
+         // --- IGNORE ---
+
         $persona->es_socio = app(\App\Http\Controllers\WebServiceController::class)
             ->validatePersonMember($tipo_documento->sie_code, $request->numero_documento);
+
+            $persona->es_socio =true;
 
         return json_encode(['persona' => $persona, 'status' => $status]);
     }
 
-    // public function getEmpresaData(Request $request)
-    // {
-    //     $direccion = "";
-    //     $status = true;
-
-    //     if ($request->tipo_doc == 1) {
-    //         $empresa = Persona::where('id_tipo_documento', $request->tipo_doc)->where('documento', $request->documento)->first();
-    //     } else {
-    //         $empresa = Empresa::where('id_tipo_documento', $request->tipo_doc)->where('documento', $request->documento)->first();
-    //     }
-
-    //     if ($empresa) {
-
-    //         if (is_null($empresa->direccion)) {
-    //             return response()->json([
-    //                 'message' => "Empresa no cuenta con direccion registrada",
-    //             ]);
-    //         }
-
-    //         $empresa->pais = $empresa->direccion->id_pais;
-    //         $empresa->departamento  = intval($empresa->direccion->id_departamento) > 0 ? $empresa->direccion->id_departamento : 0;
-    //         $empresa->provincia  = intval($empresa->direccion->id_provincia) > 0 ? $empresa->direccion->id_provincia : 0;
-    //         $empresa->distrito  = intval($empresa->direccion->id_distrito) > 0 ? $empresa->direccion->id_distrito : 0;
-
-    //         if ($empresa instanceof Persona) {
-    //             $empresa->nombre = trim($empresa->nombres . " " . $empresa->apellido_paterno . " " . $empresa->apellido_materno);
-    //             $empresa->telefono = $empresa->celular;
-    //         }
-
-    //         $departamento = Departamento::where('id_pais', intval($empresa->pais))->where('id_departamento', intval($empresa->departamento))->first();
-    //         $departamento = ($departamento) ? $departamento->name : '';
-
-    //         $provincia = Provincia::where('id_pais', intval($empresa->pais))->where('id_departamento', intval($empresa->departamento))
-    //             ->where('id_provincia', intval($empresa->provincia))->first();
-    //         $provincia = ($provincia) ? $provincia->name : '';
-
-    //         $distrito = Distrito::where('id_pais', intval($empresa->pais))->where('id_departamento', intval($empresa->departamento))
-    //             ->where('id_provincia', intval($empresa->provincia))->where('id_distrito', intval($empresa->distrito))->first();
-    //         $distrito = ($distrito) ? $distrito->name : '';
-
-    //         $direccion = trim($empresa->direccion->direccion . " " . $departamento . " - " . $provincia . " - " . $distrito);
-    //     } else {
-    //         $empresa = new \stdClass();
-    //         $empresa->id_tipo_documento = $request->id_tipo_documento;
-    //         $empresa->documento = $request->numero_documento;
-    //         $empresa->pais = 0;
-    //         $empresa->departamento  = 0;
-    //         $empresa->provincia  = 0;
-    //         $empresa->distrito  = 0;
-    //         $empresa->direccionEmpresa  = "";
-    //         $empresa->telefono = "";
-    //         $empresa->correo = "";
-    //         $empresa->nombre = "";
-    //         $empresa->nombre_comercial = "";
-    //         $empresa->web = "";
-
-    //         $status = false;
-    //     }
-
-    //     if ($request->tipo_doc == 1) { //dni
-
-    //         $api_empresa = $this->getData('dni', $request->documento);
-
-    //         if ($api_empresa['status']) {
-    //             $api_empresa = $api_empresa['persona'];
-    //             $empresa->nombre = trim($api_empresa->nombres . " " . $api_empresa->apellidoPaterno . " " . $api_empresa->apellidoMaterno);
-    //         } else {
-    //             $status = false;
-    //         }
-    //     }
-
-    //     if ($request->tipo_doc == 2) { //ruc
-
-    //         $api_empresa = $this->getData('ruc', $request->documento);
-
-    //         if ($api_empresa['status']) {
-    //             $api_empresa = $api_empresa['empresa'];
-
-    //             $empresa->nombre = $api_empresa->razonSocial;
-    //             $direccion = trim($api_empresa->direccion . " " . $api_empresa->departamento . " - " . $api_empresa->provincia . " - " . $api_empresa->distrito);
-    //         } else {
-    //             $status = false;
-    //         }
-    //     }
-
-    //     $empresa->direccionEmpresa = $direccion;
-
-    //     return json_encode(['empresa' => $empresa, 'status' => $status]);
-    // }
 
     public function getEmpresaData(Request $request)
     {

@@ -27,6 +27,17 @@ const props = defineProps({
     categorias: Object,
     saved_values: Object
 });
+const fieldNames = {
+    selected_categoria: 'Registration Category',
+    tipoDocumentoEmpresa: 'Billing Document Type',
+    documentoEmpresa: 'Billing Document Number',
+    razonSocial: 'Business Name / Full Name',
+    direccionEmpresa: 'Billing Address',
+    responsable: 'Billing Contact Name',
+    correo_facturador: 'Billing Email',
+    reglamento: 'Terms and Conditions Acceptance',
+    uploadDocument: 'Category Required Document'
+};
 
 const es_socio = ref(false);
 const loading_doc = ref(false);
@@ -55,39 +66,37 @@ const current_days = { 'lun': false, 'mar': false, 'mie': false, 'jue': false, '
 
 const formManualErrors = ref({ reglamento: null, total: null, uploadDocument: null });
 
-// const { defineField, errors, setValues, values } = useForm({
-//     validationSchema: yup.object({
-//         tipoDocumentoEmpresa: yup.mixed().required('Company document type is required'),
-//         documentoEmpresa: yup.string().required('Document number is required'),
-//         nombres: yup.string().required('Name is required'),
-//         apellido_paterno: yup.string().required('Last name is required'),
-//         fecha_nacimiento: yup.mixed().required('Date of birth is required'),
-//         sexo: yup.mixed().required('Gender is required'),
-//         correo: yup.string().required('Email is required').email('Enter a valid email'),
-//         celular: yup.string().required('Mobile phone is required'),
-//         pais: yup.mixed().required('Country is required'),
-//         direccionPersona: yup.string().required('Address is required'),
-//         empresa: yup.string().required('Company is required'),
-//         credencial: yup.string().required('Credential name is required'),
-//         razonSocial: yup.string().required('Business name is required'),
-//         direccionEmpresa: yup.string().required('Company address is required'),
-//         responsable: yup.string().required('Responsible party name is required'),
-//         correo_facturador: yup.string().required('Billing email is required').email('Enter a valid email'),
-//         selectTipoPago: yup.string().required('Payment type is required'),
-//         selectTipoDocPago: yup.string().required('Payment document type is required'),
-//         reglamento: yup.string().required('You must accept the Regulations'),
-//     })
-// })
 const { defineField, errors, setValues, values, validate } = useForm({
     validationSchema: yup.object({
-        tipoDocumentoEmpresa: yup.mixed().required('Required'),
-        // documentoEmpresa: yup.string().required('Required'),
-        // razonSocial: yup.string().required('Required'),
-        // direccionEmpresa: yup.string().required('Required'),
-        // responsable: yup.string().required('Required'),
-        // correo_facturador: yup.string().email('Invalid email').required('Required'),
+        selected_categoria: yup.mixed().required('Category is required'),
+        tipoDocumentoEmpresa: yup.mixed().required('Document type is required'),
+        documentoEmpresa: yup.string()
+            .required('Document number is required')
+            .when('tipoDocumentoEmpresa', {
+                is: 1, // DNI
+                then: (schema) => schema.matches(/^[0-9]{8}$/, 'DNI must be exactly 8 digits'),
+            })
+            .when('tipoDocumentoEmpresa', {
+                is: 2, // RUC
+                then: (schema) => schema.matches(/^[0-9]{11}$/, 'RUC must be exactly 11 digits'),
+            })
+            .test('min-length', 'Minimum 8 characters required', function(value) {
+                // Para otros documentos que no sean DNI (1) ni RUC (2)
+                const { tipoDocumentoEmpresa } = this.parent;
+                if (tipoDocumentoEmpresa !== 1 && tipoDocumentoEmpresa !== 2) {
+                    return value && value.length >= 8;
+                }
+                return true;
+            }),
+        razonSocial: yup.string().required('Business name is required'),
+        direccionEmpresa: yup.string().required('Company address is required'),
+        responsable: yup.string().required('Responsible party name is required'),
+        correo_facturador: yup.string()
+            .email('Invalid email format')
+            .required('Billing email is required'),
+        reglamento: yup.boolean().oneOf([true], 'You must accept the regulations'),
     })
-})
+});
 
 // const [nombres] = defineField('nombres');
 // const [apellido_paterno] = defineField('apellido_paterno');
@@ -191,6 +200,27 @@ watch(selected_categoria, (newId) => {
     const cat = props.categorias.find(c => c.id === newId);
     if (cat) changeCategory(newId, cat.precio_disponible?.valor || 0);
 });
+
+// Watcher para limpiar campos cuando cambia el tipo de documento
+watch(tipoDocumentoEmpresa, (newVal, oldVal) => {
+    // Solo limpiamos si el cambio es realizado manualmente por el usuario (cuando está editando)
+    if (isEditingBilling.value && oldVal !== undefined) {
+        console.log("Cambiando tipo de documento, limpiando campos de facturación...");
+
+        // Mantenemos el tipo de documento pero reseteamos lo demás
+        setValues({
+            ...values,
+            documentoEmpresa: '',
+            razonSocial: '',
+            direccionEmpresa: '',
+            responsable: '',
+            correo_facturador: ''
+        });
+
+        // Llamamos a la lógica de bloqueo de dirección si es necesario
+        setTipoDocPago();
+    }
+});
 const loadDepartamentos = async () => {
     departamentos.value = await Functions.loadDepartamentos(pais.value);
 }
@@ -277,7 +307,7 @@ const getInscripcion = async () => {
 
     // Agrega aquí tus validaciones manuales (reglamento, total, etc.)
     if (!result.valid || total.value <= 0 || (show_document.value && !uploadDocument.value)) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Please fill all fields' });
+        // toast.add({ severity: 'error', summary: 'Error', detail: 'Please fill all fields' });
         return { validate: false };
     }
 
@@ -392,18 +422,15 @@ const filteredDocTypes = computed(() => {
     }
 });
 
+const missingFields = computed(() => {
+    return Object.keys(errors.value).map(key => fieldNames[key] || key);
+});
+
 defineExpose({ getInscripcion });
 </script>
 
 <template>
-    <div v-if="Object.keys(errors).length > 0" class="bg-black text-white p-4 fixed top-0 left-0 z-[9999] w-full">
-        <p class="font-bold text-red-500">CAMPOS QUE BLOQUEAN EL PASO:</p>
-        <ul>
-            <li v-for="(msg, field) in errors" :key="field">
-                <strong>{{ field }}</strong>: {{ msg }}
-            </li>
-        </ul>
-    </div>
+
     <div class="gap-6 p-6 w-full justify-around overflow-visible">
 
         <!--          CATEGORIAS                      -->
@@ -546,12 +573,32 @@ defineExpose({ getInscripcion });
         <div class="text-green-iimp font-bold p-4">
             <Card class="mt-5 overflow-hidden">
                 <template #header>
-                    <div class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc">
-                        Billing Information
+                    <div v-if="missingFields.length > 0"
+                        class="flex flex-col p-4 mb-6 text-orange-800 border-t-4 border-orange-300 bg-orange-50 rounded-lg shadow-sm"
+                        role="alert">
+                        <div class="flex items-center">
+                            <i class="pi pi-exclamation-circle mr-2 text-xl"></i>
+                            <span class="text-sm font-bold">Billing Information Incomplete</span>
+                        </div>
+                        <div class="mt-2 text-sm">
+                            Please complete the following required fields to proceed to payment:
+                            <ul class="list-disc ml-5 mt-1 font-semibold">
+                                <li v-for="field in missingFields" :key="field">{{ field }}</li>
+                            </ul>
+                        </div>
                     </div>
                 </template>
 
                 <template #content>
+                    <div v-if="show_document && !uploadDocument"
+                        class="flex items-center p-4 mb-6 text-blue-800 border-t-4 border-blue-300 bg-blue-50 rounded-lg"
+                        role="alert">
+                        <i class="pi pi-file-import mr-2 text-xl"></i>
+                        <div class="text-sm font-medium">
+                            The selected category requires an <strong>attachment</strong>. Please upload your document
+                            below.
+                        </div>
+                    </div>
                     <div class="flex justify-center md:justify-end px-6 mb-6">
                         <Button v-if="!isEditingBilling" icon="pi pi-exclamation-circle"
                             label="The information is incorrect? Click here to modify"

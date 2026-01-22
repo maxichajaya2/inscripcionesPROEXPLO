@@ -28,11 +28,6 @@ class InscripcionController extends Controller
         $this->now = Carbon::now()->format('Y-m-d');
     }
 
-    // public function index()
-    // {
-    //     return Inertia::render('Inscripcion/Index');
-    // }
-
     public function index()
     {
         $categorias = CategoriaInscripcion::query()
