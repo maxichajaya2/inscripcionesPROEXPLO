@@ -15,6 +15,7 @@ const props = defineProps({
     }
 });
 
+
 const grupoSeleccionado = ref(null);
 
 const categoriasVisibles = computed(() => {

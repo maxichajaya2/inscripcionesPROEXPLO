@@ -21,6 +21,9 @@ import "../../../css/inscripciones.css";
 const visible = ref(true);
 const loading = ref(false);
 const toast = useToast();
+const bloqueoExtranjero = ref(false);
+const categoriaIdActual = ref(null);
+
 
 const props = defineProps({
     title: String,
@@ -234,6 +237,13 @@ onMounted(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const categoryId = urlParams.get('category');
 
+    categoriaIdActual.value = categoryId;
+
+    // Lógica de bloqueo para categorías 35 y 29
+    if (categoryId == '35' || categoryId == '29') {
+        bloqueoExtranjero.value = true;
+    }
+
     if (categoryId && props.categorias) {
         // 2. Buscar en la lista de categorías que mandó el controlador
         // Convertimos a array por si viene como objeto indexado de PHP
@@ -429,7 +439,20 @@ const resetToNationality = () => {
                 </div>
 
                 <div class="p-8 md:p-12 bg-slate-50 px-0">
+                    <div v-if="bloqueoExtranjero"
+                        class="p-4 mb-6 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3 animate-fade-in-up">
+                        <i class="pi pi-info-circle text-amber-600 text-xl mt-0.5"></i>
+                        <p class="text-sm text-amber-800 leading-relaxed">
+                            The <b>International</b> option for Author Members or Member Participants is not available
+                            through
+                            this portal. If you are an international attendee and an active member, please contact
+                            <a href="mailto:asociados@iimp.org.pe"
+                                class="font-bold underline hover:text-amber-900">asociados@iimp.org.pe</a> for
+                            assistance.
+                        </p>
+                    </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
 
                         <button @click="seleccionarOrigen('peruano', 1)"
                             class="group relative h-auto rounded-2xl bg-white border border-slate-200 shadow-lg hover:shadow-2xl hover:shadow-red-900/20 transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-2">
@@ -466,8 +489,13 @@ const resetToNationality = () => {
                             </div>
                         </button>
 
-                        <button @click="seleccionarOrigen('extranjero', 2)"
-                            class="group relative h-auto rounded-2xl bg-white border border-slate-200 shadow-lg hover:shadow-2xl hover:shadow-blue-900/20 transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-2">
+                        <button @click="!bloqueoExtranjero && seleccionarOrigen('extranjero', 2)"
+                            :disabled="bloqueoExtranjero" :class="[
+                                'group relative h-auto rounded-2xl bg-white border border-slate-200 shadow-lg transition-all duration-300 flex flex-col overflow-hidden',
+                                bloqueoExtranjero
+                                    ? 'opacity-60 cursor-not-allowed grayscale'
+                                    : 'hover:shadow-2xl hover:shadow-blue-900/20 hover:-translate-y-2'
+                            ]">
 
                             <div class="h-1 w-full bg-blue-600"></div>
 
@@ -496,9 +524,14 @@ const resetToNationality = () => {
                                 </p>
 
                                 <div class="mt-auto w-full">
-                                    <span
-                                        class="block w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#002855] to-blue-700 text-white font-bold text-sm tracking-wider uppercase shadow-md group-hover:shadow-lg group-hover:from-blue-800 group-hover:to-blue-600 transition-all flex items-center justify-center gap-2">
-                                        Continue Purchase <i class="pi pi-arrow-right text-xs"></i>
+                                    <span :class="[
+                                        'block w-full py-3 px-4 rounded-xl text-white font-bold text-sm tracking-wider uppercase shadow-md transition-all flex items-center justify-center gap-2',
+                                        bloqueoExtranjero
+                                            ? 'bg-gray-400'
+                                            : 'bg-gradient-to-r from-[#002855] to-blue-700 group-hover:from-blue-800 group-hover:to-blue-600'
+                                    ]">
+                                        {{ bloqueoExtranjero ? 'Not Available' : 'Continue Purchase' }}
+                                        <i v-if="!bloqueoExtranjero" class="pi pi-arrow-right text-xs"></i>
                                     </span>
                                 </div>
                             </div>

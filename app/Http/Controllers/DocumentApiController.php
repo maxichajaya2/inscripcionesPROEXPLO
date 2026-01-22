@@ -127,12 +127,10 @@ class DocumentApiController extends Controller
         }
 
 
-         // --- IGNORE ---
-
         $persona->es_socio = app(\App\Http\Controllers\WebServiceController::class)
-            ->validatePersonMember($tipo_documento->sie_code, $request->numero_documento);
+            ->validatePersonMember($request->id_tipo_documento, $request->numero_documento);
 
-            $persona->es_socio =true;
+            // $persona->es_socio =true;
 
         return json_encode(['persona' => $persona, 'status' => $status]);
     }
