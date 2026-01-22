@@ -80,9 +80,9 @@ class InscripcionController extends Controller
         $title = "Author with special rate";
 
         $modal_texts = [
-            'MEMBER AUTHOR' => 'Special rate exclusively for Active Members of the IIMP whose current-year fees are duly settled and whose work has been selected.',
+            'MEMBER AUTHOR' => 'Special rate exclusively for Active Members of the Peruvian Institute of Mining Engineers (IIMP) whose current-year fees are duly settled and whose work has been selected.',
 
-            'NON-MEMBER AUTHOR' => 'Rate for selected authors who do not qualify as students, faculty members, or IIMP members.',
+            'NON-MEMBER AUTHOR' => 'Rate for selected authors who do not qualify as students, faculty members, or Peruvian Institute of Mining Engineers (IIMP) members.',
 
             'FACULTY MEMBER AUTHOR' => 'Special rate for undergraduate faculty members whose work has been selected, upon presentation of valid proof of their status.',
 
@@ -109,7 +109,7 @@ class InscripcionController extends Controller
         $title = "General Attendee";
 
         $modal_texts = [
-            'GENERAL ATTENDEE – MEMBER' => 'Special rate exclusively for Active Members of the IIMP whose current-year fees are duly settled.',
+            'GENERAL ATTENDEE – MEMBER' => 'Special rate exclusively for Active Members of the Peruvian Institute of Mining Engineers (IIMP) whose current-year fees are duly settled.',
 
             'GENERAL ATTENDEE – NON-MEMBER' => 'Rate applicable to the general public.',
 

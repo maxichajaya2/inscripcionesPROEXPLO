@@ -758,18 +758,18 @@ defineExpose({
                             <p>De conformidad con lo dispuesto en la Ley N° 29733, Ley de Protección de Datos Personales
                                 y su Reglamento aprobado por Decreto Supremo N° 003-2013-JUS, a través del presente
                                 documento, otorgo mi consentimiento para que el Instituto de Ingenieros de Minas del
-                                Perú (en adelante, "IIMP") pueda efectuar el tratamiento de mis datos personales
+                                Perú (en adelante, "Peruvian Institute of Mining Engineers (IIMP)") pueda efectuar el tratamiento de mis datos personales
                                 consignados en la presente ficha de inscripción y otros documentos oficiales de
                                 "PERUMIN 37" (en adelante, el "Evento"), tales como: nombres y apellidos, número de
                                 documento de identidad, dirección, sexo, profesión, entre otros datos, así como de toda
                                 aquella información registrada durante mi participación en el Evento, tales como: imagen
                                 física, fotografía, grabación en audio y/o video, entre otros; con la finalidad de que
-                                el IIMP pueda usarlos y/o reproducirlos libremente para fines de promoción del Evento
+                                el Peruvian Institute of Mining Engineers (IIMP) pueda usarlos y/o reproducirlos libremente para fines de promoción del Evento
                                 y/o de posteriores ediciones, promoción de programas educativos o institucionales,
                                 eventos similares y otros permitidos por Ley.</p>
                             <p>Este material podrá difundirse a través de spots televisivos y/o radiales, avisos en
                                 prensa escrita, afiches, volantes, encartes, folletos, banners impresos, sitios web,
-                                aplicativos (APP) del Evento y/o del IIMP, redes sociales, merchandising y cualquier
+                                aplicativos (APP) del Evento y/o del Peruvian Institute of Mining Engineers (IIMP), redes sociales, merchandising y cualquier
                                 otro tipo de material de soporte audio-.visual, ya sea en formato físico o digital.
                                 Suscribo esta autorización en señal de conformidad en todos sus extremos, la cual se
                                 otorga por tiempo indefinido y sin restricción geográfica.</p>
@@ -1085,20 +1085,20 @@ defineExpose({
                     comprendido y aceptado el Reglamento de Inscripciones publicado en la
                     página web oficial del evento, así como todos los presentes términos
                     establecidos.</li>
-                <li class="text-justify mb-4">Se autoriza al IIMP a usar gratuitamente la imagen captada del asistente
+                <li class="text-justify mb-4">Se autoriza al Peruvian Institute of Mining Engineers (IIMP) a usar gratuitamente la imagen captada del asistente
                     durante el evento, sin límite de tiempo ni territorio.</li>
                 <li class="text-justify mb-4">Los datos personales serán tratados conforme a la ley peruana para fines
                     administrativos, de seguridad, estadísticos y de comunicación.</li>
                 <li class="text-justify mb-4">Para el ingreso y permanencia, se requiere entrada válida y documento de
                     identidad. No se permite el ingreso con objetos peligrosos, drogas, armas ni
                     alcohol externo.</li>
-                <li class="text-justify mb-4">Prohibido el uso de drones sin autorización expresa del IIMP; se debe
+                <li class="text-justify mb-4">Prohibido el uso de drones sin autorización expresa del Peruvian Institute of Mining Engineers (IIMP); se debe
                     cumplir
                     con la normativa aérea vigente.</li>
-                <li class="text-justify mb-4">El IIMP no se responsabiliza por pérdidas, robos o accidentes, salvo en
+                <li class="text-justify mb-4">El Peruvian Institute of Mining Engineers (IIMP) no se responsabiliza por pérdidas, robos o accidentes, salvo en
                     casos
                     de negligencia o dolo.</li>
-                <li class="text-justify mb-4">No se permite la reventa no autorizada de entradas; el IIMP no responde
+                <li class="text-justify mb-4">No se permite la reventa no autorizada de entradas; el Peruvian Institute of Mining Engineers (IIMP) no responde
                     por
                     boletos comprados fuera de canales oficiales.</li>
                 <li class="text-justify mb-4">El uso de marcas, logos o contenidos del evento sin permiso está

@@ -802,20 +802,20 @@ defineExpose({ getInscripcion });
                     comprendido y aceptado el Reglamento de Inscripciones publicado en la
                     página web oficial del evento, así como todos los presentes términos
                     establecidos.</li>
-                <li class="text-justify mb-4">Se autoriza al IIMP a usar gratuitamente la imagen captada del asistente
+                <li class="text-justify mb-4">Se autoriza al Peruvian Institute of Mining Engineers (IIMP) a usar gratuitamente la imagen captada del asistente
                     durante el evento, sin límite de tiempo ni territorio.</li>
                 <li class="text-justify mb-4">Los datos personales serán tratados conforme a la ley peruana para fines
                     administrativos, de seguridad, estadísticos y de comunicación.</li>
                 <li class="text-justify mb-4">Para el ingreso y permanencia, se requiere entrada válida y documento de
                     identidad. No se permite el ingreso con objetos peligrosos, drogas, armas ni
                     alcohol externo.</li>
-                <li class="text-justify mb-4">Prohibido el uso de drones sin autorización expresa del IIMP; se debe
+                <li class="text-justify mb-4">Prohibido el uso de drones sin autorización expresa del Peruvian Institute of Mining Engineers (IIMP); se debe
                     cumplir
                     con la normativa aérea vigente.</li>
-                <li class="text-justify mb-4">El IIMP no se responsabiliza por pérdidas, robos o accidentes, salvo en
+                <li class="text-justify mb-4">El Peruvian Institute of Mining Engineers (IIMP) no se responsabiliza por pérdidas, robos o accidentes, salvo en
                     casos
                     de negligencia o dolo.</li>
-                <li class="text-justify mb-4">No se permite la reventa no autorizada de entradas; el IIMP no responde
+                <li class="text-justify mb-4">No se permite la reventa no autorizada de entradas; el Peruvian Institute of Mining Engineers (IIMP) no responde
                     por
                     boletos comprados fuera de canales oficiales.</li>
                 <li class="text-justify mb-4">El uso de marcas, logos o contenidos del evento sin permiso está
