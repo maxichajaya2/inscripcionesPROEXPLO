@@ -29,14 +29,14 @@ class MailInscripcion extends Mailable
             if (strlen($this->inscripcion->facturacion->correo_facturador) > 0) {
                 return new Envelope(
                     from: new Address('inscripciones.wmc@iimp.org.pe', config('app.event_name')),
-                    subject: config('app.event_name') . " - Confirmación de inscripción World Mining Congress 2026",
+                    subject: config('app.event_name') . " - World Mining Congress 2026 Registration Confirmation",
                     // cc: ['inscripciones.wmc@iimp.org.pe','cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
                     bcc: ['wmc.itsupport@iimp.org.pe']
                 );
             } else {
                 return new Envelope(
                     from: new Address('inscripciones.wmc@iimp.org.pe', config('app.event_name')),
-                    subject: config('app.event_name') . " - Confirmación de inscripción World Mining Congress 2026",
+                    subject: config('app.event_name') . " - World Mining Congress 2026 Registration Confirmation",
                     // cc: ['inscripciones.wmc@iimp.org.pe','cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
                     bcc: ['wmc.itsupport@iimp.org.pe']
                 );
@@ -45,14 +45,14 @@ class MailInscripcion extends Mailable
             if (strlen($this->inscripcion->facturacion->correo_facturador) > 0) {
                 return new Envelope(
                     from: new Address('inscripciones.wmc@iimp.org.pe', config('app.event_name')),
-                    subject: config('app.event_name') . " - Confirmación de inscripción World Mining Congress 2026",
+                    subject: config('app.event_name') . " - World Mining Congress 2026 Registration Confirmation",
                     // cc: ['inscripciones.wmc@iimp.org.pe','cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
                     bcc: ['wmc.itsupport@iimp.org.pe']
                 );
             } else {
                 return new Envelope(
                     from: new Address('inscripciones.wmc@iimp.org.pe', config('app.event_name')),
-                    subject: config('app.event_name') . " - Confirmación de inscripción World Mining Congress 2026",
+                    subject: config('app.event_name') . " - World Mining Congress 2026 Registration Confirmation",
                     // cc: ['inscripciones.wmc@iimp.org.pe','cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
                     bcc: ['wmc.itsupport@iimp.org.pe']
                 );

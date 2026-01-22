@@ -104,7 +104,7 @@ const searchPerson = async () => {
         if (data.status && data.persona) {
             const p = data.persona;
             noEncontrado.value = false;
-
+            const paisAsignado = props.tipo_origen === 1 ? 75 : (p.pais || p.id_pais);
             if (p.pais || p.id_pais) {
                 pais.value = p.pais || p.id_pais;
                 await loadDepartamentos();
@@ -121,7 +121,7 @@ const searchPerson = async () => {
                 celular: p.celular || '',
                 direccionPersona: p.direccionPersona || p.direccion?.direccion || '',
                 empresa: p.empresa_nombre || p.empresa || '',
-                pais: p.pais || p.id_pais,
+                pais: p.pais || p.id_pais || paisAsignado,
                 sexo: p.sexo || '',
                 fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento) : null
             });
@@ -247,6 +247,7 @@ watch(() => props.tipo_origen, (newOrigen) => {
         tipo_doc.value = 1;
         pais.value = 75;
         loadDepartamentos();
+        setValues({ ...values, pais: 75, tipo_doc: 1 });
     } else if (newOrigen === 2) {
         if (tipo_doc.value === 1) {
             tipo_doc.value = null;
@@ -285,7 +286,8 @@ const onlyPhoneKeys = (event) => {
                         class="flex items-center p-4 mb-4 text-green-800 border-t-4 border-green-300 bg-green-50 rounded-lg"
                         role="alert">
                         <i class="pi pi-check-circle mr-2 text-xl"></i>
-                        <div class="text-sm font-medium">Verification successful. You are an <strong>Active Member</strong>.</div>
+                        <div class="text-sm font-medium">Verification successful. You are an <strong>Active
+                                Member</strong>.</div>
                     </div>
 
                     <div v-if="hasSearched && !esSocio && esCategoriaDeSocio"
@@ -296,7 +298,9 @@ const onlyPhoneKeys = (event) => {
                             <span class="text-sm font-bold">You are not a member.</span>
                         </div>
                         <div class="mt-2 text-sm">
-                            This category is exclusive for members. Please contact <a href="mailto:asociados@iimp.org.pe" class="font-bold underline">asociados@iimp.org.pe</a> or change your category.
+                            This category is exclusive for members. Please contact <a
+                                href="mailto:asociados@iimp.org.pe"
+                                class="font-bold underline">asociados@iimp.org.pe</a> or change your category.
                         </div>
                     </div>
 
@@ -304,12 +308,14 @@ const onlyPhoneKeys = (event) => {
                         class="flex items-center p-4 mb-4 text-blue-800 border-t-4 border-blue-300 bg-blue-50 rounded-lg"
                         role="alert">
                         <i class="pi pi-info-circle mr-2 text-xl"></i>
-                        <div class="text-sm font-medium">No records found. <strong>Please complete your details manually in the form below.</strong></div>
+                        <div class="text-sm font-medium">No records found. <strong>Please complete your details manually
+                                in the form below.</strong></div>
                     </div>
                 </div>
 
                 <div class="flex gap-6 p-2 w-full justify-around">
-                    <div class="text-green-iimp font-bold max-w-[650px] w-full p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div
+                        class="text-green-iimp font-bold max-w-[650px] w-full p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="col-span-1">
                             <label for="tipo_doc">Document Type <span class="text-red-600">*</span></label>
                             <Select name="tipo_doc" v-model="tipo_doc" v-bind="tipo_docAttrs"
@@ -321,12 +327,14 @@ const onlyPhoneKeys = (event) => {
                         </div>
                         <div class="col-span-1">
                             <label for="documento">
-                                {{ esPeruano ? 'Document Number' : 'Identity Card / Passport Number' }} <span class="text-red-600">*</span>
+                                {{ esPeruano ? 'Document Number' : 'Identity Card / Passport Number' }} <span
+                                    class="text-red-600">*</span>
                             </label>
                             <InputGroup v-if="esPeruano">
                                 <InputText name="documento" v-model="documento" v-bind="documentoAttrs"
                                     class="w-full border-green-iimp" @keypress="onlyNumberKey" :maxlength="25" />
-                                <Button icon="pi pi-search" severity="info" @click="searchPerson" :loading="loadingSearch" label="Search" />
+                                <Button icon="pi pi-search" severity="info" @click="searchPerson"
+                                    :loading="loadingSearch" label="Search" />
                             </InputGroup>
                             <InputText v-else name="documento" v-model="documento" v-bind="documentoAttrs"
                                 class="w-full border-green-iimp" :maxlength="25" placeholder="Enter number" />
@@ -339,7 +347,8 @@ const onlyPhoneKeys = (event) => {
 
         <Card class="mt-5 overflow-hidden shadow-lg border border-gray-200">
             <template #header>
-                <div class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc">Personal Details</div>
+                <div class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc">Personal Details
+                </div>
             </template>
             <template #content>
                 <div class="p-2">
@@ -362,12 +371,14 @@ const onlyPhoneKeys = (event) => {
                     <div class="grid gap-6 m-6 md:grid-cols-2">
                         <div class="w-full">
                             <label for="nombres">First Name <span class="text-red-600">*</span></label>
-                            <InputText name="nombres" v-model="nombres" v-bind="nombresAttrs" class="w-full border-green-iimp" />
+                            <InputText name="nombres" v-model="nombres" v-bind="nombresAttrs"
+                                class="w-full border-green-iimp" />
                             <small class="text-red-600">{{ errors.nombres }}</small>
                         </div>
                         <div class="w-full">
                             <label for="apellido_paterno">Last Name <span class="text-red-600">*</span></label>
-                            <InputText name="apellido_paterno" v-model="apellido_paterno" v-bind="apellido_paternoAttrs" class="w-full border-green-iimp" />
+                            <InputText name="apellido_paterno" v-model="apellido_paterno" v-bind="apellido_paternoAttrs"
+                                class="w-full border-green-iimp" />
                             <small class="text-red-600">{{ errors.apellido_paterno }}</small>
                         </div>
                     </div>
@@ -382,26 +393,32 @@ const onlyPhoneKeys = (event) => {
                         </div>
                         <div class="w-full md:col-span-2">
                             <label for="direccionPersona">Address <span class="text-red-600">*</span></label>
-                            <InputText name="direccionPersona" v-model="direccionPersona" v-bind="direccionPersonaAttrs" class="w-full border-green-iimp" />
+                            <InputText name="direccionPersona" v-model="direccionPersona" v-bind="direccionPersonaAttrs"
+                                class="w-full border-green-iimp" />
                             <small class="text-red-600">{{ errors.direccionPersona }}</small>
                         </div>
                     </div>
 
                     <div class="grid gap-6 m-6 md:grid-cols-3">
                         <div class="w-full">
-                            <label for="correo" class="">Email Address <span class="font-normal text-red-600">*</span></label>
-                            <InputText name="correo" v-model="correo" v-bind="correoAttrs" class="w-full border-green-iimp" />
+                            <label for="correo" class="">Email Address <span
+                                    class="font-normal text-red-600">*</span></label>
+                            <InputText name="correo" v-model="correo" v-bind="correoAttrs"
+                                class="w-full border-green-iimp" />
                             <span class="font-normal text-red-600">{{ errors.correo }}</span>
                         </div>
                         <div class="w-full">
-                            <label for="celular" class="">Phone Number <span class="font-normal text-red-600">*</span></label>
+                            <label for="celular" class="">Phone Number <span
+                                    class="font-normal text-red-600">*</span></label>
                             <InputText name="celular" v-model="celular" v-bind="celularAttrs" @keypress="onlyPhoneKeys"
                                 class="w-full border-green-iimp" placeholder="+51999888777 or 999888777" />
                             <span class="font-normal text-red-600">{{ errors.celular }}</span>
                         </div>
                         <div class="w-full">
-                            <label for="empresa" class="">Company <span class="font-normal text-gray-500 ml-1">(Optional)</span></label>
-                            <InputText name="empresa" v-model="empresa" v-bind="empresaAttrs" class="w-full border-green-iimp" />
+                            <label for="empresa" class="">Company <span
+                                    class="font-normal text-gray-500 ml-1">(Optional)</span></label>
+                            <InputText name="empresa" v-model="empresa" v-bind="empresaAttrs"
+                                class="w-full border-green-iimp" />
                             <span class="font-normal text-red-600">{{ errors.empresa }}</span>
                         </div>
                     </div>
@@ -413,8 +430,9 @@ const onlyPhoneKeys = (event) => {
                                 <InputGroupAddon class="border-green-iimp border-r-0 bg-white text-green-iimp">
                                     <i class="pi pi-calendar"></i>
                                 </InputGroupAddon>
-                                <Calendar name="fecha_nacimiento" v-model="fecha_nacimiento" v-bind="fecha_nacimientoAttrs"
-                                    :maxDate="today" dateFormat="yy-mm-dd" :showTime="false" placeholder="YYYY-MM-DD" class="w-full"
+                                <Calendar name="fecha_nacimiento" v-model="fecha_nacimiento"
+                                    v-bind="fecha_nacimientoAttrs" :maxDate="today" dateFormat="yy-mm-dd"
+                                    :showTime="false" placeholder="YYYY-MM-DD" class="w-full"
                                     inputClass="w-full border-green-iimp border-l-0 shadow-none outline-none bg-white" />
                             </InputGroup>
                             <span class="font-normal text-red-600">{{ errors.fecha_nacimiento }}</span>
@@ -434,6 +452,12 @@ const onlyPhoneKeys = (event) => {
 </template>
 
 <style>
-:deep(.p-select.p-disabled) { background-color: #f3f4f6 !important; opacity: 1; }
-:deep(.p-select.p-disabled .p-select-label) { color: #4b5563 !important; }
+:deep(.p-select.p-disabled) {
+    background-color: #f3f4f6 !important;
+    opacity: 1;
+}
+
+:deep(.p-select.p-disabled .p-select-label) {
+    color: #4b5563 !important;
+}
 </style>

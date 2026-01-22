@@ -22,6 +22,8 @@ const loading = ref(false);
 const toast = useToast();
 const bloqueoExtranjero = ref(false);
 const categoriaIdActual = ref(null);
+const uploading = ref(false);
+const uploadProgress = ref(0);
 
 
 const props = defineProps({
@@ -224,6 +226,7 @@ const confirmarYProcesar = async () => {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
 
+
         if (response.data.status && response.data.formulario) {
             formDataPayment.value = response.data.formulario;
             activeStep.value = "3"; // Movemos al paso de pago manualmente
@@ -285,6 +288,8 @@ const resetToNationality = () => {
     // 3. Opcional: Aseguramos que el Stepper vuelva al paso 1
     activeStep.value = "1";
 };
+
+
 
 </script>
 
@@ -356,7 +361,7 @@ const resetToNationality = () => {
                                 <!-- <Button label="Register" iconPos="right" icon="pi pi-arrow-right"
                                     @click="handleInscripcionClick" class="bg-degradient border-rounded-full" /> -->
                                 <Button label="Register" iconPos="right" icon="pi pi-arrow-right" :loading="loading"
-                                    @click="handleInscripcionClick" class="bg-degradient border-rounded-full" />
+                                    @click="handleInscripcionClick" class="bg-degradient border-rounded-full"  />
                             </div>
                         </StepPanel>
 
@@ -568,6 +573,22 @@ const resetToNationality = () => {
                     </button>
                 </div>
 
+            </div>
+        </Dialog>
+
+        <Dialog v-model:visible="uploading" modal :closable="false" :showHeader="false" :style="{ width: '350px' }">
+            <div class="flex flex-col items-center p-6 text-center">
+                <div class="mb-4 text-green-iimp relative">
+                    <i class="pi pi-cloud-upload text-5xl animate-bounce"></i>
+                </div>
+                <h3 class="text-xl font-black text-blue-900 mb-2">Uploading Document</h3>
+                <p class="text-sm text-gray-500 mb-6">Please wait while we process your file...</p>
+
+                <div class="w-full bg-gray-100 rounded-full h-4 mb-2 overflow-hidden border border-gray-200">
+                    <div class="bg-gradient-to-r from-green-500 to-green-300 h-full transition-all duration-300"
+                        :style="{ width: uploadProgress + '%' }"></div>
+                </div>
+                <span class="text-xs font-bold text-green-600">{{ uploadProgress }}% Completed</span>
             </div>
         </Dialog>
 

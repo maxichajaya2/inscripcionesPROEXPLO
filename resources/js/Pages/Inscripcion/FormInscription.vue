@@ -152,41 +152,172 @@ const is_category_fixed = ref(false);
 //         });
 //     }
 // }
-function changeCategory(id, precio) {
+// function changeCategory(id, precio) {
+//     if (!id) return;
+//     current_price = precio;
+//     const categoria = props.categorias.find(c => c.id === id);
+
+//     if (categoria) {
+//         nextTick(() => {
+//             // --- LÓGICA DE DOCUMENTOS ---
+//             show_document.value = Boolean(categoria.requiere_documento);
+//             if (show_document.value) {
+//                 const nombre = categoria.nombre_en.toUpperCase();
+//                 if (nombre.includes('STUDENT') || nombre.includes('ESTUDIANTE')) {
+//                     upload_instruction.value = "Rate applicable to undergraduate students, presentation of enrollment proof required.";
+//                 } else if (nombre.includes('FACULTY') || nombre.includes('DOCENTE')) {
+//                     upload_instruction.value = "Special rate for faculty members, valid proof required.";
+//                 } else {
+//                     upload_instruction.value = "Please upload the required document for this category.";
+//                 }
+//             }
+
+//             // --- LÓGICA DE DÍAS (CORREGIDA) ---
+//             // Solo mostramos días si el ID es exactamente 39
+//             if (id == 39) {
+//                 show_days.value = true;
+//                 // Si es por día, el total inicial depende de los días marcados
+//                 let count = Object.values(current_days).filter(v => v).length;
+//                 total.value = count * current_price;
+//             } else {
+//                 show_days.value = false;
+//                 total.value = precio; // Para categorías normales, el total es el precio base
+//             }
+//         });
+//     }
+// }
+
+// function changeCategory(id, precioRecibido) {
+//     if (!id) return;
+
+//     // Buscamos la categoría completa en props para estar seguros del precio
+//     const categoria = props.categorias.find(c => c.id === id);
+//     if (!categoria) return;
+
+//     // Usamos el precio del objeto categoría si el recibido es nulo/cero
+//     current_price = categoria.precio_disponible?.valor || precioRecibido || 0;
+
+//     nextTick(() => {
+//         // --- LÓGICA DE DOCUMENTOS ---
+//         show_document.value = Boolean(categoria.requiere_documento);
+//         if (show_document.value) {
+//             const nombre = categoria.nombre_en.toUpperCase();
+//             if (nombre.includes('STUDENT') || nombre.includes('ESTUDIANTE')) {
+//                 upload_instruction.value = "Rate applicable to undergraduate students, presentation of enrollment proof required.";
+//             } else if (nombre.includes('FACULTY') || nombre.includes('DOCENTE')) {
+//                 upload_instruction.value = "Special rate for faculty members, valid proof required.";
+//             } else {
+//                 upload_instruction.value = "Please upload the required document for this category.";
+//             }
+//         }
+
+//         // --- LÓGICA DE DÍAS Y PRECIO TOTAL ---
+//         if (id == 39) {
+//             show_days.value = true;
+//             let count = Object.values(current_days).filter(v => v).length;
+//             total.value = count * current_price;
+//         } else {
+//             show_days.value = false;
+//             // IMPORTANTE: Aquí asignamos el precio real de estudiante u otra categoría
+//             total.value = current_price;
+//         }
+
+//         console.log("Categoría seleccionada:", id, "Precio asignado:", total.value);
+//     });
+// }
+
+// function changeCategory(id, precioRecibido) {
+//     if (!id) return;
+
+//     const categoria = props.categorias.find(c => c.id === id);
+//     if (!categoria) return;
+
+//     // --- SOLUCIÓN: Priorizar el precio recibido del click si el del objeto es inconsistente ---
+//     // Si precioRecibido tiene un valor válido (> 0), lo usamos.
+//     // Si no, intentamos sacar el valor del objeto categoría.
+//     current_price = (precioRecibido > 0) ? precioRecibido : (categoria.precio_disponible?.valor || 0);
+
+//     nextTick(() => {
+//         // Lógica de documentos (se mantiene igual)
+//         show_document.value = Boolean(categoria.requiere_documento);
+//         if (show_document.value) {
+//             const nombre = categoria.nombre_en.toUpperCase();
+//             if (nombre.includes('STUDENT') || nombre.includes('ESTUDIANTE')) {
+//                 upload_instruction.value = "Rate applicable to undergraduate students, presentation of enrollment proof required.";
+//             } else if (nombre.includes('FACULTY') || nombre.includes('DOCENTE')) {
+//                 upload_instruction.value = "Special rate for faculty members, valid proof required.";
+//             } else {
+//                 upload_instruction.value = "Please upload the required document for this category.";
+//             }
+//         }
+
+//         // Lógica de Días y asignación final al TOTAL
+//         if (id == 39) { // Category by days
+//             show_days.value = true;
+//             let count = Object.values(current_days).filter(v => v).length;
+//             total.value = count * current_price;
+//         } else {
+//             show_days.value = false;
+//             // Aquí forzamos que el total sea el current_price calculado arriba
+//             total.value = current_price;
+//         }
+
+//         console.log("Categoría:", id, "Precio Final asignado al Total:", total.value);
+//     });
+// }
+
+function changeCategory(id, precioRecibido) {
     if (!id) return;
-    current_price = precio;
+
+    // 1. Buscamos el objeto en la lista de props
     const categoria = props.categorias.find(c => c.id === id);
-
-    if (categoria) {
-        nextTick(() => {
-            // --- LÓGICA DE DOCUMENTOS ---
-            show_document.value = Boolean(categoria.requiere_documento);
-            if (show_document.value) {
-                const nombre = categoria.nombre_en.toUpperCase();
-                if (nombre.includes('STUDENT') || nombre.includes('ESTUDIANTE')) {
-                    upload_instruction.value = "Rate applicable to undergraduate students, presentation of enrollment proof required.";
-                } else if (nombre.includes('FACULTY') || nombre.includes('DOCENTE')) {
-                    upload_instruction.value = "Special rate for faculty members, valid proof required.";
-                } else {
-                    upload_instruction.value = "Please upload the required document for this category.";
-                }
-            }
-
-            // --- LÓGICA DE DÍAS (CORREGIDA) ---
-            // Solo mostramos días si el ID es exactamente 39
-            if (id == 39) {
-                show_days.value = true;
-                // Si es por día, el total inicial depende de los días marcados
-                let count = Object.values(current_days).filter(v => v).length;
-                total.value = count * current_price;
-            } else {
-                show_days.value = false;
-                total.value = precio; // Para categorías normales, el total es el precio base
-            }
-        });
+    if (!categoria) {
+        console.error("DEBUG: No se encontró la categoría con ID:", id);
+        return;
     }
-}
 
+    // --- IMPRESIONES DE CONTROL ---
+    console.log("%c--- DEPURACIÓN DE PRECIO ---", "color: white; background: #2196F3; font-weight: bold; padding: 2px 5px;");
+    console.log("ID Categoría:", id);
+    console.log("Nombre:", categoria.nombre_en);
+    console.log("Precio que llega desde el Click (precioRecibido):", precioRecibido);
+    console.log("Precio que está en el Objeto Prop (categoria.precio_disponible?.valor):", categoria.precio_disponible?.valor);
+
+    // 2. Determinamos qué precio usar
+    // Si precioRecibido es > 0, es el que manda porque es el que el usuario "vio" al hacer click
+    current_price = (precioRecibido > 0) ? precioRecibido : (categoria.precio_disponible?.valor || 0);
+
+    console.log("%cPRECIO FINAL QUE SE ASIGNARÁ:", "color: yellow; font-weight: bold;", current_price);
+
+    nextTick(() => {
+        // Lógica de documentos
+        show_document.value = Boolean(categoria.requiere_documento);
+        if (show_document.value) {
+            const nombre = categoria.nombre_en.toUpperCase();
+            if (nombre.includes('STUDENT') || nombre.includes('ESTUDIANTE')) {
+                upload_instruction.value = "Rate applicable to undergraduate students, presentation of enrollment proof required.";
+            } else if (nombre.includes('FACULTY') || nombre.includes('DOCENTE')) {
+                upload_instruction.value = "Special rate for faculty members, valid proof required.";
+            } else {
+                upload_instruction.value = "Please upload the required document for this category.";
+            }
+        }
+
+        // Lógica de Días y asignación final al TOTAL
+        if (id == 39) {
+            show_days.value = true;
+            let count = Object.values(current_days).filter(v => v).length;
+            total.value = count * current_price;
+        } else {
+            show_days.value = false;
+            // ASIGNACIÓN AL REF REACTIVO QUE SE VE EN LA UI
+            total.value = current_price;
+        }
+
+        console.log("VALOR FINAL DE 'TOTAL' EN LA UI:", total.value);
+        console.log("------------------------------");
+    });
+}
 onMounted(() => {
     // Configuraciones iniciales
     tipoDocumentoEmpresa.value = 1;
@@ -229,9 +360,22 @@ watch(() => props.data_persona, (newVal) => {
 }, { immediate: true, deep: true });
 
 // Watcher para asegurar que si el valor de la categoría cambia, la UI responda (Días/Documentos)
+// watch(selected_categoria, (newId) => {
+//     const cat = props.categorias.find(c => c.id === newId);
+//     if (cat) changeCategory(newId, cat.precio_disponible?.valor || 0);
+// });
+
+// Busca este watcher en tu código y modifícalo así:
 watch(selected_categoria, (newId) => {
+    if (!newId) return; // Si es nulo, no hacer nada
+
     const cat = props.categorias.find(c => c.id === newId);
-    if (cat) changeCategory(newId, cat.precio_disponible?.valor || 0);
+    if (cat) {
+        // Solo ejecutamos changeCategory si el total actual es 0
+        // o si la categoría cambió realmente por una acción que no sea el llenado inicial
+        console.log("Watcher detectó cambio de categoría a:", newId);
+        changeCategory(newId, cat.precio_disponible?.valor || 0);
+    }
 });
 
 // Watcher para limpiar campos cuando cambia el tipo de documento
@@ -254,6 +398,7 @@ watch(tipoDocumentoEmpresa, (newVal, oldVal) => {
         setTipoDocPago();
     }
 });
+
 const loadDepartamentos = async () => {
     departamentos.value = await Functions.loadDepartamentos(pais.value);
 }
@@ -365,8 +510,6 @@ const getInscripcion = async () => {
         formInscription: values // "values" viene de vee-validate
     };
 };
-
-
 
 function setTipoDocPago() {
     if (tipoDocumentoEmpresa.value == 2) {
@@ -522,16 +665,19 @@ defineExpose({ getInscripcion });
                                 }">
                                 <div class="flex items-start w-full">
                                     <div class="flex-none pt-1">
-                                        <RadioButton v-model="selected_categoria" v-bind="selected_categoriaAttrs"
+                                        <!-- <RadioButton v-model="selected_categoria" v-bind="selected_categoriaAttrs"
                                             name="selected_categoria" :value='categoria.id' class="radio-green-iimp"
-                                            @click="changeCategory(categoria.id, categoria.precio_disponible.valor)" />
+                                            @click="changeCategory(categoria.id, categoria.precio_disponible.valor)" /> -->
+                                        <!-- <RadioButton v-model="selected_categoria" :value="categoria.id"
+                                            @click="changeCategory(categoria.id, categoria.precio_disponible?.valor)" /> -->
+                                        <RadioButton v-model="selected_categoria" :value="categoria.id" />
                                     </div>
                                     <div class="flex flex-col sm:flex-row sm:justify-between w-full pl-3 cursor-pointer"
                                         @click="changeCategory(categoria.id, categoria.precio_disponible.valor)">
                                         <label
                                             class="text-sm sm:text-base text-gray-700 leading-tight mb-1 sm:mb-0 cursor-pointer"
                                             :class="{ 'font-bold text-blue-900': selected_categoria === categoria.id }">
-                                            {{ es_socio || categoria.condicion == 'NS' ? categoria.nombre_es :
+                                            {{ es_socio ? categoria.nombre_es :
                                                 categoria.nombre_en }}
                                         </label>
                                         <p
