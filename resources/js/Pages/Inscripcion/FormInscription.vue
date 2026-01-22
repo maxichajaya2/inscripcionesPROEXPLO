@@ -507,7 +507,8 @@ const getInscripcion = async () => {
 
     return {
         validate: true,
-        formInscription: values // "values" viene de vee-validate
+        formInscription: values ,// "values" viene de vee-validate
+        total_final: total.value
     };
 };
 

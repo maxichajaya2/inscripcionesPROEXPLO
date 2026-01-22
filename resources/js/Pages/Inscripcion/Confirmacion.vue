@@ -253,11 +253,11 @@ const goStart = () => {
                             <span class="text-lg text-gray-800 font-semibold">{{ pago.num_orden }}</span>
                         </div>
 
-                        <div class="flex flex-col">
+                        <!-- <div class="flex flex-col">
                             <span class="text-xs font-bold text-blue-500 uppercase tracking-widest mb-1">Transaction
                                 ID</span>
                             <span class="text-lg text-gray-800 font-semibold">{{ pago.idtransaccion }}</span>
-                        </div>
+                        </div> -->
 
                         <div class="flex flex-col">
                             <span class="text-xs font-bold text-blue-500 uppercase tracking-widest mb-1">Authorization
@@ -271,10 +271,14 @@ const goStart = () => {
                             <span class="text-lg text-gray-800 font-semibold">{{ pago.fecha }} {{ pago.hora }}</span>
                         </div>
 
-                        <div v-if="pago?.card_num" class="flex flex-col">
+                        <!-- <div v-if="pago?.card_num" class="flex flex-col">
                             <span class="text-xs font-bold text-blue-500 uppercase tracking-widest mb-1">Card
                                 Used</span>
                             <span class="text-lg text-gray-800 font-semibold">{{ pago.card_num }}</span>
+                        </div> -->
+                        <div  class="flex flex-col">
+                            <span class="text-xs font-bold text-blue-500 uppercase tracking-widest mb-1">Type of currency</span>
+                            <span class="text-lg text-gray-800 font-semibold">USD</span>
                         </div>
 
                         <div class="flex flex-col">

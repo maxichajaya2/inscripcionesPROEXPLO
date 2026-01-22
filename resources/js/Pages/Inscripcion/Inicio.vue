@@ -58,13 +58,13 @@ const actualizarResumen = (datos) => {
     resumen_dinamico.value = { ...resumen_dinamico.value, ...datos };
 };
 
-onMounted(() => {
-    window.addEventListener('beforeunload', handleBeforeUnload);
-});
-onUnmounted(() => {
-    // Es vital remover el evento para no afectar otras partes del sitio
-    window.removeEventListener('beforeunload', handleBeforeUnload);
-});
+// onMounted(() => {
+//     window.addEventListener('beforeunload', handleBeforeUnload);
+// });
+// onUnmounted(() => {
+//     // Es vital remover el evento para no afectar otras partes del sitio
+//     window.removeEventListener('beforeunload', handleBeforeUnload);
+// });
 
 const handleBeforeUnload = (event) => {
     // Solo mostrar alerta si ya pasó al paso 2 o si ya ingresó nombres
@@ -231,6 +231,17 @@ const confirmarYProcesar = async () => {
             formDataPayment.value = response.data.formulario;
             activeStep.value = "3"; // Movemos al paso de pago manualmente
             loading.value = false;
+
+            // --- ESTO ES LO QUE FALTA ---
+            // Aseguramos que el padre sepa qué categoría es antes de mostrar el Paso 3
+            const catId = tempResIns.value.formInscription.selected_categoria;
+            const encontrada = props.categorias.find(c => c.id == catId);
+            if (encontrada) {
+                categoria_seleccionada.value = encontrada;
+            }
+
+            actualizarResumen({ total: tempResIns.value.total_final });
+            // ----------------------------
         } else {
             toast.add({ severity: 'error', summary: 'Error', detail: response.data.message });
             loading.value = false;
@@ -241,9 +252,15 @@ const confirmarYProcesar = async () => {
     }
 };
 // Modificamos el computed del total para que use el del formulario si existe
+// const total_final = computed(() => {
+//     // Si el formulario nos está enviando un total (por días), usamos ese.
+//     // Si no, usamos el precio base de la categoría seleccionada.
+//     return resumen_dinamico.value.total > 0
+//         ? resumen_dinamico.value.total
+//         : (categoria_seleccionada.value?.precio_disponible?.valor || '0.00');
+// });
+
 const total_final = computed(() => {
-    // Si el formulario nos está enviando un total (por días), usamos ese.
-    // Si no, usamos el precio base de la categoría seleccionada.
     return resumen_dinamico.value.total > 0
         ? resumen_dinamico.value.total
         : (categoria_seleccionada.value?.precio_disponible?.valor || '0.00');
@@ -361,7 +378,7 @@ const resetToNationality = () => {
                                 <!-- <Button label="Register" iconPos="right" icon="pi pi-arrow-right"
                                     @click="handleInscripcionClick" class="bg-degradient border-rounded-full" /> -->
                                 <Button label="Register" iconPos="right" icon="pi pi-arrow-right" :loading="loading"
-                                    @click="handleInscripcionClick" class="bg-degradient border-rounded-full"  />
+                                    @click="handleInscripcionClick" class="bg-degradient border-rounded-full" />
                             </div>
                         </StepPanel>
 
