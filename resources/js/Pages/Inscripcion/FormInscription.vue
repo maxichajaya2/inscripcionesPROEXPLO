@@ -80,7 +80,7 @@ const { defineField, errors, setValues, values, validate } = useForm({
                 is: 2, // RUC
                 then: (schema) => schema.matches(/^[0-9]{11}$/, 'RUC must be exactly 11 digits'),
             })
-            .test('min-length', 'Minimum 8 characters required', function(value) {
+            .test('min-length', 'Minimum 8 characters required', function (value) {
                 // Para otros documentos que no sean DNI (1) ni RUC (2)
                 const { tipoDocumentoEmpresa } = this.parent;
                 if (tipoDocumentoEmpresa !== 1 && tipoDocumentoEmpresa !== 2) {
@@ -118,6 +118,40 @@ const [uploadDocument] = defineField('uploadDocument');
 const is_category_fixed = ref(false);
 
 // --- LÓGICA PRINCIPAL ---
+// function changeCategory(id, precio) {
+//     if (!id) return;
+//     current_price = precio;
+//     const categoria = props.categorias.find(c => c.id === id);
+
+//     if (categoria) {
+//         nextTick(() => {
+//             // Documentos
+//             show_document.value = Boolean(categoria.requiere_documento);
+//             if (show_document.value) {
+//                 const nombre = categoria.nombre_en.toUpperCase();
+//                 if (nombre.includes('STUDENT') || nombre.includes('ESTUDIANTE')) {
+//                     upload_instruction.value = "Rate applicable to undergraduate students, presentation of enrollment proof required.";
+//                 } else if (nombre.includes('FACULTY') || nombre.includes('DOCENTE')) {
+//                     upload_instruction.value = "Special rate for faculty members, valid proof required.";
+//                 } else {
+//                     upload_instruction.value = "Please upload the required document for this category.";
+//                 }
+//             }
+
+//             // Días
+//             const nomEs = categoria.nombre_es.toUpperCase();
+//             const nomEn = categoria.nombre_en.toUpperCase();
+
+//             if (nomEs.includes("DIA") || nomEn.includes("DAY")) {
+//                 show_days.value = true;
+//                 total.value = total.value > 0 ? total.value : 0;
+//             } else {
+//                 show_days.value = false;
+//                 total.value = precio;
+//             }
+//         });
+//     }
+// }
 function changeCategory(id, precio) {
     if (!id) return;
     current_price = precio;
@@ -125,7 +159,7 @@ function changeCategory(id, precio) {
 
     if (categoria) {
         nextTick(() => {
-            // Documentos
+            // --- LÓGICA DE DOCUMENTOS ---
             show_document.value = Boolean(categoria.requiere_documento);
             if (show_document.value) {
                 const nombre = categoria.nombre_en.toUpperCase();
@@ -138,21 +172,20 @@ function changeCategory(id, precio) {
                 }
             }
 
-            // Días
-            const nomEs = categoria.nombre_es.toUpperCase();
-            const nomEn = categoria.nombre_en.toUpperCase();
-
-            if (nomEs.includes("DIA") || nomEn.includes("DAY")) {
+            // --- LÓGICA DE DÍAS (CORREGIDA) ---
+            // Solo mostramos días si el ID es exactamente 39
+            if (id == 39) {
                 show_days.value = true;
-                total.value = total.value > 0 ? total.value : 0;
+                // Si es por día, el total inicial depende de los días marcados
+                let count = Object.values(current_days).filter(v => v).length;
+                total.value = count * current_price;
             } else {
                 show_days.value = false;
-                total.value = precio;
+                total.value = precio; // Para categorías normales, el total es el precio base
             }
         });
     }
 }
-
 
 onMounted(() => {
     // Configuraciones iniciales
@@ -304,6 +337,22 @@ function selectDays(id) {
 
 const getInscripcion = async () => {
     const result = await validate(); // Validación de vee-validate
+
+    formManualErrors.value.total = null;
+
+    if (selected_categoria.value == 39) {
+        const tieneDias = Object.values(current_days).some(v => v === true);
+        if (!tieneDias) {
+            // ASIGNAMOS EL ERROR AQUÍ (Esto activará la alerta en el HTML)
+            formManualErrors.value.total = "Attention: You must select at least one day to proceed with your registration.";
+
+            // Hacemos scroll suave hacia la alerta para que el usuario la vea
+            const el = document.getElementById('days-section');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            return { validate: false };
+        }
+    }
 
     // Agrega aquí tus validaciones manuales (reglamento, total, etc.)
     if (!result.valid || total.value <= 0 || (show_document.value && !uploadDocument.value)) {
@@ -499,9 +548,16 @@ defineExpose({ getInscripcion });
                     <Card v-if="show_days" class="mt-6 border border-dashed border-blue-300 bg-blue-50/30">
                         <template #content>
                             <div v-if="formManualErrors.total"
-                                class="mb-4 flex items-center gap-3 rounded border-l-4 border-red-500 bg-red-50 px-4 py-2 text-red-800 shadow-sm">
-                                <i class="pi pi-times-circle"></i>
-                                <span class="text-xs font-bold">{{ formManualErrors.total }}</span>
+                                class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-center gap-4 animate-fade-in-down shadow-sm">
+                                <div class="bg-red-500 rounded-full p-2 flex-none">
+                                    <i class="pi pi-exclamation-triangle text-white text-lg"></i>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-red-800 font-black text-sm uppercase">Selection Required</span>
+                                    <p class="text-red-700 text-sm font-medium leading-tight">
+                                        {{ formManualErrors.total }}
+                                    </p>
+                                </div>
                             </div>
 
                             <p class="text-sm text-blue-800 font-bold mb-4 text-center">
@@ -529,6 +585,22 @@ defineExpose({ getInscripcion });
                     <!-- ================================= -->
                     <Card v-if="show_document" class="mt-6 border border-dashed border-green-300">
                         <template #content>
+                            <div v-if="show_document && !uploadDocument"
+                                class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-center gap-4 animate-fade-in-down shadow-sm">
+                                <div class="bg-red-500 rounded-full p-2 flex-none">
+                                    <i class="pi pi-exclamation-triangle text-white text-lg"></i>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-red-800 font-black text-sm uppercase">Selection Required</span>
+                                    <p class="text-red-700 text-sm font-medium leading-tight">
+                                        The selected category requires an <strong>attachment</strong>. Please upload
+                                        your
+                                        document
+                                        below.
+                                    </p>
+                                </div>
+                            </div>
+
                             <div v-if="upload_instruction"
                                 class="mb-4 p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-700">
                                 <p class="text-sm font-bold">Requirement:</p>
@@ -590,15 +662,7 @@ defineExpose({ getInscripcion });
                 </template>
 
                 <template #content>
-                    <div v-if="show_document && !uploadDocument"
-                        class="flex items-center p-4 mb-6 text-blue-800 border-t-4 border-blue-300 bg-blue-50 rounded-lg"
-                        role="alert">
-                        <i class="pi pi-file-import mr-2 text-xl"></i>
-                        <div class="text-sm font-medium">
-                            The selected category requires an <strong>attachment</strong>. Please upload your document
-                            below.
-                        </div>
-                    </div>
+
                     <div class="flex justify-center md:justify-end px-6 mb-6">
                         <Button v-if="!isEditingBilling" icon="pi pi-exclamation-circle"
                             label="The information is incorrect? Click here to modify"
@@ -631,7 +695,7 @@ defineExpose({ getInscripcion });
                                         :loading="loading_doc" :disabled="!isEditingBilling || !documentoEmpresa" />
                                 </InputGroup>
                                 <small class="text-red-600" v-if="errors.documentoEmpresa">{{ errors.documentoEmpresa
-                                }}</small>
+                                    }}</small>
                             </div>
                         </div>
 
@@ -652,7 +716,7 @@ defineExpose({ getInscripcion });
                                 :readonly="!isEditingBilling || block_direction"
                                 :disabled="!isEditingBilling || loading_doc" />
                             <small class="text-red-600" v-if="errors.direccionEmpresa">{{ errors.direccionEmpresa
-                            }}</small>
+                                }}</small>
                         </div>
 
                         <div class="grid gap-6 md:grid-cols-2">
@@ -668,7 +732,7 @@ defineExpose({ getInscripcion });
                                 <InputText v-model="correo_facturador" :readonly="!isEditingBilling"
                                     class="w-full border-green-iimp" :disabled="!isEditingBilling || loading_doc" />
                                 <small class="text-red-600" v-if="errors.correo_facturador">{{ errors.correo_facturador
-                                }}</small>
+                                    }}</small>
                             </div>
                         </div>
                     </div>

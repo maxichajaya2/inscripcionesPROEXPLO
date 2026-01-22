@@ -238,7 +238,8 @@ onMounted(() => {
 defineExpose({
     getValidacionDoc,
     esSocio,
-    hasSearched
+    hasSearched,
+    esCategoriaDeSocio
 });
 
 watch(() => props.tipo_origen, (newOrigen) => {

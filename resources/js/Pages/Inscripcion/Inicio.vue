@@ -304,11 +304,17 @@ const resetToNationality = () => {
 
                                 <Button label="Validate" icon="pi pi-arrow-right" iconPos="right"
                                     class="bg-degradient border-rounded-full" :loading="loading"
-                                    :disabled="childFormValidacionDoc?.hasSearched && !childFormValidacionDoc?.esSocio"
+                                    :disabled="childFormValidacionDoc?.esCategoriaDeSocio && childFormValidacionDoc?.hasSearched && !childFormValidacionDoc?.esSocio"
                                     @click="async () => {
                                         const isValid = await validate('Documento');
-                                        if (isValid && childFormValidacionDoc?.esSocio) {
-                                            activateCallback('2');
+
+                                        // También ajustamos esta lógica para que deje pasar si NO es categoría de socio
+                                        if (isValid) {
+                                            if (childFormValidacionDoc?.esCategoriaDeSocio) {
+                                                if (childFormValidacionDoc?.esSocio) activateCallback('2');
+                                            } else {
+                                                activateCallback('2');
+                                            }
                                         }
                                     }" />
                             </div>
