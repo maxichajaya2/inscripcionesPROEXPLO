@@ -2,7 +2,7 @@
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import { usePage, router } from '@inertiajs/vue3';
-import { ref, onMounted, computed, watch, nextTick ,onUnmounted } from 'vue';
+import { ref, onMounted, computed, watch, nextTick, onUnmounted } from 'vue';
 import { useForm } from 'vee-validate';
 import * as yup from 'yup';
 import Functions from '@/Functions';
@@ -190,8 +190,12 @@ const onlyNumberKey = (event) => {
 
 
 
+// const camposBloqueados = computed(() => {
+//     // Bloqueamos si es peruano (tipo_origen === 1) y aún no ha buscado
+//     return esPeruano.value && !hasSearched.value;
+// });
+
 const camposBloqueados = computed(() => {
-    // Bloqueamos si es peruano (tipo_origen === 1) y aún no ha buscado
     return esPeruano.value && !hasSearched.value;
 });
 
@@ -281,30 +285,88 @@ const onlyPhoneKeys = (event) => {
 };
 
 const goToHome = () => {
-    router.get('/'); // O la ruta que definas como inicio, ej: route('dashboard')
+    // Solo preguntamos si hay algo escrito (por ejemplo, si ya puso su documento)
+    if (documento.value) {
+        const confirmacion = confirm("Are you sure you want to leave? All progress in this registration will be lost.");
+        if (confirmacion) {
+            router.get('/');
+        }
+    } else {
+        router.get('/');
+    }
 };
 
+// const clearDocument = async () => {
+//     documento.value = "";
+//     // Si es extranjero (2), mantenemos los campos abiertos
+//     hasSearched.value = (props.tipo_origen === 2);
+
+//     setValues({
+//         nombres: '',
+//         apellido_paterno: '',
+//         empresa: '',
+//         correo: '',
+//         celular: '',
+//         direccionPersona: '',
+//         sexo: '',
+//         fecha_nacimiento: null
+//     });
+
+//     if (props.tipo_origen === 2) {
+//         await nextTick();
+//         validate();
+//     }
+// }
+
+// const clearDocument = async () => {
+//     documento.value = "";
+
+//     // Si es peruano, al limpiar el documento debemos permitir que vuelva a buscar
+//     if (props.tipo_origen === 1) {
+//         hasSearched.value = false; // Esto "desbloquea" la lógica de búsqueda
+//     } else {
+//         hasSearched.value = true; // Si es extranjero, los campos siguen abiertos
+//     }
+
+//     setValues({
+//         nombres: '',
+//         apellido_paterno: '',
+//         empresa: '',
+//         correo: '',
+//         celular: '',
+//         direccionPersona: '',
+//         sexo: '',
+//         fecha_nacimiento: null
+//     });
+// }
+
 const clearDocument = async () => {
+    // Siempre limpiamos el número de documento al cambiar el tipo
     documento.value = "";
-    // Si es extranjero (2), mantenemos los campos abiertos
-    hasSearched.value = (props.tipo_origen === 2);
 
-    setValues({
-        nombres: '',
-        apellido_paterno: '',
-        empresa: '',
-        correo: '',
-        celular: '',
-        direccionPersona: '',
-        sexo: '',
-        fecha_nacimiento: null
-    });
+    if (props.tipo_origen === 1) {
+        // --- FLUJO PERUANO: Blanqueo total porque los datos dependen del DNI ---
+        hasSearched.value = false;
+        setValues({
+            nombres: '',
+            apellido_paterno: '',
+            empresa: '',
+            correo: '',
+            celular: '',
+            direccionPersona: '',
+            sexo: '',
+            fecha_nacimiento: null
+        });
+    } else {
+        // --- FLUJO EXTRANJERO: NO blanqueamos detalles personales ---
+        // Solo aseguramos que los campos sigan editables
+        hasSearched.value = true;
 
-    if (props.tipo_origen === 2) {
-        await nextTick();
-        validate();
+        // Mantenemos los valores actuales del formulario (nombres, correo, etc.)
+        // y solo reseteamos el documento que ya hicimos arriba.
     }
-}
+};
+
 
 
 // UNICO WATCHER PARA TIPO_ORIGEN
@@ -330,6 +392,20 @@ watch(() => props.tipo_origen, async (newOrigen) => {
         validate();
     }
 }, { immediate: true });
+
+// watch(() => props.tipo_origen, async (newOrigen) => {
+//     if (newOrigen === 1) {
+//         tipo_doc.value = 1;
+//         pais.value = 75;
+//         await loadDepartamentos();
+//         hasSearched.value = false;
+//     } else if (newOrigen === 2) {
+//         // Al pasar a extranjero, marcamos como "buscado" para que los campos
+//         // se desbloqueen inmediatamente sin borrar lo que el usuario ya escribió
+//         hasSearched.value = true;
+//         esSocio.value = true;
+//     }
+// }, { immediate: true });
 
 // const handleBeforeUnload = (event) => {
 //     // Solo bloquea si hay algún dato (ejemplo: documento o nombres)
@@ -424,8 +500,11 @@ watch(() => props.tipo_origen, async (newOrigen) => {
                                     class="text-red-600">*</span>
                             </label>
                             <InputGroup v-if="esPeruano">
+                                <!-- <InputText name="documento" v-model="documento" v-bind="documentoAttrs"
+                                    class="w-full border-green-iimp" @keypress="onlyNumberKey" :maxlength="25" /> -->
                                 <InputText name="documento" v-model="documento" v-bind="documentoAttrs"
-                                    class="w-full border-green-iimp" @keypress="onlyNumberKey" :maxlength="25" />
+                                    class="w-full border-green-iimp" @keypress="onlyNumberKey" :maxlength="25"
+                                    :disabled="loadingSearch" />
                                 <Button icon="pi pi-search" severity="info" @click="searchPerson"
                                     :loading="loadingSearch" label="Search" />
                             </InputGroup>
@@ -465,14 +544,14 @@ watch(() => props.tipo_origen, async (newOrigen) => {
                     <div class="grid gap-6 m-6 md:grid-cols-2">
                         <div class="w-full">
                             <label for="nombres">First Name <span class="text-red-600">*</span></label>
-                            <InputText name="nombres" v-model="nombres" v-bind="nombresAttrs" :disabled="camposBloqueados"
-                                class="w-full border-green-iimp" />
+                            <InputText name="nombres" v-model="nombres" v-bind="nombresAttrs"
+                                :disabled="camposBloqueados" class="w-full border-green-iimp" />
                             <small class="text-red-600">{{ errors.nombres }}</small>
                         </div>
                         <div class="w-full">
                             <label for="apellido_paterno">Last Name <span class="text-red-600">*</span></label>
-                            <InputText name="apellido_paterno" v-model="apellido_paterno" v-bind="apellido_paternoAttrs" :disabled="camposBloqueados"
-                                class="w-full border-green-iimp" />
+                            <InputText name="apellido_paterno" v-model="apellido_paterno" v-bind="apellido_paternoAttrs"
+                                :disabled="camposBloqueados" class="w-full border-green-iimp" />
                             <small class="text-red-600">{{ errors.apellido_paterno }}</small>
                         </div>
                     </div>
@@ -487,8 +566,8 @@ watch(() => props.tipo_origen, async (newOrigen) => {
                         </div>
                         <div class="w-full md:col-span-2">
                             <label for="direccionPersona">Address <span class="text-red-600">*</span></label>
-                            <InputText name="direccionPersona" v-model="direccionPersona" v-bind="direccionPersonaAttrs" :disabled="camposBloqueados"
-                                class="w-full border-green-iimp" />
+                            <InputText name="direccionPersona" v-model="direccionPersona" v-bind="direccionPersonaAttrs"
+                                :disabled="camposBloqueados" class="w-full border-green-iimp" />
                             <small class="text-red-600">{{ errors.direccionPersona }}</small>
                         </div>
                     </div>
@@ -504,15 +583,16 @@ watch(() => props.tipo_origen, async (newOrigen) => {
                         <div class="w-full">
                             <label for="celular" class="">Phone Number <span
                                     class="font-normal text-red-600">*</span></label>
-                            <InputText name="celular" v-model="celular" v-bind="celularAttrs" @keypress="onlyPhoneKeys" :disabled="camposBloqueados"
-                                class="w-full border-green-iimp" placeholder="+51999888777 or 999888777" />
+                            <InputText name="celular" v-model="celular" v-bind="celularAttrs" @keypress="onlyPhoneKeys"
+                                :disabled="camposBloqueados" class="w-full border-green-iimp"
+                                placeholder="+51999888777 or 999888777" />
                             <span class="font-normal text-red-600">{{ errors.celular }}</span>
                         </div>
                         <div class="w-full">
                             <label for="empresa" class="">Company <span
                                     class="font-normal text-gray-500 ml-1">(Optional)</span></label>
-                            <InputText name="empresa" v-model="empresa" v-bind="empresaAttrs" :disabled="camposBloqueados"
-                                class="w-full border-green-iimp" />
+                            <InputText name="empresa" v-model="empresa" v-bind="empresaAttrs"
+                                :disabled="camposBloqueados" class="w-full border-green-iimp" />
                             <span class="font-normal text-red-600">{{ errors.empresa }}</span>
                         </div>
                     </div>
@@ -526,7 +606,8 @@ watch(() => props.tipo_origen, async (newOrigen) => {
                                 </InputGroupAddon>
                                 <Calendar name="fecha_nacimiento" v-model="fecha_nacimiento"
                                     v-bind="fecha_nacimientoAttrs" :maxDate="today" dateFormat="yy-mm-dd"
-                                    :showTime="false" placeholder="YYYY-MM-DD" class="w-full" :disabled="camposBloqueados"
+                                    :showTime="false" placeholder="YYYY-MM-DD" class="w-full"
+                                    :disabled="camposBloqueados"
                                     inputClass="w-full border-green-iimp border-l-0 shadow-none outline-none bg-white" />
                             </InputGroup>
                             <span class="font-normal text-red-600">{{ errors.fecha_nacimiento }}</span>
@@ -534,8 +615,8 @@ watch(() => props.tipo_origen, async (newOrigen) => {
                         <div class="w-full">
                             <label for="sexo" class="">Gender <span class="font-normal text-red-600"> *</span></label>
                             <Select name="sexo" v-model="sexo" v-bind="sexoAttrs" optionLabel="label"
-                                optionValue="value" placeholder="Select" showClear checkmark :options="generos" :disabled="camposBloqueados"
-                                class="w-full border-green-iimp" />
+                                optionValue="value" placeholder="Select" showClear checkmark :options="generos"
+                                :disabled="camposBloqueados" class="w-full border-green-iimp" />
                             <span class="font-normal text-red-600">{{ errors.sexo }}</span>
                         </div>
                     </div>

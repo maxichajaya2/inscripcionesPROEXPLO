@@ -38,6 +38,7 @@ const formDataPayment = ref(null);
 const data_persona = ref({});
 const showRequisitosModal = ref(false); // Controla el modal
 const tempResIns = ref(null);
+const isPaying = ref(false);
 
 const nacionalidadSeleccionada = ref(null);
 
@@ -199,6 +200,7 @@ const handleInscripcionClick = async () => {
 const confirmarYProcesar = async () => {
     showRequisitosModal.value = false;
     loading.value = true;
+    isPaying.value = true;
 
     try {
         const payload = new FormData();
@@ -285,19 +287,26 @@ onMounted(() => {
 });
 
 
-const resetToNationality = () => {
-    // 1. Volvemos a mostrar el modal de selección
-    visible.value = true;
 
-    // 2. Opcional: Limpiamos los datos que se hayan podido cargar
-    tipo_origen.value = 0;
-    nacionalidadSeleccionada.value = null;
-    data_persona.value = {};
 
-    // 3. Opcional: Aseguramos que el Stepper vuelva al paso 1
-    activeStep.value = "1";
+const handleBeforeUnload = (event) => {
+    // SI isPaying es true, esta función termina aquí y NO sale ninguna alerta
+    if (isPaying.value) return;
+
+    // Solo si NO está pagando y hay datos, lanza la advertencia
+    if (data_persona.value.documento || data_persona.value.nombres) {
+        event.preventDefault();
+        event.returnValue = ''; // Esto activa la alerta estándar del navegador
+    }
 };
 
+onMounted(() => {
+    window.addEventListener('beforeunload', handleBeforeUnload);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+});
 
 </script>
 
@@ -315,8 +324,8 @@ const resetToNationality = () => {
             <div class="mt-6 mb-6">
                 <Stepper v-model:value="activeStep" class="w-full">
                     <StepList class="text-black-price bg-degradient">
-                        <Step value="1">Data Validation</Step>
-                        <Step value="2">Personal Details</Step>
+                        <Step value="1">Personal Details</Step>
+                        <Step value="2">Billing Information</Step>
                         <Step value="3">Payment Process</Step>
                     </StepList>
 

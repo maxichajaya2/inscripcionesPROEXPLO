@@ -739,6 +739,10 @@ class InscripcionController extends Controller
 
             $persona = Persona::find($inscripcion->id_persona);
 
+            $service_wmc = app(\App\Http\Controllers\WebServiceController::class)
+                ->wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz);
+
+            // dd($service_wmc);
             try {
                 Mail::to($persona->correo)->send(new \App\Mail\MailInscripcion($inscripcion, $niubiz));
             } catch (\Exception $e) {

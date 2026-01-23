@@ -72,17 +72,34 @@ const { defineField, errors, setValues, values, validate } = useForm({
     validationSchema: yup.object({
         selected_categoria: yup.mixed().required('Category is required'),
         tipoDocumentoEmpresa: yup.mixed().required('Document type is required'),
+        // documentoEmpresa: yup.string()
+        //     .required('Document number is required')
+        //     .test('len', 'Length error', function (value) {
+        //         const { tipoDocumentoEmpresa } = this.parent;
+        //         if (tipoDocumentoEmpresa === 1) { // DNI
+        //             return value?.length === 8 || this.createError({ message: 'DNI must be exactly 8 digits' });
+        //         }
+        //         if (tipoDocumentoEmpresa === 2) { // RUC
+        //             return value?.length === 11 || this.createError({ message: 'RUC must be exactly 11 digits' });
+        //         }
+        //         return value?.length >= 8 || this.createError({ message: 'Minimum 8 characters required' });
+        //     }),
         documentoEmpresa: yup.string()
             .required('Document number is required')
-            .test('len', 'Length error', function (value) {
+            .test('len', 'Invalid format', function (value) {
                 const { tipoDocumentoEmpresa } = this.parent;
+
+                // --- VALIDACIÓN PARA PERUANOS ---
                 if (tipoDocumentoEmpresa === 1) { // DNI
                     return value?.length === 8 || this.createError({ message: 'DNI must be exactly 8 digits' });
                 }
                 if (tipoDocumentoEmpresa === 2) { // RUC
                     return value?.length === 11 || this.createError({ message: 'RUC must be exactly 11 digits' });
                 }
-                return value?.length >= 8 || this.createError({ message: 'Minimum 8 characters required' });
+
+                // --- FLUJO EXTRANJERO ---
+                // Permitimos cualquier longitud alfanumérica, solo validamos que exista
+                return value?.length > 0;
             }),
         razonSocial: yup.string().required('Business name is required'),
         direccionEmpresa: yup.string().required('Company address is required'),
@@ -924,6 +941,9 @@ defineExpose({ getInscripcion });
         <div class="text-green-iimp font-bold p-4">
             <Card class="mt-5 overflow-hidden">
                 <template #header>
+                    <div class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc">
+                        Billing Information
+                    </div>
                     <div v-if="missingFields.length > 0"
                         class="flex flex-col p-4 mb-6 text-orange-800 border-t-4 border-orange-300 bg-orange-50 rounded-lg shadow-sm"
                         role="alert">
@@ -938,6 +958,7 @@ defineExpose({ getInscripcion });
                             </ul>
                         </div>
                     </div>
+
                 </template>
 
                 <template #content>
