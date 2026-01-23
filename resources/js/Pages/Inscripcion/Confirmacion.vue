@@ -276,8 +276,9 @@ const goStart = () => {
                                 Used</span>
                             <span class="text-lg text-gray-800 font-semibold">{{ pago.card_num }}</span>
                         </div> -->
-                        <div  class="flex flex-col">
-                            <span class="text-xs font-bold text-blue-500 uppercase tracking-widest mb-1">Type of currency</span>
+                        <div class="flex flex-col">
+                            <span class="text-xs font-bold text-blue-500 uppercase tracking-widest mb-1">Type of
+                                currency</span>
                             <span class="text-lg text-gray-800 font-semibold">USD</span>
                         </div>
 
@@ -297,6 +298,27 @@ const goStart = () => {
                             <Button label="Finish and Exit" icon="pi pi-check" @click="goStart"
                                 class="p-button-rounded px-8 py-3 shadow-lg"
                                 style="background: linear-gradient(to right, #1d4ed8, #2563eb); border: none;" />
+                        </div>
+                    </div>
+
+                    <div class="mt-8 pt-6 border-t border-gray-100">
+                        <p class="text-sm text-gray-500 font-medium mb-3">
+                            For any further inquiries, please contact us:
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                            <a href="mailto:inscripciones.wmc@iimp.org.pe"
+                                class="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors">
+                                <i class="pi pi-envelope text-lg"></i>
+                                <span class="text-sm font-bold">inscripciones.wmc@iimp.org.pe</span>
+                            </a>
+
+                            <span class="hidden sm:block text-gray-300">|</span>
+
+                            <a href="https://wa.me/51951294314" target="_blank"
+                                class="flex items-center gap-2 text-green-600 hover:text-green-800 transition-colors">
+                                <i class="pi pi-whatsapp text-lg font-bold"></i>
+                                <span class="text-sm font-bold">+51 951 294 314 (Helen Loayza)</span>
+                            </a>
                         </div>
                     </div>
                 </div>

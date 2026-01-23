@@ -32,6 +32,7 @@ const mountNiubiz = async (data) => {
         const residuals = document.querySelectorAll('.v-modal, .niubiz-visible, #visa_checkout, #visa_ads, .main-checkout');
         residuals.forEach(r => r.remove());
 
+        // O simplemente: script.dataset.buttontext = "Pay Now"
         // 2. INYECCIÓN DE LA PASARELA
         setTimeout(() => {
             const form = document.createElement("form");
@@ -41,6 +42,20 @@ const mountNiubiz = async (data) => {
 
             const script = document.createElement("script");
             script.src = config.script.src + "?ts=" + new Date().getTime();
+
+            // ============================================================
+            // CONFIGURACIÓN DEL BOTÓN (ESTO ES LO QUE BUSCABAS)
+            // ============================================================
+            // PROBAMOS CON AMBOS ATRIBUTOS PARA ASEGURARNOS
+            const textoBoton = "Pay USD " + config.script.amount;
+
+            script.setAttribute('data-buttontext', textoBoton);
+            script.setAttribute('data-untokenized-buttontext', textoBoton); // Refuerzo para Niubiz
+            script.dataset.buttontext = textoBoton;
+
+            // Color del botón (Azul WMC)
+            script.dataset.formbuttoncolor = "#1d4ed8";
+            // ============================================================
 
             // Dataset (Merchant ID 651054910 según contrato)
             script.dataset.sessiontoken = config.script.sessiontoken;
@@ -99,6 +114,7 @@ const scriptData = computed(() => {
     if (!props.formulario) return null;
     return props.formulario.formulario ? props.formulario.formulario.script : props.formulario.script;
 });
+
 </script>
 
 <template>
@@ -126,7 +142,7 @@ const scriptData = computed(() => {
                                 <span class="text-blue-600 font-bold text-right">
                                     {{ (categoria_seleccionada && categoria_seleccionada.nombre_en) ?
                                         categoria_seleccionada.nombre_en : (categoria_seleccionada &&
-                                    categoria_seleccionada.nombre ? categoria_seleccionada.nombre : 'WMC 2026 Delegate')
+                                            categoria_seleccionada.nombre ? categoria_seleccionada.nombre : 'WMC 2026 Delegate')
                                     }}
                                 </span>
                             </div>
