@@ -66,13 +66,6 @@ const actualizarResumen = (datos) => {
 //     window.removeEventListener('beforeunload', handleBeforeUnload);
 // });
 
-const handleBeforeUnload = (event) => {
-    // Solo mostrar alerta si ya pasó al paso 2 o si ya ingresó nombres
-    if (activeStep.value !== "1" || data_persona.value.nombres) {
-        event.preventDefault();
-        event.returnValue = '';
-    }
-};
 
 // --- LÓGICA DE VALIDACIÓN COMPLETA EN INICIO.VUE ---
 const validate = async (value) => {
@@ -195,9 +188,8 @@ const handleInscripcionClick = async () => {
     if (resIns.validate) {
         // Guardamos los datos para usarlos luego
         tempResIns.value = resIns;
+        await confirmarYProcesar();
 
-        // Llamamos al proceso de envío (esta función ya tiene su propio try/catch/finally)
-        confirmarYProcesar();
     } else {
         // SI NO VALIDA, APAGAMOS EL SPINNER PARA QUE EL USUARIO CORRIJA
         loading.value = false;
@@ -308,6 +300,8 @@ const resetToNationality = () => {
 
 
 
+
+
 </script>
 
 <template>
@@ -333,10 +327,10 @@ const resetToNationality = () => {
                         <StepPanel v-slot="{ activateCallback }" value="1"
                             class="rounded-2xl border-2 border-green-iimp bg-white-price shadow-wmc">
                             <FormValidacionDoc ref="childFormValidacionDoc" :tipo_origen="tipo_origen" />
-                            <div class="flex p-6 justify-between items-center">
-                                <Button label="Home" icon="pi pi-home" variant="text"
+                            <div class="flex p-6 justify-end items-center">
+                                <!-- <Button label="Home" icon="pi pi-home" variant="text"
                                     class="p-button-secondary p-button-text font-bold text-gray-500 hover:text-green-iimp"
-                                    @click="resetToNationality" />
+                                    @click="resetToNationality" /> -->
 
                                 <Button label="Validate" icon="pi pi-arrow-right" iconPos="right"
                                     class="bg-degradient border-rounded-full" :loading="loading"

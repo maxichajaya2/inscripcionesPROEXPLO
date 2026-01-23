@@ -9,7 +9,7 @@ import Checkbox from 'primevue/checkbox';
 import RadioButton from 'primevue/radiobutton';
 import Card from 'primevue/card';
 import InputGroup from 'primevue/inputgroup';
-import { ref, onMounted, computed, watch, nextTick } from 'vue'; // Agregado nextTick
+import { ref, onMounted, computed, watch, nextTick, onUnmounted } from 'vue'; // Agregado nextTick
 import { useForm } from 'vee-validate';
 import * as yup from 'yup';
 import { usePage, router } from '@inertiajs/vue3';
@@ -44,6 +44,8 @@ const loading_doc = ref(false);
 const show_days = ref(false);
 const show_document = ref(false);
 const upload_instruction = ref('');
+const showManualAlert = ref(false);
+const showSuccessAlert = ref(false);
 const total = ref(0);
 const src = ref(null);
 const block_direction = ref(false);
@@ -72,21 +74,15 @@ const { defineField, errors, setValues, values, validate } = useForm({
         tipoDocumentoEmpresa: yup.mixed().required('Document type is required'),
         documentoEmpresa: yup.string()
             .required('Document number is required')
-            .when('tipoDocumentoEmpresa', {
-                is: 1, // DNI
-                then: (schema) => schema.matches(/^[0-9]{8}$/, 'DNI must be exactly 8 digits'),
-            })
-            .when('tipoDocumentoEmpresa', {
-                is: 2, // RUC
-                then: (schema) => schema.matches(/^[0-9]{11}$/, 'RUC must be exactly 11 digits'),
-            })
-            .test('min-length', 'Minimum 8 characters required', function (value) {
-                // Para otros documentos que no sean DNI (1) ni RUC (2)
+            .test('len', 'Length error', function (value) {
                 const { tipoDocumentoEmpresa } = this.parent;
-                if (tipoDocumentoEmpresa !== 1 && tipoDocumentoEmpresa !== 2) {
-                    return value && value.length >= 8;
+                if (tipoDocumentoEmpresa === 1) { // DNI
+                    return value?.length === 8 || this.createError({ message: 'DNI must be exactly 8 digits' });
                 }
-                return true;
+                if (tipoDocumentoEmpresa === 2) { // RUC
+                    return value?.length === 11 || this.createError({ message: 'RUC must be exactly 11 digits' });
+                }
+                return value?.length >= 8 || this.createError({ message: 'Minimum 8 characters required' });
             }),
         razonSocial: yup.string().required('Business name is required'),
         direccionEmpresa: yup.string().required('Company address is required'),
@@ -359,12 +355,6 @@ watch(() => props.data_persona, (newVal) => {
     }
 }, { immediate: true, deep: true });
 
-// Watcher para asegurar que si el valor de la categoría cambia, la UI responda (Días/Documentos)
-// watch(selected_categoria, (newId) => {
-//     const cat = props.categorias.find(c => c.id === newId);
-//     if (cat) changeCategory(newId, cat.precio_disponible?.valor || 0);
-// });
-
 // Busca este watcher en tu código y modifícalo así:
 watch(selected_categoria, (newId) => {
     if (!newId) return; // Si es nulo, no hacer nada
@@ -375,6 +365,24 @@ watch(selected_categoria, (newId) => {
         // o si la categoría cambió realmente por una acción que no sea el llenado inicial
         console.log("Watcher detectó cambio de categoría a:", newId);
         changeCategory(newId, cat.precio_disponible?.valor || 0);
+    }
+});
+
+watch(documentoEmpresa, (newVal) => {
+    if (!newVal) return;
+
+    // Solo aplicamos restricción numérica y de longitud para DNI (1) y RUC (2)
+    if (tipoDocumentoEmpresa.value === 1 || tipoDocumentoEmpresa.value === 2) {
+        // 1. Eliminar todo lo que no sea número (por si pegan texto)
+        const cleanedValue = newVal.replace(/\D/g, '');
+
+        // 2. Definir el máximo permitido
+        const maxLength = tipoDocumentoEmpresa.value === 1 ? 8 : 11;
+
+        // 3. Aplicar recortes si excede el largo
+        if (newVal !== cleanedValue || newVal.length > maxLength) {
+            documentoEmpresa.value = cleanedValue.slice(0, maxLength);
+        }
     }
 });
 
@@ -403,30 +411,110 @@ const loadDepartamentos = async () => {
     departamentos.value = await Functions.loadDepartamentos(pais.value);
 }
 
+// const getEmpresaData = async () => {
+//     // 1. Activamos el estado de carga
+//     loading_doc.value = true;
+//     billingMessage.value = null; // Limpiamos mensajes previos
+//     showManualAlert.value = false;
+
+//     try {
+//         const empresaData = await Functions.getEmpresaData(documentoEmpresa.value, tipoDocumentoEmpresa.value);
+
+//         if (empresaData?.empresa) {
+//             razonSocial.value = empresaData.empresa.nombre;
+//             direccionEmpresa.value = empresaData.empresa.direccionEmpresa;
+
+//             // Si el status es true significa que encontró datos en API o BD
+//             if (empresaData.status) {
+//                 toast.add({ severity: 'success', summary: 'Success', detail: 'Data loaded', life: 3000 });
+//             } else {
+//                 toast.add({ severity: 'warn', summary: 'Info', detail: 'Record not found, please fill manually', life: 3000 });
+//             }
+//         }
+//     } catch (e) {
+//         console.error(e);
+//         toast.add({ severity: 'error', summary: 'Error', detail: 'External service unavailable', life: 3000 });
+//     } finally {
+//         // 2. Desactivamos el estado de carga siempre (aunque falle o funcione)
+//         loading_doc.value = false;
+//     }
+// }
+
+
+// const getEmpresaData = async () => {
+//     loading_doc.value = true;
+//     billingMessage.value = null;
+//     showManualAlert.value = false; // Resetear alerta al buscar
+
+//     try {
+//         const empresaData = await Functions.getEmpresaData(documentoEmpresa.value, tipoDocumentoEmpresa.value);
+
+//         if (empresaData?.status && empresaData?.empresa) {
+//             razonSocial.value = empresaData.empresa.nombre;
+//             direccionEmpresa.value = empresaData.empresa.direccionEmpresa;
+//             toast.add({ severity: 'success', summary: 'Success', detail: 'Data loaded', life: 3000 });
+//         } else {
+//             // ACTIVAR ALERTA Y MODO EDICIÓN
+//             showManualAlert.value = true;
+//             isEditingBilling.value = true;
+//             block_direction.value = false;
+//         }
+//     } catch (e) {
+//         console.error(e);
+//         showManualAlert.value = true;
+//         isEditingBilling.value = true;
+//         block_direction.value = false;
+//     } finally {
+//         loading_doc.value = false;
+//     }
+// }
+
 const getEmpresaData = async () => {
-    // 1. Activamos el estado de carga
+    // 1. Limpieza preventiva: Blanqueamos campos y ocultamos alertas previas
+    razonSocial.value = '';
+    direccionEmpresa.value = '';
+    showManualAlert.value = false;
+    showSuccessAlert.value = false;
+
+    // Sincronizamos con vee-validate para que no queden valores viejos en el objeto 'values'
+    setValues({
+        ...values,
+        razonSocial: '',
+        direccionEmpresa: ''
+    });
+
+    if (!documentoEmpresa.value) return;
+
     loading_doc.value = true;
-    billingMessage.value = null; // Limpiamos mensajes previos
 
     try {
         const empresaData = await Functions.getEmpresaData(documentoEmpresa.value, tipoDocumentoEmpresa.value);
 
-        if (empresaData?.empresa) {
+        // Si la API responde con éxito y trae datos
+        if (empresaData?.status && empresaData?.empresa) {
             razonSocial.value = empresaData.empresa.nombre;
             direccionEmpresa.value = empresaData.empresa.direccionEmpresa;
 
-            // Si el status es true significa que encontró datos en API o BD
-            if (empresaData.status) {
-                toast.add({ severity: 'success', summary: 'Success', detail: 'Data loaded', life: 3000 });
-            } else {
-                toast.add({ severity: 'warn', summary: 'Info', detail: 'Record not found, please fill manually', life: 3000 });
-            }
+            // Mostrar Alerta de Éxito
+            showSuccessAlert.value = true;
+
+            // Actualizar vee-validate
+            setValues({
+                ...values,
+                razonSocial: empresaData.empresa.nombre,
+                direccionEmpresa: empresaData.empresa.direccionEmpresa
+            });
+        } else {
+            // Caso: No encontrado
+            showManualAlert.value = true;
+            isEditingBilling.value = true;
+            block_direction.value = false;
         }
     } catch (e) {
         console.error(e);
-        toast.add({ severity: 'error', summary: 'Error', detail: 'External service unavailable', life: 3000 });
+        showManualAlert.value = true;
+        isEditingBilling.value = true;
     } finally {
-        // 2. Desactivamos el estado de carga siempre (aunque falle o funcione)
         loading_doc.value = false;
     }
 }
@@ -507,7 +595,7 @@ const getInscripcion = async () => {
 
     return {
         validate: true,
-        formInscription: values ,// "values" viene de vee-validate
+        formInscription: values,// "values" viene de vee-validate
         total_final: total.value
     };
 };
@@ -522,10 +610,10 @@ function setTipoDocPago() {
     }
 }
 
-const onlyNumberKey = (event) => {
-    const charCode = event.which ? event.which : event.keyCode;
-    if (charCode > 31 && (charCode < 48 || charCode > 57)) event.preventDefault();
-}
+// const onlyNumberKey = (event) => {
+//     const charCode = event.which ? event.which : event.keyCode;
+//     if (charCode > 31 && (charCode < 48 || charCode > 57)) event.preventDefault();
+// }
 
 const enableManualEdit = () => {
     isEditingBilling.value = true;
@@ -619,6 +707,45 @@ const missingFields = computed(() => {
     return Object.keys(errors.value).map(key => fieldNames[key] || key);
 });
 
+const onlyNumberKey = (event) => {
+    const charCode = event.which ? event.which : event.keyCode;
+
+    // Si es DNI o RUC, solo permitir números
+    if (tipoDocumentoEmpresa.value === 1 || tipoDocumentoEmpresa.value === 2) {
+        if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+            event.preventDefault();
+            return false;
+        }
+
+        // Bloquear si ya llegó al máximo permitido
+        const max = tipoDocumentoEmpresa.value === 1 ? 8 : 11;
+        if (documentoEmpresa.value?.length >= max) {
+            event.preventDefault();
+            return false;
+        }
+    }
+    return true;
+}
+
+// const handleBeforeUnload = (event) => {
+//     // Solo bloquea si hay algún dato (ejemplo: documento o nombres)
+//     if (props.data_persona?.documento || props.data_persona?.nombres) {
+//         event.preventDefault();
+//         event.returnValue = '';
+//     }
+// };
+
+// onMounted(() => {
+//     window.addEventListener('beforeunload', handleBeforeUnload);
+// });
+
+// onUnmounted(() => {
+//     // ESTO ES VITAL: Si no lo pones, la alerta te seguirá al Paso 3
+//     window.removeEventListener('beforeunload', handleBeforeUnload);
+// });
+
+
+
 defineExpose({ getInscripcion });
 </script>
 
@@ -705,6 +832,7 @@ defineExpose({ getInscripcion });
                                         {{ formManualErrors.total }}
                                     </p>
                                 </div>
+
                             </div>
 
                             <p class="text-sm text-blue-800 font-bold mb-4 text-center">
@@ -725,7 +853,11 @@ defineExpose({ getInscripcion });
                                     <span class="text-sm uppercase tracking-wider">Subtotal:</span>
                                     <span class="text-2xl text-yellow-price">USD {{ total }}</span>
                                 </div>
+
                             </div>
+                            <span class="text-[10px] text-blue-700 font-bold italic uppercase tracking-wider">
+                                * Rate per day of attendance
+                            </span>
                         </template>
                     </Card>
                     <!-- =========== CARGAR DOCUMENTO  ========== -->
@@ -810,6 +942,36 @@ defineExpose({ getInscripcion });
 
                 <template #content>
 
+                    <div v-if="showSuccessAlert"
+                        class="mx-6 mb-6 p-4 rounded-xl bg-green-50 border border-green-200 flex items-center gap-4 animate-fade-in shadow-sm">
+                        <div class="bg-green-500 rounded-full p-2 flex-none">
+                            <i class="pi pi-check-circle text-white text-lg"></i>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-green-900 font-black text-sm uppercase tracking-wide">Success</span>
+                            <p class="text-green-800 text-sm font-medium leading-tight">
+                                Data found and loaded successfully.
+                            </p>
+                        </div>
+                        <Button icon="pi pi-times" class="p-button-text p-button-rounded text-green-400 ml-auto"
+                            @click="showSuccessAlert = false" />
+                    </div>
+                    <div v-if="showManualAlert"
+                        class="mx-6 mb-6 p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-center gap-4 animate-fade-in shadow-sm">
+                        <div class="bg-blue-500 rounded-full p-2 flex-none">
+                            <i class="pi pi-info-circle text-white text-lg"></i>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-blue-900 font-black text-sm uppercase tracking-wide">Information</span>
+                            <p class="text-blue-800 text-sm font-medium leading-tight">
+                                Record not found. Please fill in the billing details manually to proceed with your
+                                registration for the World Mining Congress.
+                            </p>
+                        </div>
+                        <Button icon="pi pi-times" class="p-button-text p-button-rounded text-blue-400 ml-auto"
+                            @click="showManualAlert = false" />
+                    </div>
+
                     <div class="flex justify-center md:justify-end px-6 mb-6">
                         <Button v-if="!isEditingBilling" icon="pi pi-exclamation-circle"
                             label="The information is incorrect? Click here to modify"
@@ -835,8 +997,11 @@ defineExpose({ getInscripcion });
                             <div class="col-span-3 sm:col-span-1">
                                 <label class="block mb-1">Document Number <span class="text-red-600">*</span></label>
                                 <InputGroup>
-                                    <InputText v-model="documentoEmpresa" :readonly="!isEditingBilling"
+                                    <!-- <InputText v-model="documentoEmpresa" :readonly="!isEditingBilling"
                                         class="border-green-iimp" @keypress="onlyNumberKey"
+                                        :disabled="!isEditingBilling" /> -->
+                                    <InputText v-model="documentoEmpresa" :readonly="!isEditingBilling"
+                                        class="border-green-iimp" @keypress="onlyNumberKey" @paste="onlyNumberKey"
                                         :disabled="!isEditingBilling" />
                                     <Button icon="pi pi-search" class="bg-green-iimp" @click="getEmpresaData"
                                         :loading="loading_doc" :disabled="!isEditingBilling || !documentoEmpresa" />
@@ -949,20 +1114,20 @@ defineExpose({ getInscripcion });
                     comprendido y aceptado el Reglamento de Inscripciones publicado en la
                     página web oficial del evento, así como todos los presentes términos
                     establecidos.</li>
-                <li class="text-justify mb-4">Se autoriza al Peruvian Institute of Mining Engineers (IIMP) a usar gratuitamente la imagen captada del asistente
+                <li class="text-justify mb-4">Se autoriza al Peruvian Institute of Mining Engineers (Peruvian Institute of Mining Engineers (IIMP)) a usar gratuitamente la imagen captada del asistente
                     durante el evento, sin límite de tiempo ni territorio.</li>
                 <li class="text-justify mb-4">Los datos personales serán tratados conforme a la ley peruana para fines
                     administrativos, de seguridad, estadísticos y de comunicación.</li>
                 <li class="text-justify mb-4">Para el ingreso y permanencia, se requiere entrada válida y documento de
                     identidad. No se permite el ingreso con objetos peligrosos, drogas, armas ni
                     alcohol externo.</li>
-                <li class="text-justify mb-4">Prohibido el uso de drones sin autorización expresa del Peruvian Institute of Mining Engineers (IIMP); se debe
+                <li class="text-justify mb-4">Prohibido el uso de drones sin autorización expresa del Peruvian Institute of Mining Engineers (Peruvian Institute of Mining Engineers (IIMP)); se debe
                     cumplir
                     con la normativa aérea vigente.</li>
-                <li class="text-justify mb-4">El Peruvian Institute of Mining Engineers (IIMP) no se responsabiliza por pérdidas, robos o accidentes, salvo en
+                <li class="text-justify mb-4">El Peruvian Institute of Mining Engineers (Peruvian Institute of Mining Engineers (IIMP)) no se responsabiliza por pérdidas, robos o accidentes, salvo en
                     casos
                     de negligencia o dolo.</li>
-                <li class="text-justify mb-4">No se permite la reventa no autorizada de entradas; el Peruvian Institute of Mining Engineers (IIMP) no responde
+                <li class="text-justify mb-4">No se permite la reventa no autorizada de entradas; el Peruvian Institute of Mining Engineers (Peruvian Institute of Mining Engineers (IIMP)) no responde
                     por
                     boletos comprados fuera de canales oficiales.</li>
                 <li class="text-justify mb-4">El uso de marcas, logos o contenidos del evento sin permiso está

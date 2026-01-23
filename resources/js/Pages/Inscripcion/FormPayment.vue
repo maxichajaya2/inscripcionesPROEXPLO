@@ -66,9 +66,28 @@ const mountNiubiz = async (data) => {
     }
 };
 
+const handleBeforeUnload = (event) => {
+    // Tu lógica de validación actual
+    event.preventDefault();
+    event.returnValue = '';
+};
+
 onMounted(() => {
     if (props.formulario) mountNiubiz(props.formulario);
+    // Forzamos la limpieza de cualquier alerta que haya quedado de los pasos anteriores
+
 });
+// onMounted(() => {
+//     if (props.formulario) mountNiubiz(props.formulario);
+
+//     // LIMPIEZA FORZADA
+//     window.onbeforeunload = null;
+
+//     // Matamos cualquier listener residual por si acaso
+//     window.removeEventListener('beforeunload', handleBeforeUnload);
+
+//     console.log("Paso 3 libre de alertas.");
+// });
 
 // Vigilamos si la data del formulario cambia para recargar la pasarela
 watch(() => props.formulario, (newVal) => {

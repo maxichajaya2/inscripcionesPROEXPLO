@@ -1,8 +1,8 @@
 <script setup>
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
-import { usePage } from '@inertiajs/vue3';
-import { ref, onMounted, computed, watch } from 'vue';
+import { usePage, router } from '@inertiajs/vue3';
+import { ref, onMounted, computed, watch, nextTick ,onUnmounted } from 'vue';
 import { useForm } from 'vee-validate';
 import * as yup from 'yup';
 import Functions from '@/Functions';
@@ -44,7 +44,7 @@ const schema = yup.object({
     celular: yup.string()
         .matches(/^\+?[0-9]*$/, 'Only numbers are allowed (the + at the beginning is optional)')
         .required('Phone is required'),
-    sexo: yup.string().required('Sex is required'),
+    sexo: yup.string().required('Gender is required'),
     fecha_nacimiento: yup.date().required('Date of Birth is required'),
 });
 
@@ -74,7 +74,7 @@ const fieldNames = {
     direccionPersona: 'Address',
     correo: 'Email',
     celular: 'Phone',
-    sexo: 'Sex',
+    sexo: 'Gender',
     fecha_nacimiento: 'Date of Birth'
 };
 
@@ -162,14 +162,38 @@ const onlyNumberKey = (event) => {
     }
 }
 
-const clearDocument = () => {
-    documento.value = "";
-    setValues({
-        nombres: '',
-        apellido_paterno: '',
-        empresa: ''
-    });
-}
+// const clearDocument = () => {
+//     documento.value = "";
+//     setValues({
+//         nombres: '',
+//         apellido_paterno: '',
+//         empresa: ''
+//     });
+// }
+
+
+
+// const clearDocument = () => {
+//     documento.value = "";
+//     hasSearched.value = false; // <-- CRUCIAL: Esto vuelve a bloquear los campos
+//     setValues({
+//         nombres: '',
+//         apellido_paterno: '',
+//         empresa: '',
+//         correo: '',
+//         celular: '',
+//         direccionPersona: '',
+//         sexo: '',
+//         fecha_nacimiento: null
+//     });
+// }
+
+
+
+const camposBloqueados = computed(() => {
+    // Bloqueamos si es peruano (tipo_origen === 1) y aún no ha buscado
+    return esPeruano.value && !hasSearched.value;
+});
 
 const tiposDocumentoFiltrados = computed(() => {
     const todos = page.props.general.tipDocPer || [];
@@ -242,21 +266,6 @@ defineExpose({
     esCategoriaDeSocio
 });
 
-watch(() => props.tipo_origen, (newOrigen) => {
-    if (newOrigen === 1) {
-        tipo_doc.value = 1;
-        pais.value = 75;
-        loadDepartamentos();
-        setValues({ ...values, pais: 75, tipo_doc: 1 });
-    } else if (newOrigen === 2) {
-        if (tipo_doc.value === 1) {
-            tipo_doc.value = null;
-        }
-        pais.value = null;
-        // Para extranjeros, marcamos esSocio como true para que la validación pase
-        esSocio.value = true;
-    }
-}, { immediate: true });
 
 const onlyPhoneKeys = (event) => {
     const charCode = event.charCode ? event.charCode : event.keyCode;
@@ -270,10 +279,89 @@ const onlyPhoneKeys = (event) => {
     event.preventDefault();
     return false;
 };
+
+const goToHome = () => {
+    router.get('/'); // O la ruta que definas como inicio, ej: route('dashboard')
+};
+
+const clearDocument = async () => {
+    documento.value = "";
+    // Si es extranjero (2), mantenemos los campos abiertos
+    hasSearched.value = (props.tipo_origen === 2);
+
+    setValues({
+        nombres: '',
+        apellido_paterno: '',
+        empresa: '',
+        correo: '',
+        celular: '',
+        direccionPersona: '',
+        sexo: '',
+        fecha_nacimiento: null
+    });
+
+    if (props.tipo_origen === 2) {
+        await nextTick();
+        validate();
+    }
+}
+
+
+// UNICO WATCHER PARA TIPO_ORIGEN
+watch(() => props.tipo_origen, async (newOrigen) => {
+    if (newOrigen === 1) {
+        // --- LÓGICA NACIONAL ---
+        tipo_doc.value = 1;
+        pais.value = 75;
+        await loadDepartamentos();
+        setValues({ ...values, pais: 75, tipo_doc: 1 });
+        hasSearched.value = false; // Bloquea campos hasta que busquen DNI
+
+    } else if (newOrigen === 2) {
+        // --- LÓGICA INTERNACIONAL ---
+        if (tipo_doc.value === 1) tipo_doc.value = null;
+
+        pais.value = null;
+        esSocio.value = true;
+        hasSearched.value = true; // DESBLOQUEA CAMPOS PARA EXTRANJEROS
+
+        // FORZAR VALIDACIÓN DE TODO EL FORMULARIO
+        await nextTick();
+        validate();
+    }
+}, { immediate: true });
+
+// const handleBeforeUnload = (event) => {
+//     // Solo bloquea si hay algún dato (ejemplo: documento o nombres)
+//     if (props.data_persona?.documento || props.data_persona?.nombres) {
+//         event.preventDefault();
+//         event.returnValue = '';
+//     }
+// };
+
+// onMounted(() => {
+//     window.addEventListener('beforeunload', handleBeforeUnload);
+// });
+
+// onUnmounted(() => {
+//     // ESTO ES VITAL: Si no lo pones, la alerta te seguirá al Paso 3
+//     window.removeEventListener('beforeunload', handleBeforeUnload);
+// });
+
 </script>
 
 <template>
-    <div class="font-bold p-4">
+    <div class="font-bold p-4 relative">
+
+        <div class="flex justify-end pr-2 mb-4">
+            <Button @click="goToHome" class="wmc-btn-international shadow-xl flex items-center">
+                <i class="pi pi-home mr-3 text-lg"></i>
+                <div class="flex flex-col items-start leading-none">
+                    <span class="text-xs font-bold uppercase tracking-[0.3em] ml-4">Main Menu</span>
+                </div>
+            </Button>
+        </div>
+
         <Card class="mt-5 overflow-hidden shadow-lg border border-gray-200">
             <template #header>
                 <div class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc">
@@ -313,6 +401,11 @@ const onlyPhoneKeys = (event) => {
                     </div>
                 </div>
 
+                <div v-if="camposBloqueados"
+                    class="mx-6 mb-2 p-2 bg-yellow-50 text-yellow-700 border-l-4 border-yellow-400 text-xs font-semibold">
+                    <i class="pi pi-lock mr-2"></i> PLEASE SEARCH BY DOCUMENT NUMBER TO UNLOCK THESE FIELDS
+                </div>
+
                 <div class="flex gap-6 p-2 w-full justify-around">
                     <div
                         class="text-green-iimp font-bold max-w-[650px] w-full p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -344,7 +437,8 @@ const onlyPhoneKeys = (event) => {
                 </div>
             </template>
         </Card>
-
+        <!--PERSONAL DATAILS/
+        /==============================  -->
         <Card class="mt-5 overflow-hidden shadow-lg border border-gray-200">
             <template #header>
                 <div class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc">Personal Details
@@ -371,13 +465,13 @@ const onlyPhoneKeys = (event) => {
                     <div class="grid gap-6 m-6 md:grid-cols-2">
                         <div class="w-full">
                             <label for="nombres">First Name <span class="text-red-600">*</span></label>
-                            <InputText name="nombres" v-model="nombres" v-bind="nombresAttrs"
+                            <InputText name="nombres" v-model="nombres" v-bind="nombresAttrs" :disabled="camposBloqueados"
                                 class="w-full border-green-iimp" />
                             <small class="text-red-600">{{ errors.nombres }}</small>
                         </div>
                         <div class="w-full">
                             <label for="apellido_paterno">Last Name <span class="text-red-600">*</span></label>
-                            <InputText name="apellido_paterno" v-model="apellido_paterno" v-bind="apellido_paternoAttrs"
+                            <InputText name="apellido_paterno" v-model="apellido_paterno" v-bind="apellido_paternoAttrs" :disabled="camposBloqueados"
                                 class="w-full border-green-iimp" />
                             <small class="text-red-600">{{ errors.apellido_paterno }}</small>
                         </div>
@@ -393,7 +487,7 @@ const onlyPhoneKeys = (event) => {
                         </div>
                         <div class="w-full md:col-span-2">
                             <label for="direccionPersona">Address <span class="text-red-600">*</span></label>
-                            <InputText name="direccionPersona" v-model="direccionPersona" v-bind="direccionPersonaAttrs"
+                            <InputText name="direccionPersona" v-model="direccionPersona" v-bind="direccionPersonaAttrs" :disabled="camposBloqueados"
                                 class="w-full border-green-iimp" />
                             <small class="text-red-600">{{ errors.direccionPersona }}</small>
                         </div>
@@ -403,21 +497,21 @@ const onlyPhoneKeys = (event) => {
                         <div class="w-full">
                             <label for="correo" class="">Email Address <span
                                     class="font-normal text-red-600">*</span></label>
-                            <InputText name="correo" v-model="correo" v-bind="correoAttrs"
+                            <InputText name="correo" v-model="correo" v-bind="correoAttrs" :disabled="camposBloqueados"
                                 class="w-full border-green-iimp" />
                             <span class="font-normal text-red-600">{{ errors.correo }}</span>
                         </div>
                         <div class="w-full">
                             <label for="celular" class="">Phone Number <span
                                     class="font-normal text-red-600">*</span></label>
-                            <InputText name="celular" v-model="celular" v-bind="celularAttrs" @keypress="onlyPhoneKeys"
+                            <InputText name="celular" v-model="celular" v-bind="celularAttrs" @keypress="onlyPhoneKeys" :disabled="camposBloqueados"
                                 class="w-full border-green-iimp" placeholder="+51999888777 or 999888777" />
                             <span class="font-normal text-red-600">{{ errors.celular }}</span>
                         </div>
                         <div class="w-full">
                             <label for="empresa" class="">Company <span
                                     class="font-normal text-gray-500 ml-1">(Optional)</span></label>
-                            <InputText name="empresa" v-model="empresa" v-bind="empresaAttrs"
+                            <InputText name="empresa" v-model="empresa" v-bind="empresaAttrs" :disabled="camposBloqueados"
                                 class="w-full border-green-iimp" />
                             <span class="font-normal text-red-600">{{ errors.empresa }}</span>
                         </div>
@@ -432,15 +526,15 @@ const onlyPhoneKeys = (event) => {
                                 </InputGroupAddon>
                                 <Calendar name="fecha_nacimiento" v-model="fecha_nacimiento"
                                     v-bind="fecha_nacimientoAttrs" :maxDate="today" dateFormat="yy-mm-dd"
-                                    :showTime="false" placeholder="YYYY-MM-DD" class="w-full"
+                                    :showTime="false" placeholder="YYYY-MM-DD" class="w-full" :disabled="camposBloqueados"
                                     inputClass="w-full border-green-iimp border-l-0 shadow-none outline-none bg-white" />
                             </InputGroup>
                             <span class="font-normal text-red-600">{{ errors.fecha_nacimiento }}</span>
                         </div>
                         <div class="w-full">
-                            <label for="sexo" class="">Sex <span class="font-normal text-red-600"> *</span></label>
+                            <label for="sexo" class="">Gender <span class="font-normal text-red-600"> *</span></label>
                             <Select name="sexo" v-model="sexo" v-bind="sexoAttrs" optionLabel="label"
-                                optionValue="value" placeholder="Elegir" showClear checkmark :options="generos"
+                                optionValue="value" placeholder="Select" showClear checkmark :options="generos" :disabled="camposBloqueados"
                                 class="w-full border-green-iimp" />
                             <span class="font-normal text-red-600">{{ errors.sexo }}</span>
                         </div>
@@ -459,5 +553,29 @@ const onlyPhoneKeys = (event) => {
 
 :deep(.p-select.p-disabled .p-select-label) {
     color: #4b5563 !important;
+}
+
+.wmc-btn-international {
+    /* Fondo blanco con un toque de gris muy claro */
+    background-color: #f8fafc !important;
+    /* Color de texto "Steel" (Acero) profesional */
+    color: #334155 !important;
+    border: 1.5px solid #cbd5e1 !important;
+    padding: 0.8rem 1.8rem !important;
+    border-radius: 12px !important;
+    transition: all 0.3s ease;
+}
+
+.wmc-btn-international:hover {
+    background-color: #ffffff !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.wmc-btn-international i {
+    color: #64748b;
+    /* El icono un poco más suave que el texto */
 }
 </style>
