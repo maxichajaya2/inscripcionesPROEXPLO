@@ -39,7 +39,7 @@ const irAlFormulario = (id) => {
 </script>
 
 <template>
-    <AppLayout title="Inscripciones" class="bg-gradient-wmc">
+    <AppLayout  class="bg-gradient-wmc">
         <div class="px-6 py-12 mx-auto max-w-6xl min-h-[80vh] flex flex-col justify-center font-sans">
 
             <div id="titulo_inicial" class="mb-12 text-left animate-fade-in-down">
