@@ -154,14 +154,45 @@ const searchPerson = async () => {
     }
 };
 
-const onlyNumberKey = (event) => {
-    if (tipo_doc.value == 1) {
-        const charCode = event.charCode ? event.charCode : event.keyCode
-        if (charCode < 48 || charCode > 57) event.preventDefault();
-        if (documento.value?.length >= 8) event.preventDefault();
-    }
-}
+// const onlyNumberKey = (event) => {
+//     if (tipo_doc.value == 1) {
+//         const charCode = event.charCode ? event.charCode : event.keyCode
+//         if (charCode < 48 || charCode > 57) event.preventDefault();
+//         if (documento.value?.length >= 8) event.preventDefault();
+//     }
+// }
 
+const onlyNumberKey = (event) => {
+    const charCode = event.which ? event.which : event.keyCode;
+
+    // 1. Permitir teclas de control (Backspace, Delete, Tab, flechas)
+    if ([8, 46, 9, 37, 39].includes(charCode)) return true;
+
+    // 2. Permitir combinaciones de teclas (Ctrl+A, Ctrl+C, Ctrl+V)
+    if (event.ctrlKey || event.metaKey) return true;
+
+    if (tipo_doc.value == 1) {
+        // 3. Si hay una selección de texto (el usuario seleccionó todo para borrar/sobrescribir)
+        // permitimos la entrada porque la selección será reemplazada.
+        const selection = window.getSelection().toString();
+        if (selection.length > 0 && selection.length === documento.value?.length) {
+            return true;
+        }
+
+        // 4. Bloquear si no es número
+        if (charCode < 48 || charCode > 57) {
+            event.preventDefault();
+            return false;
+        }
+
+        // 5. Bloquear si ya llegó a 8 dígitos (y no hay selección)
+        if (documento.value?.length >= 8) {
+            event.preventDefault();
+            return false;
+        }
+    }
+    return true;
+};
 // const clearDocument = () => {
 //     documento.value = "";
 //     setValues({

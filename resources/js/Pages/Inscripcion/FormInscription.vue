@@ -404,12 +404,37 @@ watch(documentoEmpresa, (newVal) => {
 });
 
 // Watcher para limpiar campos cuando cambia el tipo de documento
-watch(tipoDocumentoEmpresa, (newVal, oldVal) => {
-    // Solo limpiamos si el cambio es realizado manualmente por el usuario (cuando está editando)
-    if (isEditingBilling.value && oldVal !== undefined) {
-        console.log("Cambiando tipo de documento, limpiando campos de facturación...");
+// watch(tipoDocumentoEmpresa, (newVal, oldVal) => {
+//     // Solo limpiamos si el cambio es realizado manualmente por el usuario (cuando está editando)
+//     if (isEditingBilling.value && oldVal !== undefined) {
+//         console.log("Cambiando tipo de documento, limpiando campos de facturación...");
 
-        // Mantenemos el tipo de documento pero reseteamos lo demás
+//         // Mantenemos el tipo de documento pero reseteamos lo demás
+//         setValues({
+//             ...values,
+//             documentoEmpresa: '',
+//             razonSocial: '',
+//             direccionEmpresa: '',
+//             responsable: '',
+//             correo_facturador: ''
+//         });
+
+//         // Llamamos a la lógica de bloqueo de dirección si es necesario
+//         setTipoDocPago();
+//     }
+// });
+
+watch(tipoDocumentoEmpresa, (newVal, oldVal) => {
+    // Definimos qué IDs son de extranjeros (generalmente todo lo que no es 1 o 2)
+    const documentosExtranjeros = [3, 4, 5]; // Ajusta estos IDs según tu base de datos (Pasaporte, CE, etc.)
+
+    // LÓGICA:
+    // Si el valor anterior era extranjero Y el nuevo también es extranjero, NO limpiamos.
+    const ambosSonExtranjeros = documentosExtranjeros.includes(oldVal) && documentosExtranjeros.includes(newVal);
+
+    if (isEditingBilling.value && oldVal !== undefined && !ambosSonExtranjeros) {
+        console.log("Cambiando entre tipos incompatibles (o nacional/extranjero), limpiando campos...");
+
         setValues({
             ...values,
             documentoEmpresa: '',
@@ -419,8 +444,9 @@ watch(tipoDocumentoEmpresa, (newVal, oldVal) => {
             correo_facturador: ''
         });
 
-        // Llamamos a la lógica de bloqueo de dirección si es necesario
         setTipoDocPago();
+    } else {
+        console.log("Cambio entre documentos extranjeros: Se mantiene la información.");
     }
 });
 
