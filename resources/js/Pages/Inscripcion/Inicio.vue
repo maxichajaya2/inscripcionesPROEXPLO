@@ -299,13 +299,10 @@ const resetToNationality = () => {
 };
 
 
-
-
-
 </script>
 
 <template>
-    <AppLayout title="Inscripciones" class="bg-gradient-wmc">
+    <AppLayout class="bg-gradient-wmc">
 
 
         <div class="px-3 mx-auto max-w-7xl md:px-6 lg:px-8 relative">

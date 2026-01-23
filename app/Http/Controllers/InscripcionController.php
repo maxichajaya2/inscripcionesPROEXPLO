@@ -329,16 +329,44 @@ class InscripcionController extends Controller
         $id_ocupacion = $ocupacion_obj ? $ocupacion_obj->id : 2795;
 
         $categoria = CategoriaInscripcion::findOrFail($request->input('selected_categoria'));
-        $precio_disponible = $categoria->precio
-            ->where('fecha_inicio', '<=', $this->now)
-            ->where('fecha_fin', '>=', $this->now)
-            ->first();
+        // $precio_disponible = $categoria->precio
+        //     ->where('fecha_inicio', '<=', $this->now)
+        //     ->where('fecha_fin', '>=', $this->now)
+        //     ->first();
+
+
+        // dd($precio_disponible);
+        $precio_disponible = $categoria->precio->filter(function ($p) {
+            $hoy = Carbon::now();
+            return $hoy->between(
+                Carbon::parse($p->fecha_inicio)->startOfDay(),
+                Carbon::parse($p->fecha_fin)->endOfDay()
+            );
+        })->first();
+
+        // 2. Si por algún motivo el filtro de fechas falla, toma el precio por defecto de la categoría
+        if (!$precio_disponible) {
+            $precio_disponible = $categoria->precio->first();
+        }
+
+        // 3. Verificamos el valor
+        $total = ($precio_disponible) ? $precio_disponible->valor : 0;
+
+        // // Si después de todo sigue siendo 0, hay un problema grave de configuración
+        // if ($total <= 0) {
+        //     return response()->json(['status' => false, 'message' => 'Invalid amount (0)'], 400);
+        // }
 
         $total = $precio_disponible->valor;
+
         $dias = '{"lun":1,"mar":1,"mie":1,"jue":1,"vie":1}';
 
         // 5. Lógica de One Day (CORREGIDA para evitar error de count())
-        if (str_contains(strtoupper($categoria->nombre_en), 'DAY') || str_contains(strtoupper($categoria->nombre_es), 'DIA')) {
+        // if (str_contains(strtoupper($categoria->nombre_en), 'DAY') || str_contains(strtoupper($categoria->nombre_es), 'DIA')) {
+        if (
+            str_contains(strtoupper($categoria->nombre_en), ' DAY') ||
+            (str_contains(strtoupper($categoria->nombre_es), ' DIA') && !str_contains(strtoupper($categoria->nombre_es), 'ESTUDIANTE'))
+        ) {
             $selectedDays = $request->input('selectedDays', []);
 
             // Convertir string "mar,mie" a array si es necesario (FormData lo envía así aveces)
@@ -426,6 +454,8 @@ class InscripcionController extends Controller
             "porcentaje" => "100",
             "estado_pago" => false
         ]);
+
+        // dd($cuota);
         $cuota->save();
 
         // 10. Crear Inscripción
