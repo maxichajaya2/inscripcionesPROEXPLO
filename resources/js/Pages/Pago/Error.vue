@@ -102,7 +102,7 @@ const goStart = () => router.get(route('inscripcion.index'));
                             <a href="https://wa.me/51951294314" target="_blank"
                                 class="flex items-center gap-2 text-green-600 hover:text-green-800 transition-colors">
                                 <i class="pi pi-whatsapp text-lg font-bold"></i>
-                                <span class="text-sm font-bold">+51 951 294 314 (Helen Loayza)</span>
+                                <span class="text-sm font-bold">+51 951 294 314 (Helen Loaiza)</span>
                             </a>
                         </div>
                     </div>

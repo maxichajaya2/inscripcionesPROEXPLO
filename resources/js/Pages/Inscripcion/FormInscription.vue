@@ -63,7 +63,7 @@ const tipoDocumento = computed(() => page.props.general.tipDocEmp)
 const reglamento_inscripciones = computed(() => usePage().props.general.reglamento_inscripciones);
 
 const departamentos = ref();
-const days = { 'mar': 'Tuesday', 'mie': 'Wednesday', 'jue': 'Thursday' };
+const days = { 'mie': 'Wednesday', 'jue': 'Thursday', 'vie': 'Friday' };
 const current_days = { 'lun': false, 'mar': false, 'mie': false, 'jue': false, 'vie': false };
 
 const formManualErrors = ref({ reglamento: null, total: null, uploadDocument: null });

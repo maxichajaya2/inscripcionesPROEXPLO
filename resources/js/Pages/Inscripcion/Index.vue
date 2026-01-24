@@ -150,10 +150,10 @@ const irAlFormulario = (id) => {
                                     {{ cat.precio_disponible?.moneda?.simbolo || '$' }}{{ cat.precio_disponible?.valor
                                         || '0' }}
                                 </span>
-                                <span class="text-[9px] uppercase text-gray-400 font-bold mb-3 block tracking-wider">
+                            <!--    <span class="text-[9px] uppercase text-gray-400 font-bold mb-3 block tracking-wider">
                                     + TAX / IVA
                                 </span>
-
+                            -->
                                 <div
                                     class="px-4 py-2 rounded-full flex items-center gap-2 text-xs font-bold transition-all duration-300
                                             border border-yellow-500/30 text-yellow-400 bg-yellow-500/5
