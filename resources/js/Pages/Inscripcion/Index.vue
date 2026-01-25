@@ -3,7 +3,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import colorbar from '@/Components/colorbar.vue';
 import GreenArrowRight from '@/Components/GreenArrowRight.vue';
 import { router, usePage } from '@inertiajs/vue3';
-import { ref, computed,onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 
 // Estilos globales
 import "../../../css/inscripciones.css";
@@ -17,29 +17,58 @@ const props = defineProps({
 
 
 const grupoSeleccionado = ref(null);
+const macroSeccion = ref(null); // 'inscripciones' o 'viajes'
+
+
+// const categoriasVisibles = computed(() => {
+//     if (!grupoSeleccionado.value) return [];
+//     return props.categorias.filter(cat => cat.grupo === grupoSeleccionado.value);
+// });
 
 const categoriasVisibles = computed(() => {
     if (!grupoSeleccionado.value) return [];
+
+    // Filtramos por el grupo (autor/participante)
+    // y podrías añadir un filtro extra si tu base de datos tiene algo para "viajes"
     return props.categorias.filter(cat => cat.grupo === grupoSeleccionado.value);
-});
+})
 
-const irAlFormulario = (id) => {
-    // Buscamos la categoría para saber su grupo
-    const categoria = props.categorias.find(c => c.id === id);
-
-    if (categoria.grupo === 'autor') {
-        router.get(route('inscripcion.autor'), { category: id });
-    } else {
-        router.get(route('inscripcion.participante'), { category: id });
-    }
+const volverAMacro = () => {
+    macroSeccion.value = null;
+    grupoSeleccionado.value = null;
 };
 
+// const irAlFormulario = (id) => {
+//     // Buscamos la categoría para saber su grupo
+//     const categoria = props.categorias.find(c => c.id === id);
 
+//     if (categoria.grupo === 'autor') {
+//         router.get(route('inscripcion.autor'), { category: id });
+//     } else {
+//         router.get(route('inscripcion.participante'), { category: id });
+//     }
+// };
+
+const irAlFormulario = (id) => {
+    const categoria = props.categorias.find(c => c.id === id);
+
+    // Preparamos los parámetros
+    const params = {
+        category: id,
+        section: macroSeccion.value // Esto enviará 'inscripciones' o 'viajes'
+    };
+
+    if (categoria.grupo === 'autor') {
+        router.get(route('inscripcion.autor'), params);
+    } else {
+        router.get(route('inscripcion.participante'), params);
+    }
+};
 
 </script>
 
 <template>
-    <AppLayout  class="bg-gradient-wmc">
+    <AppLayout class="bg-gradient-wmc">
         <div class="px-6 py-12 mx-auto max-w-6xl min-h-[80vh] flex flex-col justify-center font-sans">
 
             <div id="titulo_inicial" class="mb-12 text-left animate-fade-in-down">
@@ -56,53 +85,105 @@ const irAlFormulario = (id) => {
 
                 <div class="w-full lg:w-5/12 space-y-6">
 
-                    <button @click="grupoSeleccionado = 'participante'"
-                        :class="grupoSeleccionado === 'participante'
-                            ? 'bg-blue-900/40 border-blue-400 shadow-[0_0_35px_rgba(59,130,246,0.6)] scale-105 ring-1 ring-blue-300'
-                            : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]'"
-                        class="w-full group relative flex items-center justify-between p-6 backdrop-blur-md border rounded-3xl transition-all duration-300 ease-out text-left">
+                    <div v-if="!macroSeccion" class="space-y-6 animate-fade-in">
+                        <button @click="macroSeccion = 'inscripciones'"
+                            class="w-full group relative flex items-center justify-between p-8 bg-white/5 border border-white/10 rounded-3xl backdrop-blur-md transition-all duration-300 hover:border-blue-500 hover:bg-white/10 hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] text-left">
+                            <div class="flex flex-col z-10">
+                                <div class="flex flex-col z-10">
+                                    <span class="text-blue-400 text-xs uppercase tracking-widest font-bold mb-1">
+                                        Register now and get access to courses and tours
+                                    </span>
+                                    <h5
+                                        class="text-2xl font-black text-white group-hover:text-blue-200 transition-colors">
+                                        REGISTRATION
+                                    </h5>
+                                </div>
+                            </div>
+                            <div
+                                class="p-4 rounded-2xl bg-white/10 group-hover:bg-blue-600 transition-all duration-300">
+                                <GreenArrowRight class="w-6 h-6 invert brightness-200" />
+                            </div>
+                        </button>
 
-                        <div class="flex flex-col z-10">
-                            <span :class="grupoSeleccionado === 'participante' ? 'text-blue-200' : 'text-blue-400'"
-                                class="text-xs uppercase tracking-widest font-bold mb-1 transition-colors">
-                                Registration
+                        <button @click="macroSeccion = 'viajes'"
+                            class="w-full group relative flex items-center justify-between p-8 bg-white/5 border border-white/10 rounded-3xl backdrop-blur-md transition-all duration-300 hover:border-green-500 hover:bg-white/10 hover:shadow-[0_0_20px_rgba(34,197,94,0.3)] text-left">
+                            <div class="flex flex-col z-10">
+                                <span class="text-green-400 text-xs uppercase tracking-widest font-bold mb-1">
+                                    Exclusive technical visits and specialized training
+                                </span>
+                                <h5 class="text-2xl font-black text-white group-hover:text-green-200 transition-colors">
+                                    TOURS & COURSES
+                                </h5>
+                            </div>
+                            <div
+                                class="p-4 rounded-2xl bg-white/10 group-hover:bg-green-600 transition-all duration-300">
+                                <GreenArrowRight class="w-6 h-6 invert brightness-200" />
+                            </div>
+                        </button>
+                    </div>
+                    <div v-else class="space-y-6 animate-fade-in-right">
+                        <button @click="volverAMacro"
+                            class="group flex items-center gap-3 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 rounded-xl transition-all duration-300 mb-8 w-fit shadow-lg backdrop-blur-sm">
+                            <div class="rotate-180 transition-transform group-hover:-translate-x-1">
+                                <GreenArrowRight class="w-4 h-4 invert brightness-200" />
+                            </div>
+                            <span class="text-white text-xs font-black uppercase tracking-[0.15em]">
+                                Back to Start
                             </span>
-                            <h5 class="text-2xl font-black text-white group-hover:text-blue-200 transition-colors">
-                                GENERAL PARTICIPANT
-                            </h5>
-                        </div>
+                        </button>
 
-                        <div :class="grupoSeleccionado === 'participante'
-                            ? 'bg-blue-600 shadow-lg scale-110 rotate-0'
-                            : 'bg-white/10 group-hover:bg-blue-600 group-hover:rotate-[-45deg]'"
-                            class="p-4 rounded-2xl transition-all duration-300">
-                            <GreenArrowRight class="w-6 h-6 invert brightness-200" />
-                        </div>
-                    </button>
+                        <h4 class="text-white/60 font-bold text-[15px] uppercase tracking-[0.2em] mb-4">
+                            Select your profile for <span class="text-yellow-price">{{ macroSeccion === 'inscripciones'
+                                ? 'REGISTRATION' : 'TOURS & COURSES' }}</span>:
+                        </h4>
+                        <button @click="grupoSeleccionado = 'participante'"
+                            :class="grupoSeleccionado === 'participante'
+                                ? 'bg-blue-900/40 border-blue-400 shadow-[0_0_35px_rgba(59,130,246,0.6)] scale-105 ring-1 ring-blue-300'
+                                : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]'"
+                            class="w-full group relative flex items-center justify-between p-6 backdrop-blur-md border rounded-3xl transition-all duration-300 ease-out text-left">
 
-                    <button @click="grupoSeleccionado = 'autor'"
-                        :class="grupoSeleccionado === 'autor'
-                            ? 'bg-cyan-900/40 border-cyan-400 shadow-[0_0_35px_rgba(34,211,238,0.6)] scale-105 ring-1 ring-cyan-300'
-                            : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-cyan-500 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]'"
-                        class="w-full group relative flex items-center justify-between p-6 backdrop-blur-md border rounded-3xl transition-all duration-300 ease-out text-left">
+                            <div class="flex flex-col z-10">
+                                <span :class="grupoSeleccionado === 'participante' ? 'text-blue-200' : 'text-blue-400'"
+                                    class="text-xs uppercase tracking-widest font-bold mb-1 transition-colors">
+                                    Registration
+                                </span>
+                                <h5 class="text-2xl font-black text-white group-hover:text-blue-200 transition-colors">
+                                    GENERAL PARTICIPANT
+                                </h5>
+                            </div>
 
-                        <div class="flex flex-col z-10">
-                            <span :class="grupoSeleccionado === 'autor' ? 'text-cyan-200' : 'text-cyan-400'"
-                                class="text-xs uppercase tracking-widest font-bold mb-1 transition-colors">
-                                Registration
-                            </span>
-                            <h5 class="text-2xl font-black text-white group-hover:text-cyan-200 transition-colors">
-                                AUTHOR SPECIAL
-                            </h5>
-                        </div>
+                            <div :class="grupoSeleccionado === 'participante'
+                                ? 'bg-blue-600 shadow-lg scale-110 rotate-0'
+                                : 'bg-white/10 group-hover:bg-blue-600 group-hover:rotate-[-45deg]'"
+                                class="p-4 rounded-2xl transition-all duration-300">
+                                <GreenArrowRight class="w-6 h-6 invert brightness-200" />
+                            </div>
+                        </button>
 
-                        <div :class="grupoSeleccionado === 'autor'
-                            ? 'bg-cyan-600 shadow-lg scale-110 rotate-0'
-                            : 'bg-white/10 group-hover:bg-cyan-600 group-hover:rotate-[-45deg]'"
-                            class="p-4 rounded-2xl transition-all duration-300">
-                            <GreenArrowRight class="w-6 h-6 invert brightness-200" />
-                        </div>
-                    </button>
+                        <button @click="grupoSeleccionado = 'autor'"
+                            :class="grupoSeleccionado === 'autor'
+                                ? 'bg-cyan-900/40 border-cyan-400 shadow-[0_0_35px_rgba(34,211,238,0.6)] scale-105 ring-1 ring-cyan-300'
+                                : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-cyan-500 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]'"
+                            class="w-full group relative flex items-center justify-between p-6 backdrop-blur-md border rounded-3xl transition-all duration-300 ease-out text-left">
+
+                            <div class="flex flex-col z-10">
+                                <span :class="grupoSeleccionado === 'autor' ? 'text-cyan-200' : 'text-cyan-400'"
+                                    class="text-xs uppercase tracking-widest font-bold mb-1 transition-colors">
+                                    Registration
+                                </span>
+                                <h5 class="text-2xl font-black text-white group-hover:text-cyan-200 transition-colors">
+                                    AUTHOR SPECIAL
+                                </h5>
+                            </div>
+
+                            <div :class="grupoSeleccionado === 'autor'
+                                ? 'bg-cyan-600 shadow-lg scale-110 rotate-0'
+                                : 'bg-white/10 group-hover:bg-cyan-600 group-hover:rotate-[-45deg]'"
+                                class="p-4 rounded-2xl transition-all duration-300">
+                                <GreenArrowRight class="w-6 h-6 invert brightness-200" />
+                            </div>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="w-full lg:w-7/12 mt-8 lg:mt-0 relative min-h-[300px]">
@@ -145,12 +226,17 @@ const irAlFormulario = (id) => {
 
                             <div
                                 class="relative z-10 text-right flex flex-col items-end border-l border-white/10 pl-6 group-hover:border-yellow-500/30 transition-colors">
-                                <span
+                                <!-- <span
+                                    class="text-2xl md:text-4xl font-black text-yellow-price drop-shadow-[0_2px_10px_rgba(234,179,8,0.3)] group-hover:scale-110 transition-transform duration-300 origin-right">
+                                    {{ cat.precio_disponible?.moneda?.simbolo || '$' }}{{ cat.precio_disponible?.valor
+                                        || '0' }}
+                                </span> -->
+                                <span v-if="macroSeccion === 'inscripciones'"
                                     class="text-2xl md:text-4xl font-black text-yellow-price drop-shadow-[0_2px_10px_rgba(234,179,8,0.3)] group-hover:scale-110 transition-transform duration-300 origin-right">
                                     {{ cat.precio_disponible?.moneda?.simbolo || '$' }}{{ cat.precio_disponible?.valor
                                         || '0' }}
                                 </span>
-                            <!--    <span class="text-[9px] uppercase text-gray-400 font-bold mb-3 block tracking-wider">
+                                <!--    <span class="text-[9px] uppercase text-gray-400 font-bold mb-3 block tracking-wider">
                                     + TAX / IVA
                                 </span>
                             -->
@@ -158,7 +244,7 @@ const irAlFormulario = (id) => {
                                     class="px-4 py-2 rounded-full flex items-center gap-2 text-xs font-bold transition-all duration-300
                                             border border-yellow-500/30 text-yellow-400 bg-yellow-500/5
                                             group-hover:bg-yellow-500 group-hover:text-black group-hover:shadow-[0_0_15px_rgba(234,179,8,0.6)]">
-                                    Select
+                                    {{ macroSeccion === 'inscripciones' ? 'Select' : 'View Details' }}
                                     <GreenArrowRight
                                         class="w-3 h-3 transition-all duration-300 group-hover:invert group-hover:brightness-0" />
                                 </div>

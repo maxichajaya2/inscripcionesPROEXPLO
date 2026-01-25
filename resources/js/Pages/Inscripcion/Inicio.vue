@@ -6,6 +6,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import Dialog from 'primevue/dialog';
 import FormValidacionDoc from './FormValidacionDoc.vue';
 import FormInscription from './FormInscription.vue';
+import FormTourCourse from './FormTourCourse.vue';
 import FormPayment from './FormPayment.vue';
 import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
@@ -29,24 +30,21 @@ const uploadProgress = ref(0);
 const props = defineProps({
     title: String,
     categorias: Object,
-    modal_texts: Object,
+    adicionales: Array,
+    section: String,
 })
 
-const formDataValidacionDoc = ref(null);
-const formDataInscription = ref(null);
+
 const formDataPayment = ref(null);
 const data_persona = ref({});
 const showRequisitosModal = ref(false); // Controla el modal
 const tempResIns = ref(null);
 const isPaying = ref(false);
-
 const nacionalidadSeleccionada = ref(null);
-
 const childFormValidacionDoc = ref();
 const childFormInscription = ref(null);
-const childFormPayment = ref(null);
 const tipo_origen = ref(0);
-const categoria_seleccionada = ref({}); // Esto debe empezar vacío
+const categoria_seleccionada = ref({});
 
 const resumen_dinamico = ref({
     total: 0,
@@ -59,16 +57,6 @@ const actualizarResumen = (datos) => {
     resumen_dinamico.value = { ...resumen_dinamico.value, ...datos };
 };
 
-// onMounted(() => {
-//     window.addEventListener('beforeunload', handleBeforeUnload);
-// });
-// onUnmounted(() => {
-//     // Es vital remover el evento para no afectar otras partes del sitio
-//     window.removeEventListener('beforeunload', handleBeforeUnload);
-// });
-
-
-// --- LÓGICA DE VALIDACIÓN COMPLETA EN INICIO.VUE ---
 const validate = async (value) => {
     loading.value = true;
     switch (value) {
@@ -133,7 +121,7 @@ const validate = async (value) => {
     loading.value = false;
     return false;
 }
-// --- FUNCIÓN MODIFICADA PARA RECIBIR EL ID ---
+
 const seleccionarOrigen = (origen, id_numerico) => {
     nacionalidadSeleccionada.value = origen; // Guarda el texto 'peruano'/'extranjero'
     tipo_origen.value = id_numerico;         // Guarda el número 1 o 2
@@ -148,36 +136,6 @@ const goStart = () => {
 };
 
 const activeStep = ref("1"); // Control del paso actual
-
-// const handleInscripcionClick = async () => {
-//     // 1. Validar el formulario del hijo primero
-//     const resIns = await childFormInscription.value.getInscripcion();
-
-//     if (resIns.validate) {
-//         // Guardamos los datos para usarlos luego si acepta
-//         tempResIns.value = resIns;
-//         // 2. Mostrar el modal de requisitos
-//         showRequisitosModal.value = true;
-//     }
-// };
-
-// --- Busca esto en tu Inicio.vue ---
-// const handleInscripcionClick = async () => {
-//     // 1. Validar el formulario del hijo primero
-//     const resIns = await childFormInscription.value.getInscripcion();
-
-//     if (resIns.validate) {
-//         // Guardamos los datos para usarlos luego
-//         tempResIns.value = resIns;
-
-//         // --- EL CAMBIO: ---
-//         // showRequisitosModal.value = true; // COMENTA ESTA LÍNEA
-//         confirmarYProcesar();               // AGREGA ESTA LÍNEA (Llama directo al proceso)
-
-//         console.log("Puenteando modal: Saltando directo a confirmarYProcesar");
-//     }
-// };
-
 
 const handleInscripcionClick = async () => {
     // ACTIVAMOS EL SPINNER
@@ -245,19 +203,9 @@ const confirmarYProcesar = async () => {
         loading.value = false;
     }
 };
-// Modificamos el computed del total para que use el del formulario si existe
-// const total_final = computed(() => {
-//     // Si el formulario nos está enviando un total (por días), usamos ese.
-//     // Si no, usamos el precio base de la categoría seleccionada.
-//     return resumen_dinamico.value.total > 0
-//         ? resumen_dinamico.value.total
-//         : (categoria_seleccionada.value?.precio_disponible?.valor || '0.00');
-// });
 
-const total_final = computed(() => {
-    return resumen_dinamico.value.total > 0
-        ? resumen_dinamico.value.total
-        : (categoria_seleccionada.value?.precio_disponible?.valor || '0.00');
+const listaAMostrar = computed(() => {
+    return props.section === 'viajes' ? props.adicionales : props.categorias;
 });
 
 onMounted(() => {
@@ -285,9 +233,6 @@ onMounted(() => {
         }
     }
 });
-
-
-
 
 const handleBeforeUnload = (event) => {
     // SI isPaying es true, esta función termina aquí y NO sale ninguna alerta
@@ -322,21 +267,24 @@ onUnmounted(() => {
             </div>
 
             <div class="mt-6 mb-6">
+                <!-- ============= PASOS =============
+                 ================================== -->
                 <Stepper v-model:value="activeStep" class="w-full">
                     <StepList class="text-black-price bg-degradient">
                         <Step value="1">Personal Details</Step>
                         <Step value="2">Billing Information</Step>
-                        <Step value="3">Payment Process</Step>
+                        <Step value="3">Courses or Tours</Step>
+                        <Step value="4">Payment Process</Step>
                     </StepList>
 
+
                     <StepPanels>
+                        <!-- ========== Personal Details ==========
+                         ==========================================  -->
                         <StepPanel v-slot="{ activateCallback }" value="1"
                             class="rounded-2xl border-2 border-green-iimp bg-white-price shadow-wmc">
                             <FormValidacionDoc ref="childFormValidacionDoc" :tipo_origen="tipo_origen" />
                             <div class="flex p-6 justify-end items-center">
-                                <!-- <Button label="Home" icon="pi pi-home" variant="text"
-                                    class="p-button-secondary p-button-text font-bold text-gray-500 hover:text-green-iimp"
-                                    @click="resetToNationality" /> -->
 
                                 <Button label="Validate" icon="pi pi-arrow-right" iconPos="right"
                                     class="bg-degradient border-rounded-full" :loading="loading"
@@ -356,86 +304,56 @@ onUnmounted(() => {
                             </div>
                         </StepPanel>
 
+                        <!-- ========== Billing Information ==========
+                         ==========================================  -->
                         <StepPanel v-slot="{ activateCallback }" value="2"
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
                             <FormInscription ref="childFormInscription" :data_persona="data_persona"
                                 :categorias="props.categorias" />
-                            <!-- <div class="flex justify-between p-6">
-                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
-                                    @click="activateCallback('1')" />
-                                <Button label="Register" icon="pi pi-arrow-right" iconPos="right" :loading="loading"
-                                    @click="async () => {
-                                        const success = await validate('Inscripcion');
-                                        if (success) {
-                                            activateCallback('3');
-                                        }
-                                    }" class="bg-green-iimp border-rounded-full" />
-                            </div> -->
                             <div class="flex justify-between p-6">
                                 <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
                                     @click="activateCallback('1')" />
-
-                                <!-- <Button label="Register" iconPos="right" icon="pi pi-arrow-right"
-                                    @click="handleInscripcionClick" class="bg-degradient border-rounded-full" /> -->
                                 <Button label="Register" iconPos="right" icon="pi pi-arrow-right" :loading="loading"
                                     @click="handleInscripcionClick" class="bg-degradient border-rounded-full" />
                             </div>
                         </StepPanel>
 
+                        <!-- ========== Courses or Tours ==========
+                         ==========================================  -->
                         <StepPanel v-slot="{ activateCallback }" value="3"
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
-                            <FormPayment ref="childFormPayment" :data_persona="data_persona"
-                                :formulario="formDataPayment" :categoria_seleccionada="categoria_seleccionada" />
+                            <FormTourCourse ref="childFormTourCourse" :data_persona="data_persona"
+                                :adicionales="props.adicionales" />
                             <div class="flex justify-between p-6">
                                 <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
                                     @click="activateCallback('2')" />
+                                <Button label="Continue to Payment" iconPos="right" icon="pi pi-arrow-right"
+                                    :loading="loading" @click="async () => {
+                                        const isValid = await validate('Inscripcion');
+                                        if (isValid) {
+                                            activateCallback('4');
+                                        }
+                                    }" class="bg-degradient border-rounded-full" />
+                            </div>
+                        </StepPanel>
+
+                        <!-- ========== Payment Process ==========
+                         ==========================================  -->
+                        <StepPanel v-slot="{ activateCallback }" value="4"
+                            class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
+
+                            <FormPayment ref="childFormPayment" :data_persona="data_persona"
+                                :formulario="formDataPayment" :categoria_seleccionada="categoria_seleccionada" />
+
+                            <div class="flex justify-between p-6">
+                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                    @click="activateCallback('3')" />
                             </div>
                         </StepPanel>
                     </StepPanels>
                 </Stepper>
             </div>
 
-            <!-- <aside class="hidden xl:block absolute top-32 -right-64 w-60">
-                <Card class="shadow-2xl border-t-4 border-yellow-price bg-white">
-                    <template #title>
-                        <div class="text-sm font-bold text-slate-700 flex items-center gap-2">
-                            <i class="pi pi-shopping-cart text-green-iimp"></i> RESUMEN
-                        </div>
-                    </template>
-<template #content>
-                        <div class="flex flex-col gap-3">
-                            <div v-if="categoria_seleccionada.id">
-                                <span
-                                    class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Categoría</span>
-                                <p class="text-xs font-bold text-blue-900 uppercase">
-                                    {{ categoria_seleccionada.nombre_en }}
-                                </p>
-                                <p class="text-[10px] text-slate-500 italic">
-                                    {{ categoria_seleccionada.precio_disponible?.nombre_en }}
-                                </p>
-                            </div>
-
-                            <div v-if="data_persona.nombres">
-                                <span
-                                    class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Participante</span>
-                                <p class="text-xs font-semibold text-slate-700 leading-tight">
-                                    {{ data_persona.nombres }} {{ data_persona.apellido_paterno }}
-                                </p>
-                            </div>
-
-                            <div class="pt-2 border-t border-gray-100">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-xs font-bold text-slate-600">TOTAL:</span>
-                                    <span class="text-xl font-black text-green-iimp">
-                                        {{ categoria_seleccionada.precio_disponible?.moneda?.simbolo || '$' }} {{
-                                            total_final }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-</Card>
-</aside> -->
         </div>
 
         <Dialog v-model:visible="visible" modal :showHeader="false" :closable="false" :style="{ width: '900px' }"
