@@ -71,7 +71,22 @@ const irAlFormulario = (id) => {
 <template>
     <AppLayout class="bg-gradient-wmc">
         <div class="px-6 py-12 mx-auto max-w-6xl min-h-[80vh] flex flex-col justify-center font-sans">
-
+            <div class="preventa-banner-home animate-fade-in-down mb-8">
+                <div class="banner-home-content">
+                    <div class="banner-home-icon">
+                        <span class="text-2xl">⏳</span>
+                    </div>
+                    <div class="banner-home-text">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="tag-early-bird">EARLY BIRD RATES</span>
+                        </div>
+                        <h2 class="text-xl md:text-2xl font-black text-white">Take advantage of Early Bird rates!</h2>
+                        <p class="text-white/80 text-sm md:text-base">
+                            Register by <strong>March 31st</strong> to secure your place with special pricing.
+                        </p>
+                    </div>
+                </div>
+            </div>
             <div id="titulo_inicial" class="mb-12 text-left animate-fade-in-down">
                 <h1 class="text-4xl md:text-5xl font-black text-yellow-price tracking-tight mb-2">
                     World Mining Congress <span class="text-white">2026</span>
@@ -309,4 +324,87 @@ const irAlFormulario = (id) => {
         opacity: 1;
     }
 }
+
+    .preventa-banner-home {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        border-left: 6px solid #f59e0b;
+        border-radius: 24px;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px); /* Para soporte en Safari/iPhone */
+        position: relative;
+        overflow: hidden;
+    }
+
+    .banner-home-content {
+        display: flex;
+        align-items: center;
+        padding: 1.5rem;
+        gap: 1.25rem;
+    }
+
+    .banner-home-icon {
+        background: rgba(245, 158, 11, 0.2);
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .tag-early-bird {
+        background: #f59e0b;
+        color: #000;
+        font-size: 0.65rem;
+        font-weight: 900;
+        padding: 2px 8px;
+        border-radius: 6px;
+        letter-spacing: 0.05em;
+    }
+
+    .banner-home-text h2 {
+        line-height: 1.2;
+        margin-bottom: 4px;
+    }
+
+    /* Adaptación para Mobile */
+    @media (max-width: 640px) {
+        .banner-home-content {
+            padding: 1.25rem;
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .banner-home-icon {
+            width: 48px;
+            height: 48px;
+        }
+
+        .banner-home-text h2 {
+            font-size: 1.25rem;
+        }
+        
+        .banner-home-text p {
+            font-size: 0.85rem;
+        }
+    }
+
+    /* Animación de entrada igual a la de tus títulos */
+    .animate-fade-in-down {
+        animation: fadeInDown 0.6s ease-out forwards;
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 </style>
