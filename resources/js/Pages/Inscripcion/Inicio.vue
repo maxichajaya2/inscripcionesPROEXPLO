@@ -43,8 +43,12 @@ const isPaying = ref(false);
 const nacionalidadSeleccionada = ref(null);
 const childFormValidacionDoc = ref();
 const childFormInscription = ref(null);
+const childFormTourCourse = ref(null);
 const tipo_origen = ref(0);
 const categoria_seleccionada = ref({});
+const extras_para_mostrar = ref([]);
+const urlParams = new URLSearchParams(window.location.search);
+const sectionUrl = urlParams.get('section') || 'inscripciones';
 
 const resumen_dinamico = ref({
     total: 0,
@@ -137,72 +141,335 @@ const goStart = () => {
 
 const activeStep = ref("1"); // Control del paso actual
 
+// const handleInscripcionClick = async () => {
+//     // ACTIVAMOS EL SPINNER
+//     loading.value = true;
+
+//     // 1. Validar el formulario del hijo primero
+//     const resIns = await childFormInscription.value.getInscripcion();
+
+//     if (resIns.validate) {
+//         // Guardamos los datos para usarlos luego
+//         tempResIns.value = resIns;
+//         await confirmarYProcesar();
+
+//     } else {
+//         // SI NO VALIDA, APAGAMOS EL SPINNER PARA QUE EL USUARIO CORRIJA
+//         loading.value = false;
+//     }
+// };
+
+// 2. CREAMOS EL NUEVO HANDLER DEL PASO 3 (CURSOS)
 const handleInscripcionClick = async () => {
-    // ACTIVAMOS EL SPINNER
     loading.value = true;
 
-    // 1. Validar el formulario del hijo primero
+    // Validamos el formulario del Paso 2
     const resIns = await childFormInscription.value.getInscripcion();
 
     if (resIns.validate) {
-        // Guardamos los datos para usarlos luego
+        // A. Guardamos la data del Paso 2 en la variable temporal
         tempResIns.value = resIns;
-        await confirmarYProcesar();
 
-    } else {
-        // SI NO VALIDA, APAGAMOS EL SPINNER PARA QUE EL USUARIO CORRIJA
-        loading.value = false;
+        // B. ¡AQUÍ ESTÁ LA CLAVE! No llamamos a confirmarYProcesar todavía.
+        // Simplemente avanzamos el Stepper al Paso 3.
+        activeStep.value = "3";
+
+        // Opcional: Hacemos scroll arriba si es necesario
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+    // Si no valida, simplemente quitamos el loading y el usuario ve los errores
+    loading.value = false;
 };
 
-const confirmarYProcesar = async () => {
+// const handleCursosClick = async () => {
+//     loading.value = true;
+
+//     // A. Capturamos los datos del componente hijo usando el ref
+//     // (Gracias al defineExpose que pusiste antes)
+//     let extras = [];
+//     if (childFormTourCourse.value) {
+//         extras = childFormTourCourse.value.extras_seleccionados;
+//     }
+
+//     console.log("Extras seleccionados:", extras);
+
+//     // B. Ahora sí, llamamos a la función final pasando los extras
+//     await confirmarYProcesar(extras);
+// };
+
+// const confirmarYProcesar = async () => {
+//     showRequisitosModal.value = false;
+//     loading.value = true;
+//     isPaying.value = true;
+
+//     try {
+//         const payload = new FormData();
+//         // Datos del paso 1
+//         Object.keys(data_persona.value).forEach(key => {
+//             payload.append(key, data_persona.value[key]);
+//         });
+
+//         // Datos del paso 2 guardados previamente
+//         Object.keys(tempResIns.value.formInscription).forEach(key => {
+//             if (!payload.has(key)) {
+//                 payload.append(key, tempResIns.value.formInscription[key]);
+//             }
+//         });
+
+//         const response = await axios.post('/pago/getform', payload, {
+//             headers: { 'Content-Type': 'multipart/form-data' }
+//         });
+
+
+//         if (response.data.status && response.data.formulario) {
+//             formDataPayment.value = response.data.formulario;
+//             activeStep.value = "3"; // Movemos al paso de pago manualmente
+//             loading.value = false;
+
+//             // --- ESTO ES LO QUE FALTA ---
+//             // Aseguramos que el padre sepa qué categoría es antes de mostrar el Paso 3
+//             const catId = tempResIns.value.formInscription.selected_categoria;
+//             const encontrada = props.categorias.find(c => c.id == catId);
+//             if (encontrada) {
+//                 categoria_seleccionada.value = encontrada;
+//             }
+
+//             actualizarResumen({ total: tempResIns.value.total_final });
+//             // ----------------------------
+//         } else {
+//             toast.add({ severity: 'error', summary: 'Error', detail: response.data.message });
+//             loading.value = false;
+//         }
+//     } catch (error) {
+//         console.error("Error:", error);
+//         loading.value = false;
+//     }
+// };
+
+// const handleCursosClick = async () => {
+//     loading.value = true;
+
+//     let idsExtras = [];
+
+//     if (childFormTourCourse.value) {
+//         // 1. OBTENER IDs PARA EL BACKEND (Laravel)
+//         idsExtras = childFormTourCourse.value.extras_seleccionados || [];
+
+//         // 2. OBTENER OBJETOS COMPLETOS PARA EL VISUAL (FormPayment)
+//         // Ya no usamos props.adicionales, usamos lo que nos da el hijo
+//         extras_para_mostrar.value = childFormTourCourse.value.selectedObjects || [];
+//     }
+
+//     // 3. Enviamos los IDs al backend
+//     await confirmarYProcesar(idsExtras);
+// };
+
+const handleCursosClick = async () => {
+    // 1. DISPARAR LA VALIDACIÓN DEL HIJO
+    if (childFormTourCourse.value) {
+        // Llamamos a la función que expuso el hijo
+        const esValido = childFormTourCourse.value.validarSeleccion();
+
+        if (!esValido) {
+            // Si el hijo devuelve false, apagamos el loading y NO seguimos
+            loading.value = false;
+            return;
+        }
+    }
+
+    // 2. SI ES VÁLIDO, SEGUIMOS CON EL PROCESO DE PAGO
+    loading.value = true;
+    let idsExtras = [];
+    if (childFormTourCourse.value) {
+        idsExtras = childFormTourCourse.value.extras_seleccionados || [];
+        extras_para_mostrar.value = childFormTourCourse.value.selectedObjects || [];
+    }
+
+    // Enviamos los IDs al backend
+    await confirmarYProcesar(idsExtras);
+};
+
+// const confirmarYProcesar = async (extras = []) => {
+//     // Cerramos modal de requisitos si estaba abierto
+//     showRequisitosModal.value = false;
+//     loading.value = true;
+
+//     // Activamos flag para evitar que el usuario salga de la página accidentalmente
+//     isPaying.value = true;
+
+//     try {
+//         const payload = new FormData();
+
+//         // ---------------------------------------------------------
+//         // 1. AGREGAR DATOS DEL PASO 1 (Persona)
+//         // ---------------------------------------------------------
+//         Object.keys(data_persona.value).forEach(key => {
+//             payload.append(key, data_persona.value[key]);
+//         });
+
+//         // ---------------------------------------------------------
+//         // 2. AGREGAR DATOS DEL PASO 2 (Inscripción / Facturación)
+//         // ---------------------------------------------------------
+//         // Usamos los datos guardados en la variable temporal 'tempResIns'
+//         if (tempResIns.value && tempResIns.value.formInscription) {
+//             Object.keys(tempResIns.value.formInscription).forEach(key => {
+//                 // Manejo especial para el archivo (uploadDocument)
+//                 if (key === 'uploadDocument') {
+//                     if (tempResIns.value.formInscription[key]) {
+//                         payload.append(key, tempResIns.value.formInscription[key]);
+//                     }
+//                 } else {
+//                     // Para el resto de campos, agregamos solo si no existen ya
+//                     // (para evitar duplicar campos como 'nombres' o 'documento' si se repiten)
+//                     if (!payload.has(key)) {
+//                         payload.append(key, tempResIns.value.formInscription[key]);
+//                     }
+//                 }
+//             });
+//         }
+
+//         // ---------------------------------------------------------
+//         // 3. AGREGAR DATOS DEL PASO 3 (Extras / Cursos) - ¡NUEVO!
+//         // ---------------------------------------------------------
+//         // Convertimos el array a string JSON para que Laravel lo lea fácil
+//         payload.append('extras_seleccionados', JSON.stringify(extras));
+
+
+//         // ---------------------------------------------------------
+//         // 4. ENVIAR AL BACKEND (Laravel)
+//         // ---------------------------------------------------------
+//         const response = await axios.post('/pago/getform', payload, {
+//             headers: { 'Content-Type': 'multipart/form-data' }
+//         });
+
+//         // ---------------------------------------------------------
+//         // 5. PROCESAR RESPUESTA
+//         // ---------------------------------------------------------
+//         if (response.data.status && response.data.formulario) {
+//             // A. Guardamos el formulario de Niubiz que nos devolvió el backend
+//             formDataPayment.value = response.data.formulario;
+
+//             // B. Detenemos el spinner
+//             loading.value = false;
+
+//             // C. ¡IMPORTANTE! Movemos al Paso 4 (Pago), ya que el 3 fue Cursos
+//             activeStep.value = "4";
+
+//             // D. Lógica visual: Recuperar objeto de categoría para mostrar resumen
+//             const catId = tempResIns.value.formInscription.selected_categoria;
+//             const encontrada = props.categorias.find(c => c.id == catId);
+//             if (encontrada) {
+//                 categoria_seleccionada.value = encontrada;
+//             }
+
+//             // E. Actualizar el resumen de precios en el lateral
+//             // Si el backend nos devuelve el 'total_real' (suma de inscripción + extras), usamos ese.
+//             // Si no, usamos el del paso 2 (aunque estaría desactualizado si sumaste extras).
+//             // Lo ideal es que tu controller devuelva 'total_real'.
+//             const totalFinal = response.data.total_real || tempResIns.value.total_final;
+
+//             actualizarResumen({ total: totalFinal });
+
+//         } else {
+//             // Manejo de errores que vienen del backend (status: false)
+//             toast.add({ severity: 'error', summary: 'Error', detail: response.data.message });
+//             loading.value = false;
+//         }
+
+//     } catch (error) {
+//         // Manejo de errores de red o código
+//         console.error("Error en confirmarYProcesar:", error);
+//         toast.add({ severity: 'error', summary: 'Error', detail: 'Ocurrió un error al procesar la solicitud.' });
+//         loading.value = false;
+//     }
+// };
+
+const confirmarYProcesar = async (extras = []) => {
     showRequisitosModal.value = false;
     loading.value = true;
     isPaying.value = true;
 
     try {
         const payload = new FormData();
-        // Datos del paso 1
+
+        // 1. Datos Persona
         Object.keys(data_persona.value).forEach(key => {
             payload.append(key, data_persona.value[key]);
         });
 
-        // Datos del paso 2 guardados previamente
-        Object.keys(tempResIns.value.formInscription).forEach(key => {
-            if (!payload.has(key)) {
-                payload.append(key, tempResIns.value.formInscription[key]);
-            }
-        });
+        // 2. Datos Inscripción
+        if (tempResIns.value && tempResIns.value.formInscription) {
+            Object.keys(tempResIns.value.formInscription).forEach(key => {
+                if (key === 'uploadDocument') {
+                    if (tempResIns.value.formInscription[key]) {
+                        payload.append(key, tempResIns.value.formInscription[key]);
+                    }
+                } else {
+                    if (!payload.has(key)) {
+                        payload.append(key, tempResIns.value.formInscription[key]);
+                    }
+                }
+            });
+        }
 
+        const urlParams = new URLSearchParams(window.location.search);
+        const profileId = urlParams.get('profile');
+        if (profileId) {
+            payload.append('profile', profileId);
+        }
+
+        // ==========================================================
+        // AGREGA ESTA LÍNEA AQUÍ (CRÍTICO):
+        // ==========================================================
+        payload.append('section', props.section);
+        // ==========================================================
+        // 3. Datos Extras (JSON String)
+        payload.append('extras_seleccionados', JSON.stringify(extras));
+
+        // 4. Enviar al Backend
         const response = await axios.post('/pago/getform', payload, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
 
-
         if (response.data.status && response.data.formulario) {
             formDataPayment.value = response.data.formulario;
-            activeStep.value = "3"; // Movemos al paso de pago manualmente
+
+            // Avanzamos al paso 4
+            activeStep.value = "4";
+
             loading.value = false;
 
-            // --- ESTO ES LO QUE FALTA ---
-            // Aseguramos que el padre sepa qué categoría es antes de mostrar el Paso 3
+            // Actualizar referencia de categoría
             const catId = tempResIns.value.formInscription.selected_categoria;
             const encontrada = props.categorias.find(c => c.id == catId);
             if (encontrada) {
                 categoria_seleccionada.value = encontrada;
             }
 
-            actualizarResumen({ total: tempResIns.value.total_final });
-            // ----------------------------
+            const totalFinal = response.data.total_real || tempResIns.value.total_final;
+            actualizarResumen({ total: totalFinal });
+
         } else {
             toast.add({ severity: 'error', summary: 'Error', detail: response.data.message });
             loading.value = false;
         }
+
     } catch (error) {
-        console.error("Error:", error);
+        console.error("Error en confirmarYProcesar:", error);
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Ocurrió un error al procesar la solicitud.' });
         loading.value = false;
     }
 };
+
+const extras_resumen = computed(() => {
+    // Si no se ha montado el hijo o no hay selección, retorna vacío
+    if (!childFormTourCourse.value || !childFormTourCourse.value.extras_seleccionados) return [];
+
+    const ids = childFormTourCourse.value.extras_seleccionados;
+
+    // Filtramos de la lista completa de 'props.adicionales' los que coinciden con los IDs seleccionados
+    return props.adicionales.filter(item => ids.includes(item.id));
+});
 
 const listaAMostrar = computed(() => {
     return props.section === 'viajes' ? props.adicionales : props.categorias;
@@ -323,17 +590,13 @@ onUnmounted(() => {
                         <StepPanel v-slot="{ activateCallback }" value="3"
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
                             <FormTourCourse ref="childFormTourCourse" :data_persona="data_persona"
-                                :adicionales="props.adicionales" />
+                                :adicionales="props.adicionales" :section="sectionUrl" />
                             <div class="flex justify-between p-6">
                                 <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
                                     @click="activateCallback('2')" />
                                 <Button label="Continue to Payment" iconPos="right" icon="pi pi-arrow-right"
-                                    :loading="loading" @click="async () => {
-                                        const isValid = await validate('Inscripcion');
-                                        if (isValid) {
-                                            activateCallback('4');
-                                        }
-                                    }" class="bg-degradient border-rounded-full" />
+                                    :loading="loading" @click="handleCursosClick"
+                                    class="bg-degradient border-rounded-full" />
                             </div>
                         </StepPanel>
 
@@ -343,7 +606,8 @@ onUnmounted(() => {
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
 
                             <FormPayment ref="childFormPayment" :data_persona="data_persona"
-                                :formulario="formDataPayment" :categoria_seleccionada="categoria_seleccionada" />
+                                :formulario="formDataPayment" :categoria_seleccionada="categoria_seleccionada"
+                                :extras_seleccionados="extras_para_mostrar" />
 
                             <div class="flex justify-between p-6">
                                 <Button label="Back" severity="secondary" icon="pi pi-arrow-left"

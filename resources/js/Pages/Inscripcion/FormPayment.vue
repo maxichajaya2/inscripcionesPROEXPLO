@@ -5,11 +5,21 @@ import Card from 'primevue/card';
 const props = defineProps({
     categoria_seleccionada: Object,
     data_persona: Object,
-    formulario: Object
+    formulario: Object,
+    extras_seleccionados: {
+        type: Array,
+        default: () => []
+    }
 });
 
+const urlParams = new URLSearchParams(window.location.search);
+const esSeccionViajes = computed(() => urlParams.get('section') === 'viajes');
 // Controla si el usuario aceptó los términos para habilitar el botón
 const termsAccepted = ref(false);
+
+const precioInscripcion = computed(() => {
+    return props.categoria_seleccionada?.precio_disponible?.valor || '0.00';
+});
 
 const mountNiubiz = async (data) => {
     let config = data;
@@ -92,17 +102,7 @@ onMounted(() => {
     // Forzamos la limpieza de cualquier alerta que haya quedado de los pasos anteriores
 
 });
-// onMounted(() => {
-//     if (props.formulario) mountNiubiz(props.formulario);
 
-//     // LIMPIEZA FORZADA
-//     window.onbeforeunload = null;
-
-//     // Matamos cualquier listener residual por si acaso
-//     window.removeEventListener('beforeunload', handleBeforeUnload);
-
-//     console.log("Paso 3 libre de alertas.");
-// });
 
 // Vigilamos si la data del formulario cambia para recargar la pasarela
 watch(() => props.formulario, (newVal) => {
@@ -118,6 +118,9 @@ const scriptData = computed(() => {
 </script>
 
 <template>
+    <!-- <pre class="bg-black text-white p-4 text-xs">
+    {{ extras_seleccionados }}
+</pre> -->
     <div id="FormPaymentFinish" class="w-full">
         <div class="flex flex-col items-center p-6 w-full">
             <div class="text-blue-900 font-bold text-center text-2xl mb-6 tracking-wide uppercase">
@@ -145,6 +148,34 @@ const scriptData = computed(() => {
                                             categoria_seleccionada.nombre ? categoria_seleccionada.nombre : 'WMC 2026 Delegate')
                                     }}
                                 </span>
+                            </div>
+                            <div
+                                v-if="!esSeccionViajes" class="flex justify-between items-start mb-1 text-sm pl-2 border-l-2 border-gray-100 p-1 ">
+                                <div class="flex flex-col w-2/3">
+                                    <span class="text-blue-600 font-medium leading-tight">
+                                        Register
+                                    </span>
+                                </div>
+                                <span class="text-gray-600 font-medium text-right w-1/3">
+                                  USD {{ precioInscripcion || '0.00' }}
+                                </span>
+
+                            </div>
+
+                            <div v-for="extra in extras_seleccionados" :key="extra.id"
+                                class="flex justify-between items-start mb-1 text-sm pl-2 border-l-2 border-gray-100 p-1 ">
+                                <div class="flex flex-col w-2/3">
+                                    <span class="text-blue-600 font-medium leading-tight">
+                                        {{ extra.titulo || extra.nombre_en }}
+                                    </span>
+                                    <span class="text-[10px] text-gray-400 uppercase">
+                                        {{ extra.tipo === 'viaje' ? 'Technical Visit' : 'Course' }}
+                                    </span>
+                                </div>
+                                <span class="text-gray-600 font-medium text-right w-1/3">
+                                    USD {{ extra.precio_disponible?.valor || '0.00' }}
+                                </span>
+
                             </div>
 
                             <div

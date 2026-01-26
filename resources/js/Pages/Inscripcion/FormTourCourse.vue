@@ -1,87 +1,56 @@
 <script setup>
-import { ref, computed, h } from 'vue';
+import { ref, computed, defineExpose, watch } from 'vue';
 import Checkbox from 'primevue/checkbox';
 import Accordion from 'primevue/accordion';
 import AccordionTab from 'primevue/accordiontab';
 import Card from 'primevue/card';
 import Button from 'primevue/button'; // Importamos el botón
 
-const items_adicionales = ref([
-    {
-        id: 101,
-        tipo: 'curso',
-        titulo: 'Curso A [Waste Rock Dumps]',
-        subtitulo: 'Diseño, Mantenimiento, Operación y Cierre de Depósitos de Desmonte',
-        precio: 250,
-        pdf_url: 'https://services.slopestability2026.com/api/files/ebfebbb6-83e8-47d8-83aa-965e1ea21a4a.pdf',
-        detalles: {
-            coordinador: 'Denys Parra (Anddes, Peru)',
-            expositores: ['Denys Parra', 'Jesús Negrón', 'Humberto Alvarado', 'Mckevin Canicoba', 'Franco Sánchez', 'Luis Santamaria'],
-            fecha: 'Sábado 24 de Octubre, 2026 (*)',
-            horario: '08:00 - 12:00 y 14:00 - 18:00 horas',
-            idioma: 'Español (Interpretación en inglés)',
-            lugar: 'Centro de Convenciones de Lima, sede de Slope Stability 2026'
-        }
-    },
-    {
-        id: 102,
-        tipo: 'curso',
-        titulo: 'Curso B [Geoblast]',
-        subtitulo: 'Optimización de Voladura y Estabilidad de Taludes',
-        precio: 250,
-        pdf_url: 'https://services.slopestability2026.com/api/files/ebfebbb6-83e8-47d8-83aa-965e1ea21a4a.pdf',
-        detalles: {
-            coordinador: 'Cristian Alvarez (Geoblast, Chile)',
-            expositores: ['Carlos Scherpenisse', 'Alex Calderón'],
-            fecha: 'Sábado 24 de Octubre, 2026 (*)',
-            horario: '08:00 - 12:00 y 14:00 - 18:00 horas',
-            idioma: 'Español (Interpretación en inglés)',
-            lugar: 'Centro de Convenciones de Lima, sede de Slope Stability 2026'
-        }
-    },
-    {
-        id: 201,
-        tipo: 'viaje',
-        titulo: 'Visita Técnica: Unidad Minera Cerro Verde',
-        subtitulo: 'Operaciones de tajo abierto y lixiviación a gran escala',
-        precio: 450,
-        pdf_url: 'https://services.slopestability2026.com/api/files/ebfebbb6-83e8-47d8-83aa-965e1ea21a4a.pdf',
-        detalles: {
-            responsable: 'Ing. Carlos Martínez (Sociedad Minera Cerro Verde)',
-            fecha: 'Domingo 25 de Octubre, 2026',
-            horario: '07:00 - 17:00 horas (Full Day)',
-            lugar: 'Punto de partida: Centro de Convenciones de Lima',
-            idioma: 'Español / Inglés',
-            nota: 'Incluye traslados, almuerzo técnico y EPP básico.'
-        }
-    },
-    {
-        id: 202,
-        tipo: 'viaje',
-        titulo: 'Visita Técnica: Proyecto Quellaveco',
-        subtitulo: 'Minería 100% Digital y Centro de Control Integrado',
-        precio: 500,
-        pdf_url: 'https://services.slopestability2026.com/api/files/ebfebbb6-83e8-47d8-83aa-965e1ea21a4a.pdf',
-        detalles: {
-            responsable: 'Staff Anglo American',
-            fecha: 'Lunes 26 de Octubre, 2026',
-            horario: '06:00 - 18:00 horas (Full Day)',
-            lugar: 'Salida desde Hoteles autorizados (Miraflores/San Isidro)',
-            idioma: 'Inglés con traducción al español',
-            nota: 'Requiere validación de examen médico vigente.'
-        }
-    }
-]);
+const props = defineProps({
+    adicionales: Array, // Aquí llegarán los 13 cursos del controlador
+    data_persona: Object,
+    section: String
+});
 
 const extras_seleccionados = ref([]);
 
-// Para controlar qué acordeón de detalles está abierto manualmente si fuera necesario
-const expandedDetails = ref({});
+
+const estaVacio = computed(() => {
+    return (props.adicionales || []).length === 0;
+});
+const formManualErrors = ref({ total: null });
+
+const validarSeleccion = () => {
+    // Si es sección viajes y no hay nada seleccionado
+    if (props.section === 'viajes' && extras_seleccionados.value.length === 0) {
+        formManualErrors.value.total = "Please select at least one course or technical visit to proceed with your registration.";
+
+        // Scroll automático al error para que no haya pierde
+        const el = document.getElementById('error-container-extras');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        return false; // Bloquea el paso
+    }
+
+    formManualErrors.value.total = null;
+    return true; // Deja pasar
+};
+
+
+watch(extras_seleccionados, (newVal) => {
+    if (newVal.length > 0) {
+        formManualErrors.value.total = null;
+    }
+}, { deep: true });
 
 const total_extras = computed(() => {
-    return items_adicionales.value
+    return (props.adicionales || [])
         .filter(item => extras_seleccionados.value.includes(item.id))
-        .reduce((sum, item) => sum + (Number(item.precio) || 0), 0);
+        .reduce((sum, item) => {
+            // Accedemos a precio_disponible.valor que creamos en el controlador
+            const precio = item.precio_disponible ? Number(item.precio_disponible.valor) : 0;
+            return sum + precio;
+        }, 0);
 });
 
 const toggleSelection = (id) => {
@@ -91,6 +60,22 @@ const toggleSelection = (id) => {
         extras_seleccionados.value.push(id);
     }
 };
+
+const selectedObjects = computed(() => {
+    return (props.adicionales || []).filter(item => extras_seleccionados.value.includes(item.id));
+});
+
+watch(() => props.section, (newVal) => {
+    console.log("¡Sección recibida en el hijo!", newVal);
+}, { immediate: true });
+
+defineExpose({
+    extras_seleccionados,
+    total_extras,
+    selectedObjects,
+    validarSeleccion
+});
+
 </script>
 
 <template>
@@ -104,7 +89,39 @@ const toggleSelection = (id) => {
             </template>
 
             <template #content>
-                <div class="px-2">
+                <div id="error-container-extras">
+                    <div v-if="formManualErrors.total"
+                        class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-center gap-4 animate-fade-in-down shadow-sm">
+                        <div class="bg-red-500 rounded-full p-2 flex-none">
+                            <i class="pi pi-exclamation-triangle text-white text-lg"></i>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-red-800 font-black text-sm uppercase">Selection Required</span>
+                            <p class="text-red-700 text-sm font-medium leading-tight">
+                                {{ formManualErrors.total }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div v-if="estaVacio"
+                    class="mb-6 p-6 rounded-3xl bg-blue-50 border border-blue-200 flex items-center gap-5 animate-fade-in-down shadow-sm">
+                    <div class="bg-blue-600 rounded-full p-3 flex-none shadow-md">
+                        <i class="pi pi-info-circle text-white text-xl"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-blue-900 font-black text-sm uppercase tracking-wider">
+                            Information for your profile
+                        </span>
+                        <p class="text-blue-800 text-sm font-medium leading-relaxed mt-1">
+                            Dear students or day participants: this option for courses and technical visits is not
+                            enabled for your
+                            profile.
+                            <br><strong>You may continue to the next step without any issues.</strong> Thank you!
+                        </p>
+                    </div>
+                </div>
+
+                <div v-if="!estaVacio" class="px-2">
                     <Accordion :multiple="true" :activeIndex="[0, 1]" class="wmc-accordion">
 
                         <AccordionTab>
@@ -113,7 +130,7 @@ const toggleSelection = (id) => {
                             </template>
 
                             <div class="space-y-4 py-2">
-                                <div v-for="item in items_adicionales.filter(i => i.tipo === 'curso')" :key="item.id"
+                                <div v-for="item in adicionales.filter(i => i.tipo === 'curso')" :key="item.id"
                                     class="w-full border rounded-lg transition-all duration-200 shadow-sm"
                                     :class="extras_seleccionados.includes(item.id) ? 'bg-blue-50 border-blue-300' : 'border-gray-100 bg-white'">
 
@@ -124,25 +141,27 @@ const toggleSelection = (id) => {
                                                 class="mr-3" />
                                             <div class="flex flex-col">
                                                 <label
-                                                    class="text-sm font-black text-blue-900 leading-tight cursor-pointer">{{
-                                                        item.titulo
-                                                    }}</label>
+                                                    class="text-sm font-black text-blue-900 leading-tight cursor-pointer">
+                                                    {{ item.nombre_en }}
+                                                </label>
                                                 <span
-                                                    class="text-[10px] text-slate-500 font-medium italic uppercase tracking-tighter leading-none mt-1">{{
-                                                        item.subtitulo }}</span>
+                                                    class="text-[10px] text-slate-500 font-medium italic uppercase tracking-tighter leading-none mt-1">
+                                                    {{ item.subtitulo_en || 'WMC 2026 Special Course' }}
+                                                </span>
                                             </div>
                                         </div>
 
                                         <div class="flex items-center gap-4 border-l pl-4 border-gray-100">
-                                            <a :href="item.pdf_url" target="_blank" class="no-underline">
+                                            <a v-if="item.pdf_url" :href="item.pdf_url" target="_blank"
+                                                class="no-underline">
                                                 <Button icon="pi pi-file-pdf" label="Details"
                                                     class="p-button-text p-button-sm text-blue-500 font-bold uppercase text-[10px]" />
                                             </a>
                                             <div class="text-right">
-                                                <p class="text-yellow-price font-black text-lg">USD {{ item.precio }}
+                                                <p class="text-yellow-price font-black text-lg">
+                                                    USD {{ item.precio_disponible?.valor || 0 }}
                                                 </p>
                                             </div>
-
                                         </div>
                                     </div>
 
@@ -152,33 +171,37 @@ const toggleSelection = (id) => {
                                                 <div class="flex items-center gap-2 pl-8">
                                                     <i class="pi pi-info-circle text-blue-400 text-xs"></i>
                                                     <span
-                                                        class="text-[10px] font-black text-blue-400 uppercase tracking-widest italic underline">Technical
-                                                        Sheet / Ver Ficha Técnica</span>
+                                                        class="text-[10px] font-black text-blue-400 uppercase tracking-widest italic underline">
+                                                        Technical Sheet / Ver Ficha Técnica
+                                                    </span>
                                                 </div>
                                             </template>
                                             <div
                                                 class="p-4 bg-slate-50 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-normal text-gray-600 ml-8 border-l-2 border-blue-200 rounded-br-lg">
                                                 <div class="space-y-1.5">
                                                     <p><strong><i class="pi pi-user mr-1 text-blue-400"></i>
-                                                            Coordinador:</strong> {{
-                                                                item.detalles.coordinador }}</p>
+                                                            Encargado:</strong> {{ item.encargado
+                                                                || 'TBA' }}</p>
                                                     <p><strong><i class="pi pi-users mr-1 text-blue-400"></i>
-                                                            Expositores:</strong> {{
-                                                                item.detalles.expositores.join(', ') }}</p>
+                                                            Expositores:</strong>
+                                                        {{ Array.isArray(item.expositores) ? item.expositores.join(', ')
+                                                            : (item.expositores ||
+                                                                'Experts in the field') }}
+                                                    </p>
                                                     <p><strong><i class="pi pi-language mr-1 text-blue-400"></i>
                                                             Idioma:</strong> {{
-                                                                item.detalles.idioma }}</p>
+                                                                item.idioma_texto || 'English / Spanish' }}</p>
                                                 </div>
                                                 <div class="space-y-1.5">
                                                     <p><strong><i class="pi pi-calendar mr-1 text-blue-400"></i>
-                                                            Fecha:</strong> {{
-                                                                item.detalles.fecha }}</p>
+                                                            Fecha:</strong> {{ item.fecha_texto
+                                                                || 'To be defined' }}</p>
                                                     <p><strong><i class="pi pi-clock mr-1 text-blue-400"></i>
                                                             Horario:</strong> {{
-                                                                item.detalles.horario }}</p>
+                                                                item.horario_texto || 'Full Day' }}</p>
                                                     <p><strong><i class="pi pi-map-marker mr-1 text-blue-400"></i>
                                                             Lugar:</strong> {{
-                                                                item.detalles.lugar }}</p>
+                                                                item.lugar_texto || 'Convention Center' }}</p>
                                                 </div>
                                             </div>
                                         </AccordionTab>
@@ -187,12 +210,12 @@ const toggleSelection = (id) => {
                             </div>
                         </AccordionTab>
 
-                        <AccordionTab>
+                        <!-- <AccordionTab>
                             <template #header>
                                 <span class="font-bold text-blue-900 uppercase text-sm italic">Technical Visits</span>
                             </template>
                             <div class="space-y-4 py-2">
-                                <div v-for="item in items_adicionales.filter(i => i.tipo === 'viaje')" :key="item.id"
+                                <div v-for="item in adicionales.filter(i => i.tipo === 'viaje')" :key="item.id"
                                     class="w-full border rounded-lg transition-all shadow-sm"
                                     :class="extras_seleccionados.includes(item.id) ? 'bg-blue-50 border-blue-300' : 'border-gray-100 bg-white'">
 
@@ -203,24 +226,20 @@ const toggleSelection = (id) => {
                                                 class="mr-3" />
                                             <div class="flex flex-col">
                                                 <label
-                                                    class="text-sm font-black text-blue-900 leading-tight cursor-pointer">{{
-                                                        item.titulo
-                                                    }}</label>
+                                                    class="text-sm font-black text-blue-900 leading-tight cursor-pointer">
+                                                    {{ item.nombre_en }}
+                                                </label>
                                                 <span
-                                                    class="text-[10px] text-slate-500 font-medium italic uppercase tracking-tighter leading-none mt-1">{{
-                                                        item.subtitulo }}</span>
+                                                    class="text-[10px] text-slate-500 font-medium italic uppercase tracking-tighter leading-none mt-1">
+                                                    {{ item.subtitulo_en || 'Technical Trip' }}
+                                                </span>
                                             </div>
                                         </div>
                                         <div class="flex items-center gap-4 border-l pl-4 border-gray-100">
-                                            <a :href="item.pdf_url" target="_blank" class="no-underline">
-                                                <Button icon="pi pi-file-pdf" label="Details"
-                                                    class="p-button-text p-button-sm text-blue-500 font-bold uppercase text-[10px]" />
-                                            </a>
                                             <div class="text-right">
-                                                <p class="text-yellow-price font-black text-lg">USD {{ item.precio }}
-                                                </p>
+                                                <p class="text-yellow-price font-black text-lg">USD {{
+                                                    item.precio_disponible?.valor || 0 }}</p>
                                             </div>
-
                                         </div>
                                     </div>
 
@@ -231,35 +250,29 @@ const toggleSelection = (id) => {
                                                     <i class="pi pi-info-circle text-blue-400 text-xs"></i>
                                                     <span
                                                         class="text-[10px] font-black text-blue-400 uppercase tracking-widest italic underline">Trip
-                                                        Logistics / Logística de Viaje</span>
+                                                        Logistics</span>
                                                 </div>
                                             </template>
                                             <div
                                                 class="p-4 bg-slate-50 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-normal text-gray-600 ml-8 border-l-2 border-blue-200 rounded-br-lg">
                                                 <div class="space-y-1.5">
-                                                    <p><strong>Responsable:</strong> {{ item.detalles.responsable }}</p>
-                                                    <p><strong>Horario:</strong> {{ item.detalles.horario }}</p>
-                                                    <p><strong>Encuentro:</strong> {{ item.detalles.lugar }}</p>
+                                                    <p><strong>Fecha:</strong> {{ item.fecha_texto || 'TBD' }}</p>
+                                                    <p><strong>Horario:</strong> {{ item.horario_texto || 'TBD' }}</p>
                                                 </div>
-                                                <div class="space-y-1.5 text-right md:text-left">
-                                                    <p><strong>Fecha:</strong> {{ item.detalles.fecha }}</p>
-                                                    <p><strong>Idioma:</strong> {{ item.detalles.idioma }}</p>
-                                                    <div v-if="item.detalles.nota"
-                                                        class="mt-2 text-blue-600 font-bold bg-blue-100 p-2 rounded-md italic shadow-inner">
-                                                        <i class="pi pi-ticket mr-1"></i> {{ item.detalles.nota }}
-                                                    </div>
+                                                <div class="space-y-1.5">
+                                                    <p><strong>Nota:</strong> {{ item.nota_logistica ||
+                                                        'Safetyequipmentrequired' }}</p>
                                                 </div>
                                             </div>
                                         </AccordionTab>
                                     </Accordion>
                                 </div>
                             </div>
-                        </AccordionTab>
+                        </AccordionTab> -->
                     </Accordion>
 
                     <div v-if="extras_seleccionados.length > 0"
                         class="mt-8 p-5 bg-lightblue-wmc border border-blue-wmc rounded-xl flex justify-between items-center shadow-md animate-fade-in">
-
                         <div class="flex flex-col">
                             <span class="text-[10px] uppercase text-blue-500 font-black tracking-widest">
                                 Additional Selection ({{ extras_seleccionados.length }})
@@ -268,7 +281,6 @@ const toggleSelection = (id) => {
                                 Subtotal Extras
                             </span>
                         </div>
-
                         <div class="text-right">
                             <span class="text-yellow-price font-black text-3xl tracking-tight">
                                 USD {{ total_extras }}

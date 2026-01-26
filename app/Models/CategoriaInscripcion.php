@@ -17,7 +17,9 @@ class CategoriaInscripcion extends Model
 
     public function precio(): BelongsToMany
     {
-        return $this->belongsToMany(Precio::class, 'detalle_categoria', 'id_categoria_inscripcion', 'id_precio');
+        // return $this->belongsToMany(Precio::class, 'detalle_categoria', 'id_categoria_inscripcion', 'id_precio');
+        return $this->belongsToMany(Precio::class, 'detalle_categoria', 'id_categoria_inscripcion', 'id_precio')
+            ->withPivot('id_perfil') // <--- Indicar que traiga esta columna de la tabla intermedia
+            ->withTimestamps();
     }
-
 }

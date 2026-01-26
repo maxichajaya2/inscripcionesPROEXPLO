@@ -18,7 +18,8 @@ use App\Models\CategoriaInscripcion;
 use App\Mail\MailInscripcion;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
-
+use App\Models\CategoriaCursoViaje;
+use App\Models\Precio;
 
 
 class InscripcionController extends Controller
@@ -39,22 +40,26 @@ class InscripcionController extends Controller
             ->orderBy('orden_es', 'ASC')
             ->get();
 
+        // dd($categorias);
         foreach ($categorias as $categoria) {
+            // 1. Buscamos el precio vigente
+            $precioVigente = $categoria->precio->filter(function ($p) {
+                return Carbon::parse($p->fecha_inicio)->startOfDay() <= Carbon::now()
+                    && Carbon::parse($p->fecha_fin)->endOfDay() >= Carbon::now();
+            })->first() ?? $categoria->precio->first();
 
-            $categoria->precio_disponible = $categoria->precio
-                ->where('fecha_inicio', '<=', $this->now)
-                ->where('fecha_fin', '>=', $this->now)
-                ->first();
+            $categoria->precio_disponible = $precioVigente;
 
-            if (str_contains(strtoupper($categoria->nombre_en), 'AUTHOR')) {
-                $categoria->grupo = 'autor';
-            } else {
-                $categoria->grupo = 'participante';
-            }
+            // 2. EXTRAEMOS EL ID_PERFIL DE LA TABLA PIVOTE (intermedia)
+            // Ahora ya no será null, vendrá de la tabla detalle_categoria
+            $categoria->id_perfil = $precioVigente ? $precioVigente->pivot->id_perfil : null;
+
+            // 3. Definimos el grupo para la UI
+            $categoria->grupo = str_contains(strtoupper($categoria->nombre_en), 'AUTHOR') ? 'autor' : 'participante';
         }
 
+        //  dd($categorias->toArray());
         $title = "Registration WMC 2026";
-
 
         return Inertia::render('Inscripcion/Index', compact('categorias', 'title'));
     }
@@ -73,13 +78,15 @@ class InscripcionController extends Controller
     private function renderInscripcion(Request $request, string $filtro, string $defaultTitle)
     {
         $section = $request->query('section', 'inscripciones');
+        $perfil_id = $request->query('profile');
+        $perfilesPermitidos = [1, 2, 3, 5, 6, 7];
 
         // Función anónima para reutilizar la lógica de precios vigentes
         $filtroPrecios = function ($query) {
-            $query->where('fecha_inicio', '<=', $this->now)
-                ->where('fecha_fin', '>=', $this->now);
+            $query->where('precio.fecha_inicio', '<=', $this->now)
+                ->where('precio.fecha_fin', '>=', $this->now)
+                ->where('precio.isactive', true); // <--- CAMBIO AQUÍ
         };
-
         // 1. Cargamos los Perfiles Principales (Inscripción al Congreso)
         $categorias = CategoriaInscripcion::with(['precio' => $filtroPrecios])
             ->where('nombre_en', 'LIKE', $filtro)
@@ -91,18 +98,49 @@ class InscripcionController extends Controller
                 return $cat;
             });
 
-        // 2. Cargamos los Adicionales (Tours y Cursos) - SIEMPRE se envían
-        $adicionales = CategoriaInscripcion::with(['precio' => $filtroPrecios])
-            ->where(function ($query) {
-                $query->where('nombre_en', 'LIKE', '%TOUR%')
-                    ->orWhere('nombre_en', 'LIKE', '%COURSE%');
-            })
-            ->where('isactive', true)
-            ->get()
-            ->map(function ($item) {
-                $item->precio_disponible = $item->precio->first();
-                return $item;
-            });
+        $perfilesPermitidos = [1, 2, 3, 5, 6, 7];
+        // $adicionales = CategoriaCursoViaje::with(['precios' => $filtroPrecios])
+        //     ->where('isactive', true)
+        //     ->get()
+        //     ->map(function ($item) use ($perfil_id) {
+        //         // Buscamos dentro de la relación el precio que tenga el id_perfil seleccionado en el pivot
+        //         $precioEspecifico = $item->precios->first(function ($p) use ($perfil_id) {
+        //             return $p->pivot->id_perfil == $perfil_id;
+        //         });
+
+        //         // Asignamos el precio encontrado (o el primero si no hay filtro)
+        //         $item->precio_disponible = $precioEspecifico ?? $item->precios->first();
+
+        //         return $item;
+        //     })
+        //     // Opcional: Si quieres ocultar cursos que no tengan precio para ese perfil
+        //     ->filter(fn($item) => $item->precio_disponible !== null)
+        //     ->values();
+
+        // 2. Adicionales (Cursos/Tours) con validación de perfiles
+        if (!in_array($perfil_id, $perfilesPermitidos)) {
+            $adicionales = collect(); // Si no es perfil permitido, enviamos lista vacía
+        } else {
+            $adicionales = CategoriaCursoViaje::with(['precios' => $filtroPrecios])
+                ->where('isactive', true)
+                ->get()
+                ->map(function ($item) use ($perfil_id) {
+                    // Buscamos el precio que coincida con el perfil en la tabla pivote
+                    $precioEspecifico = $item->precios->first(function ($p) use ($perfil_id) {
+                        return $p->pivot->id_perfil == $perfil_id;
+                    });
+
+                    // Asignamos el precio. Si no existe para ese perfil, será null
+                    $item->precio_disponible = $precioEspecifico;
+                    return $item;
+                })
+                // Solo dejamos los cursos que SI tienen precio para ese perfil
+                ->filter(fn($item) => $item->precio_disponible !== null)
+                ->values();
+        }
+
+        // dd($adicionales->toArray());
+
 
         $title = ($section === 'viajes') ? "Tours & Courses" : $defaultTitle;
 
@@ -110,93 +148,262 @@ class InscripcionController extends Controller
     }
 
 
+
+    // public function getForm(Request $request)
+    // {
+    //     // 1. Seguridad básica
+    //     if (!str_contains($request->headers->get('referer'), 'registro') || (csrf_token() === null)) {
+    //         abort(403, 'Unauthorized POST request.');
+    //     }
+
+    //     // 2. Captura de datos iniciales
+    //     $id_tipo_documento = $request->input('id_tipo_documento') ?? $request->input('tipo_doc');
+    //     $documento = trim($request->input('documento') ?? '');
+
+    //     if (empty($id_tipo_documento) || empty($documento)) {
+    //         return response()->json(['status' => false, 'message' => 'Document info missing'], 400);
+    //     }
+
+    //     // 3. Procesar Persona
+    //     $persona = Persona::where('id_tipo_documento', $id_tipo_documento)
+    //         ->where('documento', $documento)
+    //         ->firstOrNew();
+
+    //     // 4. Procesar Ocupación y Categoría
+    //     $cargo = $request->input('cargo', '');
+    //     $ocupacion_obj = Ocupacion::whereRaw("name like '%" . $cargo . "%'")
+    //         ->where('isactive', true)
+    //         ->first();
+
+    //     $id_ocupacion = $ocupacion_obj ? $ocupacion_obj->id : 2795;
+
+    //     $categoria = CategoriaInscripcion::findOrFail($request->input('selected_categoria'));
+
+    //     $precio_disponible = $categoria->precio->filter(function ($p) {
+    //         $hoy = Carbon::now();
+    //         return $hoy->between(
+    //             Carbon::parse($p->fecha_inicio)->startOfDay(),
+    //             Carbon::parse($p->fecha_fin)->endOfDay()
+    //         );
+    //     })->first();
+
+    //     // 2. Si por algún motivo el filtro de fechas falla, toma el precio por defecto de la categoría
+    //     if (!$precio_disponible) {
+    //         $precio_disponible = $categoria->precio->first();
+    //     }
+
+    //     // 3. Verificamos el valor
+    //     $total = ($precio_disponible) ? $precio_disponible->valor : 0;
+
+
+
+    //     $total = $precio_disponible->valor;
+
+    //     $dias = '{"lun":1,"mar":1,"mie":1,"jue":1,"vie":1}';
+
+    //     // 5. Lógica de One Day (CORREGIDA para evitar error de count())
+    //     // if (str_contains(strtoupper($categoria->nombre_en), 'DAY') || str_contains(strtoupper($categoria->nombre_es), 'DIA')) {
+    //     if (
+    //         str_contains(strtoupper($categoria->nombre_en), ' DAY') ||
+    //         (str_contains(strtoupper($categoria->nombre_es), ' DIA') && !str_contains(strtoupper($categoria->nombre_es), 'ESTUDIANTE'))
+    //     ) {
+    //         $selectedDays = $request->input('selectedDays', []);
+
+    //         // Convertir string "mar,mie" a array si es necesario (FormData lo envía así aveces)
+    //         if (is_string($selectedDays)) {
+    //             $selectedDays = explode(',', $selectedDays);
+    //         }
+
+    //         $total = count($selectedDays) * $precio_disponible->valor;
+    //         $dias_array = ["lun" => 0, "mar" => 0, "mie" => 0, "jue" => 0, "vie" => 0];
+
+    //         foreach ($selectedDays as $sd) {
+    //             $dia_key = strtolower(trim($sd));
+    //             if (array_key_exists($dia_key, $dias_array)) {
+    //                 $dias_array[$dia_key] = 1;
+    //             }
+    //         }
+    //         $dias = json_encode($dias_array);
+    //     }
+
+    //     // 6. Guardar Dirección
+    //     $direccion = ($persona->id_direccion > 0) ? Direccion::find($persona->id_direccion) : new Direccion;
+    //     $direccion->id_pais = $request->input('pais');
+    //     $direccion->id_departamento = $request->input('departamento', 0);
+    //     $direccion->id_provincia = $request->input('provincia', 0);
+    //     $direccion->id_distrito = $request->input('distrito', 0);
+    //     $direccion->direccion = trim($request->input('direccionPersona', ''));
+    //     $direccion->save();
+
+    //     // 7. Guardar Persona
+    //     $persona->id_direccion = $direccion->id;
+    //     $persona->nombres = trim($request->input('nombres'));
+    //     $persona->apellido_paterno = trim($request->input('apellido_paterno'));
+    //     $persona->apellido_materno = $request->input('apellido_materno', '');
+    //     $persona->correo = trim($request->input('correo'));
+    //     $persona->celular = trim($request->input('celular'));
+    //     $persona->sexo = $request->input('sexo');
+    //     $persona->id_ocupacion = $id_ocupacion;
+    //     $persona->id_nacionalidad = $request->input('nacionalidad', $request->input('pais')); // Fallback al país si no hay nacionalidad
+
+    //     if ($request->filled('fecha_nacimiento')) {
+    //         try {
+    //             $persona->fecha_nacimiento = Carbon::parse($request->input('fecha_nacimiento'))->format('Y-m-d');
+    //         } catch (\Exception $e) {
+    //             Log::error("Error parseando fecha: " . $e->getMessage());
+    //         }
+    //     }
+
+    //     if (!$persona->exists) {
+    //         $persona->id_tipo_documento = $id_tipo_documento;
+    //         $persona->documento = $documento;
+    //     }
+    //     $persona->save();
+
+    //     // 8. Crear Facturación
+    //     $IGV = round(($total * 0.18), 2);
+
+    //     $facturacion = new Facturacion;
+    //     $facturacion->id_tipo_servicio = 4;
+    //     $facturacion->id_moneda = $precio_disponible->moneda->id;
+    //     $facturacion->id_tipo_pago = $request->input('selectTipoPago');
+    //     $facturacion->tipo_doc_pago = $request->input('selectTipoDocPago');
+    //     $facturacion->id_tipo_doc_facturador = $request->input('tipoDocumentoEmpresa');
+    //     $facturacion->numero_doc_facturador = trim($request->input('documentoEmpresa'));
+    //     $facturacion->nombre_facturador = trim($request->input('razonSocial'));
+    //     $facturacion->direccion_facturador = trim($request->input('direccionEmpresa'));
+    //     $facturacion->responsable_facturador = trim($request->input('responsable'));
+    //     $facturacion->correo_facturador = trim($request->input('correo_facturador'));
+    //     $facturacion->id_comprador = $persona->id;
+    //     $facturacion->tipo_comprador = 'persona';
+    //     $facturacion->IGV = $IGV;
+    //     $facturacion->sub_total = floatval($total) - $IGV;
+    //     $facturacion->detraccion = 0;
+    //     $facturacion->total = $total;
+    //     $facturacion->observacion = trim($request->input('empresa', ''));
+    //     $facturacion->save();
+
+    //     // 9. Crear Cuota (Agregado isactive para evitar error SQL)
+    //     $cuota = new Cuota;
+    //     $cuota->id_facturacion = $facturacion->id;
+    //     $cuota->estado_pago = 'PENDIENTE';
+    //     $cuota->isactive = true;
+    //     $cuota->informacion = json_encode([
+    //         "cuota" => "1",
+    //         "valor" => (string)$total,
+    //         "porcentaje" => "100",
+    //         "estado_pago" => false
+    //     ]);
+
+    //     // dd($cuota);
+    //     $cuota->save();
+
+    //     // 10. Crear Inscripción
+    //     $inscripcion = new Inscripcion;
+    //     $inscripcion->id_persona = $persona->id;
+    //     $inscripcion->id_categoria_inscripcion = $categoria->id;
+    //     $inscripcion->id_facturacion = $facturacion->id;
+    //     $inscripcion->usuario_creacion = $persona->id;
+    //     $inscripcion->origen = 'web';
+    //     $inscripcion->texto_cargo = $cargo;
+    //     $inscripcion->dias = $dias;
+    //     $inscripcion->autorizacion_datos = $request->input('auth', false);
+
+    //     if ($request->hasFile('uploadDocument')) {
+    //         $file = $request->file('uploadDocument');
+    //         $name = 'insc_' . time() . '.' . $file->getClientOriginalExtension();
+    //         $file->move(storage_path('app/public/documents'), $name);
+    //         $inscripcion->document_path = asset('storage/documents/' . $name);
+    //     }
+    //     $inscripcion->save();
+
+    //     // 11. Generar formulario de Niubiz
+    //     try {
+    //         $formNiubiz = app(\App\Http\Controllers\NiubizController::class)->getForm(
+    //             $persona,
+    //             $inscripcion,
+    //             $facturacion,
+    //             url()->previous(),
+    //             url()->current()
+    //         );
+
+    //         $cuota->respuesta_api = $formNiubiz->k;
+    //         $cuota->update();
+
+    //         return response()->json([
+    //             'status' => true,
+    //             'formulario' => json_decode(base64_decode($formNiubiz->frm))
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         Log::error("Error en Niubiz: " . $e->getMessage());
+    //         return response()->json(['status' => false, 'message' => 'Error al contactar pasarela'], 500);
+    //     }
+    // }
+
+
     public function getForm(Request $request)
     {
-        // 1. Seguridad básica
+
+        //  dd($request->all());
+        // dd($request->all());
+        // 1. Validaciones iniciales
+        $this->validateRequest($request);
+
+        // 2. Obtener / Guardar Persona y Dirección
+        $persona = $this->handlePersona($request);
+
+        // 3. Obtener Categoría
+        $categoria = CategoriaInscripcion::findOrFail($request->input('selected_categoria'));
+
+        // 4. Calcular Total (Precio base + Días + Extras)
+        // Devuelve un array con [total, array_nombres_extras, json_dias]
+        $calculo = $this->calculateTotal($request, $categoria);
+
+        $total = $calculo['total'];
+        $nombres_extras = $calculo['nombres_extras'];
+        $dias_json = $calculo['dias_json'];
+
+        // 5. Crear Facturación y Cuota
+        $facturacion = $this->createFacturacion($request, $persona, $categoria, $total, $nombres_extras);
+
+        // 6. Crear Inscripción (y subir archivo)
+        $inscripcion = $this->createInscripcion($request, $persona, $categoria, $facturacion, $dias_json);
+
+        // 7. Generar respuesta de Niubiz
+        return $this->generateNiubizResponse($persona, $inscripcion, $facturacion);
+    }
+
+    // =========================================================================
+    // MÉTODOS PRIVADOS (HELPER FUNCTIONS)
+    // =========================================================================
+
+    private function validateRequest(Request $request)
+    {
         if (!str_contains($request->headers->get('referer'), 'registro') || (csrf_token() === null)) {
             abort(403, 'Unauthorized POST request.');
         }
 
-        // 2. Captura de datos iniciales
         $id_tipo_documento = $request->input('id_tipo_documento') ?? $request->input('tipo_doc');
         $documento = trim($request->input('documento') ?? '');
 
         if (empty($id_tipo_documento) || empty($documento)) {
-            return response()->json(['status' => false, 'message' => 'Document info missing'], 400);
+            abort(response()->json(['status' => false, 'message' => 'Document info missing'], 400));
         }
+    }
 
-        // 3. Procesar Persona
-        $persona = Persona::where('id_tipo_documento', $id_tipo_documento)
-            ->where('documento', $documento)
-            ->firstOrNew();
-
-        // 4. Procesar Ocupación y Categoría
+    private function handlePersona(Request $request)
+    {
+        // A. Resolver Ocupación
         $cargo = $request->input('cargo', '');
-        $ocupacion_obj = Ocupacion::whereRaw("name like '%" . $cargo . "%'")
-            ->where('isactive', true)
-            ->first();
-
+        $ocupacion_obj = Ocupacion::whereRaw("name like '%" . $cargo . "%'")->where('isactive', true)->first();
         $id_ocupacion = $ocupacion_obj ? $ocupacion_obj->id : 2795;
 
-        $categoria = CategoriaInscripcion::findOrFail($request->input('selected_categoria'));
-        // $precio_disponible = $categoria->precio
-        //     ->where('fecha_inicio', '<=', $this->now)
-        //     ->where('fecha_fin', '>=', $this->now)
-        //     ->first();
+        // B. Buscar o Instanciar Persona
+        $persona = Persona::where('id_tipo_documento', $request->input('id_tipo_documento') ?? $request->input('tipo_doc'))
+            ->where('documento', trim($request->input('documento')))
+            ->firstOrNew();
 
-
-        // dd($precio_disponible);
-        $precio_disponible = $categoria->precio->filter(function ($p) {
-            $hoy = Carbon::now();
-            return $hoy->between(
-                Carbon::parse($p->fecha_inicio)->startOfDay(),
-                Carbon::parse($p->fecha_fin)->endOfDay()
-            );
-        })->first();
-
-        // 2. Si por algún motivo el filtro de fechas falla, toma el precio por defecto de la categoría
-        if (!$precio_disponible) {
-            $precio_disponible = $categoria->precio->first();
-        }
-
-        // 3. Verificamos el valor
-        $total = ($precio_disponible) ? $precio_disponible->valor : 0;
-
-        // // Si después de todo sigue siendo 0, hay un problema grave de configuración
-        // if ($total <= 0) {
-        //     return response()->json(['status' => false, 'message' => 'Invalid amount (0)'], 400);
-        // }
-
-        $total = $precio_disponible->valor;
-
-        $dias = '{"lun":1,"mar":1,"mie":1,"jue":1,"vie":1}';
-
-        // 5. Lógica de One Day (CORREGIDA para evitar error de count())
-        // if (str_contains(strtoupper($categoria->nombre_en), 'DAY') || str_contains(strtoupper($categoria->nombre_es), 'DIA')) {
-        if (
-            str_contains(strtoupper($categoria->nombre_en), ' DAY') ||
-            (str_contains(strtoupper($categoria->nombre_es), ' DIA') && !str_contains(strtoupper($categoria->nombre_es), 'ESTUDIANTE'))
-        ) {
-            $selectedDays = $request->input('selectedDays', []);
-
-            // Convertir string "mar,mie" a array si es necesario (FormData lo envía así aveces)
-            if (is_string($selectedDays)) {
-                $selectedDays = explode(',', $selectedDays);
-            }
-
-            $total = count($selectedDays) * $precio_disponible->valor;
-            $dias_array = ["lun" => 0, "mar" => 0, "mie" => 0, "jue" => 0, "vie" => 0];
-
-            foreach ($selectedDays as $sd) {
-                $dia_key = strtolower(trim($sd));
-                if (array_key_exists($dia_key, $dias_array)) {
-                    $dias_array[$dia_key] = 1;
-                }
-            }
-            $dias = json_encode($dias_array);
-        }
-
-        // 6. Guardar Dirección
+        // C. Guardar Dirección
         $direccion = ($persona->id_direccion > 0) ? Direccion::find($persona->id_direccion) : new Direccion;
         $direccion->id_pais = $request->input('pais');
         $direccion->id_departamento = $request->input('departamento', 0);
@@ -205,7 +412,7 @@ class InscripcionController extends Controller
         $direccion->direccion = trim($request->input('direccionPersona', ''));
         $direccion->save();
 
-        // 7. Guardar Persona
+        // D. Guardar Datos Persona
         $persona->id_direccion = $direccion->id;
         $persona->nombres = trim($request->input('nombres'));
         $persona->apellido_paterno = trim($request->input('apellido_paterno'));
@@ -214,7 +421,12 @@ class InscripcionController extends Controller
         $persona->celular = trim($request->input('celular'));
         $persona->sexo = $request->input('sexo');
         $persona->id_ocupacion = $id_ocupacion;
-        $persona->id_nacionalidad = $request->input('nacionalidad', $request->input('pais')); // Fallback al país si no hay nacionalidad
+        $persona->id_nacionalidad = $request->input('nacionalidad', $request->input('pais'));
+
+        if (!$persona->exists) {
+            $persona->id_tipo_documento = $request->input('id_tipo_documento') ?? $request->input('tipo_doc');
+            $persona->documento = trim($request->input('documento'));
+        }
 
         if ($request->filled('fecha_nacimiento')) {
             try {
@@ -224,18 +436,244 @@ class InscripcionController extends Controller
             }
         }
 
-        if (!$persona->exists) {
-            $persona->id_tipo_documento = $id_tipo_documento;
-            $persona->documento = $documento;
-        }
         $persona->save();
 
-        // 8. Crear Facturación
+        return $persona;
+    }
+
+    // private function calculateTotal(Request $request, $categoria)
+    // {
+    //     // 1. Precio Base
+    //     $precio_disponible = $categoria->precio->filter(function ($p) {
+    //         return Carbon::now()->between(
+    //             Carbon::parse($p->fecha_inicio)->startOfDay(),
+    //             Carbon::parse($p->fecha_fin)->endOfDay()
+    //         );
+    //     })->first() ?? $categoria->precio->first();
+
+    //     $total = ($precio_disponible) ? $precio_disponible->valor : 0;
+
+    //     // 2. Lógica One Day
+    //     $dias_json = '{"lun":1,"mar":1,"mie":1,"jue":1,"vie":1}';
+
+    //     if (
+    //         str_contains(strtoupper($categoria->nombre_en), ' DAY') ||
+    //         (str_contains(strtoupper($categoria->nombre_es), ' DIA') && !str_contains(strtoupper($categoria->nombre_es), 'ESTUDIANTE'))
+    //     ) {
+    //         $selectedDays = $request->input('selectedDays', []);
+    //         if (is_string($selectedDays)) $selectedDays = explode(',', $selectedDays);
+
+    //         $total = count($selectedDays) * $precio_disponible->valor;
+
+    //         $dias_array = ["lun" => 0, "mar" => 0, "mie" => 0, "jue" => 0, "vie" => 0];
+    //         foreach ($selectedDays as $sd) {
+    //             $dia_key = strtolower(trim($sd));
+    //             if (array_key_exists($dia_key, $dias_array)) $dias_array[$dia_key] = 1;
+    //         }
+    //         $dias_json = json_encode($dias_array);
+    //     }
+
+    //     // 3. Lógica Extras (Cursos/Tours)
+    //     $extras_seleccionados = json_decode($request->input('extras_seleccionados'), true);
+    //     $nombres_extras = [];
+
+    //     if (!empty($extras_seleccionados) && is_array($extras_seleccionados)) {
+    //         $extras_bd = CategoriaInscripcion::whereIn('id', $extras_seleccionados)->get();
+    //         foreach ($extras_bd as $extra) {
+    //             $precio_extra = $extra->precio->filter(function ($p) {
+    //                 return Carbon::now()->between(
+    //                     Carbon::parse($p->fecha_inicio)->startOfDay(),
+    //                     Carbon::parse($p->fecha_fin)->endOfDay()
+    //                 );
+    //             })->first() ?? $extra->precio->first();
+
+    //             if ($precio_extra) {
+    //                 $total += $precio_extra->valor;
+    //                 $nombres_extras[] = $extra->nombre_en;
+    //             }
+    //         }
+    //     }
+
+    //     return [
+    //         'total' => $total,
+    //         'nombres_extras' => $nombres_extras,
+    //         'dias_json' => $dias_json,
+    //         'moneda' => $precio_disponible ? $precio_disponible->moneda->id : 1 // Asumiendo 1 como default
+    //     ];
+    // }
+
+    // private function calculateTotal(Request $request, $categoria)
+    // {
+    //     // 1. Obtener precio actual de la Categoría Principal (Relación 'precio')
+    //     $hoy = Carbon::now();
+    //     $precio_disponible = $categoria->precio->first(function ($p) use ($hoy) {
+    //         return $hoy->between(
+    //             Carbon::parse($p->fecha_inicio)->startOfDay(),
+    //             Carbon::parse($p->fecha_fin)->endOfDay()
+    //         );
+    //     }) ?? $categoria->precio->first();
+
+    //     $total = $precio_disponible ? (float)$precio_disponible->valor : 0;
+
+    //     // 2. Lógica por Días (Ej: Categoría 39)
+    //     $dias_json = '{"lun":1,"mar":1,"mie":1,"jue":1,"vie":1}';
+    //     $nombre_upper = strtoupper($categoria->nombre_en);
+
+    //     if (str_contains($nombre_upper, ' DAY') || (str_contains(strtoupper($categoria->nombre_es), ' DIA') && !str_contains($nombre_upper, 'STUDENT'))) {
+    //         $selectedDays = $request->input('selectedDays', []);
+    //         if (is_string($selectedDays)) $selectedDays = explode(',', $selectedDays);
+
+    //         // El total para categorías "por día" es: (días) * (precio_base)
+    //         $total = count($selectedDays) * ($precio_disponible ? $precio_disponible->valor : 0);
+
+    //         $dias_array = ["lun" => 0, "mar" => 0, "mie" => 0, "jue" => 0, "vie" => 0];
+    //         foreach ($selectedDays as $sd) {
+    //             $dia_key = strtolower(trim($sd));
+    //             if (array_key_exists($dia_key, $dias_array)) $dias_array[$dia_key] = 1;
+    //         }
+    //         $dias_json = json_encode($dias_array);
+    //     }
+
+    //     // 3. Lógica Extras (Cursos/Tours) - ¡CORREGIDO!
+    //     // Decodificamos los IDs que vienen del frontend [5, 4]
+    //     $extras_seleccionados = json_decode($request->input('extras_seleccionados'), true);
+    //     $nombres_extras = [];
+
+    //     if (!empty($extras_seleccionados) && is_array($extras_seleccionados)) {
+    //         // IMPORTANTE: Usamos el modelo CategoriaCursoViaje para los extras
+    //         $extras_bd = \App\Models\CategoriaCursoViaje::whereIn('id', $extras_seleccionados)->get();
+
+    //         foreach ($extras_bd as $extra) {
+    //             // En CategoriaCursoViaje la relación de precios es 'precios' (en plural)
+    //             $precio_extra = $extra->precios->first(function ($p) use ($hoy) {
+    //                 return $hoy->between(
+    //                     Carbon::parse($p->fecha_inicio)->startOfDay(),
+    //                     Carbon::parse($p->fecha_fin)->endOfDay()
+    //                 );
+    //             }) ?? $extra->precios->first();
+
+    //             if ($precio_extra) {
+    //                 $total += (float)$precio_extra->valor;
+    //                 $nombres_extras[] = $extra->nombre_en;
+    //             }
+    //         }
+    //     }
+
+    //     return [
+    //         'total' => $total,
+    //         'nombres_extras' => $nombres_extras,
+    //         'dias_json' => $dias_json,
+    //         'moneda' => $precio_disponible ? $precio_disponible->id_moneda : 1
+    //     ];
+    // }
+
+
+    private function calculateTotal(Request $request, $categoria)
+    {
+        $hoy = Carbon::now();
+        $total_inscripcion = 0.0;
+        $total_extras = 0.0;
+        $nombres_extras = [];
+        $dias_json = '{"lun":1,"mar":1,"mie":1,"jue":1,"vie":1}';
+
+        // 1. OBTENER PRECIO DE LA CATEGORÍA (Relación: precio)
+        $precio_base_obj = $categoria->precio->first(function ($p) use ($hoy) {
+            return $hoy->between(
+                Carbon::parse($p->fecha_inicio)->startOfDay(),
+                Carbon::parse($p->fecha_fin)->endOfDay()
+            );
+        }) ?? $categoria->precio->first();
+
+        // dd( $precio_base_obj);
+        $valor_unitario_cat = $precio_base_obj ? (float)$precio_base_obj->valor : 0;
+
+        // 2. LÓGICA DE INSCRIPCIÓN: ¿Paga entrada al congreso o solo adicionales?
+        if ($request->input('section') === 'viajes') {
+            // Si viene de la pestaña de tours, la inscripción base es CERO
+            $total_inscripcion = 0.0;
+        } else {
+            // Si es inscripción normal, verificamos si es por día (ID 39 o similares)
+            $nombre_en_upper = strtoupper($categoria->nombre_en);
+            $es_por_dia = str_contains($nombre_en_upper, ' DAY') ||
+                (str_contains(strtoupper($categoria->nombre_es), ' DIA') && !str_contains($nombre_en_upper, 'STUDENT'));
+
+            if ($es_por_dia) {
+                $selectedDays = $request->input('selectedDays', []);
+                if (is_string($selectedDays)) $selectedDays = explode(',', $selectedDays);
+
+                $total_inscripcion = count($selectedDays) * $valor_unitario_cat;
+
+                // Guardar qué días seleccionó
+                $dias_array = ["lun" => 0, "mar" => 0, "mie" => 0, "jue" => 0, "vie" => 0];
+                foreach ($selectedDays as $sd) {
+                    $dia_key = strtolower(trim($sd));
+                    if (array_key_exists($dia_key, $dias_array)) $dias_array[$dia_key] = 1;
+                }
+                $dias_json = json_encode($dias_array);
+            } else {
+                // Inscripción de evento completo
+                $total_inscripcion = $valor_unitario_cat;
+            }
+        }
+
+        // 3. LÓGICA DE EXTRAS: Cursos y Tours (Relación: precios en tabla CategoriaCursoViaje)
+        $extras_ids = json_decode($request->input('extras_seleccionados'), true);
+        $perfil_id = $request->input('profile');
+
+
+        if (!empty($extras_ids) && is_array($extras_ids)) {
+            // Traemos los extras pero filtrando la relación 'precios' desde la consulta
+            $extras_bd = \App\Models\CategoriaCursoViaje::whereIn('id', $extras_ids)
+                ->with(['precios' => function ($query) use ($hoy, $perfil_id) {
+                    $query->where('fecha_inicio', '<=', $hoy)
+                        ->where('fecha_fin', '>=', $hoy)
+                        ->where('detalle_categoria_cursos_viajes.id_perfil', $perfil_id); // Filtro directo en el pivot
+                }])
+                ->get();
+
+            foreach ($extras_bd as $extra) {
+                // Como ya filtramos en la consulta, el primero es el correcto
+                $precio_obj = $extra->precios->first();
+
+                if ($precio_obj) {
+                    $total_extras += (float)$precio_obj->valor;
+                    $nombres_extras[] = $extra->nombre_en;
+                }
+            }
+        }
+
+        // 4. SUMA FINAL
+        // dd($total_inscripcion, $total_extras);
+        $total_final = $total_inscripcion + $total_extras;
+
+        // AUDITORÍA: Si sale 1800, verás por qué en storage/logs/laravel.log
+        Log::warning("AUDITORÍA DE PAGO WMC", [
+            'section_recibida' => $request->input('section'),
+            'monto_inscripcion' => $total_inscripcion,
+            'monto_extras' => $total_extras,
+            'total_calculado' => $total_final,
+            'extras_detectados' => $nombres_extras
+        ]);
+
+        return [
+            'total' => $total_final,
+            'nombres_extras' => $nombres_extras,
+            'dias_json' => $dias_json,
+            'moneda' => $precio_base_obj ? $precio_base_obj->id_moneda : 1
+        ];
+    }
+
+    private function createFacturacion(Request $request, $persona, $categoria, $total, $nombres_extras)
+    {
+        // Recalcular moneda si es necesario o pasarla desde calculateTotal
+        // Aquí asumimos que usamos la moneda del precio base de la categoría para simplificar
+        $precio_base = $categoria->precio->first();
+
         $IGV = round(($total * 0.18), 2);
 
         $facturacion = new Facturacion;
         $facturacion->id_tipo_servicio = 4;
-        $facturacion->id_moneda = $precio_disponible->moneda->id;
+        $facturacion->id_moneda = $precio_base->moneda->id ?? 1;
         $facturacion->id_tipo_pago = $request->input('selectTipoPago');
         $facturacion->tipo_doc_pago = $request->input('selectTipoDocPago');
         $facturacion->id_tipo_doc_facturador = $request->input('tipoDocumentoEmpresa');
@@ -250,10 +688,12 @@ class InscripcionController extends Controller
         $facturacion->sub_total = floatval($total) - $IGV;
         $facturacion->detraccion = 0;
         $facturacion->total = $total;
-        $facturacion->observacion = trim($request->input('empresa', ''));
+
+        $obs_extras = count($nombres_extras) > 0 ? " | Extras: " . implode(', ', $nombres_extras) : "";
+        $facturacion->observacion = trim($request->input('empresa', '')) . $obs_extras;
         $facturacion->save();
 
-        // 9. Crear Cuota (Agregado isactive para evitar error SQL)
+        // Crear Cuota vinculada (Es parte de la facturación)
         $cuota = new Cuota;
         $cuota->id_facturacion = $facturacion->id;
         $cuota->estado_pago = 'PENDIENTE';
@@ -264,19 +704,21 @@ class InscripcionController extends Controller
             "porcentaje" => "100",
             "estado_pago" => false
         ]);
-
-        // dd($cuota);
         $cuota->save();
 
-        // 10. Crear Inscripción
+        return $facturacion;
+    }
+
+    private function createInscripcion(Request $request, $persona, $categoria, $facturacion, $dias_json)
+    {
         $inscripcion = new Inscripcion;
         $inscripcion->id_persona = $persona->id;
         $inscripcion->id_categoria_inscripcion = $categoria->id;
         $inscripcion->id_facturacion = $facturacion->id;
         $inscripcion->usuario_creacion = $persona->id;
         $inscripcion->origen = 'web';
-        $inscripcion->texto_cargo = $cargo;
-        $inscripcion->dias = $dias;
+        $inscripcion->texto_cargo = $request->input('cargo', '');
+        $inscripcion->dias = $dias_json;
         $inscripcion->autorizacion_datos = $request->input('auth', false);
 
         if ($request->hasFile('uploadDocument')) {
@@ -287,7 +729,11 @@ class InscripcionController extends Controller
         }
         $inscripcion->save();
 
-        // 11. Generar formulario de Niubiz
+        return $inscripcion;
+    }
+
+    private function generateNiubizResponse($persona, $inscripcion, $facturacion)
+    {
         try {
             $formNiubiz = app(\App\Http\Controllers\NiubizController::class)->getForm(
                 $persona,
@@ -297,18 +743,23 @@ class InscripcionController extends Controller
                 url()->current()
             );
 
+            // Actualizamos la cuota con el token de respuesta (k)
+            $cuota = $facturacion->cuotas->first();
             $cuota->respuesta_api = $formNiubiz->k;
             $cuota->update();
 
             return response()->json([
                 'status' => true,
-                'formulario' => json_decode(base64_decode($formNiubiz->frm))
+                'formulario' => json_decode(base64_decode($formNiubiz->frm)),
+                'total_real' => $facturacion->total
             ]);
         } catch (\Exception $e) {
             Log::error("Error en Niubiz: " . $e->getMessage());
             return response()->json(['status' => false, 'message' => 'Error al contactar pasarela'], 500);
         }
     }
+
+
 
 
     public function niubizPayment($id, $order)

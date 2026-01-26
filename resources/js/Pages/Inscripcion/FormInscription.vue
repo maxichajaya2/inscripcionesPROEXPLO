@@ -57,10 +57,8 @@ const fileupload = ref(null);
 const isEditingBilling = ref(false);
 
 let current_price = 0;
-const billingMessage = ref(null);
-const tipoDocumentoPago = computed(() => page.props.general.tipoDocumentoPago);
 const tipoDocumento = computed(() => page.props.general.tipDocEmp)
-const reglamento_inscripciones = computed(() => usePage().props.general.reglamento_inscripciones);
+
 
 const departamentos = ref();
 const days = { 'mie': 'Wednesday', 'jue': 'Thursday', 'vie': 'Friday' };
@@ -72,18 +70,6 @@ const { defineField, errors, setValues, values, validate } = useForm({
     validationSchema: yup.object({
         selected_categoria: yup.mixed().required('Category is required'),
         tipoDocumentoEmpresa: yup.mixed().required('Document type is required'),
-        // documentoEmpresa: yup.string()
-        //     .required('Document number is required')
-        //     .test('len', 'Length error', function (value) {
-        //         const { tipoDocumentoEmpresa } = this.parent;
-        //         if (tipoDocumentoEmpresa === 1) { // DNI
-        //             return value?.length === 8 || this.createError({ message: 'DNI must be exactly 8 digits' });
-        //         }
-        //         if (tipoDocumentoEmpresa === 2) { // RUC
-        //             return value?.length === 11 || this.createError({ message: 'RUC must be exactly 11 digits' });
-        //         }
-        //         return value?.length >= 8 || this.createError({ message: 'Minimum 8 characters required' });
-        //     }),
         documentoEmpresa: yup.string()
             .required('Document number is required')
             .test('len', 'Invalid format', function (value) {
@@ -111,8 +97,7 @@ const { defineField, errors, setValues, values, validate } = useForm({
     })
 });
 
-// const [nombres] = defineField('nombres');
-// const [apellido_paterno] = defineField('apellido_paterno');
+
 const [documentoEmpresa] = defineField('documentoEmpresa');
 const [razonSocial] = defineField('razonSocial');
 const [responsable] = defineField('responsable');
@@ -120,138 +105,33 @@ const [correo_facturador] = defineField('correo_facturador');
 const [tipoDocumentoEmpresa] = defineField('tipoDocumentoEmpresa');
 const [direccionEmpresa] = defineField('direccionEmpresa');
 const [selectTipoPago] = defineField('selectTipoPago');
-const [reglamento] = defineField('reglamento');
 const [selectTipoDocPago] = defineField('selectTipoDocPago');
 const [selected_categoria, selected_categoriaAttrs] = defineField('selected_categoria');
 const [selectedDays, selectedDaysAttrs] = defineField('selectedDays');
 const [uploadDocument] = defineField('uploadDocument');
-// const [pais] = defineField('pais');
 
 
 const is_category_fixed = ref(false);
-
-// --- LÓGICA PRINCIPAL ---
-// function changeCategory(id, precio) {
-//     if (!id) return;
-//     current_price = precio;
-//     const categoria = props.categorias.find(c => c.id === id);
-
-//     if (categoria) {
-//         nextTick(() => {
-//             // Documentos
-//             show_document.value = Boolean(categoria.requiere_documento);
-//             if (show_document.value) {
-//                 const nombre = categoria.nombre_en.toUpperCase();
-//                 if (nombre.includes('STUDENT') || nombre.includes('ESTUDIANTE')) {
-//                     upload_instruction.value = "Rate applicable to undergraduate students, presentation of enrollment proof required.";
-//                 } else if (nombre.includes('FACULTY') || nombre.includes('DOCENTE')) {
-//                     upload_instruction.value = "Special rate for faculty members, valid proof required.";
-//                 } else {
-//                     upload_instruction.value = "Please upload the required document for this category.";
-//                 }
-//             }
-
-//             // Días
-//             const nomEs = categoria.nombre_es.toUpperCase();
-//             const nomEn = categoria.nombre_en.toUpperCase();
-
-//             if (nomEs.includes("DIA") || nomEn.includes("DAY")) {
-//                 show_days.value = true;
-//                 total.value = total.value > 0 ? total.value : 0;
-//             } else {
-//                 show_days.value = false;
-//                 total.value = precio;
-//             }
-//         });
-//     }
-// }
-// function changeCategory(id, precio) {
-//     if (!id) return;
-//     current_price = precio;
-//     const categoria = props.categorias.find(c => c.id === id);
-
-//     if (categoria) {
-//         nextTick(() => {
-//             // --- LÓGICA DE DOCUMENTOS ---
-//             show_document.value = Boolean(categoria.requiere_documento);
-//             if (show_document.value) {
-//                 const nombre = categoria.nombre_en.toUpperCase();
-//                 if (nombre.includes('STUDENT') || nombre.includes('ESTUDIANTE')) {
-//                     upload_instruction.value = "Rate applicable to undergraduate students, presentation of enrollment proof required.";
-//                 } else if (nombre.includes('FACULTY') || nombre.includes('DOCENTE')) {
-//                     upload_instruction.value = "Special rate for faculty members, valid proof required.";
-//                 } else {
-//                     upload_instruction.value = "Please upload the required document for this category.";
-//                 }
-//             }
-
-//             // --- LÓGICA DE DÍAS (CORREGIDA) ---
-//             // Solo mostramos días si el ID es exactamente 39
-//             if (id == 39) {
-//                 show_days.value = true;
-//                 // Si es por día, el total inicial depende de los días marcados
-//                 let count = Object.values(current_days).filter(v => v).length;
-//                 total.value = count * current_price;
-//             } else {
-//                 show_days.value = false;
-//                 total.value = precio; // Para categorías normales, el total es el precio base
-//             }
-//         });
-//     }
-// }
+const urlParams = new URLSearchParams(window.location.search);
+const esSeccionViajes = computed(() => urlParams.get('section') === 'viajes');
 
 // function changeCategory(id, precioRecibido) {
 //     if (!id) return;
 
-//     // Buscamos la categoría completa en props para estar seguros del precio
+//     // 1. Buscamos el objeto en la lista de props
 //     const categoria = props.categorias.find(c => c.id === id);
-//     if (!categoria) return;
+//     if (!categoria) {
+//         console.error("DEBUG: No se encontró la categoría con ID:", id);
+//         return;
+//     }
 
-//     // Usamos el precio del objeto categoría si el recibido es nulo/cero
-//     current_price = categoria.precio_disponible?.valor || precioRecibido || 0;
-
-//     nextTick(() => {
-//         // --- LÓGICA DE DOCUMENTOS ---
-//         show_document.value = Boolean(categoria.requiere_documento);
-//         if (show_document.value) {
-//             const nombre = categoria.nombre_en.toUpperCase();
-//             if (nombre.includes('STUDENT') || nombre.includes('ESTUDIANTE')) {
-//                 upload_instruction.value = "Rate applicable to undergraduate students, presentation of enrollment proof required.";
-//             } else if (nombre.includes('FACULTY') || nombre.includes('DOCENTE')) {
-//                 upload_instruction.value = "Special rate for faculty members, valid proof required.";
-//             } else {
-//                 upload_instruction.value = "Please upload the required document for this category.";
-//             }
-//         }
-
-//         // --- LÓGICA DE DÍAS Y PRECIO TOTAL ---
-//         if (id == 39) {
-//             show_days.value = true;
-//             let count = Object.values(current_days).filter(v => v).length;
-//             total.value = count * current_price;
-//         } else {
-//             show_days.value = false;
-//             // IMPORTANTE: Aquí asignamos el precio real de estudiante u otra categoría
-//             total.value = current_price;
-//         }
-
-//         console.log("Categoría seleccionada:", id, "Precio asignado:", total.value);
-//     });
-// }
-
-// function changeCategory(id, precioRecibido) {
-//     if (!id) return;
-
-//     const categoria = props.categorias.find(c => c.id === id);
-//     if (!categoria) return;
-
-//     // --- SOLUCIÓN: Priorizar el precio recibido del click si el del objeto es inconsistente ---
-//     // Si precioRecibido tiene un valor válido (> 0), lo usamos.
-//     // Si no, intentamos sacar el valor del objeto categoría.
+//     // 2. Determinamos qué precio usar
+//     // Si precioRecibido es > 0, es el que manda porque es el que el usuario "vio" al hacer click
 //     current_price = (precioRecibido > 0) ? precioRecibido : (categoria.precio_disponible?.valor || 0);
 
+
 //     nextTick(() => {
-//         // Lógica de documentos (se mantiene igual)
+//         // Lógica de documentos
 //         show_document.value = Boolean(categoria.requiere_documento);
 //         if (show_document.value) {
 //             const nombre = categoria.nombre_en.toUpperCase();
@@ -265,72 +145,174 @@ const is_category_fixed = ref(false);
 //         }
 
 //         // Lógica de Días y asignación final al TOTAL
-//         if (id == 39) { // Category by days
+//         if (id == 39) {
 //             show_days.value = true;
 //             let count = Object.values(current_days).filter(v => v).length;
 //             total.value = count * current_price;
 //         } else {
 //             show_days.value = false;
-//             // Aquí forzamos que el total sea el current_price calculado arriba
+//             // ASIGNACIÓN AL REF REACTIVO QUE SE VE EN LA UI
 //             total.value = current_price;
 //         }
 
-//         console.log("Categoría:", id, "Precio Final asignado al Total:", total.value);
 //     });
 // }
+
+// function changeCategory(id, precioRecibido) {
+//     if (!id) return;
+
+//     // 1. Buscamos el objeto en la lista de props
+//     const categoria = props.categorias.find(c => c.id === id);
+//     if (!categoria) {
+//         console.error("DEBUG: No se encontró la categoría con ID:", id);
+//         return;
+//     }
+
+//     // 2. Determinamos qué precio usar
+//     // LÓGICA: Si es sección "viajes", el precio de inscripción es SIEMPRE 0.
+//     // De lo contrario, usamos el precio recibido o el disponible de la categoría.
+//     if (esSeccionViajes.value) {
+//         current_price = 0;
+//     } else {
+//         current_price = (precioRecibido > 0) ? precioRecibido : (categoria.precio_disponible?.valor || 0);
+//     }
+
+//     nextTick(() => {
+//         // 3. Lógica de documentos (Se mantiene activa aunque sea sección viajes)
+//         show_document.value = Boolean(categoria.requiere_documento);
+
+//         if (show_document.value) {
+//             const nombre = categoria.nombre_en.toUpperCase();
+//             if (nombre.includes('STUDENT') || nombre.includes('ESTUDIANTE')) {
+//                 upload_instruction.value = "Rate applicable to undergraduate students, presentation of enrollment proof required.";
+//             } else if (nombre.includes('FACULTY') || nombre.includes('DOCENTE')) {
+//                 upload_instruction.value = "Special rate for faculty members, valid proof required.";
+//             } else {
+//                 upload_instruction.value = "Please upload the required document for this category.";
+//             }
+//         }
+
+//         // 4. Lógica de Días (Categoría 39 - Participante por día)
+//         if (id == 39) {
+//             show_days.value = true;
+//             // Contamos los días marcados en el objeto current_days
+//             let count = Object.values(current_days).filter(v => v).length;
+//             total.value = count * current_price; // Si es viajes, 0 * count = 0
+//         } else {
+//             show_days.value = false;
+//             total.value = current_price; // Si es viajes, esto es 0
+//         }
+//     });
+// }
+
+// function changeCategory(id, precioRecibido) {
+//     if (!id) return;
+
+//     const categoria = props.categorias.find(c => c.id === id);
+//     if (!categoria) return;
+
+//     // Si es sección viajes, forzamos el precio interno a 0
+//     if (esSeccionViajes.value) {
+//         current_price = 0;
+//     } else {
+//         current_price = (precioRecibido > 0) ? precioRecibido : (categoria.precio_disponible?.valor || 0);
+//     }
+
+//     nextTick(() => {
+//         show_document.value = Boolean(categoria.requiere_documento);
+
+//         if (id == 39) {
+//             show_days.value = true;
+//             let count = Object.values(current_days).filter(v => v).length;
+//             total.value = count * current_price;
+//         } else {
+//             show_days.value = false;
+//             total.value = current_price;
+//         }
+//     });
+// }
+
 
 function changeCategory(id, precioRecibido) {
     if (!id) return;
 
-    // 1. Buscamos el objeto en la lista de props
     const categoria = props.categorias.find(c => c.id === id);
-    if (!categoria) {
-        console.error("DEBUG: No se encontró la categoría con ID:", id);
-        return;
+    if (!categoria) return;
+
+    // LÓGICA CRÍTICA: Forzamos a 0 si la sección es 'viajes'
+    if (esSeccionViajes.value) {
+        current_price = 0;
+    } else {
+        current_price = (precioRecibido > 0) ? precioRecibido : (categoria.precio_disponible?.valor || 0);
     }
 
-    // --- IMPRESIONES DE CONTROL ---
-    console.log("%c--- DEPURACIÓN DE PRECIO ---", "color: white; background: #2196F3; font-weight: bold; padding: 2px 5px;");
-    console.log("ID Categoría:", id);
-    console.log("Nombre:", categoria.nombre_en);
-    console.log("Precio que llega desde el Click (precioRecibido):", precioRecibido);
-    console.log("Precio que está en el Objeto Prop (categoria.precio_disponible?.valor):", categoria.precio_disponible?.valor);
-
-    // 2. Determinamos qué precio usar
-    // Si precioRecibido es > 0, es el que manda porque es el que el usuario "vio" al hacer click
-    current_price = (precioRecibido > 0) ? precioRecibido : (categoria.precio_disponible?.valor || 0);
-
-    console.log("%cPRECIO FINAL QUE SE ASIGNARÁ:", "color: yellow; font-weight: bold;", current_price);
-
     nextTick(() => {
-        // Lógica de documentos
         show_document.value = Boolean(categoria.requiere_documento);
-        if (show_document.value) {
-            const nombre = categoria.nombre_en.toUpperCase();
-            if (nombre.includes('STUDENT') || nombre.includes('ESTUDIANTE')) {
-                upload_instruction.value = "Rate applicable to undergraduate students, presentation of enrollment proof required.";
-            } else if (nombre.includes('FACULTY') || nombre.includes('DOCENTE')) {
-                upload_instruction.value = "Special rate for faculty members, valid proof required.";
-            } else {
-                upload_instruction.value = "Please upload the required document for this category.";
-            }
-        }
 
-        // Lógica de Días y asignación final al TOTAL
         if (id == 39) {
             show_days.value = true;
+            // Al multiplicar por current_price (que es 0), el total será 0
             let count = Object.values(current_days).filter(v => v).length;
             total.value = count * current_price;
         } else {
             show_days.value = false;
-            // ASIGNACIÓN AL REF REACTIVO QUE SE VE EN LA UI
-            total.value = current_price;
+            total.value = current_price; // Será 0
         }
-
-        console.log("VALOR FINAL DE 'TOTAL' EN LA UI:", total.value);
-        console.log("------------------------------");
     });
 }
+
+// const getInscripcion = async () => {
+//     const result = await validate();
+//     formManualErrors.value.total = null;
+
+//     if (selected_categoria.value == 39) {
+//         const tieneDias = Object.values(current_days).some(v => v === true);
+//         if (!tieneDias) {
+//             formManualErrors.value.total = "Attention: You must select at least one day.";
+//             return { validate: false };
+//         }
+//     }
+
+//     // LÓGICA DE TOTAL: Si es viajes, el total 0 es válido.
+//     const totalValido = esSeccionViajes.value ? true : (total.value > 0);
+
+//     if (!result.valid || !totalValido || (show_document.value && !uploadDocument.value)) {
+//         return { validate: false };
+//     }
+
+//     return {
+//         validate: true,
+//         formInscription: values,
+//         total_final: total.value // Será 0 si es sección viajes
+//     };
+// };
+
+const getInscripcion = async () => {
+    const result = await validate();
+    formManualErrors.value.total = null;
+
+    if (selected_categoria.value == 39) {
+        const tieneDias = Object.values(current_days).some(v => v === true);
+        if (!tieneDias) {
+            formManualErrors.value.total = "Attention: You must select at least one day.";
+            return { validate: false };
+        }
+    }
+
+    // Si es viajes, permitimos pasar con 0
+    const totalValido = esSeccionViajes.value ? true : (total.value > 0);
+
+    if (!result.valid || !totalValido || (show_document.value && !uploadDocument.value)) {
+        return { validate: false };
+    }
+
+    return {
+        validate: true,
+        formInscription: values,
+        total_final: total.value // Aquí enviará 0 si es viajes
+    };
+};
+
 onMounted(() => {
     // Configuraciones iniciales
     tipoDocumentoEmpresa.value = 1;
@@ -364,6 +346,8 @@ onMounted(() => {
             changeCategory(targetCategoryId, cat?.precio_disponible?.valor || 0);
         }, 150);
     }
+
+
 });
 
 watch(() => props.data_persona, (newVal) => {
@@ -403,27 +387,6 @@ watch(documentoEmpresa, (newVal) => {
     }
 });
 
-// Watcher para limpiar campos cuando cambia el tipo de documento
-// watch(tipoDocumentoEmpresa, (newVal, oldVal) => {
-//     // Solo limpiamos si el cambio es realizado manualmente por el usuario (cuando está editando)
-//     if (isEditingBilling.value && oldVal !== undefined) {
-//         console.log("Cambiando tipo de documento, limpiando campos de facturación...");
-
-//         // Mantenemos el tipo de documento pero reseteamos lo demás
-//         setValues({
-//             ...values,
-//             documentoEmpresa: '',
-//             razonSocial: '',
-//             direccionEmpresa: '',
-//             responsable: '',
-//             correo_facturador: ''
-//         });
-
-//         // Llamamos a la lógica de bloqueo de dirección si es necesario
-//         setTipoDocPago();
-//     }
-// });
-
 watch(tipoDocumentoEmpresa, (newVal, oldVal) => {
     // Definimos qué IDs son de extranjeros (generalmente todo lo que no es 1 o 2)
     const documentosExtranjeros = [3, 4, 5]; // Ajusta estos IDs según tu base de datos (Pasaporte, CE, etc.)
@@ -433,7 +396,6 @@ watch(tipoDocumentoEmpresa, (newVal, oldVal) => {
     const ambosSonExtranjeros = documentosExtranjeros.includes(oldVal) && documentosExtranjeros.includes(newVal);
 
     if (isEditingBilling.value && oldVal !== undefined && !ambosSonExtranjeros) {
-        console.log("Cambiando entre tipos incompatibles (o nacional/extranjero), limpiando campos...");
 
         setValues({
             ...values,
@@ -454,63 +416,6 @@ const loadDepartamentos = async () => {
     departamentos.value = await Functions.loadDepartamentos(pais.value);
 }
 
-// const getEmpresaData = async () => {
-//     // 1. Activamos el estado de carga
-//     loading_doc.value = true;
-//     billingMessage.value = null; // Limpiamos mensajes previos
-//     showManualAlert.value = false;
-
-//     try {
-//         const empresaData = await Functions.getEmpresaData(documentoEmpresa.value, tipoDocumentoEmpresa.value);
-
-//         if (empresaData?.empresa) {
-//             razonSocial.value = empresaData.empresa.nombre;
-//             direccionEmpresa.value = empresaData.empresa.direccionEmpresa;
-
-//             // Si el status es true significa que encontró datos en API o BD
-//             if (empresaData.status) {
-//                 toast.add({ severity: 'success', summary: 'Success', detail: 'Data loaded', life: 3000 });
-//             } else {
-//                 toast.add({ severity: 'warn', summary: 'Info', detail: 'Record not found, please fill manually', life: 3000 });
-//             }
-//         }
-//     } catch (e) {
-//         console.error(e);
-//         toast.add({ severity: 'error', summary: 'Error', detail: 'External service unavailable', life: 3000 });
-//     } finally {
-//         // 2. Desactivamos el estado de carga siempre (aunque falle o funcione)
-//         loading_doc.value = false;
-//     }
-// }
-
-
-// const getEmpresaData = async () => {
-//     loading_doc.value = true;
-//     billingMessage.value = null;
-//     showManualAlert.value = false; // Resetear alerta al buscar
-
-//     try {
-//         const empresaData = await Functions.getEmpresaData(documentoEmpresa.value, tipoDocumentoEmpresa.value);
-
-//         if (empresaData?.status && empresaData?.empresa) {
-//             razonSocial.value = empresaData.empresa.nombre;
-//             direccionEmpresa.value = empresaData.empresa.direccionEmpresa;
-//             toast.add({ severity: 'success', summary: 'Success', detail: 'Data loaded', life: 3000 });
-//         } else {
-//             // ACTIVAR ALERTA Y MODO EDICIÓN
-//             showManualAlert.value = true;
-//             isEditingBilling.value = true;
-//             block_direction.value = false;
-//         }
-//     } catch (e) {
-//         console.error(e);
-//         showManualAlert.value = true;
-//         isEditingBilling.value = true;
-//         block_direction.value = false;
-//     } finally {
-//         loading_doc.value = false;
-//     }
-// }
 
 const getEmpresaData = async () => {
     // 1. Limpieza preventiva: Blanqueamos campos y ocultamos alertas previas
@@ -611,37 +516,66 @@ function selectDays(id) {
 }
 
 
-const getInscripcion = async () => {
-    const result = await validate(); // Validación de vee-validate
+// const getInscripcion = async () => {
+//     const result = await validate(); // Validación de vee-validate
 
-    formManualErrors.value.total = null;
+//     formManualErrors.value.total = null;
 
-    if (selected_categoria.value == 39) {
-        const tieneDias = Object.values(current_days).some(v => v === true);
-        if (!tieneDias) {
-            // ASIGNAMOS EL ERROR AQUÍ (Esto activará la alerta en el HTML)
-            formManualErrors.value.total = "Attention: You must select at least one day to proceed with your registration.";
+//     if (selected_categoria.value == 39) {
+//         const tieneDias = Object.values(current_days).some(v => v === true);
+//         if (!tieneDias) {
+//             // ASIGNAMOS EL ERROR AQUÍ (Esto activará la alerta en el HTML)
+//             formManualErrors.value.total = "Attention: You must select at least one day to proceed with your registration.";
 
-            // Hacemos scroll suave hacia la alerta para que el usuario la vea
-            const el = document.getElementById('days-section');
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+//             // Hacemos scroll suave hacia la alerta para que el usuario la vea
+//             const el = document.getElementById('days-section');
+//             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-            return { validate: false };
-        }
-    }
+//             return { validate: false };
+//         }
+//     }
 
-    // Agrega aquí tus validaciones manuales (reglamento, total, etc.)
-    if (!result.valid || total.value <= 0 || (show_document.value && !uploadDocument.value)) {
-        // toast.add({ severity: 'error', summary: 'Error', detail: 'Please fill all fields' });
-        return { validate: false };
-    }
+//     // Agrega aquí tus validaciones manuales (reglamento, total, etc.)
+//     if (!result.valid || total.value <= 0 || (show_document.value && !uploadDocument.value)) {
+//         // toast.add({ severity: 'error', summary: 'Error', detail: 'Please fill all fields' });
+//         return { validate: false };
+//     }
 
-    return {
-        validate: true,
-        formInscription: values,// "values" viene de vee-validate
-        total_final: total.value
-    };
-};
+//     return {
+//         validate: true,
+//         formInscription: values,// "values" viene de vee-validate
+//         total_final: total.value
+//     };
+// };
+
+// const getInscripcion = async () => {
+//     const result = await validate();
+//     formManualErrors.value.total = null;
+
+//     // Validación manual de días para categoría 39
+//     if (selected_categoria.value == 39) {
+//         const tieneDias = Object.values(current_days).some(v => v === true);
+//         if (!tieneDias) {
+//             formManualErrors.value.total = "Attention: You must select at least one day to proceed with your registration.";
+//             return { validate: false };
+//         }
+//     }
+
+//     // LÓGICA DE VALIDACIÓN MODIFICADA:
+//     // Si NO es sección viajes, el total debe ser mayor a 0.
+//     // Si ES sección viajes, permitimos total 0 (porque pagará en el paso de adicionales).
+//     const totalValido = esSeccionViajes.value ? true : (total.value > 0);
+
+//     if (!result.valid || !totalValido || (show_document.value && !uploadDocument.value)) {
+//         return { validate: false };
+//     }
+
+//     return {
+//         validate: true,
+//         formInscription: values,
+//         total_final: total.value
+//     };
+// };
 
 function setTipoDocPago() {
     if (tipoDocumentoEmpresa.value == 2) {
@@ -652,11 +586,6 @@ function setTipoDocPago() {
         block_direction.value = false;
     }
 }
-
-// const onlyNumberKey = (event) => {
-//     const charCode = event.which ? event.which : event.keyCode;
-//     if (charCode > 31 && (charCode < 48 || charCode > 57)) event.preventDefault();
-// }
 
 const enableManualEdit = () => {
     isEditingBilling.value = true;
@@ -671,11 +600,6 @@ const enableManualEdit = () => {
 
 const fillBillingData = (p) => {
     if (!p) return;
-
-    console.log("--- DEBUG LLENADO FACTURACIÓN ---");
-    console.log("Data cruda recibida:", p);
-    console.log("Documento capturado:", p.documento);
-    console.log("Tipo Doc capturado:", p.tipo_doc || p.id_tipo_documento);
 
     const nombreCompleto = `${p.nombres || ''} ${p.apellido_paterno || ''}`.trim();
     const docTipo = p.id_tipo_documento || p.tipo_doc || 1;
@@ -711,16 +635,9 @@ watch(() => props.data_persona, (newVal) => {
 }, { immediate: true, deep: true });
 
 
-
 const filteredDocTypes = computed(() => {
     const p = props.data_persona?.persona || props.data_persona;
 
-    // --- LOGS DE CONTROL ---
-    console.log("--- DEBUG NACIONALIDAD ---");
-    console.log("ID País recibido:", p?.pais);
-    console.log("Tipo Doc recibido:", p?.tipo_doc);
-
-    // LÓGICA CORREGIDA:
     // Es peruano si el país es 1
     // O si ya trae un tipo_doc 1 (DNI) o 2 (RUC) aunque el ID de país diga otra cosa
     const esPeruano = p?.pais == 1 ||
@@ -770,24 +687,6 @@ const onlyNumberKey = (event) => {
     return true;
 }
 
-// const handleBeforeUnload = (event) => {
-//     // Solo bloquea si hay algún dato (ejemplo: documento o nombres)
-//     if (props.data_persona?.documento || props.data_persona?.nombres) {
-//         event.preventDefault();
-//         event.returnValue = '';
-//     }
-// };
-
-// onMounted(() => {
-//     window.addEventListener('beforeunload', handleBeforeUnload);
-// });
-
-// onUnmounted(() => {
-//     // ESTO ES VITAL: Si no lo pones, la alerta te seguirá al Paso 3
-//     window.removeEventListener('beforeunload', handleBeforeUnload);
-// });
-
-
 
 defineExpose({ getInscripcion });
 </script>
@@ -810,7 +709,7 @@ defineExpose({ getInscripcion });
                 <template #content>
                     <div class="px-2">
 
-                        <div v-if="is_category_fixed"
+                        <div v-if="is_category_fixed || esSeccionViajes"
                             class="w-full p-4 bg-blue-50 border border-blue-200 rounded-xl shadow-sm flex justify-between items-center">
                             <div class="flex flex-col">
                                 <span class="text-[10px] uppercase text-blue-400 font-black tracking-widest">Selected
@@ -819,7 +718,7 @@ defineExpose({ getInscripcion });
                                     {{categorias.find(c => c.id === selected_categoria)?.nombre_en}}
                                 </h4>
                             </div>
-                            <div class="text-right">
+                            <div v-if="!esSeccionViajes" class="text-right">
                                 <p class="text-yellow-price font-black text-xl">
                                     USD {{categorias.find(c => c.id === selected_categoria)?.precio_disponible?.valor
                                         || '0.00'}}
@@ -1044,9 +943,6 @@ defineExpose({ getInscripcion });
                             <div class="col-span-3 sm:col-span-1">
                                 <label class="block mb-1">Document Number <span class="text-red-600">*</span></label>
                                 <InputGroup>
-                                    <!-- <InputText v-model="documentoEmpresa" :readonly="!isEditingBilling"
-                                        class="border-green-iimp" @keypress="onlyNumberKey"
-                                        :disabled="!isEditingBilling" /> -->
                                     <InputText v-model="documentoEmpresa" :readonly="!isEditingBilling"
                                         class="border-green-iimp" @keypress="onlyNumberKey" @paste="onlyNumberKey"
                                         :disabled="!isEditingBilling" />
@@ -1101,99 +997,7 @@ defineExpose({ getInscripcion });
         </pre>
             </Card>
         </div>
-        <!-- <div class="text-green-iimp font-bold p-4">
-            <Card class="mt-5 overflow-hidden shadow-lg border border-gray-200">
-
-                <template #header>
-                    <div class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc">
-                        Terms and Conditions
-                    </div>
-                </template>
-
-                <template #content>
-                    <div v-if="formManualErrors.reglamento"
-                        class="mb-4 flex items-center gap-3 rounded border-l-4 border-red-500 bg-red-50 px-4 py-2 text-red-800 shadow-sm animate-fade-in">
-                        <i class="pi pi-times-circle"></i>
-                        <span class="text-xs font-bold">{{ formManualErrors.reglamento }}</span>
-                    </div>
-                    <div
-                        class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-800 font-normal text-sm text-justify rounded-r">
-                        <p>
-                            It is mandatory to read and accept the Terms and Conditions to proceed with the registration
-                            process.
-                            Please mark the checkbox below to confirm your agreement. We appreciate your participation.
-                        </p>
-                    </div>
-
-                    <div class="flex flex-col items-center justify-center">
-                        <div class="flex items-center">
-
-                            <Checkbox :binary="true" v-model="reglamento" v-bind="reglamentoAttrs" name="reglamento" />
-                            <a :href="reglamento_inscripciones" target="_blank" rel="noopener noreferrer"
-                                title="Ver reglamento">
-                                <label for="reglamento" class="pl-2 cursor-pointer"> I have read and accept the Terms
-                                    and Conditions of
-                                    Participation<span class="font-normal text-red-600">*</span></label>
-                            </a>
-                        </div>
-
-                        <span class="font-normal text-red-600 text-sm mt-2">{{ errors.terminos }}</span>
-                    </div>
-                </template>
-            </Card>
-        </div> -->
 
     </div>
-
-    <!--      MODAL DE TERMINOS Y CONDICIONES     -->
-    <!-- ======================================== -->
-    <!-- <Dialog v-model:visible="visible" modal :style="{ border: 'none' }"
-        class="modal-green max-w-[750px] modal-custom-scroll m-[5px]"
-        :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
-        <div class="modal-head-title font-bold">
-            <p>TÉRMINOS Y CONDICIONES DE PARTICIPACIÓN</p>
-            <p>PERUMIN 37 CONVENCIÓN MINERA</p>
-        </div>
-        <div class="pt-[30px] pr-[30px] pl-[30px] pb-[20px] modal-custom-scroll">
-            <ul class="mt-5 mb-5 ml-10 font'bold list-decimal">
-                <li class="text-justify mb-4">Al comprar una entrada e ingresar al evento, el comprador declara haber
-                    leído,
-                    comprendido y aceptado el Reglamento de Inscripciones publicado en la
-                    página web oficial del evento, así como todos los presentes términos
-                    establecidos.</li>
-                <li class="text-justify mb-4">Se autoriza al Peruvian Institute of Mining Engineers (Peruvian Institute of Mining Engineers (IIMP)) a usar gratuitamente la imagen captada del asistente
-                    durante el evento, sin límite de tiempo ni territorio.</li>
-                <li class="text-justify mb-4">Los datos personales serán tratados conforme a la ley peruana para fines
-                    administrativos, de seguridad, estadísticos y de comunicación.</li>
-                <li class="text-justify mb-4">Para el ingreso y permanencia, se requiere entrada válida y documento de
-                    identidad. No se permite el ingreso con objetos peligrosos, drogas, armas ni
-                    alcohol externo.</li>
-                <li class="text-justify mb-4">Prohibido el uso de drones sin autorización expresa del Peruvian Institute of Mining Engineers (Peruvian Institute of Mining Engineers (IIMP)); se debe
-                    cumplir
-                    con la normativa aérea vigente.</li>
-                <li class="text-justify mb-4">El Peruvian Institute of Mining Engineers (Peruvian Institute of Mining Engineers (IIMP)) no se responsabiliza por pérdidas, robos o accidentes, salvo en
-                    casos
-                    de negligencia o dolo.</li>
-                <li class="text-justify mb-4">No se permite la reventa no autorizada de entradas; el Peruvian Institute of Mining Engineers (Peruvian Institute of Mining Engineers (IIMP)) no responde
-                    por
-                    boletos comprados fuera de canales oficiales.</li>
-                <li class="text-justify mb-4">El uso de marcas, logos o contenidos del evento sin permiso está
-                    prohibido.
-                </li>
-                <li class="text-justify mb-4">Cualquier conflicto se resolverá según las leyes peruanas, ante tribunales
-                    de
-                    Lima.</li>
-
-            </ul>
-        </div>
-        <div class="flex justify-around">
-            <div class="flex max-w-[450px] justify-evenly w-[100%]">
-                <button class="border border-white modal-continue-button p-[12px] rounded-full font-bold min-w-[130px]"
-                    @click="acceptModal">
-                    Aceptar
-                </button>
-            </div>
-        </div>
-    </Dialog> -->
 
 </template>
