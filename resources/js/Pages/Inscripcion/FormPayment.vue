@@ -16,6 +16,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const esSeccionViajes = computed(() => urlParams.get('section') === 'viajes');
 // Controla si el usuario aceptó los términos para habilitar el botón
 const termsAccepted = ref(false);
+const procesandoPago = ref(false);
 
 const precioInscripcion = computed(() => {
     return props.categoria_seleccionada?.precio_disponible?.valor || '0.00';
@@ -83,6 +84,30 @@ const mountNiubiz = async (data) => {
 
             script.dataset.canvas = "form_holder";
 
+            // --- SOLUCIÓN DEFINITIVA: VIGILANTE DEL BOTÓN ---
+            const detectorBotones = setInterval(() => {
+                // Niubiz suele renderizar un botón con la clase .v-button o dentro de un div específico
+                const btnNiubiz = document.querySelector('.v-button') ||
+                    document.querySelector('#form_holder button') ||
+                    document.querySelector('#niubiz_form button');
+
+                if (btnNiubiz) {
+                    console.log("¡Botón de Niubiz detectado! Pegando evento de carga...");
+
+                    btnNiubiz.addEventListener('click', () => {
+                        // Le damos un respiro de 300ms para que Niubiz procese el clic
+                        // y luego lanzamos nuestro spinner
+                        setTimeout(() => {
+                            procesandoPago.value = true;
+                            console.log("Spinner activado por clic en botón Niubiz");
+                        }, 300);
+                    });
+
+                    // Una vez que le pegamos el evento al botón, dejamos de buscar
+                    clearInterval(detectorBotones);
+                }
+            }, 1000); // Revisa cada segundo hasta que el botón aparezca
+
             form.appendChild(script);
             form_holder.appendChild(form);
 
@@ -149,15 +174,15 @@ const scriptData = computed(() => {
                                     }}
                                 </span>
                             </div>
-                            <div
-                                v-if="!esSeccionViajes" class="flex justify-between items-start mb-1 text-sm pl-2 border-l-2 border-gray-100 p-1 ">
+                            <div v-if="!esSeccionViajes"
+                                class="flex justify-between items-start mb-1 text-sm pl-2 border-l-2 border-gray-100 p-1 ">
                                 <div class="flex flex-col w-2/3">
                                     <span class="text-blue-600 font-medium leading-tight">
                                         Register
                                     </span>
                                 </div>
                                 <span class="text-gray-600 font-medium text-right w-1/3">
-                                  USD {{ precioInscripcion || '0.00' }}
+                                    USD {{ precioInscripcion || '0.00' }}
                                 </span>
 
                             </div>
@@ -227,4 +252,51 @@ const scriptData = computed(() => {
             </Card>
         </div>
     </div>
+    <Dialog v-model:visible="procesandoPago" modal :showHeader="false" :closable="false" :baseZIndex="99999"
+        class="bg-slate-900/80 backdrop-blur-sm border-none shadow-none m-0 p-0"
+        :style="{ width: '100vw', height: '100vh' }" :pt="{
+            root: { style: 'z-index: 99999 !important;' },
+            mask: { style: 'z-index: 99998 !important; background: rgba(0,0,0,0.85);' }
+        }">
+        <div class="flex flex-col items-center justify-center">
+            <div class="relative w-24 h-24 mb-6">
+                <div class="absolute inset-0 border-4 border-blue-500/20 rounded-full"></div>
+                <div class="absolute inset-0 border-4 border-t-blue-500 rounded-full animate-spin"></div>
+                <i
+                    class="pi pi-lock absolute inset-0 flex items-center justify-center text-blue-400 text-2xl animate-pulse"></i>
+            </div>
+
+            <h3 class="text-2xl font-black text-white uppercase tracking-widest animate-pulse">
+                Processing Secure Payment
+            </h3>
+            <p class="text-blue-300 text-sm mt-2 font-medium">
+                Please do not close or refresh the window...
+            </p>
+
+            <div class="w-64 h-1 bg-white/10 rounded-full mt-6 overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-blue-600 to-blue-400 animate-infinite-scroll"></div>
+            </div>
+        </div>
+    </Dialog>
 </template>
+<style scoped>
+.pi-lock {
+    text-shadow: 0 0 15px rgba(96, 165, 250, 0.8);
+    animation: lock-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes infiniteScroll {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.animate-infinite-scroll {
+    width: 100%;
+    animation: infiniteScroll 2s linear infinite;
+}
+</style>

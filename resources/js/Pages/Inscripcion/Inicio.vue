@@ -49,7 +49,7 @@ const categoria_seleccionada = ref({});
 const extras_para_mostrar = ref([]);
 const urlParams = new URLSearchParams(window.location.search);
 const sectionUrl = urlParams.get('section') || 'inscripciones';
-
+const showConfirmNoExtrasModal = ref(false);
 const resumen_dinamico = ref({
     total: 0,
     dias_seleccionados: [],
@@ -137,6 +137,14 @@ const seleccionarOrigen = (origen, id_numerico) => {
 
 const goStart = () => {
     router.get(route('inscripcion.index'));
+};
+
+
+// 2. Función que simplemente avanza (se usará en ambos casos)
+const proceedToBilling = () => {
+    showConfirmNoExtrasModal.value = false;
+    activeStep.value = "3";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 const activeStep = ref("1"); // Control del paso actual
@@ -475,6 +483,76 @@ const listaAMostrar = computed(() => {
     return props.section === 'viajes' ? props.adicionales : props.categorias;
 });
 
+// NUEVO HANDLER: Del paso 2 (Cursos) al 3 (Facturación)
+// const handleCursosHaciaFacturacion = async () => {
+//     loading.value = true;
+
+//     // Validamos la selección de cursos/tours
+//     if (childFormTourCourse.value) {
+//         const esValido = childFormTourCourse.value.validarSeleccion();
+//         if (!esValido) {
+//             loading.value = false;
+//             return;
+//         }
+
+//         // Guardamos los objetos seleccionados para el resumen final
+//         extras_para_mostrar.value = childFormTourCourse.value.selectedObjects || [];
+//     }
+
+//     // Si es válido, avanzamos al paso de Facturación
+//     activeStep.value = "3";
+//     window.scrollTo({ top: 0, behavior: 'smooth' });
+//     loading.value = false;
+// };
+const handleCursosHaciaFacturacion = async () => {
+    loading.value = true;
+
+    if (childFormTourCourse.value) {
+        // Validamos primero (por si en sección viajes es obligatorio)
+        const esValido = childFormTourCourse.value.validarSeleccion();
+        if (!esValido) {
+            loading.value = false;
+            return;
+        }
+
+        // Chequeamos si la lista de seleccionados está vacía
+        const tieneSeleccion = childFormTourCourse.value.extras_seleccionados.length > 0;
+
+        if (!tieneSeleccion) {
+            // SI NO TIENE NADA: Mostramos el modal "bonito" de advertencia
+            showConfirmNoExtrasModal.value = true;
+            loading.value = false;
+            return;
+        }
+
+        // Si tiene selección, guardamos los objetos para el resumen
+        extras_para_mostrar.value = childFormTourCourse.value.selectedObjects || [];
+    }
+
+    // Si todo está ok y tiene selección, avanzamos directo
+    proceedToBilling();
+    loading.value = false;
+};
+// NUEVO HANDLER: Del paso 3 (Facturación) al 4 (Pago Final)
+const handleInscripcionFinal = async () => {
+    loading.value = true;
+
+    // Validamos el formulario de Inscripción/Facturación
+    const resIns = await childFormInscription.value.getInscripcion();
+
+    if (resIns.validate) {
+        // Guardamos la data de facturación
+        tempResIns.value = resIns;
+
+        // Como ya tenemos los cursos guardados del paso anterior,
+        // disparamos la función que envía TODO al backend
+        const idsExtras = childFormTourCourse.value?.extras_seleccionados || [];
+        await confirmarYProcesar(idsExtras);
+    }
+
+    loading.value = false;
+};
+
 onMounted(() => {
     // 1. Leer el ID de la URL (ej: ?category=5)
     const urlParams = new URLSearchParams(window.location.search);
@@ -539,8 +617,11 @@ onUnmounted(() => {
                 <Stepper v-model:value="activeStep" class="w-full">
                     <StepList class="text-black-price bg-degradient">
                         <Step value="1">Personal Details</Step>
-                        <Step value="2">Billing Information</Step>
-                        <Step value="3">Courses or Tours</Step>
+                        <!-- <Step value="2">Billing Information</Step>
+                        <Step value="3">Courses or Tours</Step> -->
+
+                        <Step value="2">Courses or Tours</Step>
+                        <Step value="3">Billing Information</Step>
                         <Step value="4">Payment Process</Step>
                     </StepList>
 
@@ -570,10 +651,9 @@ onUnmounted(() => {
                                     }" />
                             </div>
                         </StepPanel>
-
-                        <!-- ========== Billing Information ==========
+                        <!-- ========== Courses or Tours ==========
                          ==========================================  -->
-                        <StepPanel v-slot="{ activateCallback }" value="2"
+                        <!-- <StepPanel v-slot="{ activateCallback }" value="2"
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
                             <FormInscription ref="childFormInscription" :data_persona="data_persona"
                                 :categorias="props.categorias" />
@@ -583,11 +663,22 @@ onUnmounted(() => {
                                 <Button label="Register" iconPos="right" icon="pi pi-arrow-right" :loading="loading"
                                     @click="handleInscripcionClick" class="bg-degradient border-rounded-full" />
                             </div>
+                        </StepPanel> -->
+                        <StepPanel v-slot="{ activateCallback }" value="2"
+                            class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
+                            <FormTourCourse ref="childFormTourCourse" :data_persona="data_persona"
+                                :adicionales="props.adicionales" :section="sectionUrl" />
+                            <div class="flex justify-between p-6">
+                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                    @click="activateCallback('1')" />
+                                <Button label="Continue to Billing" iconPos="right" icon="pi pi-arrow-right"
+                                    :loading="loading" @click="handleCursosHaciaFacturacion"
+                                    class="bg-degradient border-rounded-full" />
+                            </div>
                         </StepPanel>
-
-                        <!-- ========== Courses or Tours ==========
+                        <!-- ========== Billing Information ==========
                          ==========================================  -->
-                        <StepPanel v-slot="{ activateCallback }" value="3"
+                        <!-- <StepPanel v-slot="{ activateCallback }" value="3"
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
                             <FormTourCourse ref="childFormTourCourse" :data_persona="data_persona"
                                 :adicionales="props.adicionales" :section="sectionUrl" />
@@ -598,8 +689,20 @@ onUnmounted(() => {
                                     :loading="loading" @click="handleCursosClick"
                                     class="bg-degradient border-rounded-full" />
                             </div>
-                        </StepPanel>
+                        </StepPanel> -->
 
+                        <StepPanel v-slot="{ activateCallback }" value="3"
+                            class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
+                            <FormInscription ref="childFormInscription" :data_persona="data_persona"
+                                :categorias="props.categorias" />
+                            <div class="flex justify-between p-6">
+                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                    @click="activateCallback('2')" />
+                                <Button label="Register & Pay" iconPos="right" icon="pi pi-arrow-right"
+                                    :loading="loading" @click="handleInscripcionFinal"
+                                    class="bg-degradient border-rounded-full" />
+                            </div>
+                        </StepPanel>
                         <!-- ========== Payment Process ==========
                          ==========================================  -->
                         <StepPanel v-slot="{ activateCallback }" value="4"
@@ -809,6 +912,58 @@ onUnmounted(() => {
                 </div>
             </div>
         </Dialog>
+
+        <Dialog v-model:visible="showConfirmNoExtrasModal" modal :showHeader="false" :closable="false"
+            :style="{ width: '500px' }" class="rounded-3xl overflow-hidden border-none shadow-2xl animate-modal-entry">
+
+            <div class="p-0 relative overflow-hidden">
+                <div
+                    class="bg-gradient-to-r from-blue-900 via-blue-700 to-blue-900 p-8 text-center relative overflow-hidden">
+                    <div class="absolute inset-0 shine-effect"></div>
+
+                    <div class="relative z-10">
+                        <div
+                            class="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-md border border-white/20 animate-bounce-slow">
+                            <i
+                                class="pi pi-shopping-cart text-yellow-400 text-4xl drop-shadow-[0_0_15px_rgba(250,204,21,0.6)]"></i>
+                        </div>
+                        <h3 class="text-2xl font-black text-white uppercase tracking-tighter italic">Enhance your
+                            Experience</h3>
+                        <div class="h-1 w-20 bg-yellow-400 mx-auto mt-2 rounded-full"></div>
+                    </div>
+                </div>
+
+                <div class="p-10 bg-white text-center">
+                    <p class="text-slate-700 text-lg leading-tight font-medium">
+                        Are you sure you want to proceed without adding <span class="text-blue-700 font-extrabold">Short
+                            Courses</span> or <span class="text-blue-700 font-extrabold">Technical Visits</span>?
+                    </p>
+
+                    <p
+                        class="mt-5 text-sm text-slate-400 font-medium italic bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        "Don't miss the chance to learn from global experts and visit Peru's premier mining sites."
+                    </p>
+
+                    <div class="mt-8 flex flex-col gap-4">
+                        <button @click="showConfirmNoExtrasModal = false"
+                            class="group relative w-full py-4 px-6 rounded-2xl bg-blue-900 text-white font-black uppercase tracking-widest overflow-hidden transition-all hover:scale-[1.02] active:scale-95 shadow-[0_10px_20px_rgba(30,58,138,0.3)]">
+                            <div
+                                class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine-fast">
+                            </div>
+                            <span class="relative flex items-center justify-center gap-3">
+                                <i class="pi pi-arrow-left animate-pulse"></i>
+                                Review Courses & Visits
+                            </span>
+                        </button>
+
+                        <button @click="proceedToBilling"
+                            class="w-full py-2 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] hover:text-red-500 transition-colors duration-300">
+                            No thanks, proceed to billing anyway
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Dialog>
     </AppLayout>
 </template>
 
@@ -827,5 +982,52 @@ onUnmounted(() => {
         opacity: 1;
         transform: translateY(0) scale(1);
     }
+}
+
+/* Animación de entrada del Modal */
+.animate-modal-entry {
+    animation: modalSpring 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes modalSpring {
+    0% { opacity: 0; transform: scale(0.8) translateY(50px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Brillo constante en la cabecera */
+.shine-effect {
+    background: linear-gradient(
+        to right,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.05) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    transform: skewX(-25deg);
+    animation: shineLoop 3s infinite;
+}
+
+@keyframes shineLoop {
+    0% { transform: translateX(-150%) skewX(-25deg); }
+    100% { transform: translateX(150%) skewX(-25deg); }
+}
+
+/* Animación de brillo rápido al pasar el mouse por el botón */
+.group-hover\:animate-shine-fast {
+    animation: shineFast 0.6s forwards;
+}
+
+@keyframes shineFast {
+    0% { transform: translateX(-100%) skewX(-25deg); }
+    100% { transform: translateX(100%) skewX(-25deg); }
+}
+
+/* Rebote suave para el icono */
+.animate-bounce-slow {
+    animation: bounceSlow 3s infinite;
+}
+
+@keyframes bounceSlow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
 }
 </style>
