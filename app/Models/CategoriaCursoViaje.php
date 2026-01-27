@@ -15,6 +15,7 @@ class CategoriaCursoViaje extends Model
 
     protected $casts = [
         'expositores' => 'array', // Esto convierte el JSON de la BD a un Array de PHP/JS automáticamente
+        'itinerario' => 'array',
     ];
 
     // Seguimos la misma lógica que CategoriaInscripcion

@@ -638,12 +638,8 @@ watch(activeStep, () => {
                             <FormValidacionDoc ref="childFormValidacionDoc" :tipo_origen="tipo_origen" />
                             <!-- BOTÓN FLOTANTE SOLO EN MÓVIL -->
                             <div class="fixed bottom-4 right-4 z-50 md:hidden animate-fade-in-up">
-                                <Button
-                                    label="Validate"
-                                    icon="pi pi-arrow-right"
-                                    iconPos="right"
-                                    class="bg-degradient border-rounded-full"
-                                    :loading="loading"
+                                <Button label="Validate" icon="pi pi-arrow-right" iconPos="right"
+                                    class="bg-degradient border-rounded-full" :loading="loading"
                                     :disabled="childFormValidacionDoc?.esCategoriaDeSocio && childFormValidacionDoc?.hasSearched && !childFormValidacionDoc?.esSocio"
                                     @click="async () => {
                                         const isValid = await validate('Documento');
@@ -718,12 +714,35 @@ watch(activeStep, () => {
                             </div>
                         </StepPanel> -->
 
-                        <StepPanel v-slot="{ activateCallback }" value="3"
+                        <!-- <StepPanel v-slot="{ activateCallback }" value="3"
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
                             <FormInscription ref="childFormInscription" :data_persona="data_persona"
                                 :categorias="props.categorias" />
-                            <!-- BOTÓN FLOTANTE SOLO EN MÓVIL -->
                             <div class="mobile-floating-register z-50 animate-fade-in-up">
+                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                    @click="activateCallback('2')" />
+                                <Button label="Register & Pay" iconPos="right" icon="pi pi-arrow-right"
+                                    :loading="loading" @click="handleInscripcionFinal"
+                                    class="bg-degradient border-rounded-full" />
+                            </div>
+                        </StepPanel> -->
+                        <StepPanel v-slot="{ activateCallback }" value="3"
+                            class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
+
+                            <FormInscription ref="childFormInscription" :data_persona="data_persona"
+                                :categorias="props.categorias" />
+
+                            <div class="mobile-floating-register z-50 animate-fade-in-up md:hidden">
+                                <div class="flex gap-2">
+                                    <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                        @click="activateCallback('2')" />
+                                    <Button label="Register & Pay" iconPos="right" icon="pi pi-arrow-right"
+                                        :loading="loading" @click="handleInscripcionFinal"
+                                        class="bg-degradient border-rounded-full" />
+                                </div>
+                            </div>
+
+                            <div class="hidden md:flex justify-between p-6 border-t">
                                 <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
                                     @click="activateCallback('2')" />
                                 <Button label="Register & Pay" iconPos="right" icon="pi pi-arrow-right"
@@ -765,7 +784,8 @@ watch(activeStep, () => {
                         class="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
                     </div>
 
-                    <div class="bg-white rounded-3xl overflow-hidden shadow-2xl animate-fade-in-down px-0 flex flex-col max-h-[90vh]">
+                    <div
+                        class="bg-white rounded-3xl overflow-hidden shadow-2xl animate-fade-in-down px-0 flex flex-col max-h-[90vh]">
                     </div>
 
                     <div class="relative z-10">
@@ -814,7 +834,8 @@ watch(activeStep, () => {
                             <div class="h-1 w-full bg-red-600"></div>
 
                             <div class="p-5 md:p-8 flex flex-col items-center text-center h-full">
-                                <div class="w-16 h-12 md:w-24 md:h-24 mb-4 md:mb-6 relative drop-shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                <div
+                                    class="w-16 h-12 md:w-24 md:h-24 mb-4 md:mb-6 relative drop-shadow-lg group-hover:scale-110 transition-transform duration-300">
                                     <svg viewBox="0 0 300 200" class="w-full h-full rounded-lg shadow-sm">
                                         <rect width="300" height="200" fill="#ffffff" stroke="#e2e8f0"
                                             stroke-width="2" />
@@ -824,15 +845,18 @@ watch(activeStep, () => {
                                     <div class="absolute inset-0 bg-red-500/20 blur-2xl -z-10 rounded-full"></div>
                                 </div>
 
-                                <h3 class="text-xl md:text-2xl font-black text-slate-800 group-hover:text-red-700 transition-colors uppercase">
+                                <h3
+                                    class="text-xl md:text-2xl font-black text-slate-800 group-hover:text-red-700 transition-colors uppercase">
                                     National
                                 </h3>
-                                <p class="text-xs md:text-sm text-slate-500 mt-2 mb-4 md:mb-8 leading-relaxed font-medium">
+                                <p
+                                    class="text-xs md:text-sm text-slate-500 mt-2 mb-4 md:mb-8 leading-relaxed font-medium">
                                     Peruvian citizen or resident with DNI.
                                 </p>
 
                                 <div class="mt-auto w-full">
-                                    <span class="block w-full py-2.5 md:py-3 px-4 rounded-xl bg-gradient-to-r from-red-700 to-red-600 text-white font-bold text-xs md:text-sm tracking-wider uppercase shadow-md group-hover:shadow-lg group-hover:from-red-600 group-hover:to-red-500 transition-all flex items-center justify-center gap-2">
+                                    <span
+                                        class="block w-full py-2.5 md:py-3 px-4 rounded-xl bg-gradient-to-r from-red-700 to-red-600 text-white font-bold text-xs md:text-sm tracking-wider uppercase shadow-md group-hover:shadow-lg group-hover:from-red-600 group-hover:to-red-500 transition-all flex items-center justify-center gap-2">
                                         Continue Purchase <i class="pi pi-arrow-right text-[10px] md:text-xs"></i>
                                     </span>
                                 </div>
@@ -991,127 +1015,150 @@ watch(activeStep, () => {
 </template>
 
 <style scoped>
-    .animate-fade-in-down {
-        animation: fadeInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.animate-fade-in-down {
+    animation: fadeInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-40px) scale(0.95);
     }
 
-    @keyframes fadeInDown {
-        from {
-            opacity: 0;
-            transform: translateY(-40px) scale(0.95);
-        }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
 
-        to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
+/* Animación de entrada del Modal */
+.animate-modal-entry {
+    animation: modalSpring 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes modalSpring {
+    0% {
+        opacity: 0;
+        transform: scale(0.8) translateY(50px);
     }
 
-    /* Animación de entrada del Modal */
-    .animate-modal-entry {
-        animation: modalSpring 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
     }
+}
 
-    @keyframes modalSpring {
-        0% { opacity: 0; transform: scale(0.8) translateY(50px); }
-        100% { opacity: 1; transform: scale(1) translateY(0); }
-    }
-
-    /* Brillo constante en la cabecera */
-    .shine-effect {
-        background: linear-gradient(
-            to right,
+/* Brillo constante en la cabecera */
+.shine-effect {
+    background: linear-gradient(to right,
             rgba(255, 255, 255, 0) 0%,
             rgba(255, 255, 255, 0.05) 50%,
-            rgba(255, 255, 255, 0) 100%
-        );
-        transform: skewX(-25deg);
-        animation: shineLoop 3s infinite;
+            rgba(255, 255, 255, 0) 100%);
+    transform: skewX(-25deg);
+    animation: shineLoop 3s infinite;
+}
+
+@keyframes shineLoop {
+    0% {
+        transform: translateX(-150%) skewX(-25deg);
     }
 
-    @keyframes shineLoop {
-        0% { transform: translateX(-150%) skewX(-25deg); }
-        100% { transform: translateX(150%) skewX(-25deg); }
+    100% {
+        transform: translateX(150%) skewX(-25deg);
+    }
+}
+
+/* Animación de brillo rápido al pasar el mouse por el botón */
+.group-hover\:animate-shine-fast {
+    animation: shineFast 0.6s forwards;
+}
+
+@keyframes shineFast {
+    0% {
+        transform: translateX(-100%) skewX(-25deg);
     }
 
-    /* Animación de brillo rápido al pasar el mouse por el botón */
-    .group-hover\:animate-shine-fast {
-        animation: shineFast 0.6s forwards;
+    100% {
+        transform: translateX(100%) skewX(-25deg);
+    }
+}
+
+/* Rebote suave para el icono */
+.animate-bounce-slow {
+    animation: bounceSlow 3s infinite;
+}
+
+@keyframes bounceSlow {
+
+    0%,
+    100% {
+        transform: translateY(0);
     }
 
-    @keyframes shineFast {
-        0% { transform: translateX(-100%) skewX(-25deg); }
-        100% { transform: translateX(100%) skewX(-25deg); }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Botón flotante - SOLO VISIBLE EN MÓVIL */
+.mobile-floating-validate {
+    display: none;
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 50;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
     }
 
-    /* Rebote suave para el icono */
-    .animate-bounce-slow {
-        animation: bounceSlow 3s infinite;
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
+}
 
-    @keyframes bounceSlow {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-10px); }
-    }
+.animate-fade-in-up {
+    animation: fadeInUp 0.4s ease-out forwards;
+}
 
-    /* Botón flotante - SOLO VISIBLE EN MÓVIL */
+/* MOSTRAR BOTÓN FLOTANTE SOLO EN MÓVIL */
+@media (max-width: 768px) {
     .mobile-floating-validate {
-        display: none;
-        position: fixed;
-        bottom: 1.5rem;
-        right: 1.5rem;
-        z-index: 50;
+        display: block;
     }
+}
 
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+@media (max-width: 480px) {
+    .mobile-floating-validate {
+        bottom: 1rem !important;
+        right: 1rem !important;
     }
+}
 
-    .animate-fade-in-up {
-        animation: fadeInUp 0.4s ease-out forwards;
-    }
+/* Botón flotante Register - SOLO VISIBLE EN MÓVIL */
+.mobile-floating-register {
+    display: none;
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 50;
+}
 
-    /* MOSTRAR BOTÓN FLOTANTE SOLO EN MÓVIL */
-    @media (max-width: 768px) {
-        .mobile-floating-validate {
-            display: block;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .mobile-floating-validate {
-            bottom: 1rem !important;
-            right: 1rem !important;
-        }
-    }
-
-    /* Botón flotante Register - SOLO VISIBLE EN MÓVIL */
+/* MOSTRAR BOTÓN FLOTANTE SOLO EN MÓVIL */
+@media (max-width: 768px) {
     .mobile-floating-register {
-        display: none;
-        position: fixed;
-        bottom: 1.5rem;
-        right: 1.5rem;
-        z-index: 50;
+        display: block;
     }
+}
 
-    /* MOSTRAR BOTÓN FLOTANTE SOLO EN MÓVIL */
-    @media (max-width: 768px) {
-        .mobile-floating-register {
-            display: block;
-        }
+@media (max-width: 480px) {
+    .mobile-floating-register {
+        bottom: 1rem !important;
+        right: 1rem !important;
     }
-
-    @media (max-width: 480px) {
-        .mobile-floating-register {
-            bottom: 1rem !important;
-            right: 1rem !important;
-        }
-    }
+}
 </style>

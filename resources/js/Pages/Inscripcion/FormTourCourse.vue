@@ -5,6 +5,7 @@ import Accordion from 'primevue/accordion';
 import AccordionTab from 'primevue/accordiontab';
 import Card from 'primevue/card';
 import Button from 'primevue/button'; // Importamos el botón
+import Dialog from 'primevue/dialog';
 
 const props = defineProps({
     adicionales: Array, // Aquí llegarán los 13 cursos del controlador
@@ -19,6 +20,25 @@ const estaVacio = computed(() => {
     return (props.adicionales || []).length === 0;
 });
 const formManualErrors = ref({ total: null });
+const mostrarModal = ref(false);
+const contenidoAbstract = ref('');
+
+const mostrarItinerario = ref(false);
+const itinerarioSeleccionado = ref([]);
+const tituloViaje = ref('');
+
+
+const abrirAbstract = (texto) => {
+    contenidoAbstract.value = texto;
+    mostrarModal.value = true;
+};
+
+const verItinerario = (item) => {
+    // Aquí asumimos que guardaste el JSON que armamos en el campo 'itinerario'
+    itinerarioSeleccionado.value = item.itinerario || [];
+    tituloViaje.value = item.nombre_en;
+    mostrarItinerario.value = true;
+};
 
 const validarSeleccion = () => {
     // Si es sección viajes y no hay nada seleccionado
@@ -152,11 +172,13 @@ defineExpose({
                                         </div>
 
                                         <div class="flex items-center gap-4 border-l pl-4 border-gray-100">
-                                            <a v-if="item.pdf_url" :href="item.pdf_url" target="_blank"
-                                                class="no-underline">
+                                            <!-- <a :href="item.pdf_url" target="_blank" class="no-underline">
                                                 <Button icon="pi pi-file-pdf" label="Details"
                                                     class="p-button-text p-button-sm text-blue-500 font-bold uppercase text-[10px]" />
-                                            </a>
+                                            </a> -->
+                                            <Button icon="pi pi-eye" label="Abstract"
+                                                class="p-button-text p-button-sm text-blue-500 font-bold uppercase text-[10px]"
+                                                @click="abrirAbstract(item.abstract)" />
                                             <div class="text-right">
                                                 <p class="text-yellow-price font-black text-lg">
                                                     USD {{ item.precio_disponible?.valor || 0 }}
@@ -172,7 +194,7 @@ defineExpose({
                                                     <i class="pi pi-info-circle text-blue-400 text-xs"></i>
                                                     <span
                                                         class="text-[10px] font-black text-blue-400 uppercase tracking-widest italic underline">
-                                                        Technical Sheet / Ver Ficha Técnica
+                                                        Technical Sheet
                                                     </span>
                                                 </div>
                                             </template>
@@ -197,7 +219,7 @@ defineExpose({
                                                         <p class="mb-0">
                                                             <strong>
                                                                 <i class="pi pi-users mr-1 text-blue-400"></i>
-                                                                Expositores:
+                                                                Speakers:
                                                             </strong>
                                                         </p>
 
@@ -218,21 +240,26 @@ defineExpose({
                                                     <p>
                                                         <strong>
                                                             <i class="pi pi-language mr-1 text-blue-400"></i>
-                                                            Idioma:
+                                                            Language:
                                                         </strong>
                                                         {{ item.idioma_texto || 'English / Spanish' }}
                                                     </p>
                                                 </div>
                                                 <div class="space-y-1.5">
-                                                    <p><strong><i class="pi pi-calendar mr-1 text-blue-400"></i>
-                                                            Fecha:</strong> {{ item.fecha_texto
-                                                                || 'To be defined' }}</p>
-                                                    <p><strong><i class="pi pi-clock mr-1 text-blue-400"></i>
-                                                            Horario:</strong> {{
-                                                                item.horario_texto || 'Full Day' }}</p>
-                                                    <p><strong><i class="pi pi-map-marker mr-1 text-blue-400"></i>
-                                                            Lugar:</strong> {{
-                                                                item.lugar_texto || 'Convention Center' }}</p>
+                                                    <p><strong>
+                                                            <i class="pi pi-calendar mr-1 text-blue-400"></i>
+                                                            Date:
+                                                        </strong> {{ item.fecha_texto || 'To be defined' }}</p>
+                                                    <p><strong>
+                                                            <i class="pi pi-clock mr-1 text-blue-400"></i>
+                                                            Schedule:
+                                                        </strong> {{ item.horario_texto || 'Full Day' }}</p>
+                                                    <p><strong>
+                                                            <i class="pi pi-map-marker mr-1 text-blue-400"></i>
+                                                            Location:
+                                                        </strong> {{ item.lugar_texto || 'Convention Center'
+                                                        }}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </AccordionTab>
@@ -240,8 +267,8 @@ defineExpose({
                                 </div>
                             </div>
                         </AccordionTab>
-
-                        <!-- <AccordionTab>
+                        <!-- VIAJES  -->
+                        | <AccordionTab>
                             <template #header>
                                 <span class="font-bold text-blue-900 uppercase text-sm italic">Technical Visits</span>
                             </template>
@@ -266,10 +293,21 @@ defineExpose({
                                                 </span>
                                             </div>
                                         </div>
-                                        <div class="flex items-center gap-4 border-l pl-4 border-gray-100">
+                                        <!-- <div class="flex items-center gap-4 border-l pl-4 border-gray-100">
                                             <div class="text-right">
                                                 <p class="text-yellow-price font-black text-lg">USD {{
                                                     item.precio_disponible?.valor || 0 }}</p>
+                                            </div>
+                                        </div> -->
+                                        <div class="flex items-center gap-4 border-l pl-4 border-gray-100">
+                                            <Button v-if="item.itinerario" icon="pi pi-map" label="View Itinerary"
+                                                class="p-button-text p-button-sm text-green-600 font-bold uppercase text-[10px]"
+                                                @click="verItinerario(item)" />
+
+                                            <div class="text-right">
+                                                <p class="text-yellow-price font-black text-lg">
+                                                    USD {{ item.precio_disponible?.valor || 0 }}
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
@@ -287,19 +325,44 @@ defineExpose({
                                             <div
                                                 class="p-4 bg-slate-50 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-normal text-gray-600 ml-8 border-l-2 border-blue-200 rounded-br-lg">
                                                 <div class="space-y-1.5">
-                                                    <p><strong>Fecha:</strong> {{ item.fecha_texto || 'TBD' }}</p>
-                                                    <p><strong>Horario:</strong> {{ item.horario_texto || 'TBD' }}</p>
+                                                    <p>
+                                                        <strong><i class="pi pi-calendar mr-1 text-blue-400"></i>
+                                                            Date:</strong>
+                                                        {{ item.fecha_texto || 'No definido' }}
+
+                                                    </p>
+                                                    <p>
+                                                        <strong><i class="pi pi-check-circle mr-1 text-blue-400"></i>
+                                                            Includes:</strong>
+                                                     Registration, ground transfers, entrance to Machu
+                                                        Picchu, meals, and
+                                                        accommodation.
+                                                    </p>
                                                 </div>
+
                                                 <div class="space-y-1.5">
-                                                    <p><strong>Nota:</strong> {{ item.nota_logistica ||
-                                                        'Safetyequipmentrequired' }}</p>
+                                                    <p>
+                                                        <strong><i
+                                                                class="pi pi-exclamation-triangle mr-1 text-blue-400"></i>
+                                                            Requirements:</strong>
+                                                        All participants must have SCTR (Health & Pension)
+                                                        and Medical Exam Annex
+                                                        16.
+                                                    </p>
+                                                    <p>
+                                                        <strong><i class="pi pi-info-circle mr-1 text-blue-400"></i>
+                                                            Note:</strong>
+                                                     The transfer to Cusco at the start and return to
+                                                        Lima at the end is assumed
+                                                        by the participant.
+                                                    </p>
                                                 </div>
                                             </div>
                                         </AccordionTab>
                                     </Accordion>
                                 </div>
                             </div>
-                        </AccordionTab> -->
+                        </AccordionTab>
                     </Accordion>
 
                     <div v-if="extras_seleccionados.length > 0"
@@ -322,6 +385,45 @@ defineExpose({
             </template>
         </Card>
     </div>
+    <Dialog v-model:visible="mostrarModal" header="Course Abstract" :style="{ width: '50vw' }"
+        :breakpoints="{ '960px': '75vw', '641px': '90vw' }" :modal="true" dismissableMask class="abstract-dialog">
+        <div class="p-4 border-l-4 border-blue-500 bg-blue-50 rounded-r-lg">
+            <p class="text-gray-700 leading-relaxed text-sm italic">
+                {{ contenidoAbstract }}
+            </p>
+        </div>
+
+        <template #footer>
+            <Button label="CLOSE" icon="pi pi-times" @click="mostrarModal = false"
+                class="p-button-text p-button-secondary font-bold" />
+        </template>
+    </Dialog>
+    <Dialog v-model:visible="mostrarItinerario" :header="tituloViaje" :style="{ width: '600px' }"
+        :breakpoints="{ '960px': '75vw', '641px': '90vw' }" :modal="true" dismissableMask class="itinerary-dialog">
+        <div class="p-4 space-y-6">
+            <div v-for="(step, index) in itinerarioSeleccionado" :key="index"
+                class="relative pl-8 border-l-2 border-blue-100 pb-4">
+                <div
+                    class="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-white border-4 border-blue-500 shadow-sm">
+                </div>
+
+                <span class="text-[10px] font-black text-blue-500 uppercase tracking-widest">{{ step.day }}</span>
+                <h4 class="text-sm font-bold text-slate-800 mt-1 mb-2">{{ step.title }}</h4>
+
+                <ul class="space-y-2">
+                    <li v-for="act in step.activities" :key="act" class="text-xs text-slate-600 flex items-start gap-2">
+                        <i class="pi pi-circle-fill text-[6px] mt-1.5 text-slate-300"></i>
+                        {{ act }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <template #footer>
+            <Button label="Close" icon="pi pi-times" @click="mostrarItinerario = false"
+                class="p-button-text p-button-secondary" />
+        </template>
+    </Dialog>
 </template>
 
 <style scoped>
