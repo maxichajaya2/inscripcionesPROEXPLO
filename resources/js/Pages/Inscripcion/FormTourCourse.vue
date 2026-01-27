@@ -178,7 +178,7 @@ defineExpose({
                                             </template>
                                             <div
                                                 class="p-4 bg-slate-50 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-normal text-gray-600 ml-8 border-l-2 border-blue-200 rounded-br-lg">
-                                                <div class="space-y-1.5">
+                                                <!-- <div class="space-y-1.5">
                                                     <p><strong><i class="pi pi-user mr-1 text-blue-400"></i>
                                                             Encargado:</strong> {{ item.encargado
                                                                 || 'TBA' }}</p>
@@ -191,6 +191,37 @@ defineExpose({
                                                     <p><strong><i class="pi pi-language mr-1 text-blue-400"></i>
                                                             Idioma:</strong> {{
                                                                 item.idioma_texto || 'English / Spanish' }}</p>
+                                                </div> -->
+                                                <div class="space-y-3">
+                                                    <div class="flex flex-col gap-2">
+                                                        <p class="mb-0">
+                                                            <strong>
+                                                                <i class="pi pi-users mr-1 text-blue-400"></i>
+                                                                Expositores:
+                                                            </strong>
+                                                        </p>
+
+                                                        <ul v-if="Array.isArray(item.expositores)"
+                                                            class="list-none p-0 m-0 ml-7 space-y-2">
+                                                            <li v-for="(expo, index) in item.expositores" :key="index"
+                                                                class="text-xs leading-normal text-gray-700 flex items-start">
+                                                                <span class="mr-2 text-blue-300">•</span>
+                                                                <span>{{ expo }}</span>
+                                                            </li>
+                                                        </ul>
+
+                                                        <p v-else class="text-xs ml-7 text-gray-600">
+                                                            {{ item.expositores || 'Experts in the field' }}
+                                                        </p>
+                                                    </div>
+
+                                                    <p>
+                                                        <strong>
+                                                            <i class="pi pi-language mr-1 text-blue-400"></i>
+                                                            Idioma:
+                                                        </strong>
+                                                        {{ item.idioma_texto || 'English / Spanish' }}
+                                                    </p>
                                                 </div>
                                                 <div class="space-y-1.5">
                                                     <p><strong><i class="pi pi-calendar mr-1 text-blue-400"></i>
