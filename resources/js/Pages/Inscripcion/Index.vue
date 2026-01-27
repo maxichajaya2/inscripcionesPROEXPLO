@@ -3,7 +3,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import colorbar from '@/Components/colorbar.vue';
 import GreenArrowRight from '@/Components/GreenArrowRight.vue';
 import { router, usePage } from '@inertiajs/vue3';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
 
 // Estilos globales
 import "../../../css/inscripciones.css";
@@ -19,6 +19,10 @@ const props = defineProps({
 const grupoSeleccionado = ref(null);
 const macroSeccion = ref(null); // 'inscripciones' o 'viajes'
 
+const seleccionarGrupo = (grupo) => {
+    grupoSeleccionado.value = grupo;
+    scrollToCategories();
+};
 
 // const categoriasVisibles = computed(() => {
 //     if (!grupoSeleccionado.value) return [];
@@ -66,23 +70,38 @@ const irAlFormulario = (id) => {
     }
 };
 
+const scrollToCategories = () => {
+    nextTick(() => {
+        // Buscamos el ID que pusimos en el HTML
+        const element = document.getElementById('section-categories');
+        if (element) {
+            // Ajuste: offset para que no quede pegado al borde superior
+            const yOffset = -20; 
+            const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+            
+            window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+    });
+};
 </script>
 
 <template>
     <AppLayout class="bg-gradient-wmc">
         <div class="px-6 py-12 mx-auto max-w-6xl min-h-[80vh] flex flex-col justify-center font-sans">
             <div class="preventa-banner-home animate-fade-in-down mb-8">
-                <div class="banner-home-content">
-                    <div class="banner-home-icon">
-                        <span class="text-2xl">⏳</span>
+                <div class="banner-home-content p-3 md:p-6 flex items-center gap-3">
+                    <div class="banner-home-icon shrink-0">
+                        <span class="text-xl md:text-2xl">⏳</span>
                     </div>
-                    <div class="banner-home-text">
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="tag-early-bird">EARLY BIRD RATES</span>
+                    <div class="banner-home-text text-left">
+                        <div class="flex items-center gap-2 mb-0.5">
+                            <span class="tag-early-bird text-[10px] md:text-xs px-2 py-0.5">EARLY BIRD RATES</span>
                         </div>
-                        <h2 class="text-xl md:text-2xl font-black text-white">Take advantage of Early Bird rates!</h2>
-                        <p class="text-white/80 text-sm md:text-base">
-                            Register by <strong>March 31st</strong> to secure your place with special pricing.
+                        <h2 class="text-base md:text-2xl font-black text-white leading-tight">
+                            Take advantage of Early Bird rates!
+                        </h2>
+                        <p class="text-white/80 text-xs md:text-base leading-snug">
+                            Register by <strong>March 31st</strong> and secure your spot.
                         </p>
                     </div>
                 </div>
@@ -152,7 +171,7 @@ const irAlFormulario = (id) => {
                             Select your profile for <span class="text-yellow-price">{{ macroSeccion === 'inscripciones'
                                 ? 'REGISTRATION' : 'TOURS & COURSES' }}</span>:
                         </h4>
-                        <button @click="grupoSeleccionado = 'participante'"
+                        <button @click="seleccionarGrupo('participante')"
                             :class="grupoSeleccionado === 'participante'
                                 ? 'bg-blue-900/40 border-blue-400 shadow-[0_0_35px_rgba(59,130,246,0.6)] scale-105 ring-1 ring-blue-300'
                                 : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]'"
@@ -176,7 +195,7 @@ const irAlFormulario = (id) => {
                             </div>
                         </button>
 
-                        <button @click="grupoSeleccionado = 'autor'"
+                        <button @click="seleccionarGrupo('autor')"
                             :class="grupoSeleccionado === 'autor'
                                 ? 'bg-cyan-900/40 border-cyan-400 shadow-[0_0_35px_rgba(34,211,238,0.6)] scale-105 ring-1 ring-cyan-300'
                                 : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-cyan-500 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]'"
@@ -203,8 +222,7 @@ const irAlFormulario = (id) => {
                 </div>
 
                 <div class="w-full lg:w-7/12 mt-8 lg:mt-0 relative min-h-[300px]">
-
-                    <div v-if="grupoSeleccionado" class="flex flex-col gap-5 animate-fade-in-right">
+                    <div v-if="grupoSeleccionado" id="section-categories" class="flex flex-col gap-5 animate-fade-in-right">
 
                         <div class="flex items-center justify-between px-2 mb-1">
                             <h6 class="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em]">
@@ -240,8 +258,7 @@ const irAlFormulario = (id) => {
                                 </p>
                             </div>
 
-                            <div
-                                class="relative z-10 text-right flex flex-col items-end border-l border-white/10 pl-6 group-hover:border-yellow-500/30 transition-colors">
+                            <div class="relative z-10 text-right flex flex-col items-end border-l border-white/10 pl-6 group-hover:border-yellow-500/30 transition-colors">
                                 <!-- <span
                                     class="text-2xl md:text-4xl font-black text-yellow-price drop-shadow-[0_2px_10px_rgba(234,179,8,0.3)] group-hover:scale-110 transition-transform duration-300 origin-right">
                                     {{ cat.precio_disponible?.moneda?.simbolo || '$' }}{{ cat.precio_disponible?.valor
