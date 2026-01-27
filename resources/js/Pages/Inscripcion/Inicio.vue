@@ -636,7 +636,7 @@ watch(activeStep, () => {
                         <StepPanel v-slot="{ activateCallback }" value="1"
                             class="rounded-2xl border-2 border-green-iimp bg-white-price shadow-wmc">
                             <FormValidacionDoc ref="childFormValidacionDoc" :tipo_origen="tipo_origen" />
-                            <!-- BOTÓN FLOTANTE SOLO EN MÓVIL -->
+
                             <div class="fixed bottom-4 right-4 z-50 md:hidden animate-fade-in-up">
                                 <Button label="Validate" icon="pi pi-arrow-right" iconPos="right"
                                     class="bg-degradient border-rounded-full" :loading="loading"
@@ -644,7 +644,7 @@ watch(activeStep, () => {
                                     @click="async () => {
                                         const isValid = await validate('Documento');
 
-                                        // También ajustamos esta lógica para que deje pasar si NO es categoría de socio
+
                                         if (isValid) {
                                             if (childFormValidacionDoc?.esCategoriaDeSocio) {
                                                 if (childFormValidacionDoc?.esSocio) activateCallback('2');
@@ -654,7 +654,7 @@ watch(activeStep, () => {
                                         }
                                     }" />
                             </div>
-                            <!-- BOTÓN NORMAL EN DESKTOP -->
+
                             <div class="hidden md:flex p-6 justify-end items-center">
 
                                 <Button label="Validate" icon="pi pi-arrow-right" iconPos="right"
@@ -663,7 +663,6 @@ watch(activeStep, () => {
                                     @click="async () => {
                                         const isValid = await validate('Documento');
 
-                                        // También ajustamos esta lógica para que deje pasar si NO es categoría de socio
                                         if (isValid) {
                                             if (childFormValidacionDoc?.esCategoriaDeSocio) {
                                                 if (childFormValidacionDoc?.esSocio) activateCallback('2');
@@ -674,6 +673,8 @@ watch(activeStep, () => {
                                     }" />
                             </div>
                         </StepPanel>
+
+
                         <!-- ========== Courses or Tours ==========
                          ==========================================  -->
                         <!-- <StepPanel v-slot="{ activateCallback }" value="2"
@@ -687,7 +688,7 @@ watch(activeStep, () => {
                                     @click="handleInscripcionClick" class="bg-degradient border-rounded-full" />
                             </div>
                         </StepPanel> -->
-                        <StepPanel v-slot="{ activateCallback }" value="2"
+                        <!-- <StepPanel v-slot="{ activateCallback }" value="2"
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
                             <FormTourCourse ref="childFormTourCourse" :data_persona="data_persona"
                                 :adicionales="props.adicionales" :section="sectionUrl" />
@@ -697,6 +698,22 @@ watch(activeStep, () => {
                                 <Button label="Continue to Billing" iconPos="right" icon="pi pi-arrow-right"
                                     :loading="loading" @click="handleCursosHaciaFacturacion"
                                     class="bg-degradient border-rounded-full" />
+                            </div>
+                        </StepPanel> -->
+
+                        <StepPanel v-slot="{ activateCallback }" value="2"
+                            class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
+
+                            <FormTourCourse ref="childFormTourCourse" :data_persona="data_persona"
+                                :adicionales="props.adicionales" :section="sectionUrl" />
+
+                            <div
+                                class="fixed bottom-0 left-0 w-full p-4 bg-white/80 backdrop-blur-md border-t z-50 flex justify-between gap-3 md:relative md:bg-transparent md:border-none md:p-6 md:z-auto md:backdrop-blur-none">
+                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                    class="flex-1 md:flex-none" @click="activateCallback('1')" />
+                                <Button label="Continue to Billing" iconPos="right" icon="pi pi-arrow-right"
+                                    class="bg-degradient border-rounded-full flex-1 md:flex-none" :loading="loading"
+                                    @click="handleCursosHaciaFacturacion" />
                             </div>
                         </StepPanel>
                         <!-- ========== Billing Information ==========
@@ -726,7 +743,7 @@ watch(activeStep, () => {
                                     class="bg-degradient border-rounded-full" />
                             </div>
                         </StepPanel> -->
-                        <StepPanel v-slot="{ activateCallback }" value="3"
+                        <!-- <StepPanel v-slot="{ activateCallback }" value="3"
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
 
                             <FormInscription ref="childFormInscription" :data_persona="data_persona"
@@ -748,6 +765,21 @@ watch(activeStep, () => {
                                 <Button label="Register & Pay" iconPos="right" icon="pi pi-arrow-right"
                                     :loading="loading" @click="handleInscripcionFinal"
                                     class="bg-degradient border-rounded-full" />
+                            </div>
+                        </StepPanel> -->
+                        <StepPanel v-slot="{ activateCallback }" value="3"
+                            class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
+
+                            <FormInscription ref="childFormInscription" :data_persona="data_persona"
+                                :categorias="props.categorias" />
+
+                            <div
+                                class="fixed bottom-0 left-0 w-full p-4 bg-white/80 backdrop-blur-md border-t z-50 flex justify-between gap-3 md:relative md:bg-transparent md:border-none md:p-6 md:z-auto md:backdrop-blur-none">
+                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                    class="flex-1 md:flex-none" @click="activateCallback('2')" />
+                                <Button label="Register & Pay" iconPos="right" icon="pi pi-arrow-right"
+                                    class="bg-degradient border-rounded-full flex-1 md:flex-none" :loading="loading"
+                                    @click="handleInscripcionFinal" />
                             </div>
                         </StepPanel>
                         <!-- ========== Payment Process ==========

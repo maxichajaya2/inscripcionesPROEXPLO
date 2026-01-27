@@ -144,6 +144,8 @@ defineExpose({
                 <div v-if="!estaVacio" class="px-2">
                     <Accordion :multiple="true" :activeIndex="[0, 1]" class="wmc-accordion">
 
+                        <!-- ========= CURSO CORTOS =========
+                        ================================ -->
                         <AccordionTab>
                             <template #header>
                                 <span class="font-bold text-blue-900 uppercase text-sm italic">Short Courses</span>
@@ -154,7 +156,7 @@ defineExpose({
                                     class="w-full border rounded-lg transition-all duration-200 shadow-sm"
                                     :class="extras_seleccionados.includes(item.id) ? 'bg-blue-50 border-blue-300' : 'border-gray-100 bg-white'">
 
-                                    <div class="flex items-center justify-between p-3 gap-3">
+                                    <!-- <div class="flex items-center justify-between p-3 gap-3">
                                         <div class="flex items-center flex-1 cursor-pointer"
                                             @click="toggleSelection(item.id)">
                                             <Checkbox v-model="extras_seleccionados" :value="item.id" @click.stop
@@ -172,10 +174,10 @@ defineExpose({
                                         </div>
 
                                         <div class="flex items-center gap-4 border-l pl-4 border-gray-100">
-                                            <!-- <a :href="item.pdf_url" target="_blank" class="no-underline">
+                                            <a :href="item.pdf_url" target="_blank" class="no-underline">
                                                 <Button icon="pi pi-file-pdf" label="Details"
                                                     class="p-button-text p-button-sm text-blue-500 font-bold uppercase text-[10px]" />
-                                            </a> -->
+                                            </a>
                                             <Button icon="pi pi-eye" label="Abstract"
                                                 class="p-button-text p-button-sm text-blue-500 font-bold uppercase text-[10px]"
                                                 @click="abrirAbstract(item.abstract)" />
@@ -185,8 +187,49 @@ defineExpose({
                                                 </p>
                                             </div>
                                         </div>
-                                    </div>
+                                    </div> -->
 
+                                    <div
+                                        class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 gap-3">
+
+                                        <div class="flex items-center flex-1 cursor-pointer w-full"
+                                            @click="toggleSelection(item.id)">
+                                            <Checkbox v-model="extras_seleccionados" :value="item.id" @click.stop
+                                                class="mr-3 flex-none" />
+                                            <div class="flex flex-col min-w-0">
+                                                <label
+                                                    class="text-sm font-black text-blue-900 leading-tight cursor-pointer break-words">
+                                                    {{ item.nombre_en }}
+                                                </label>
+                                                <span
+                                                    class="text-[10px] text-slate-500 font-medium italic uppercase tracking-tighter leading-none mt-1">
+                                                    {{ item.subtitulo_en || (item.tipo === 'curso' ? 'WMC 2026 Special Course' : 'Technical Trip')
+                                                    }}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div
+                                            class="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto border-t sm:border-t-0 sm:border-l pt-2 sm:pt-0 sm:pl-4 border-gray-100">
+                                            <div class="flex items-center gap-1">
+                                                <Button v-if="item.tipo === 'curso'" icon="pi pi-eye" label="Abstract"
+                                                    class="p-button-text p-button-sm text-blue-500 font-bold uppercase text-[10px]"
+                                                    @click.stop="abrirAbstract(item.abstract)" />
+
+                                                <Button v-if="item.tipo === 'viaje' && item.itinerario" icon="pi pi-map"
+                                                    label="Itinerary"
+                                                    class="p-button-text p-button-sm text-green-600 font-bold uppercase text-[10px]"
+                                                    @click.stop="verItinerario(item)" />
+                                            </div>
+
+                                            <div class="text-right min-w-[80px]">
+                                                <p
+                                                    class="text-yellow-price font-black text-base sm:text-lg whitespace-nowrap">
+                                                    USD {{ item.precio_disponible?.valor || 0 }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <Accordion class="details-accordion border-t border-blue-50">
                                         <AccordionTab>
                                             <template #header>
@@ -200,20 +243,6 @@ defineExpose({
                                             </template>
                                             <div
                                                 class="p-4 bg-slate-50 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-normal text-gray-600 ml-8 border-l-2 border-blue-200 rounded-br-lg">
-                                                <!-- <div class="space-y-1.5">
-                                                    <p><strong><i class="pi pi-user mr-1 text-blue-400"></i>
-                                                            Encargado:</strong> {{ item.encargado
-                                                                || 'TBA' }}</p>
-                                                    <p><strong><i class="pi pi-users mr-1 text-blue-400"></i>
-                                                            Expositores:</strong>
-                                                        {{ Array.isArray(item.expositores) ? item.expositores.join(', ')
-                                                            : (item.expositores ||
-                                                                'Experts in the field') }}
-                                                    </p>
-                                                    <p><strong><i class="pi pi-language mr-1 text-blue-400"></i>
-                                                            Idioma:</strong> {{
-                                                                item.idioma_texto || 'English / Spanish' }}</p>
-                                                </div> -->
                                                 <div class="space-y-3">
                                                     <div class="flex flex-col gap-2">
                                                         <p class="mb-0">
@@ -267,7 +296,8 @@ defineExpose({
                                 </div>
                             </div>
                         </AccordionTab>
-                        <!-- VIAJES  -->
+                        <!-- ========= VIAJES =========
+                        ================================ -->
                         | <AccordionTab>
                             <template #header>
                                 <span class="font-bold text-blue-900 uppercase text-sm italic">Technical Visits</span>
@@ -277,7 +307,7 @@ defineExpose({
                                     class="w-full border rounded-lg transition-all shadow-sm"
                                     :class="extras_seleccionados.includes(item.id) ? 'bg-blue-50 border-blue-300' : 'border-gray-100 bg-white'">
 
-                                    <div class="flex items-center justify-between p-3 gap-3">
+                                    <!-- <div class="flex items-center justify-between p-3 gap-3">
                                         <div class="flex items-center flex-1 cursor-pointer"
                                             @click="toggleSelection(item.id)">
                                             <Checkbox v-model="extras_seleccionados" :value="item.id" @click.stop
@@ -293,12 +323,6 @@ defineExpose({
                                                 </span>
                                             </div>
                                         </div>
-                                        <!-- <div class="flex items-center gap-4 border-l pl-4 border-gray-100">
-                                            <div class="text-right">
-                                                <p class="text-yellow-price font-black text-lg">USD {{
-                                                    item.precio_disponible?.valor || 0 }}</p>
-                                            </div>
-                                        </div> -->
                                         <div class="flex items-center gap-4 border-l pl-4 border-gray-100">
                                             <Button v-if="item.itinerario" icon="pi pi-map" label="View Itinerary"
                                                 class="p-button-text p-button-sm text-green-600 font-bold uppercase text-[10px]"
@@ -310,8 +334,37 @@ defineExpose({
                                                 </p>
                                             </div>
                                         </div>
-                                    </div>
+                                    </div> -->
 
+                                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 gap-3">
+                                        <div class="flex items-start flex-1 cursor-pointer w-full min-w-0"
+                                            @click="toggleSelection(item.id)">
+                                            <Checkbox v-model="extras_seleccionados" :value="item.id" @click.stop
+                                                class="mr-3 mt-1 flex-none" />
+                                            <div class="flex flex-col min-w-0">
+                                                <label class="text-xs sm:text-sm font-black text-blue-900 leading-tight cursor-pointer break-words">
+                                                    {{ item.nombre_en }}
+                                                </label>
+                                                <span class="text-[9px] sm:text-[10px] text-slate-500 font-medium italic uppercase tracking-tighter leading-none mt-1">
+                                                    {{ item.subtitulo_en || 'Technical Trip' }}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto border-t sm:border-t-0 sm:border-l pt-2 sm:pt-0 sm:pl-4 border-gray-100">
+                                            <Button v-if="item.itinerario"
+                                                icon="pi pi-map"
+                                                label="View Itinerary"
+                                                class="p-button-text p-button-sm text-green-600 font-bold uppercase text-[10px] p-0"
+                                                @click.stop="verItinerario(item)" />
+
+                                            <div class="text-right flex-none">
+                                                <p class="text-yellow-price font-black text-sm sm:text-lg whitespace-nowrap">
+                                                    USD {{ item.precio_disponible?.valor || 0 }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <Accordion class="details-accordion border-t border-blue-50">
                                         <AccordionTab>
                                             <template #header>
@@ -334,7 +387,7 @@ defineExpose({
                                                     <p>
                                                         <strong><i class="pi pi-check-circle mr-1 text-blue-400"></i>
                                                             Includes:</strong>
-                                                     Registration, ground transfers, entrance to Machu
+                                                        Registration, ground transfers, entrance to Machu
                                                         Picchu, meals, and
                                                         accommodation.
                                                     </p>
@@ -352,7 +405,7 @@ defineExpose({
                                                     <p>
                                                         <strong><i class="pi pi-info-circle mr-1 text-blue-400"></i>
                                                             Note:</strong>
-                                                     The transfer to Cusco at the start and return to
+                                                        The transfer to Cusco at the start and return to
                                                         Lima at the end is assumed
                                                         by the participant.
                                                     </p>
@@ -428,7 +481,7 @@ defineExpose({
 
 <style scoped>
 /* Estilos para limpiar el acordeón interno */
-:deep(.details-accordion .p-accordion-header-link) {
+/* :deep(.details-accordion .p-accordion-header-link) {
     padding: 0.5rem 1rem !important;
     background: transparent !important;
     border: none !important;
@@ -443,11 +496,66 @@ defineExpose({
 
 :deep(.wmc-accordion .p-accordion-tab) {
     margin-bottom: 1rem;
-}
+} */
 
 /* Efecto hover suave en tarjetas */
 .border-gray-100:hover {
     border-color: #cbd5e1;
     background-color: #f8fafc;
+}
+
+/* Ajuste para que el texto largo no empuje el precio fuera de la pantalla */
+.min-w-0 {
+    min-width: 0;
+}
+
+
+@media (max-width: 640px) {
+    /* Ajuste de los títulos del acordeón principal */
+    :deep(.p-accordion-header-link) {
+        padding: 0.75rem !important;
+    }
+    :deep(.p-accordion-header-text) {
+        font-size: 0.75rem !important;
+    }
+
+    /* Ajuste de la tarjeta de contenido */
+    .p-4 {
+        padding: 0.75rem !important;
+    }
+
+    /* Texto de los labels */
+    label {
+        font-size: 0.8rem !important;
+        line-height: 1.1 !important;
+    }
+
+    /* El precio en móvil */
+    .text-yellow-price {
+        font-size: 0.95rem !important;
+    }
+}
+
+/* Evitar que el acordeón de detalles (Technical Sheet) sea muy grande */
+:deep(.details-accordion .p-accordion-header-link span) {
+    font-size: 9px !important;
+}
+
+:deep(.details-accordion .p-accordion-content div) {
+    padding: 0.75rem !important;
+    gap: 0.5rem !important;
+}
+
+/* Contenedor de subtotal inferior bilingue */
+.text-xl {
+    @media (max-width: 640px) {
+        font-size: 1rem !important;
+    }
+}
+
+/* Limpieza de bordes en el sub-acordeón de logística */
+:deep(.details-accordion .p-accordion-content) {
+    padding: 1rem !important;
+    font-size: 0.75rem;
 }
 </style>
