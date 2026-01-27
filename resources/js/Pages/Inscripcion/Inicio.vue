@@ -990,25 +990,35 @@ onUnmounted(() => {
 }
 
 @keyframes modalSpring {
-    0% { opacity: 0; transform: scale(0.8) translateY(50px); }
-    100% { opacity: 1; transform: scale(1) translateY(0); }
+    0% {
+        opacity: 0;
+        transform: scale(0.8) translateY(50px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 /* Brillo constante en la cabecera */
 .shine-effect {
-    background: linear-gradient(
-        to right,
-        rgba(255, 255, 255, 0) 0%,
-        rgba(255, 255, 255, 0.05) 50%,
-        rgba(255, 255, 255, 0) 100%
-    );
+    background: linear-gradient(to right,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.05) 50%,
+            rgba(255, 255, 255, 0) 100%);
     transform: skewX(-25deg);
     animation: shineLoop 3s infinite;
 }
 
 @keyframes shineLoop {
-    0% { transform: translateX(-150%) skewX(-25deg); }
-    100% { transform: translateX(150%) skewX(-25deg); }
+    0% {
+        transform: translateX(-150%) skewX(-25deg);
+    }
+
+    100% {
+        transform: translateX(150%) skewX(-25deg);
+    }
 }
 
 /* Animación de brillo rápido al pasar el mouse por el botón */
@@ -1017,8 +1027,13 @@ onUnmounted(() => {
 }
 
 @keyframes shineFast {
-    0% { transform: translateX(-100%) skewX(-25deg); }
-    100% { transform: translateX(100%) skewX(-25deg); }
+    0% {
+        transform: translateX(-100%) skewX(-25deg);
+    }
+
+    100% {
+        transform: translateX(100%) skewX(-25deg);
+    }
 }
 
 /* Rebote suave para el icono */
@@ -1027,7 +1042,14 @@ onUnmounted(() => {
 }
 
 @keyframes bounceSlow {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
 }
 </style>
