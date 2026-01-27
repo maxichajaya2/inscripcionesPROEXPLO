@@ -632,7 +632,30 @@ onUnmounted(() => {
                         <StepPanel v-slot="{ activateCallback }" value="1"
                             class="rounded-2xl border-2 border-green-iimp bg-white-price shadow-wmc">
                             <FormValidacionDoc ref="childFormValidacionDoc" :tipo_origen="tipo_origen" />
-                            <div class="flex p-6 justify-end items-center">
+                            <!-- BOTÓN FLOTANTE SOLO EN MÓVIL -->
+                            <div class="fixed bottom-4 right-4 z-50 md:hidden animate-fade-in-up">
+                                <Button 
+                                    label="Validate" 
+                                    icon="pi pi-arrow-right" 
+                                    iconPos="right"
+                                    class="bg-degradient border-rounded-full" 
+                                    :loading="loading"
+                                    :disabled="childFormValidacionDoc?.esCategoriaDeSocio && childFormValidacionDoc?.hasSearched && !childFormValidacionDoc?.esSocio"
+                                    @click="async () => {
+                                        const isValid = await validate('Documento');
+
+                                        // También ajustamos esta lógica para que deje pasar si NO es categoría de socio
+                                        if (isValid) {
+                                            if (childFormValidacionDoc?.esCategoriaDeSocio) {
+                                                if (childFormValidacionDoc?.esSocio) activateCallback('2');
+                                            } else {
+                                                activateCallback('2');
+                                            }
+                                        }
+                                    }" />
+                            </div>
+                            <!-- BOTÓN NORMAL EN DESKTOP -->
+                            <div class="hidden md:flex p-6 justify-end items-center">
 
                                 <Button label="Validate" icon="pi pi-arrow-right" iconPos="right"
                                     class="bg-degradient border-rounded-full" :loading="loading"
@@ -695,7 +718,8 @@ onUnmounted(() => {
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
                             <FormInscription ref="childFormInscription" :data_persona="data_persona"
                                 :categorias="props.categorias" />
-                            <div class="flex justify-between p-6">
+                            <!-- BOTÓN FLOTANTE SOLO EN MÓVIL -->
+                            <div class="mobile-floating-register z-50 animate-fade-in-up">
                                 <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
                                     @click="activateCallback('2')" />
                                 <Button label="Register & Pay" iconPos="right" icon="pi pi-arrow-right"
@@ -724,11 +748,10 @@ onUnmounted(() => {
         </div>
 
         <Dialog v-model:visible="visible" modal :showHeader="false" :closable="false" :style="{ width: '900px' }"
-            class="bg-transparent shadow-none border-none px-0" :pt="{
+            class="bg-transparent shadow-none border-none px-0 overflow-hidden" :pt="{
                 mask: { class: 'bg-slate-900/90 backdrop-blur-md' },
-                content: { class: 'bg-transparent px-0 py-0 border-none shadow-none' }
+                content: { class: 'bg-transparent px-0 py-0 border-none shadow-none overflow-hidden' }
             }">
-
             <div class="bg-white rounded-3xl overflow-hidden shadow-2xl animate-fade-in-down px-0">
 
                 <div
@@ -738,8 +761,7 @@ onUnmounted(() => {
                         class="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
                     </div>
 
-                    <div
-                        class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2">
+                    <div class="bg-white rounded-3xl overflow-hidden shadow-2xl animate-fade-in-down px-0 flex flex-col max-h-[90vh]">
                     </div>
 
                     <div class="relative z-10">
@@ -765,7 +787,7 @@ onUnmounted(() => {
                     </div>
                 </div>
 
-                <div class="p-8 md:p-12 bg-slate-50 px-0">
+                <div class="p-8 md:p-12 bg-slate-50 px-4 overflow-y-auto flex-1">
                     <div v-if="bloqueoExtranjero"
                         class="p-4 mb-6 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3 animate-fade-in-up">
                         <i class="pi pi-info-circle text-amber-600 text-xl mt-0.5"></i>
@@ -778,6 +800,7 @@ onUnmounted(() => {
                             assistance.
                         </p>
                     </div>
+                    
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 
 
@@ -786,10 +809,8 @@ onUnmounted(() => {
 
                             <div class="h-1 w-full bg-red-600"></div>
 
-                            <div class="p-8 flex flex-col items-center text-center h-full">
-
-                                <div
-                                    class="w-24 h-24 mb-6 relative drop-shadow-lg group-hover:scale-110 transition-transform duration-300">
+                            <div class="p-5 md:p-8 flex flex-col items-center text-center h-full">
+                                <div class="w-16 h-12 md:w-24 md:h-24 mb-4 md:mb-6 relative drop-shadow-lg group-hover:scale-110 transition-transform duration-300">
                                     <svg viewBox="0 0 300 200" class="w-full h-full rounded-lg shadow-sm">
                                         <rect width="300" height="200" fill="#ffffff" stroke="#e2e8f0"
                                             stroke-width="2" />
@@ -799,18 +820,16 @@ onUnmounted(() => {
                                     <div class="absolute inset-0 bg-red-500/20 blur-2xl -z-10 rounded-full"></div>
                                 </div>
 
-                                <h3
-                                    class="text-2xl font-black text-slate-800 group-hover:text-red-700 transition-colors uppercase">
+                                <h3 class="text-xl md:text-2xl font-black text-slate-800 group-hover:text-red-700 transition-colors uppercase">
                                     National
                                 </h3>
-                                <p class="text-sm text-slate-500 mt-2 mb-8 leading-relaxed font-medium">
+                                <p class="text-xs md:text-sm text-slate-500 mt-2 mb-4 md:mb-8 leading-relaxed font-medium">
                                     Peruvian citizen or resident with DNI.
                                 </p>
 
                                 <div class="mt-auto w-full">
-                                    <span
-                                        class="block w-full py-3 px-4 rounded-xl bg-gradient-to-r from-red-700 to-red-600 text-white font-bold text-sm tracking-wider uppercase shadow-md group-hover:shadow-lg group-hover:from-red-600 group-hover:to-red-500 transition-all flex items-center justify-center gap-2">
-                                        Continue Purchase <i class="pi pi-arrow-right text-xs"></i>
+                                    <span class="block w-full py-2.5 md:py-3 px-4 rounded-xl bg-gradient-to-r from-red-700 to-red-600 text-white font-bold text-xs md:text-sm tracking-wider uppercase shadow-md group-hover:shadow-lg group-hover:from-red-600 group-hover:to-red-500 transition-all flex items-center justify-center gap-2">
+                                        Continue Purchase <i class="pi pi-arrow-right text-[10px] md:text-xs"></i>
                                     </span>
                                 </div>
                             </div>
@@ -968,66 +987,127 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.animate-fade-in-down {
-    animation: fadeInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes fadeInDown {
-    from {
-        opacity: 0;
-        transform: translateY(-40px) scale(0.95);
+    .animate-fade-in-down {
+        animation: fadeInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-40px) scale(0.95);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
     }
-}
 
-/* Animación de entrada del Modal */
-.animate-modal-entry {
-    animation: modalSpring 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
+    /* Animación de entrada del Modal */
+    .animate-modal-entry {
+        animation: modalSpring 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
 
-@keyframes modalSpring {
-    0% { opacity: 0; transform: scale(0.8) translateY(50px); }
-    100% { opacity: 1; transform: scale(1) translateY(0); }
-}
+    @keyframes modalSpring {
+        0% { opacity: 0; transform: scale(0.8) translateY(50px); }
+        100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
 
-/* Brillo constante en la cabecera */
-.shine-effect {
-    background: linear-gradient(
-        to right,
-        rgba(255, 255, 255, 0) 0%,
-        rgba(255, 255, 255, 0.05) 50%,
-        rgba(255, 255, 255, 0) 100%
-    );
-    transform: skewX(-25deg);
-    animation: shineLoop 3s infinite;
-}
+    /* Brillo constante en la cabecera */
+    .shine-effect {
+        background: linear-gradient(
+            to right,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.05) 50%,
+            rgba(255, 255, 255, 0) 100%
+        );
+        transform: skewX(-25deg);
+        animation: shineLoop 3s infinite;
+    }
 
-@keyframes shineLoop {
-    0% { transform: translateX(-150%) skewX(-25deg); }
-    100% { transform: translateX(150%) skewX(-25deg); }
-}
+    @keyframes shineLoop {
+        0% { transform: translateX(-150%) skewX(-25deg); }
+        100% { transform: translateX(150%) skewX(-25deg); }
+    }
 
-/* Animación de brillo rápido al pasar el mouse por el botón */
-.group-hover\:animate-shine-fast {
-    animation: shineFast 0.6s forwards;
-}
+    /* Animación de brillo rápido al pasar el mouse por el botón */
+    .group-hover\:animate-shine-fast {
+        animation: shineFast 0.6s forwards;
+    }
 
-@keyframes shineFast {
-    0% { transform: translateX(-100%) skewX(-25deg); }
-    100% { transform: translateX(100%) skewX(-25deg); }
-}
+    @keyframes shineFast {
+        0% { transform: translateX(-100%) skewX(-25deg); }
+        100% { transform: translateX(100%) skewX(-25deg); }
+    }
 
-/* Rebote suave para el icono */
-.animate-bounce-slow {
-    animation: bounceSlow 3s infinite;
-}
+    /* Rebote suave para el icono */
+    .animate-bounce-slow {
+        animation: bounceSlow 3s infinite;
+    }
 
-@keyframes bounceSlow {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-}
+    @keyframes bounceSlow {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    /* Botón flotante - SOLO VISIBLE EN MÓVIL */
+    .mobile-floating-validate {
+        display: none;
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        z-index: 50;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in-up {
+        animation: fadeInUp 0.4s ease-out forwards;
+    }
+
+    /* MOSTRAR BOTÓN FLOTANTE SOLO EN MÓVIL */
+    @media (max-width: 768px) {
+        .mobile-floating-validate {
+            display: block;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .mobile-floating-validate {
+            bottom: 1rem !important;
+            right: 1rem !important;
+        }
+    }
+
+    /* Botón flotante Register - SOLO VISIBLE EN MÓVIL */
+    .mobile-floating-register {
+        display: none;
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        z-index: 50;
+    }
+
+    /* MOSTRAR BOTÓN FLOTANTE SOLO EN MÓVIL */
+    @media (max-width: 768px) {
+        .mobile-floating-register {
+            display: block;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .mobile-floating-register {
+            bottom: 1rem !important;
+            right: 1rem !important;
+        }
+    }
 </style>

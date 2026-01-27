@@ -33,9 +33,19 @@ const props = defineProps({
     tipo_origen: Number
 });
 
+
+const dniMessage = ref(''); 
 const schema = yup.object({
     tipo_doc: yup.mixed().required('Document type is required'),
-    documento: yup.string().required('Document number is required'),
+    documento: yup.string()
+        .required('Document number is required')
+        .test('len', 'DNI must be exactly 8 digits', (val, context) => {
+            // Solo aplicamos la regla de 8 dígitos si el tipo de doc es DNI (ID 1)
+            if (context.parent.tipo_doc === 1) {
+                return val?.length === 8;
+            }
+            return true; // Para otros documentos, no aplicamos esta restricción
+        }),
     nombres: yup.string().required('First Name is required'),
     apellido_paterno: yup.string().required('Last Name is required'),
     pais: yup.mixed().required('Country is required'),
@@ -185,10 +195,19 @@ const onlyNumberKey = (event) => {
             return false;
         }
 
-        // 5. Bloquear si ya llegó a 8 dígitos (y no hay selección)
+        // 5. Bloquear si ya llegó a 8 dígitos Y MOSTRAR MENSAJE
         if (documento.value?.length >= 8) {
+            dniMessage.value = "Solo se permiten 8 dígitos";
+            
+            // Limpiar el mensaje automáticamente después de 3 segundos
+            setTimeout(() => {
+                dniMessage.value = '';
+            }, 3000);
+
             event.preventDefault();
             return false;
+        } else {
+            dniMessage.value = ''; // Limpiar si el usuario borra y vuelve a tener espacio
         }
     }
     return true;
@@ -541,7 +560,11 @@ watch(() => props.tipo_origen, async (newOrigen) => {
                             </InputGroup>
                             <InputText v-else name="documento" v-model="documento" v-bind="documentoAttrs"
                                 class="w-full border-green-iimp" :maxlength="25" placeholder="Enter number" />
-                            <small class="text-red-600">{{ errors.documento }}</small>
+                            <small v-if="dniMessage" class="text-orange-600 font-bold block mt-1">
+                                <i class="pi pi-info-circle mr-1"></i> {{ dniMessage }}
+                            </small>
+
+                            <small v-else class="text-red-600 block mt-1">{{ errors.documento }}</small>
                         </div>
                     </div>
                 </div>

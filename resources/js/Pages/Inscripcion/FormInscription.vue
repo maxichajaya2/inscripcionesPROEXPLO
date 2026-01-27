@@ -97,6 +97,7 @@ const { defineField, errors, setValues, values, validate } = useForm({
     })
 });
 
+const dniMessageEmpresa = ref('');
 
 const [documentoEmpresa] = defineField('documentoEmpresa');
 const [razonSocial] = defineField('razonSocial');
@@ -679,9 +680,22 @@ const onlyNumberKey = (event) => {
 
         // Bloquear si ya llegó al máximo permitido
         const max = tipoDocumentoEmpresa.value === 1 ? 8 : 11;
+
         if (documentoEmpresa.value?.length >= max) {
+            // --- NUEVO: Activación del mensaje ---
+            dniMessageEmpresa.value = `Solo se permiten ${max} dígitos`;
+            
+            // Limpiamos el mensaje después de 3 segundos
+            setTimeout(() => {
+                dniMessageEmpresa.value = '';
+            }, 3000);
+            // -------------------------------------
+
             event.preventDefault();
             return false;
+        } else {
+            // Si el usuario está escribiendo y aún no llega al máximo, limpiamos el mensaje
+            dniMessageEmpresa.value = '';
         }
     }
     return true;
@@ -943,14 +957,24 @@ defineExpose({ getInscripcion });
                             <div class="col-span-3 sm:col-span-1">
                                 <label class="block mb-1">Document Number <span class="text-red-600">*</span></label>
                                 <InputGroup>
-                                    <InputText v-model="documentoEmpresa" :readonly="!isEditingBilling"
-                                        class="border-green-iimp" @keypress="onlyNumberKey" @paste="onlyNumberKey"
-                                        :disabled="!isEditingBilling" />
+                                    <InputText 
+                                        v-model="documentoEmpresa" 
+                                        :readonly="!isEditingBilling"
+                                        class="border-green-iimp" 
+                                        @keypress="onlyNumberKey" 
+                                        @paste="onlyNumberKey"
+                                        :disabled="!isEditingBilling" 
+                                        />
                                     <Button icon="pi pi-search" class="bg-green-iimp" @click="getEmpresaData"
                                         :loading="loading_doc" :disabled="!isEditingBilling || !documentoEmpresa" />
                                 </InputGroup>
-                                <small class="text-red-600" v-if="errors.documentoEmpresa">{{ errors.documentoEmpresa
-                                    }}</small>
+                                    <small v-if="dniMessageEmpresa" class="text-orange-600 font-bold block mt-1">
+            <i class="pi pi-info-circle mr-1"></i> {{ dniMessageEmpresa }}
+        </small>
+
+        <small v-else-if="errors.documentoEmpresa" class="text-red-600 block mt-1">
+            {{ errors.documentoEmpresa }}
+    </small>
                             </div>
                         </div>
 
