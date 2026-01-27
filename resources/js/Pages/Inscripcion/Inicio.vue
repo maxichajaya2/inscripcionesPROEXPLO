@@ -2,7 +2,7 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import colorbar from '@/Components/colorbar.vue';
 import { router } from '@inertiajs/vue3';
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import Dialog from 'primevue/dialog';
 import FormValidacionDoc from './FormValidacionDoc.vue';
 import FormInscription from './FormInscription.vue';
@@ -596,6 +596,10 @@ onMounted(() => {
 
 onUnmounted(() => {
     window.removeEventListener('beforeunload', handleBeforeUnload);
+});
+
+watch(activeStep, () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
 </script>
