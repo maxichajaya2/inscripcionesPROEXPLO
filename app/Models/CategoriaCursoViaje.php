@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,6 +12,10 @@ class CategoriaCursoViaje extends Model
 
     protected $connection = 'pgsql_second'; // Usando tu conexión de base de datos
     protected $table = "categoria_cursos_viajes";
+
+    protected $casts = [
+        'expositores' => 'array', // Esto convierte el JSON de la BD a un Array de PHP/JS automáticamente
+    ];
 
     // Seguimos la misma lógica que CategoriaInscripcion
     public function precios(): BelongsToMany
