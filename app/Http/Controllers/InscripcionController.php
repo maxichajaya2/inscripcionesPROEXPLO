@@ -123,6 +123,7 @@ class InscripcionController extends Controller
         } else {
             $adicionales = CategoriaCursoViaje::with(['precios' => $filtroPrecios])
                 ->where('isactive', true)
+                ->orderBy('nombre_en', 'ASC')
                 ->get()
                 ->map(function ($item) use ($perfil_id) {
                     // Buscamos el precio que coincida con el perfil en la tabla pivote
@@ -844,7 +845,7 @@ class InscripcionController extends Controller
             $service_wmc = app(\App\Http\Controllers\WebServiceController::class)
                 ->wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz);
 
-            // dd($service_wmc);
+            dd($service_wmc);
             try {
                 Mail::to($persona->correo)->send(new \App\Mail\MailInscripcion($inscripcion, $niubiz));
             } catch (\Exception $e) {
