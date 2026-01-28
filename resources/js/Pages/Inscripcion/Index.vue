@@ -32,9 +32,20 @@ const seleccionarGrupo = (grupo) => {
 const categoriasVisibles = computed(() => {
     if (!grupoSeleccionado.value) return [];
 
+    // 1. Filtramos primero por el grupo (autor/participante)
+    let filtradas = props.categorias.filter(cat => cat.grupo === grupoSeleccionado.value);
+
+    // 2. Si estamos en la sección de VIAJES, ocultamos Student y One Day
+    if (macroSeccion.value === 'viajes') {
+        filtradas = filtradas.filter(cat => {
+            const nombre = cat.nombre_en.toUpperCase();
+            // Retorna falso para los que NO queremos mostrar
+            return !nombre.includes('STUDENT') && !nombre.includes('ONE DAY');
+        });
+    }
     // Filtramos por el grupo (autor/participante)
     // y podrías añadir un filtro extra si tu base de datos tiene algo para "viajes"
-    return props.categorias.filter(cat => cat.grupo === grupoSeleccionado.value);
+   return filtradas;
 })
 
 const volverAMacro = () => {
@@ -76,9 +87,9 @@ const scrollToCategories = () => {
         const element = document.getElementById('section-categories');
         if (element) {
             // Ajuste: offset para que no quede pegado al borde superior
-            const yOffset = -20; 
+            const yOffset = -20;
             const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
-            
+
             window.scrollTo({ top: y, behavior: 'smooth' });
         }
     });
@@ -126,11 +137,11 @@ const scrollToCategories = () => {
                             <div class="flex flex-col z-10">
                                 <div class="flex flex-col z-10">
                                     <span class="text-blue-400 text-xs uppercase tracking-widest font-bold mb-1">
-                                        Register now and get access to courses and tours
+                                        Register now and get access to shorts courses and technical visits
                                     </span>
                                     <h5
                                         class="text-2xl font-black text-white group-hover:text-blue-200 transition-colors">
-                                        REGISTRATION
+                                        REGISTRATION TO EVENT
                                     </h5>
                                 </div>
                             </div>
@@ -147,7 +158,7 @@ const scrollToCategories = () => {
                                     Exclusive technical visits and specialized training
                                 </span>
                                 <h5 class="text-2xl font-black text-white group-hover:text-green-200 transition-colors">
-                                    TOURS & COURSES
+                                    TECHNICAL VISITS AND SHORT COURSES
                                 </h5>
                             </div>
                             <div
@@ -195,7 +206,7 @@ const scrollToCategories = () => {
                             </div>
                         </button>
 
-                        <button @click="seleccionarGrupo('autor')"
+                        <button @click="seleccionarGrupo('autor')" v-if="macroSeccion === 'inscripciones'"
                             :class="grupoSeleccionado === 'autor'
                                 ? 'bg-cyan-900/40 border-cyan-400 shadow-[0_0_35px_rgba(34,211,238,0.6)] scale-105 ring-1 ring-cyan-300'
                                 : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-cyan-500 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]'"
@@ -222,7 +233,8 @@ const scrollToCategories = () => {
                 </div>
 
                 <div class="w-full lg:w-7/12 mt-8 lg:mt-0 relative min-h-[300px]">
-                    <div v-if="grupoSeleccionado" id="section-categories" class="flex flex-col gap-5 animate-fade-in-right">
+                    <div v-if="grupoSeleccionado" id="section-categories"
+                        class="flex flex-col gap-5 animate-fade-in-right">
 
                         <div class="flex items-center justify-between px-2 mb-1">
                             <h6 class="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em]">
@@ -258,7 +270,8 @@ const scrollToCategories = () => {
                                 </p>
                             </div>
 
-                            <div class="relative z-10 text-right flex flex-col items-end border-l border-white/10 pl-6 group-hover:border-yellow-500/30 transition-colors">
+                            <div
+                                class="relative z-10 text-right flex flex-col items-end border-l border-white/10 pl-6 group-hover:border-yellow-500/30 transition-colors">
                                 <!-- <span
                                     class="text-2xl md:text-4xl font-black text-yellow-price drop-shadow-[0_2px_10px_rgba(234,179,8,0.3)] group-hover:scale-110 transition-transform duration-300 origin-right">
                                     {{ cat.precio_disponible?.moneda?.simbolo || '$' }}{{ cat.precio_disponible?.valor
@@ -342,86 +355,88 @@ const scrollToCategories = () => {
     }
 }
 
-    .preventa-banner-home {
-        background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%);
-        border: 1px solid rgba(245, 158, 11, 0.3);
-        border-left: 6px solid #f59e0b;
-        border-radius: 24px;
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px); /* Para soporte en Safari/iPhone */
-        position: relative;
-        overflow: hidden;
-    }
+.preventa-banner-home {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-left: 6px solid #f59e0b;
+    border-radius: 24px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    /* Para soporte en Safari/iPhone */
+    position: relative;
+    overflow: hidden;
+}
 
+.banner-home-content {
+    display: flex;
+    align-items: center;
+    padding: 1.5rem;
+    gap: 1.25rem;
+}
+
+.banner-home-icon {
+    background: rgba(245, 158, 11, 0.2);
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.tag-early-bird {
+    background: #f59e0b;
+    color: #000;
+    font-size: 0.65rem;
+    font-weight: 900;
+    padding: 2px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.05em;
+}
+
+.banner-home-text h2 {
+    line-height: 1.2;
+    margin-bottom: 4px;
+}
+
+/* Adaptación para Mobile */
+@media (max-width: 640px) {
     .banner-home-content {
-        display: flex;
-        align-items: center;
-        padding: 1.5rem;
-        gap: 1.25rem;
+        padding: 1.25rem;
+        flex-direction: column;
+        text-align: center;
     }
 
     .banner-home-icon {
-        background: rgba(245, 158, 11, 0.2);
-        width: 56px;
-        height: 56px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        border: 1px solid rgba(245, 158, 11, 0.2);
-    }
-
-    .tag-early-bird {
-        background: #f59e0b;
-        color: #000;
-        font-size: 0.65rem;
-        font-weight: 900;
-        padding: 2px 8px;
-        border-radius: 6px;
-        letter-spacing: 0.05em;
+        width: 48px;
+        height: 48px;
     }
 
     .banner-home-text h2 {
-        line-height: 1.2;
-        margin-bottom: 4px;
+        font-size: 1.25rem;
     }
 
-    /* Adaptación para Mobile */
-    @media (max-width: 640px) {
-        .banner-home-content {
-            padding: 1.25rem;
-            flex-direction: column;
-            text-align: center;
-        }
-        
-        .banner-home-icon {
-            width: 48px;
-            height: 48px;
-        }
+    .banner-home-text p {
+        font-size: 0.85rem;
+    }
+}
 
-        .banner-home-text h2 {
-            font-size: 1.25rem;
-        }
-        
-        .banner-home-text p {
-            font-size: 0.85rem;
-        }
+/* Animación de entrada igual a la de tus títulos */
+.animate-fade-in-down {
+    animation: fadeInDown 0.6s ease-out forwards;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
     }
 
-    /* Animación de entrada igual a la de tus títulos */
-    .animate-fade-in-down {
-        animation: fadeInDown 0.6s ease-out forwards;
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
-
-    @keyframes fadeInDown {
-        from {
-            opacity: 0;
-            transform: translateY(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
+}
 </style>
