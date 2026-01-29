@@ -218,7 +218,7 @@ const scrollToCategories = () => {
                                     Registration
                                 </span>
                                 <h5 class="text-2xl font-black text-white group-hover:text-cyan-200 transition-colors">
-                                    AUTHOR SPECIAL
+                                    SPECIAL AUTHOR
                                 </h5>
                             </div>
 
@@ -279,7 +279,7 @@ const scrollToCategories = () => {
                                 </span> -->
                                 <span v-if="macroSeccion === 'inscripciones'"
                                     class="text-2xl md:text-4xl font-black text-yellow-price drop-shadow-[0_2px_10px_rgba(234,179,8,0.3)] group-hover:scale-110 transition-transform duration-300 origin-right">
-                                    {{ cat.precio_disponible?.moneda?.simbolo || '$' }}{{ cat.precio_disponible?.valor
+                                    {{ cat.precio_disponible?.moneda?.simbolo || 'USD ' }}{{ cat.precio_disponible?.valor
                                         || '0' }}
                                 </span>
                                 <!--    <span class="text-[9px] uppercase text-gray-400 font-bold mb-3 block tracking-wider">

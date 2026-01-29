@@ -250,6 +250,17 @@ function changeCategory(id, precioRecibido) {
     nextTick(() => {
         show_document.value = Boolean(categoria.requiere_documento);
 
+        if (show_document.value) {
+            const nombre = categoria.nombre_en.toUpperCase();
+            if (nombre.includes('STUDENT') || nombre.includes('ESTUDIANTE')) {
+                upload_instruction.value = "Rate applicable to undergraduate students, presentation of enrollment proof required.";
+            } else if (nombre.includes('FACULTY') || nombre.includes('DOCENTE')) {
+                upload_instruction.value = "Special rate for undergraduate faculty members, who must present valid proof of their status.";
+            } else {
+                upload_instruction.value = "Please upload the required document for this category.";
+            }
+        }
+
         if (id == 39) {
             show_days.value = true;
             // Al multiplicar por current_price (que es 0), el total será 0
@@ -684,7 +695,7 @@ const onlyNumberKey = (event) => {
         if (documentoEmpresa.value?.length >= max) {
             // --- NUEVO: Activación del mensaje ---
             dniMessageEmpresa.value = `Solo se permiten ${max} dígitos`;
-            
+
             // Limpiamos el mensaje después de 3 segundos
             setTimeout(() => {
                 dniMessageEmpresa.value = '';
@@ -898,6 +909,38 @@ defineExpose({ getInscripcion });
                         </div>
                     </div>
 
+                    <div v-if="tipoDocumentoEmpresa === 1 || tipoDocumentoEmpresa === 2"
+                        class="col-span-2 mb-4 p-3 rounded-lg border flex items-center gap-3 animate-fade-in"
+                        :class="tipoDocumentoEmpresa === 1 ? 'bg-blue-50 border-blue-200' : 'bg-purple-50 border-purple-200'">
+
+                        <div :class="tipoDocumentoEmpresa === 1 ? 'bg-blue-500' : 'bg-purple-500'"
+                            class="rounded-full p-2 flex-none">
+                            <i class="pi pi-info-circle text-white text-sm"></i>
+                        </div>
+
+                        <div class="flex flex-col">
+                            <span class="font-black text-[12px] uppercase tracking-wider"
+                                :class="tipoDocumentoEmpresa === 1 ? 'text-blue-800' : 'text-purple-800'">
+                                {{ tipoDocumentoEmpresa === 1 ? 'Información de Boleta / Receipt Information' :
+                                    'Información de Factura / Invoice Information' }}
+                            </span>
+
+                            <p v-if="tipoDocumentoEmpresa === 1" class="text-xs font-medium text-blue-700">
+                                <span class="italic opacity-80">
+                                    By selecting <strong>DNI</strong>, an electronic <strong>Sales Receipt</strong> will
+                                    be issued in the name of the individual.
+                                </span>
+                            </p>
+
+                            <p v-else class="text-xs font-medium text-purple-700">
+                                <span class="italic opacity-80">
+                                    By selecting <strong>RUC</strong>, an electronic <strong>Commercial Invoice</strong>
+                                    will be issued in the name of the company or legal entity.
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
                 </template>
 
                 <template #content>
@@ -957,24 +1000,19 @@ defineExpose({ getInscripcion });
                             <div class="col-span-3 sm:col-span-1">
                                 <label class="block mb-1">Document Number <span class="text-red-600">*</span></label>
                                 <InputGroup>
-                                    <InputText 
-                                        v-model="documentoEmpresa" 
-                                        :readonly="!isEditingBilling"
-                                        class="border-green-iimp" 
-                                        @keypress="onlyNumberKey" 
-                                        @paste="onlyNumberKey"
-                                        :disabled="!isEditingBilling" 
-                                        />
+                                    <InputText v-model="documentoEmpresa" :readonly="!isEditingBilling"
+                                        class="border-green-iimp" @keypress="onlyNumberKey" @paste="onlyNumberKey"
+                                        :disabled="!isEditingBilling" />
                                     <Button icon="pi pi-search" class="bg-green-iimp" @click="getEmpresaData"
                                         :loading="loading_doc" :disabled="!isEditingBilling || !documentoEmpresa" />
                                 </InputGroup>
-                                    <small v-if="dniMessageEmpresa" class="text-orange-600 font-bold block mt-1">
-            <i class="pi pi-info-circle mr-1"></i> {{ dniMessageEmpresa }}
-        </small>
+                                <small v-if="dniMessageEmpresa" class="text-orange-600 font-bold block mt-1">
+                                    <i class="pi pi-info-circle mr-1"></i> {{ dniMessageEmpresa }}
+                                </small>
 
-        <small v-else-if="errors.documentoEmpresa" class="text-red-600 block mt-1">
-            {{ errors.documentoEmpresa }}
-    </small>
+                                <small v-else-if="errors.documentoEmpresa" class="text-red-600 block mt-1">
+                                    {{ errors.documentoEmpresa }}
+                                </small>
                             </div>
                         </div>
 

@@ -637,7 +637,7 @@ watch(activeStep, () => {
                             class="rounded-2xl border-2 border-green-iimp bg-white-price shadow-wmc">
                             <FormValidacionDoc ref="childFormValidacionDoc" :tipo_origen="tipo_origen" />
 
-                            <div class="fixed bottom-4 right-4 z-50 md:hidden animate-fade-in-up">
+                            <!-- <div class="fixed bottom-4 right-4 z-50 md:hidden animate-fade-in-up">
                                 <Button label="Validate" icon="pi pi-arrow-right" iconPos="right"
                                     class="bg-degradient border-rounded-full" :loading="loading"
                                     :disabled="childFormValidacionDoc?.esCategoriaDeSocio && childFormValidacionDoc?.hasSearched && !childFormValidacionDoc?.esSocio"
@@ -653,9 +653,9 @@ watch(activeStep, () => {
                                             }
                                         }
                                     }" />
-                            </div>
+                            </div> -->
 
-                            <div class="hidden md:flex p-6 justify-end items-center">
+                            <div class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-end gap-3 rounded-b-2xl">
 
                                 <Button label="Validate" icon="pi pi-arrow-right" iconPos="right"
                                     class="bg-degradient border-rounded-full" :loading="loading"
@@ -708,14 +708,19 @@ watch(activeStep, () => {
                                 :adicionales="props.adicionales" :section="sectionUrl" />
 
                             <div
-                                class="fixed bottom-0 left-0 w-full p-4 bg-white/80 backdrop-blur-md border-t z-50 flex justify-between gap-3 md:relative md:bg-transparent md:border-none md:p-6 md:z-auto md:backdrop-blur-none">
+                                class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-between gap-3 rounded-b-2xl">
+                                <!-- <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                    class="flex-1 md:flex-none" @click="activateCallback('1')" /> -->
                                 <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
-                                    class="flex-1 md:flex-none" @click="activateCallback('1')" />
+                                    class="flex-1 md:flex-none p-3 font-bold" @click="activateCallback('1')" />
                                 <Button label="Continue to Billing" iconPos="right" icon="pi pi-arrow-right"
                                     class="bg-degradient border-rounded-full flex-1 md:flex-none" :loading="loading"
                                     @click="handleCursosHaciaFacturacion" />
                             </div>
                         </StepPanel>
+
+
+
                         <!-- ========== Billing Information ==========
                          ==========================================  -->
                         <!-- <StepPanel v-slot="{ activateCallback }" value="3"
@@ -774,7 +779,7 @@ watch(activeStep, () => {
                                 :categorias="props.categorias" />
 
                             <div
-                                class="fixed bottom-0 left-0 w-full p-4 bg-white/80 backdrop-blur-md border-t z-50 flex justify-between gap-3 md:relative md:bg-transparent md:border-none md:p-6 md:z-auto md:backdrop-blur-none">
+                                class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-between gap-3 rounded-b-2xl">
                                 <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
                                     class="flex-1 md:flex-none" @click="activateCallback('2')" />
                                 <Button label="Register & Pay" iconPos="right" icon="pi pi-arrow-right"
@@ -791,7 +796,7 @@ watch(activeStep, () => {
                                 :formulario="formDataPayment" :categoria_seleccionada="categoria_seleccionada"
                                 :extras_seleccionados="extras_para_mostrar" />
 
-                            <div class="flex justify-between p-6">
+                            <div   class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-between gap-3 rounded-b-2xl">
                                 <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
                                     @click="activateCallback('3')" />
                             </div>
@@ -1047,6 +1052,40 @@ watch(activeStep, () => {
 </template>
 
 <style scoped>
+
+/* 1. Aseguramos que el panel del Stepper permita el posicionamiento sticky */
+:deep(.p-steppanel) {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    position: relative;
+}
+
+/* 2. El contenido del formulario debe empujar los botones hacia abajo */
+:deep(.p-steppanel-content) {
+    flex: 1;
+}
+
+/* 3. Estilo para el contenedor Sticky */
+.sticky {
+    position: -webkit-sticky; /* Soporte para Safari */
+    position: sticky;
+    bottom: -2px; /* Un pequeño ajuste para que encaje perfecto con el borde */
+    background-color: rgba(255, 255, 255, 0.98);
+    z-index: 40;
+    margin-top: auto; /* Empuja el div al final si el contenido es corto */
+}
+
+/* 4. En Web, le damos un redondeado inferior para que coincida con el Card */
+@media (min-width: 768px) {
+    .sticky {
+        border-bottom-left-radius: 1rem;
+        border-bottom-right-radius: 1rem;
+    }
+}
+
+
+
 .animate-fade-in-down {
     animation: fadeInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -1060,6 +1099,14 @@ watch(activeStep, () => {
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 768px) {
+
+    /* Añade espacio al final de los paneles para que el footer fijo no tape el contenido */
+    :deep(.p-steppanel) {
+        padding-bottom: 80px !important;
     }
 }
 

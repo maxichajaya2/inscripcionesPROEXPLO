@@ -34,7 +34,7 @@ const props = defineProps({
 });
 
 
-const dniMessage = ref(''); 
+const dniMessage = ref('');
 const schema = yup.object({
     tipo_doc: yup.mixed().required('Document type is required'),
     documento: yup.string()
@@ -198,7 +198,7 @@ const onlyNumberKey = (event) => {
         // 5. Bloquear si ya llegó a 8 dígitos Y MOSTRAR MENSAJE
         if (documento.value?.length >= 8) {
             dniMessage.value = "Solo se permiten 8 dígitos";
-            
+
             // Limpiar el mensaje automáticamente después de 3 segundos
             setTimeout(() => {
                 dniMessage.value = '';
@@ -303,15 +303,17 @@ const getValidacionDoc = async () => {
     }
 }
 
-onMounted(() => {
-    if (!tipo_doc.value) tipo_doc.value = 5;
+// onMounted(() => {
+//     if (!tipo_doc.value) tipo_doc.value = 5;
 
-    if (esPeruano.value) {
-        tipo_doc.value = 1;
-        pais.value = 75; // Respetamos tu ID de Perú
-        loadDepartamentos();
-    }
-})
+//     if (esPeruano.value) {
+//         tipo_doc.value = 1;
+//         pais.value = 75; // Respetamos tu ID de Perú
+//         loadDepartamentos();
+//     }
+// })
+
+
 
 defineExpose({
     getValidacionDoc,
@@ -420,28 +422,76 @@ const clearDocument = async () => {
 
 
 // UNICO WATCHER PARA TIPO_ORIGEN
+// watch(() => props.tipo_origen, async (newOrigen) => {
+//     if (newOrigen === 1) {
+//         // --- LÓGICA NACIONAL ---
+//         tipo_doc.value = 1;
+//         pais.value = 75;
+//         await loadDepartamentos();
+//         setValues({ ...values, pais: 75, tipo_doc: 1 });
+//         hasSearched.value = false; // Bloquea campos hasta que busquen DNI
+
+//     } else if (newOrigen === 2) {
+//         // --- LÓGICA INTERNACIONAL ---
+//         if (tipo_doc.value === 1) tipo_doc.value = null;
+
+//         pais.value = null;
+//         esSocio.value = true;
+//         hasSearched.value = true; // DESBLOQUEA CAMPOS PARA EXTRANJEROS
+
+//         // FORZAR VALIDACIÓN DE TODO EL FORMULARIO
+//         await nextTick();
+//         validate();
+//     }
+// }, { immediate: true });
+
+// UNICO WATCHER PARA TIPO_ORIGEN - BLINDADO
 watch(() => props.tipo_origen, async (newOrigen) => {
+    // Si el origen no es 1 ni 2, no hacemos nada para evitar resets accidentales
+    if (!newOrigen) return;
+
     if (newOrigen === 1) {
-        // --- LÓGICA NACIONAL ---
-        tipo_doc.value = 1;
-        pais.value = 75;
+        // --- LÓGICA NACIONAL (DNI) ---
+        tipo_doc.value = 1; // Forzamos ID 1 (DNI)
+        pais.value = 75;    // Forzamos ID 75 (Perú)
         await loadDepartamentos();
-        setValues({ ...values, pais: 75, tipo_doc: 1 });
-        hasSearched.value = false; // Bloquea campos hasta que busquen DNI
+
+        // Sincronizamos vee-validate de forma manual para asegurar el tiro
+        setValues({
+            ...values,
+            pais: 75,
+            tipo_doc: 1
+        });
+
+        hasSearched.value = false;
 
     } else if (newOrigen === 2) {
-        // --- LÓGICA INTERNACIONAL ---
-        if (tipo_doc.value === 1) tipo_doc.value = null;
+        // --- LÓGICA INTERNACIONAL (EXTRANJERO) ---
+        // Solo cambiamos a Passport si el documento actual es DNI
+        if (tipo_doc.value === 1 || !tipo_doc.value) {
+            tipo_doc.value = 3; // O el ID que corresponda a Pasaporte en tu BD
+        }
 
         pais.value = null;
         esSocio.value = true;
-        hasSearched.value = true; // DESBLOQUEA CAMPOS PARA EXTRANJEROS
+        hasSearched.value = true;
 
-        // FORZAR VALIDACIÓN DE TODO EL FORMULARIO
         await nextTick();
         validate();
     }
 }, { immediate: true });
+
+
+onMounted(() => {
+
+    if (esPeruano.value) {
+        tipo_doc.value = 1;
+        pais.value = 75;
+    } else {
+        // Si es extranjero, pon el ID de Passport por defecto, ej: 3
+        tipo_doc.value = 5;
+    }
+});
 
 // watch(() => props.tipo_origen, async (newOrigen) => {
 //     if (newOrigen === 1) {
@@ -533,11 +583,11 @@ watch(() => props.tipo_origen, async (newOrigen) => {
                 </div>
 
                 <div class="flex gap-6 p-2 w-full justify-around">
-                    <div
-                        class="text-green-iimp font-bold max-w-[650px] w-full p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="text-green-iimp font-bold max-w-[650px] w-full p-4 grid grid-cols-1 md:grid-cols-2 gap-4"
+                        >
                         <div class="col-span-1">
                             <label for="tipo_doc">Document Type <span class="text-red-600">*</span></label>
-                            <Select name="tipo_doc" v-model="tipo_doc" v-bind="tipo_docAttrs"
+                            <Select name="tipo_doc" v-model="tipo_doc" v-bind="tipo_docAttrs" translate="no"
                                 :options="tiposDocumentoFiltrados" @change="clearDocument" optionLabel="name_en"
                                 optionValue="id" placeholder="Select Document" showClear checkmark
                                 class="w-full border-green-iimp" :disabled="esPeruano"
@@ -556,7 +606,7 @@ watch(() => props.tipo_origen, async (newOrigen) => {
                                     class="w-full border-green-iimp" @keypress="onlyNumberKey" :maxlength="25"
                                     :disabled="loadingSearch" />
                                 <Button icon="pi pi-search" severity="info" @click="searchPerson"
-                                    :loading="loadingSearch" label="Search" />
+                                    :loading="loadingSearch" />
                             </InputGroup>
                             <InputText v-else name="documento" v-model="documento" v-bind="documentoAttrs"
                                 class="w-full border-green-iimp" :maxlength="25" placeholder="Enter number" />
@@ -610,11 +660,11 @@ watch(() => props.tipo_origen, async (newOrigen) => {
                         </div>
                     </div>
 
-                    <div class="grid gap-6 m-6 grid-cols-1 md:grid-cols-4">
-                        <div class="w-full md:col-span-2">
+                    <div class="grid gap-6 m-6 grid-cols-1 md:grid-cols-4" >
+                        <div class="w-full md:col-span-2" >
                             <label for="pais">Country <span class="text-red-600">*</span></label>
                             <Select name="pais" v-model="pais" v-bind="paisAttrs" :options="paises" optionLabel="name"
-                                optionValue="id" placeholder="Select" showClear filter @change="loadDepartamentos"
+                                optionValue="id" placeholder="Select" showClear filter @change="loadDepartamentos" translate="no"
                                 :disabled="esPeruano" class="w-full border-green-iimp" />
                             <small class="text-red-600">{{ errors.pais }}</small>
                         </div>

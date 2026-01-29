@@ -141,6 +141,34 @@ defineExpose({
                     </div>
                 </div>
 
+                <div v-if="section === 'inscripciones'"
+                    class="mb-6 p-6 rounded-3xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 flex items-center gap-5 animate-fade-in-down shadow-sm">
+
+                    <div class="bg-blue-600 rounded-full p-3 flex-none shadow-md">
+                        <i class="pi pi-sparkles text-white text-xl"></i>
+                    </div>
+
+                    <div class="flex flex-col">
+                        <span class="text-blue-900 font-black text-sm uppercase tracking-wider">
+                            Personalize your participation
+                        </span>
+                        <p class="text-blue-800 text-sm font-medium leading-relaxed mt-1">
+                            This section is <strong>optional</strong>. You have the opportunity to add
+                            <span class="font-bold text-blue-900">Short Courses</span> or
+                            <span class="font-bold text-blue-900">Technical Visits</span> to your experience.
+
+                            <span class="block mt-2 text-xs italic opacity-90">
+                                Please note that these specialized activities have an <strong>additional cost</strong>
+                                independent of your main registration fee.
+                            </span>
+
+                            <br>
+                            If you prefer not to add extras at this moment, feel free to click
+                            <strong>"Continue"</strong> to proceed with your registration.
+                        </p>
+                    </div>
+                </div>>
+
                 <div v-if="!estaVacio" class="px-2">
                     <Accordion :multiple="true" :activeIndex="[0, 1]" class="wmc-accordion">
 
@@ -336,30 +364,33 @@ defineExpose({
                                         </div>
                                     </div> -->
 
-                                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 gap-3">
+                                    <div
+                                        class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 gap-3">
                                         <div class="flex items-start flex-1 cursor-pointer w-full min-w-0"
                                             @click="toggleSelection(item.id)">
                                             <Checkbox v-model="extras_seleccionados" :value="item.id" @click.stop
                                                 class="mr-3 mt-1 flex-none" />
                                             <div class="flex flex-col min-w-0">
-                                                <label class="text-xs sm:text-sm font-black text-blue-900 leading-tight cursor-pointer break-words">
+                                                <label
+                                                    class="text-xs sm:text-sm font-black text-blue-900 leading-tight cursor-pointer break-words">
                                                     {{ item.nombre_en }}
                                                 </label>
-                                                <span class="text-[9px] sm:text-[10px] text-slate-500 font-medium italic uppercase tracking-tighter leading-none mt-1">
+                                                <span
+                                                    class="text-[9px] sm:text-[10px] text-slate-500 font-medium italic uppercase tracking-tighter leading-none mt-1">
                                                     {{ item.subtitulo_en || 'Technical Trip' }}
                                                 </span>
                                             </div>
                                         </div>
 
-                                        <div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto border-t sm:border-t-0 sm:border-l pt-2 sm:pt-0 sm:pl-4 border-gray-100">
-                                            <Button v-if="item.itinerario"
-                                                icon="pi pi-map"
-                                                label="View Itinerary"
+                                        <div
+                                            class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto border-t sm:border-t-0 sm:border-l pt-2 sm:pt-0 sm:pl-4 border-gray-100">
+                                            <Button v-if="item.itinerario" icon="pi pi-map" label="View Itinerary"
                                                 class="p-button-text p-button-sm text-green-600 font-bold uppercase text-[10px] p-0"
                                                 @click.stop="verItinerario(item)" />
 
                                             <div class="text-right flex-none">
-                                                <p class="text-yellow-price font-black text-sm sm:text-lg whitespace-nowrap">
+                                                <p
+                                                    class="text-yellow-price font-black text-sm sm:text-lg whitespace-nowrap">
                                                     USD {{ item.precio_disponible?.valor || 0 }}
                                                 </p>
                                             </div>
@@ -511,10 +542,12 @@ defineExpose({
 
 
 @media (max-width: 640px) {
+
     /* Ajuste de los títulos del acordeón principal */
     :deep(.p-accordion-header-link) {
         padding: 0.75rem !important;
     }
+
     :deep(.p-accordion-header-text) {
         font-size: 0.75rem !important;
     }
