@@ -370,7 +370,9 @@ class InscripcionController extends Controller
         // 6. Crear Inscripción (y subir archivo)
         $inscripcion = $this->createInscripcion($request, $persona, $categoria, $facturacion, $dias_json);
 
+
         // 7. Generar respuesta de Niubiz
+        // dd($this->generateNiubizResponse($persona, $inscripcion, $facturacion));
         return $this->generateNiubizResponse($persona, $inscripcion, $facturacion);
     }
 
@@ -842,10 +844,10 @@ class InscripcionController extends Controller
 
             $persona = Persona::find($inscripcion->id_persona);
 
-            $service_wmc = app(\App\Http\Controllers\WebServiceController::class)
-                ->wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz);
+            // $service_wmc = app(\App\Http\Controllers\WebServiceController::class)
+            //     ->wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz);
 
-            dd($service_wmc);
+            // dd($service_wmc);
             try {
                 Mail::to($persona->correo)->send(new \App\Mail\MailInscripcion($inscripcion, $niubiz));
             } catch (\Exception $e) {
