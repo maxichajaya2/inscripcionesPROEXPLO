@@ -240,6 +240,10 @@ defineExpose({
                                         <div
                                             class="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto border-t sm:border-t-0 sm:border-l pt-2 sm:pt-0 sm:pl-4 border-gray-100">
                                             <div class="flex items-center gap-1">
+                                                <span v-if="item.evento"
+                                                    class="px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 text-[9px] font-black uppercase tracking-wider border border-blue-200">
+                                                    {{ item.evento }}
+                                                </span>
                                                 <Button v-if="item.tipo === 'curso'" icon="pi pi-eye" label="Abstract"
                                                     class="p-button-text p-button-sm text-blue-500 font-bold uppercase text-[10px]"
                                                     @click.stop="abrirAbstract(item.abstract)" />
