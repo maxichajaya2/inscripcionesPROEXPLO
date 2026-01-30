@@ -167,7 +167,7 @@ defineExpose({
                             <strong>"Continue"</strong> to proceed with your registration.
                         </p>
                     </div>
-                </div>>
+                </div>
 
                 <div v-if="!estaVacio" class="px-2">
                     <Accordion :multiple="true" :activeIndex="[0, 1]" class="wmc-accordion">

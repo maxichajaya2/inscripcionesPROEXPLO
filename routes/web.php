@@ -35,6 +35,8 @@ Route::post('/padre/distritos', [PadreController::class, 'getDistritos'])->name(
 
 Route::get('/registro/autor', [InscripcionController::class, 'autor'])->name('inscripcion.autor');
 Route::get('/registro/participante', [InscripcionController::class, 'participante'])->name('inscripcion.participante');
+Route::get('/registro/participante', [InscripcionController::class, 'participante'])->name('inscripcion.participante');
+Route::get('/registro/cursosviajes', [InscripcionController::class, 'cursosViajes'])->name('inscripcion.cursosviajes');
 
 Route::post('/pago/getform', [InscripcionController::class, 'getForm'])->name('niubiz.getform');
 Route::post('/pago/getform/niubiz/{id}/{order}', [InscripcionController::class, 'niubizPayment'])->where('id','[0-9]+');

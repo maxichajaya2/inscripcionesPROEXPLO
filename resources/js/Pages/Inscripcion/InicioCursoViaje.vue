@@ -61,42 +61,6 @@ const actualizarResumen = (datos) => {
     resumen_dinamico.value = { ...resumen_dinamico.value, ...datos };
 };
 
-const saltoCursos = ref(true);
-
-// Definimos la lista de pasos completa
-const pasosCompletos = [
-    { value: "1", label: "Personal Details" },
-    { value: "2", label: "Billing Information" },
-    { value: "3", label: "Courses or Tours" },
-    { value: "4", label: "Payment Process" }
-];
-
-// Esta es la clave: Filtramos el paso 3 si saltoCursos es true
-const pasosVisibles = computed(() => {
-    if (saltoCursos.value) {
-        return pasosCompletos.filter(p => p.value !== "3");
-    }
-    return pasosCompletos;
-});
-
-const handleIrACursosDesdeModal = () => {
-    saltoCursos.value = false; // <--- AQUÍ: Al ser false, la computada RE-CALCULA y muestra el paso 3
-    showConfirmNoExtrasModal.value = false;
-
-    // Damos un respiro al DOM para que PrimeVue renderice el nuevo paso antes de saltar a él
-    setTimeout(() => {
-        activeStep.value = "3";
-    }, 50);
-};
-
-const handleSaltarCursosEIrAPago = async () => {
-    saltoCursos.value = true; // MANTIENE OCULTO EL PASO 3
-    showConfirmNoExtrasModal.value = false;
-    loading.value = true;
-    await confirmarYProcesar([]); // Va directo al paso 4
-    loading.value = false;
-};
-
 const validate = async (value) => {
     loading.value = true;
     switch (value) {
@@ -185,6 +149,248 @@ const proceedToBilling = () => {
 
 const activeStep = ref("1"); // Control del paso actual
 
+// const handleInscripcionClick = async () => {
+//     // ACTIVAMOS EL SPINNER
+//     loading.value = true;
+
+//     // 1. Validar el formulario del hijo primero
+//     const resIns = await childFormInscription.value.getInscripcion();
+
+//     if (resIns.validate) {
+//         // Guardamos los datos para usarlos luego
+//         tempResIns.value = resIns;
+//         await confirmarYProcesar();
+
+//     } else {
+//         // SI NO VALIDA, APAGAMOS EL SPINNER PARA QUE EL USUARIO CORRIJA
+//         loading.value = false;
+//     }
+// };
+
+// 2. CREAMOS EL NUEVO HANDLER DEL PASO 3 (CURSOS)
+const handleInscripcionClick = async () => {
+    loading.value = true;
+
+    // Validamos el formulario del Paso 2
+    const resIns = await childFormInscription.value.getInscripcion();
+
+    if (resIns.validate) {
+        // A. Guardamos la data del Paso 2 en la variable temporal
+        tempResIns.value = resIns;
+
+        // B. ¡AQUÍ ESTÁ LA CLAVE! No llamamos a confirmarYProcesar todavía.
+        // Simplemente avanzamos el Stepper al Paso 3.
+        activeStep.value = "3";
+
+        // Opcional: Hacemos scroll arriba si es necesario
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    // Si no valida, simplemente quitamos el loading y el usuario ve los errores
+    loading.value = false;
+};
+
+// const handleCursosClick = async () => {
+//     loading.value = true;
+
+//     // A. Capturamos los datos del componente hijo usando el ref
+//     // (Gracias al defineExpose que pusiste antes)
+//     let extras = [];
+//     if (childFormTourCourse.value) {
+//         extras = childFormTourCourse.value.extras_seleccionados;
+//     }
+
+//     console.log("Extras seleccionados:", extras);
+
+//     // B. Ahora sí, llamamos a la función final pasando los extras
+//     await confirmarYProcesar(extras);
+// };
+
+// const confirmarYProcesar = async () => {
+//     showRequisitosModal.value = false;
+//     loading.value = true;
+//     isPaying.value = true;
+
+//     try {
+//         const payload = new FormData();
+//         // Datos del paso 1
+//         Object.keys(data_persona.value).forEach(key => {
+//             payload.append(key, data_persona.value[key]);
+//         });
+
+//         // Datos del paso 2 guardados previamente
+//         Object.keys(tempResIns.value.formInscription).forEach(key => {
+//             if (!payload.has(key)) {
+//                 payload.append(key, tempResIns.value.formInscription[key]);
+//             }
+//         });
+
+//         const response = await axios.post('/pago/getform', payload, {
+//             headers: { 'Content-Type': 'multipart/form-data' }
+//         });
+
+
+//         if (response.data.status && response.data.formulario) {
+//             formDataPayment.value = response.data.formulario;
+//             activeStep.value = "3"; // Movemos al paso de pago manualmente
+//             loading.value = false;
+
+//             // --- ESTO ES LO QUE FALTA ---
+//             // Aseguramos que el padre sepa qué categoría es antes de mostrar el Paso 3
+//             const catId = tempResIns.value.formInscription.selected_categoria;
+//             const encontrada = props.categorias.find(c => c.id == catId);
+//             if (encontrada) {
+//                 categoria_seleccionada.value = encontrada;
+//             }
+
+//             actualizarResumen({ total: tempResIns.value.total_final });
+//             // ----------------------------
+//         } else {
+//             toast.add({ severity: 'error', summary: 'Error', detail: response.data.message });
+//             loading.value = false;
+//         }
+//     } catch (error) {
+//         console.error("Error:", error);
+//         loading.value = false;
+//     }
+// };
+
+// const handleCursosClick = async () => {
+//     loading.value = true;
+
+//     let idsExtras = [];
+
+//     if (childFormTourCourse.value) {
+//         // 1. OBTENER IDs PARA EL BACKEND (Laravel)
+//         idsExtras = childFormTourCourse.value.extras_seleccionados || [];
+
+//         // 2. OBTENER OBJETOS COMPLETOS PARA EL VISUAL (FormPayment)
+//         // Ya no usamos props.adicionales, usamos lo que nos da el hijo
+//         extras_para_mostrar.value = childFormTourCourse.value.selectedObjects || [];
+//     }
+
+//     // 3. Enviamos los IDs al backend
+//     await confirmarYProcesar(idsExtras);
+// };
+
+const handleCursosClick = async () => {
+    // 1. DISPARAR LA VALIDACIÓN DEL HIJO
+    if (childFormTourCourse.value) {
+        // Llamamos a la función que expuso el hijo
+        const esValido = childFormTourCourse.value.validarSeleccion();
+
+        if (!esValido) {
+            // Si el hijo devuelve false, apagamos el loading y NO seguimos
+            loading.value = false;
+            return;
+        }
+    }
+
+    // 2. SI ES VÁLIDO, SEGUIMOS CON EL PROCESO DE PAGO
+    loading.value = true;
+    let idsExtras = [];
+    if (childFormTourCourse.value) {
+        idsExtras = childFormTourCourse.value.extras_seleccionados || [];
+        extras_para_mostrar.value = childFormTourCourse.value.selectedObjects || [];
+    }
+
+    // Enviamos los IDs al backend
+    await confirmarYProcesar(idsExtras);
+};
+
+// const confirmarYProcesar = async (extras = []) => {
+//     // Cerramos modal de requisitos si estaba abierto
+//     showRequisitosModal.value = false;
+//     loading.value = true;
+
+//     // Activamos flag para evitar que el usuario salga de la página accidentalmente
+//     isPaying.value = true;
+
+//     try {
+//         const payload = new FormData();
+
+//         // ---------------------------------------------------------
+//         // 1. AGREGAR DATOS DEL PASO 1 (Persona)
+//         // ---------------------------------------------------------
+//         Object.keys(data_persona.value).forEach(key => {
+//             payload.append(key, data_persona.value[key]);
+//         });
+
+//         // ---------------------------------------------------------
+//         // 2. AGREGAR DATOS DEL PASO 2 (Inscripción / Facturación)
+//         // ---------------------------------------------------------
+//         // Usamos los datos guardados en la variable temporal 'tempResIns'
+//         if (tempResIns.value && tempResIns.value.formInscription) {
+//             Object.keys(tempResIns.value.formInscription).forEach(key => {
+//                 // Manejo especial para el archivo (uploadDocument)
+//                 if (key === 'uploadDocument') {
+//                     if (tempResIns.value.formInscription[key]) {
+//                         payload.append(key, tempResIns.value.formInscription[key]);
+//                     }
+//                 } else {
+//                     // Para el resto de campos, agregamos solo si no existen ya
+//                     // (para evitar duplicar campos como 'nombres' o 'documento' si se repiten)
+//                     if (!payload.has(key)) {
+//                         payload.append(key, tempResIns.value.formInscription[key]);
+//                     }
+//                 }
+//             });
+//         }
+
+//         // ---------------------------------------------------------
+//         // 3. AGREGAR DATOS DEL PASO 3 (Extras / Cursos) - ¡NUEVO!
+//         // ---------------------------------------------------------
+//         // Convertimos el array a string JSON para que Laravel lo lea fácil
+//         payload.append('extras_seleccionados', JSON.stringify(extras));
+
+
+//         // ---------------------------------------------------------
+//         // 4. ENVIAR AL BACKEND (Laravel)
+//         // ---------------------------------------------------------
+//         const response = await axios.post('/pago/getform', payload, {
+//             headers: { 'Content-Type': 'multipart/form-data' }
+//         });
+
+//         // ---------------------------------------------------------
+//         // 5. PROCESAR RESPUESTA
+//         // ---------------------------------------------------------
+//         if (response.data.status && response.data.formulario) {
+//             // A. Guardamos el formulario de Niubiz que nos devolvió el backend
+//             formDataPayment.value = response.data.formulario;
+
+//             // B. Detenemos el spinner
+//             loading.value = false;
+
+//             // C. ¡IMPORTANTE! Movemos al Paso 4 (Pago), ya que el 3 fue Cursos
+//             activeStep.value = "4";
+
+//             // D. Lógica visual: Recuperar objeto de categoría para mostrar resumen
+//             const catId = tempResIns.value.formInscription.selected_categoria;
+//             const encontrada = props.categorias.find(c => c.id == catId);
+//             if (encontrada) {
+//                 categoria_seleccionada.value = encontrada;
+//             }
+
+//             // E. Actualizar el resumen de precios en el lateral
+//             // Si el backend nos devuelve el 'total_real' (suma de inscripción + extras), usamos ese.
+//             // Si no, usamos el del paso 2 (aunque estaría desactualizado si sumaste extras).
+//             // Lo ideal es que tu controller devuelva 'total_real'.
+//             const totalFinal = response.data.total_real || tempResIns.value.total_final;
+
+//             actualizarResumen({ total: totalFinal });
+
+//         } else {
+//             // Manejo de errores que vienen del backend (status: false)
+//             toast.add({ severity: 'error', summary: 'Error', detail: response.data.message });
+//             loading.value = false;
+//         }
+
+//     } catch (error) {
+//         // Manejo de errores de red o código
+//         console.error("Error en confirmarYProcesar:", error);
+//         toast.add({ severity: 'error', summary: 'Error', detail: 'Ocurrió un error al procesar la solicitud.' });
+//         loading.value = false;
+//     }
+// };
 
 const confirmarYProcesar = async (extras = []) => {
     showRequisitosModal.value = false;
@@ -263,91 +469,89 @@ const confirmarYProcesar = async (extras = []) => {
     }
 };
 
+const extras_resumen = computed(() => {
+    // Si no se ha montado el hijo o no hay selección, retorna vacío
+    if (!childFormTourCourse.value || !childFormTourCourse.value.extras_seleccionados) return [];
 
+    const ids = childFormTourCourse.value.extras_seleccionados;
+
+    // Filtramos de la lista completa de 'props.adicionales' los que coinciden con los IDs seleccionados
+    return props.adicionales.filter(item => ids.includes(item.id));
+});
+
+const listaAMostrar = computed(() => {
+    return props.section === 'viajes' ? props.adicionales : props.categorias;
+});
+
+// NUEVO HANDLER: Del paso 2 (Cursos) al 3 (Facturación)
 // const handleCursosHaciaFacturacion = async () => {
 //     loading.value = true;
 
+//     // Validamos la selección de cursos/tours
 //     if (childFormTourCourse.value) {
-//         // Validamos primero (por si en sección viajes es obligatorio)
 //         const esValido = childFormTourCourse.value.validarSeleccion();
 //         if (!esValido) {
 //             loading.value = false;
 //             return;
 //         }
 
-//         // Chequeamos si la lista de seleccionados está vacía
-//         const tieneSeleccion = childFormTourCourse.value.extras_seleccionados.length > 0;
-
-//         if (!tieneSeleccion) {
-//             // SI NO TIENE NADA: Mostramos el modal "bonito" de advertencia
-//             showConfirmNoExtrasModal.value = true;
-//             loading.value = false;
-//             return;
-//         }
-
-//         // Si tiene selección, guardamos los objetos para el resumen
+//         // Guardamos los objetos seleccionados para el resumen final
 //         extras_para_mostrar.value = childFormTourCourse.value.selectedObjects || [];
 //     }
 
-//     // Si todo está ok y tiene selección, avanzamos directo
-//     proceedToBilling();
+//     // Si es válido, avanzamos al paso de Facturación
+//     activeStep.value = "3";
+//     window.scrollTo({ top: 0, behavior: 'smooth' });
 //     loading.value = false;
 // };
-
-
-// const handleInscripcionFinal = async () => {
-//     loading.value = true;
-
-//     // Validamos el formulario de Inscripción/Facturación
-//     const resIns = await childFormInscription.value.getInscripcion();
-
-//     if (resIns.validate) {
-//         // Guardamos la data de facturación
-//         tempResIns.value = resIns;
-
-//         // Como ya tenemos los cursos guardados del paso anterior,
-//         // disparamos la función que envía TODO al backend
-//         const idsExtras = childFormTourCourse.value?.extras_seleccionados || [];
-//         await confirmarYProcesar(idsExtras);
-//     }
-
-//     loading.value = false;
-// };
-
-const handleInscripcionHaciaCursos = async () => {
-    loading.value = true;
-    const resIns = await childFormInscription.value.getInscripcion();
-
-    if (resIns.validate) {
-        tempResIns.value = resIns;
-        // ESTO ES LO QUE DISPARA EL MODAL
-        showConfirmNoExtrasModal.value = true;
-    }
-    loading.value = false;
-};
-
-const handleFinalizarTodo = async () => {
+const handleCursosHaciaFacturacion = async () => {
     loading.value = true;
 
-    // 1. Validamos la selección de cursos
     if (childFormTourCourse.value) {
+        // Validamos primero (por si en sección viajes es obligatorio)
         const esValido = childFormTourCourse.value.validarSeleccion();
         if (!esValido) {
             loading.value = false;
             return;
         }
 
-        // 2. Obtenemos los IDs seleccionados
-        const idsExtras = childFormTourCourse.value.extras_seleccionados || [];
-        extras_para_mostrar.value = childFormTourCourse.value.selectedObjects || [];
+        // Chequeamos si la lista de seleccionados está vacía
+        const tieneSeleccion = childFormTourCourse.value.extras_seleccionados.length > 0;
 
-        // 3. ENVIAMOS TODO AL BACKEND (Esto ahora sí hace el activeStep = "4")
+        if (!tieneSeleccion) {
+            // SI NO TIENE NADA: Mostramos el modal "bonito" de advertencia
+            showConfirmNoExtrasModal.value = true;
+            loading.value = false;
+            return;
+        }
+
+        // Si tiene selección, guardamos los objetos para el resumen
+        extras_para_mostrar.value = childFormTourCourse.value.selectedObjects || [];
+    }
+
+    // Si todo está ok y tiene selección, avanzamos directo
+    proceedToBilling();
+    loading.value = false;
+};
+// NUEVO HANDLER: Del paso 3 (Facturación) al 4 (Pago Final)
+const handleInscripcionFinal = async () => {
+    loading.value = true;
+
+    // Validamos el formulario de Inscripción/Facturación
+    const resIns = await childFormInscription.value.getInscripcion();
+
+    if (resIns.validate) {
+        // Guardamos la data de facturación
+        tempResIns.value = resIns;
+
+        // Como ya tenemos los cursos guardados del paso anterior,
+        // disparamos la función que envía TODO al backend
+        const idsExtras = childFormTourCourse.value?.extras_seleccionados || [];
         await confirmarYProcesar(idsExtras);
     }
 
     loading.value = false;
 };
-
 
 onMounted(() => {
     // 1. Leer el ID de la URL (ej: ?category=5)
@@ -415,18 +619,16 @@ watch(activeStep, () => {
                 <!-- ============= PASOS =============
                  ================================== -->
                 <Stepper v-model:value="activeStep" class="w-full">
-                    <!-- <StepList class="text-black-price bg-degradient">
-                        <Step value="1">Personal Details</Step>
-                        <Step value="2">Billing Information</Step>
-                        <Step value="3">Courses or Tours</Step>
-                        <Step value="4">Payment Process</Step>
-                    </StepList> -->
-
                     <StepList class="text-black-price bg-degradient">
-                        <Step v-for="paso in pasosVisibles" :key="paso.value" :value="paso.value">
-                            {{ paso.label }}
-                        </Step>
+                        <Step value="1">Personal Details</Step>
+                        <!-- <Step value="2">Billing Information</Step>
+                        <Step value="3">Courses or Tours</Step> -->
+
+                        <Step value="2">Courses or Tours</Step>
+                        <Step value="3">Billing Information</Step>
+                        <Step value="4">Payment Process</Step>
                     </StepList>
+
 
                     <StepPanels>
                         <!-- ========== Personal Details ==========
@@ -434,8 +636,26 @@ watch(activeStep, () => {
                         <StepPanel v-slot="{ activateCallback }" value="1"
                             class="rounded-2xl border-2 border-green-iimp bg-white-price shadow-wmc">
                             <FormValidacionDoc ref="childFormValidacionDoc" :tipo_origen="tipo_origen" />
-                            <div
-                                class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-end gap-3 rounded-b-2xl">
+
+                            <!-- <div class="fixed bottom-4 right-4 z-50 md:hidden animate-fade-in-up">
+                                <Button label="Validate" icon="pi pi-arrow-right" iconPos="right"
+                                    class="bg-degradient border-rounded-full" :loading="loading"
+                                    :disabled="childFormValidacionDoc?.esCategoriaDeSocio && childFormValidacionDoc?.hasSearched && !childFormValidacionDoc?.esSocio"
+                                    @click="async () => {
+                                        const isValid = await validate('Documento');
+
+
+                                        if (isValid) {
+                                            if (childFormValidacionDoc?.esCategoriaDeSocio) {
+                                                if (childFormValidacionDoc?.esSocio) activateCallback('2');
+                                            } else {
+                                                activateCallback('2');
+                                            }
+                                        }
+                                    }" />
+                            </div> -->
+
+                            <div class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-end gap-3 rounded-b-2xl">
 
                                 <Button label="Validate" icon="pi pi-arrow-right" iconPos="right"
                                     class="bg-degradient border-rounded-full" :loading="loading"
@@ -454,27 +674,34 @@ watch(activeStep, () => {
                             </div>
                         </StepPanel>
 
-                        <!-- ========== Billing Information ==========
-                         ==========================================  -->
-                        <StepPanel v-slot="{ activateCallback }" value="2"
-                            class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
-
-                            <FormInscription ref="childFormInscription" :data_persona="data_persona"
-                                :categorias="props.categorias" />
-
-                            <div
-                                class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-between gap-3 rounded-b-2xl">
-                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
-                                    class="flex-1 md:flex-none" @click="activateCallback('1')" />
-                                <Button label="Register & Pay" iconPos="right" icon="pi pi-arrow-right"
-                                    class="bg-degradient border-rounded-full flex-1 md:flex-none" :loading="loading"
-                                    @click="handleInscripcionHaciaCursos" />
-                            </div>
-                        </StepPanel>
 
                         <!-- ========== Courses or Tours ==========
                          ==========================================  -->
-                        <StepPanel v-if="!saltoCursos" v-slot="{ activateCallback }" value="3"
+                        <!-- <StepPanel v-slot="{ activateCallback }" value="2"
+                            class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
+                            <FormInscription ref="childFormInscription" :data_persona="data_persona"
+                                :categorias="props.categorias" />
+                            <div class="flex justify-between p-6">
+                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                    @click="activateCallback('1')" />
+                                <Button label="Register" iconPos="right" icon="pi pi-arrow-right" :loading="loading"
+                                    @click="handleInscripcionClick" class="bg-degradient border-rounded-full" />
+                            </div>
+                        </StepPanel> -->
+                        <!-- <StepPanel v-slot="{ activateCallback }" value="2"
+                            class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
+                            <FormTourCourse ref="childFormTourCourse" :data_persona="data_persona"
+                                :adicionales="props.adicionales" :section="sectionUrl" />
+                            <div class="flex justify-between p-6">
+                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                    @click="activateCallback('1')" />
+                                <Button label="Continue to Billing" iconPos="right" icon="pi pi-arrow-right"
+                                    :loading="loading" @click="handleCursosHaciaFacturacion"
+                                    class="bg-degradient border-rounded-full" />
+                            </div>
+                        </StepPanel> -->
+
+                        <StepPanel v-slot="{ activateCallback }" value="2"
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
 
                             <FormTourCourse ref="childFormTourCourse" :data_persona="data_persona"
@@ -483,15 +710,83 @@ watch(activeStep, () => {
                             <div
                                 class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-between gap-3 rounded-b-2xl">
                                 <!-- <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
-                                    class="flex-1 md:flex-none p-3 font-bold" @click="activateCallback('2')" /> -->
+                                    class="flex-1 md:flex-none" @click="activateCallback('1')" /> -->
                                 <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
-                                    class="flex-1 md:flex-none p-3 font-bold" @click="activeStep = '2'" />
+                                    class="flex-1 md:flex-none p-3 font-bold" @click="activateCallback('1')" />
                                 <Button label="Continue to Billing" iconPos="right" icon="pi pi-arrow-right"
                                     class="bg-degradient border-rounded-full flex-1 md:flex-none" :loading="loading"
-                                    @click="handleFinalizarTodo" />
+                                    @click="handleCursosHaciaFacturacion" />
                             </div>
                         </StepPanel>
 
+
+
+                        <!-- ========== Billing Information ==========
+                         ==========================================  -->
+                        <!-- <StepPanel v-slot="{ activateCallback }" value="3"
+                            class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
+                            <FormTourCourse ref="childFormTourCourse" :data_persona="data_persona"
+                                :adicionales="props.adicionales" :section="sectionUrl" />
+                            <div class="flex justify-between p-6">
+                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                    @click="activateCallback('2')" />
+                                <Button label="Continue to Payment" iconPos="right" icon="pi pi-arrow-right"
+                                    :loading="loading" @click="handleCursosClick"
+                                    class="bg-degradient border-rounded-full" />
+                            </div>
+                        </StepPanel> -->
+
+                        <!-- <StepPanel v-slot="{ activateCallback }" value="3"
+                            class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
+                            <FormInscription ref="childFormInscription" :data_persona="data_persona"
+                                :categorias="props.categorias" />
+                            <div class="mobile-floating-register z-50 animate-fade-in-up">
+                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                    @click="activateCallback('2')" />
+                                <Button label="Register & Pay" iconPos="right" icon="pi pi-arrow-right"
+                                    :loading="loading" @click="handleInscripcionFinal"
+                                    class="bg-degradient border-rounded-full" />
+                            </div>
+                        </StepPanel> -->
+                        <!-- <StepPanel v-slot="{ activateCallback }" value="3"
+                            class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
+
+                            <FormInscription ref="childFormInscription" :data_persona="data_persona"
+                                :categorias="props.categorias" />
+
+                            <div class="mobile-floating-register z-50 animate-fade-in-up md:hidden">
+                                <div class="flex gap-2">
+                                    <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                        @click="activateCallback('2')" />
+                                    <Button label="Register & Pay" iconPos="right" icon="pi pi-arrow-right"
+                                        :loading="loading" @click="handleInscripcionFinal"
+                                        class="bg-degradient border-rounded-full" />
+                                </div>
+                            </div>
+
+                            <div class="hidden md:flex justify-between p-6 border-t">
+                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                    @click="activateCallback('2')" />
+                                <Button label="Register & Pay" iconPos="right" icon="pi pi-arrow-right"
+                                    :loading="loading" @click="handleInscripcionFinal"
+                                    class="bg-degradient border-rounded-full" />
+                            </div>
+                        </StepPanel> -->
+                        <StepPanel v-slot="{ activateCallback }" value="3"
+                            class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
+
+                            <FormInscription ref="childFormInscription" :data_persona="data_persona"
+                                :categorias="props.categorias" />
+
+                            <div
+                                class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-between gap-3 rounded-b-2xl">
+                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                    class="flex-1 md:flex-none" @click="activateCallback('2')" />
+                                <Button label="Register & Pay" iconPos="right" icon="pi pi-arrow-right"
+                                    class="bg-degradient border-rounded-full flex-1 md:flex-none" :loading="loading"
+                                    @click="handleInscripcionFinal" />
+                            </div>
+                        </StepPanel>
                         <!-- ========== Payment Process ==========
                          ==========================================  -->
                         <StepPanel v-slot="{ activateCallback }" value="4"
@@ -501,28 +796,17 @@ watch(activeStep, () => {
                                 :formulario="formDataPayment" :categoria_seleccionada="categoria_seleccionada"
                                 :extras_seleccionados="extras_para_mostrar" />
 
-                            <div
-                                class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-between gap-3 rounded-b-2xl">
-                                <!-- <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
-                                    @click="activateCallback('3')" /> -->
-                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left" @click="() => {
-                                    if (saltoCursos) {
-                                        activeStep = '2'; // Si no hay cursos visibles, regresa a Billing
-                                    } else {
-                                        activeStep = '3'; // Si el usuario eligió cursos, regresa a Cursos
-                                    }
-                                }" />
+                            <div   class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-between gap-3 rounded-b-2xl">
+                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                    @click="activateCallback('3')" />
                             </div>
                         </StepPanel>
-
                     </StepPanels>
                 </Stepper>
             </div>
 
         </div>
 
-        <!-- NACIONALIDAD MODAL =======
-         ============================== -->
         <Dialog v-model:visible="visible" modal :showHeader="false" :closable="false" :style="{ width: '900px' }"
             class="bg-transparent shadow-none border-none px-0 overflow-hidden" :pt="{
                 mask: { class: 'bg-slate-900/90 backdrop-blur-md' },
@@ -678,8 +962,22 @@ watch(activeStep, () => {
             </div>
         </Dialog>
 
-        <!-- REQUERIMIENTOS MODAL =======
-         ============================== -->
+        <Dialog v-model:visible="uploading" modal :closable="false" :showHeader="false" :style="{ width: '350px' }">
+            <div class="flex flex-col items-center p-6 text-center">
+                <div class="mb-4 text-green-iimp relative">
+                    <i class="pi pi-cloud-upload text-5xl animate-bounce"></i>
+                </div>
+                <h3 class="text-xl font-black text-blue-900 mb-2">Uploading Document</h3>
+                <p class="text-sm text-gray-500 mb-6">Please wait while we process your file...</p>
+
+                <div class="w-full bg-gray-100 rounded-full h-4 mb-2 overflow-hidden border border-gray-200">
+                    <div class="bg-gradient-to-r from-green-500 to-green-300 h-full transition-all duration-300"
+                        :style="{ width: uploadProgress + '%' }"></div>
+                </div>
+                <span class="text-xs font-bold text-green-600">{{ uploadProgress }}% Completed</span>
+            </div>
+        </Dialog>
+
         <Dialog v-if="false" v-model:visible="showRequisitosModal" modal header="Requirements and Conditions"
             :style="{ width: '50vw' }" :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
             <div class="flex flex-col gap-4">
@@ -699,8 +997,6 @@ watch(activeStep, () => {
             </div>
         </Dialog>
 
-        <!-- CONFIRM VIAJES Y CURSOS =======
-         ============================== -->
         <Dialog v-model:visible="showConfirmNoExtrasModal" modal :showHeader="false" :closable="false"
             :style="{ width: '500px' }" class="rounded-3xl overflow-hidden border-none shadow-2xl animate-modal-entry">
 
@@ -733,7 +1029,7 @@ watch(activeStep, () => {
                     </p>
 
                     <div class="mt-8 flex flex-col gap-4">
-                        <button @click="handleIrACursosDesdeModal"
+                        <button @click="showConfirmNoExtrasModal = false"
                             class="group relative w-full py-4 px-6 rounded-2xl bg-blue-900 text-white font-black uppercase tracking-widest overflow-hidden transition-all hover:scale-[1.02] active:scale-95 shadow-[0_10px_20px_rgba(30,58,138,0.3)]">
                             <div
                                 class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine-fast">
@@ -744,7 +1040,7 @@ watch(activeStep, () => {
                             </span>
                         </button>
 
-                        <button @click="handleSaltarCursosEIrAPago"
+                        <button @click="proceedToBilling"
                             class="w-full py-2 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] hover:text-red-500 transition-colors duration-300">
                             No thanks, proceed to billing anyway
                         </button>
@@ -752,12 +1048,11 @@ watch(activeStep, () => {
                 </div>
             </div>
         </Dialog>
-
-
     </AppLayout>
 </template>
 
 <style scoped>
+
 /* 1. Aseguramos que el panel del Stepper permita el posicionamiento sticky */
 :deep(.p-steppanel) {
     display: flex;
@@ -773,15 +1068,12 @@ watch(activeStep, () => {
 
 /* 3. Estilo para el contenedor Sticky */
 .sticky {
-    position: -webkit-sticky;
-    /* Soporte para Safari */
+    position: -webkit-sticky; /* Soporte para Safari */
     position: sticky;
-    bottom: -2px;
-    /* Un pequeño ajuste para que encaje perfecto con el borde */
+    bottom: -2px; /* Un pequeño ajuste para que encaje perfecto con el borde */
     background-color: rgba(255, 255, 255, 0.98);
     z-index: 40;
-    margin-top: auto;
-    /* Empuja el div al final si el contenido es corto */
+    margin-top: auto; /* Empuja el div al final si el contenido es corto */
 }
 
 /* 4. En Web, le damos un redondeado inferior para que coincida con el Card */

@@ -65,6 +65,7 @@ class InscripcionController extends Controller
     }
 
 
+
     public function autor(Request $request)
     {
         return $this->renderInscripcion($request, '%AUTHOR%', "Author with special rate");
@@ -75,6 +76,11 @@ class InscripcionController extends Controller
         return $this->renderInscripcion($request, '%GENERAL ATTENDEE%', "General Attendee");
     }
 
+    public function cursosViajes(Request $request)
+    {
+
+        return $this->renderInscripcion($request, '%GENERAL ATTENDEE%', "Tours & Courses");
+    }
     private function renderInscripcion(Request $request, string $filtro, string $defaultTitle)
     {
         $section = $request->query('section', 'inscripciones');
@@ -144,8 +150,9 @@ class InscripcionController extends Controller
 
 
         $title = ($section === 'viajes') ? "Tours & Courses" : $defaultTitle;
+        $componente = ($section === 'viajes') ? 'Inscripcion/InicioCursoViaje' : 'Inscripcion/Inicio';
 
-        return Inertia::render('Inscripcion/Inicio', compact('categorias', 'adicionales', 'title', 'section'));
+        return Inertia::render($componente, compact('categorias', 'adicionales', 'title', 'section'));
     }
 
 
