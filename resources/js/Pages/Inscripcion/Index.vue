@@ -196,6 +196,9 @@ const scrollToCategories = () => {
                                 <h5 class="text-2xl font-black text-white group-hover:text-blue-200 transition-colors">
                                     GENERAL PARTICIPANT
                                 </h5>
+                                <p class="text-base italic text-white group-hover:text-cyan-100 transition-colors leading-snug mt-1">
+                                    General access for professionals, students, and attendees interested in participating in the event, conferences, and scheduled activities.
+                                </p>
                             </div>
 
                             <div :class="grupoSeleccionado === 'participante'
@@ -220,6 +223,9 @@ const scrollToCategories = () => {
                                 <h5 class="text-2xl font-black text-white group-hover:text-cyan-200 transition-colors">
                                     SPECIAL AUTHOR
                                 </h5>
+                                <p class="text-base italic text-white group-hover:text-cyan-100 transition-colors leading-snug mt-1">
+                                    Exclusive registration for authors whose papers have been accepted and selected as winners for presentation at the event.
+                                </p>
                             </div>
 
                             <div :class="grupoSeleccionado === 'autor'
