@@ -702,7 +702,7 @@ watch(activeStep, () => {
         <!-- CONFIRM VIAJES Y CURSOS =======
          ============================== -->
         <Dialog v-model:visible="showConfirmNoExtrasModal" modal :showHeader="false" :closable="false"
-            :style="{ width: '500px' }" class="rounded-3xl overflow-hidden border-none shadow-2xl animate-modal-entry">
+            :style="{ width: '550px' }" class="rounded-3xl overflow-hidden border-none shadow-2xl animate-modal-entry">
 
             <div class="p-0 relative overflow-hidden">
                 <div
@@ -713,23 +713,29 @@ watch(activeStep, () => {
                         <div
                             class="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-md border border-white/20 animate-bounce-slow">
                             <i
-                                class="pi pi-shopping-cart text-yellow-400 text-4xl drop-shadow-[0_0_15px_rgba(250,204,21,0.6)]"></i>
+                                class="pi pi-sparkles text-yellow-400 text-4xl drop-shadow-[0_0_15px_rgba(250,204,21,0.6)]"></i>
                         </div>
-                        <h3 class="text-2xl font-black text-white uppercase tracking-tighter italic">Enhance your
-                            Experience</h3>
+                        <h3 class="text-2xl font-black text-white uppercase tracking-tighter italic">
+                            Upgrade Your Registration
+                        </h3>
                         <div class="h-1 w-20 bg-yellow-400 mx-auto mt-2 rounded-full"></div>
                     </div>
                 </div>
 
                 <div class="p-10 bg-white text-center">
-                    <p class="text-slate-700 text-lg leading-tight font-medium">
-                        Are you sure you want to proceed without adding <span class="text-blue-700 font-extrabold">Short
-                            Courses</span> or <span class="text-blue-700 font-extrabold">Technical Visits</span>?
+                    <p class="text-slate-700 text-xl leading-tight font-bold mb-4">
+                        ¿Deseas agregar <span class="text-blue-700">Cursos Cortos</span> o <span
+                            class="text-blue-700">Visitas Técnicas</span> a tu registro para mejorar tu experiencia?
+                    </p>
+
+                    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                        Aprovecha esta oportunidad única para especializarte con expertos globales y conocer de cerca
+                        las operaciones mineras más importantes del Perú.
                     </p>
 
                     <p
-                        class="mt-5 text-sm text-slate-400 font-medium italic bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                        "Don't miss the chance to learn from global experts and visit Peru's premier mining sites."
+                        class="text-blue-500 text-xs font-black uppercase tracking-[0.1em] bg-blue-50 p-4 rounded-2xl border border-blue-100">
+                        "La excelencia se alcanza con capacitación constante y experiencia en campo."
                     </p>
 
                     <div class="mt-8 flex flex-col gap-4">
@@ -739,14 +745,14 @@ watch(activeStep, () => {
                                 class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine-fast">
                             </div>
                             <span class="relative flex items-center justify-center gap-3">
-                                <i class="pi pi-arrow-left animate-pulse"></i>
-                                Review Courses & Visits
+                                <i class="pi pi-plus-circle"></i>
+                                ¡Sí, quiero agregarlos ahora!
                             </span>
                         </button>
 
                         <button @click="handleSaltarCursosEIrAPago"
                             class="w-full py-2 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] hover:text-red-500 transition-colors duration-300">
-                            No thanks, proceed to billing anyway
+                            No por ahora, proceder con el pago básico
                         </button>
                     </div>
                 </div>

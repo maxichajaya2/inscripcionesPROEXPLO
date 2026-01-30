@@ -595,7 +595,7 @@ onMounted(() => {
                             <small class="text-red-600">{{ errors.tipo_doc }}</small>
                         </div>
                         <div class="col-span-1">
-                            <label for="documento">
+                            <label for="documento" translate="no">
                                 {{ esPeruano ? 'Document Number' : 'Identity Card / Passport Number' }} <span
                                     class="text-red-600">*</span>
                             </label>
