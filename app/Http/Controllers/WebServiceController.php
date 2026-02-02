@@ -194,112 +194,631 @@ class WebServiceController extends Controller
     /**
      * Nuevo servicio adaptado para WMC 2026
      */
+    // public function wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz)
+    // {
+    //     try {
+    //         // Nueva URL de pruebas WMC
+    //         $url = "https://secure2.iimp.org:8443/KBServiciosPruebaIIMPJavaEnvironment/rest/servicioinscripcionwmc";
+
+
+
+    //         // Lógica de cargo/ocupación
+    //         if (($persona->id_ocupacion == 2795) && (strlen($inscripcion->texto_cargo)) > 0) {
+    //             $cargo = $inscripcion->texto_cargo;
+    //         } else {
+    //             $cargo = $persona->ocupacion->name ?? 'PARTICIPANTE';
+    //         }
+
+    //         // Lógica de Asistencia por días
+    //         $lunes = $martes = $miercoles = $jueves = $viernes = 1; // Default todos los días
+    //         $ficha_condicion = $inscripcion->categoria_inscripcion->condicion;
+
+    //         if (str_contains(strtoupper($inscripcion->categoria_inscripcion->nombre_es), 'DIA')) {
+    //             $lunes = $martes = $miercoles = $jueves = $viernes = 0;
+    //             $dias = json_decode($inscripcion->dias, true);
+
+    //             if ($dias) {
+    //                 $lunes = isset($dias['lun']) && $dias['lun'] ? 1 : 0;
+    //                 $martes = isset($dias['mar']) && $dias['mar'] ? 1 : 0;
+    //                 $miercoles = isset($dias['mie']) && $dias['mie'] ? 1 : 0;
+    //                 $jueves = isset($dias['jue']) && $dias['jue'] ? 1 : 0;
+    //                 $viernes = isset($dias['vie']) && $dias['vie'] ? 1 : 0;
+
+    //                 // Buscar la primera condición de día marcada
+    //                 foreach ($dias as $key => $valor) {
+    //                     if ($valor) {
+    //                         $ficha_condicion = strtoupper(substr($key, 0, 2));
+    //                         break;
+    //                     }
+    //                 }
+    //             }
+    //         }
+
+    //         // Construcción del nuevo JSON (Request Body)
+    //         $data_ws = [
+    //             "TipEvCod"          => 13, // Fijo según doc
+    //             "EvenCod"           => 1,  // Fijo según doc
+    //             "TipoDocumento"     => (string)$persona->tipoDocumento->sie_code,
+    //             "NumDocumento"      => (string)$persona->documento,
+    //             "Nombres"           => $persona->nombres,
+    //             "ApellidoPaterno"   => $persona->apellido_paterno,
+    //             "ApellidoMaterno"   => $persona->apellido_materno ?? "",
+    //             "Empresa"           => $facturacion->observacion ?? "IIMP",
+    //             "Cargo"             => substr($cargo, 0, 60),
+    //             "Pais"              => (int)($persona->direccion->id_pais ?? 75),
+    //             "Departamento"      => (int)($persona->direccion->id_departamento ?? 0),
+    //             "Provincia"         => (int)($persona->direccion->id_provincia ?? 0),
+    //             "Distrito"          => (int)($persona->direccion->id_distrito ?? 0),
+    //             "Direccion"         => substr($persona->direccion->direccion ?? "", 0, 100),
+    //             "Telefono"          => $persona->celular,
+    //             "Email"             => $persona->correo,
+
+    //             "Control"           => (string)$inscripcion->categoria_inscripcion->control,
+    //             "Categoria"         => (string)$inscripcion->categoria_inscripcion->categoria,
+    //             "Condicion"         => (string)$ficha_condicion,
+
+    //             "Lunes"             => $lunes,
+    //             "Martes"            => $martes,
+    //             "Miercoles"         => $miercoles,
+    //             "Jueves"            => $jueves,
+    //             "Viernes"           => $viernes,
+
+    //             "Moneda"            => $facturacion->id_moneda == 1 ? "S/." : "US$",
+    //             "ImporteTotal"      => (int)$facturacion->total,
+
+    //             "TipoFacturacion"   => $facturacion->tipo_doc_pago == 1 ? "01" : "03", // 01: Factura, 03: Boleta
+    //             "TipDocFacturacion" => (string)$facturacion->tipoDocumentoFacturador->sie_code,
+    //             "NumDocFacturacion" => (string)$facturacion->numero_doc_facturador,
+    //             "RazonSocial"       => substr($facturacion->nombre_facturador, 0, 20),
+    //             "DirFacturacion"    => substr($facturacion->direccion_facturador, 0, 100),
+    //             "NombreContactoFact" => substr($facturacion->responsable_facturador, 0, 90),
+    //             "TelContactoFact"   => $persona->celular,
+
+    //             "MetodoPago"        => 1, // 1: VISA/MASTERCARD (Niubiz)
+    //             "NroTarjeta"        => $niubiz->card_num ?? "**** **** **** ****",
+    //             "CodigoOperacion"   => (string)$niubiz->idtransaccion,
+    //             "TipoFicha"         => 2  // 2: INDIVIDUAL
+    //         ];
+
+    //         dd($data_ws);
+    //         // Enviar usando el método sendWS que ya tienes (usa CURL interno)
+    //         $response = $this->sendWS($url, json_encode($data_ws));
+
+    //         // Validación de respuesta según el nuevo formato
+    //         if (isset($response->Response) && $response->Response->Status) {
+    //             return [
+    //                 'status'   => true,
+    //                 'qr'       => $response->Response->QR,
+    //                 'sie_code' => $response->Response->SieCode,
+    //                 'password' => $response->Response->Password
+    //             ];
+    //         } else {
+    //             return [
+    //                 'status'  => false,
+    //                 'message' => $response->Response->Message ?? 'Error desconocido en el servicio WMC'
+    //             ];
+    //         }
+    //     } catch (\Exception $e) {
+    //         // Log::error("Error WMC Service: " . $e->getMessage());
+    //         return ['status' => false, 'message' => $e->getMessage()];
+    //     }
+    // }
+
+    // public function wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz)
+    // {
+    //     try {
+    //         // Nueva URL de pruebas WMC
+    //         $url = "https://secure2.iimp.org:8443/KBServiciosPruebaIIMPJavaEnvironment/rest/servicioinscripcionwmc";
+
+    //         // 1. Lógica de cargo/ocupación
+    //         if (($persona->id_ocupacion == 2795) && (strlen($inscripcion->texto_cargo)) > 0) {
+    //             $cargo = $inscripcion->texto_cargo;
+    //         } else {
+    //             $cargo = $persona->ocupacion->name ?? 'PARTICIPANTE';
+    //         }
+
+    //         // 2. Lógica de Asistencia por días (Inscripción Principal)
+    //         $lunes = $martes = $miercoles = $jueves = $viernes = 1;
+    //         $ficha_condicion = $inscripcion->categoria_inscripcion->condicion;
+
+    //         if (str_contains(strtoupper($inscripcion->categoria_inscripcion->nombre_es), 'DIA')) {
+    //             $lunes = $martes = $miercoles = $jueves = $viernes = 0;
+    //             $dias = json_decode($inscripcion->dias, true);
+
+    //             if ($dias) {
+    //                 $lunes = isset($dias['lun']) && $dias['lun'] ? 1 : 0;
+    //                 $martes = isset($dias['mar']) && $dias['mar'] ? 1 : 0;
+    //                 $miercoles = isset($dias['mie']) && $dias['mie'] ? 1 : 0;
+    //                 $jueves = isset($dias['jue']) && $dias['jue'] ? 1 : 0;
+    //                 $viernes = isset($dias['vie']) && $dias['vie'] ? 1 : 0;
+
+    //                 foreach ($dias as $key => $valor) {
+    //                     if ($valor) {
+    //                         $ficha_condicion = strtoupper(substr($key, 0, 2));
+    //                         break;
+    //                     }
+    //                 }
+    //             }
+    //         }
+
+    //         // 3. CONSTRUCCIÓN DEL ARRAY DE TARIFAS (NUEVA LÓGICA)
+    //         $tarifas_ws = [];
+    //         $moneda_texto = $facturacion->id_moneda == 1 ? "S/." : "US$";
+
+    //         // A. Agregar la Categoría Principal
+    //         $tarifas_ws[] = [
+    //             "Control"   => (string)$inscripcion->categoria_inscripcion->control,
+    //             "Categoria" => (string)$inscripcion->categoria_inscripcion->categoria,
+    //             "Condicion" => (string)$ficha_condicion,
+    //             "Moneda"    => $moneda_texto,
+    //             "Importe"   => (int)$inscripcion->monto_base // Asegúrate que este campo exista en tu objeto
+    //         ];
+
+    //         // B. Agregar Cursos o Visitas Técnicas (Extras)
+    //         // Asumiendo que 'detalles' es la relación con los adicionales
+    //         if ($inscripcion->detalles && count($inscripcion->detalles) > 0) {
+    //             foreach ($inscripcion->detalles as $extra) {
+    //                 $tarifas_ws[] = [
+    //                     "Control"   => (string)$extra->categoria_extra->control,
+    //                     "Categoria" => (string)$extra->categoria_extra->categoria,
+    //                     "Condicion" => "NS", // Normalmente No Socio/General para extras
+    //                     "Moneda"    => $moneda_texto,
+    //                     "Importe"   => (int)$extra->monto
+    //                 ];
+    //             }
+    //         }
+
+    //         // 4. CONSTRUCCIÓN DEL JSON FINAL
+    //         $data_ws = [
+    //             "TipEvCod"          => 13,
+    //             "EvenCod"           => 1,
+    //             "TipoDocumento"     => (string)$persona->tipoDocumento->sie_code,
+    //             "NumDocumento"      => (string)$persona->documento,
+    //             "Nombres"           => $persona->nombres,
+    //             "ApellidoPaterno"   => $persona->apellido_paterno,
+    //             "ApellidoMaterno"   => $persona->apellido_materno ?? "",
+    //             "Empresa"           => $facturacion->nombre_facturador ?? "IIMP",
+    //             "Cargo"             => substr($cargo, 0, 60),
+    //             "Pais"              => (int)($persona->direccion->id_pais ?? 75),
+    //             "Departamento"      => (int)($persona->direccion->id_departamento ?? 0),
+    //             "Provincia"         => (int)($persona->direccion->id_provincia ?? 0),
+    //             "Distrito"          => (int)($persona->direccion->id_distrito ?? 0),
+    //             "Direccion"         => substr($persona->direccion->direccion ?? "", 0, 100),
+    //             "Telefono"          => $persona->celular,
+    //             "Email"             => $persona->correo,
+
+    //             "Tarifas"           => $tarifas_ws, // El array de objetos construido arriba
+
+    //             "Lunes"             => $lunes,
+    //             "Martes"            => $martes,
+    //             "Miercoles"         => $miercoles,
+    //             "Jueves"            => $jueves,
+    //             "Viernes"           => $viernes,
+
+    //             "TipoFacturacion"   => $facturacion->tipo_doc_pago == 1 ? "01" : "03",
+    //             "TipDocFacturacion" => (string)$facturacion->tipoDocumentoFacturador->sie_code,
+    //             "NumDocFacturacion" => (string)$facturacion->numero_doc_facturador,
+    //             "RazonSocial"       => substr($facturacion->nombre_facturador, 0, 100),
+    //             "DirFacturacion"    => substr($facturacion->direccion_facturador, 0, 100),
+    //             "NombreContactoFact" => substr($facturacion->responsable_facturador, 0, 90),
+    //             "CorreoContactoFact" => $persona->correo,
+
+    //             "MetodoPago"        => 1,
+    //             "NroTarjeta"        => $niubiz->card_num ?? "**** **** **** ****",
+    //             "NumeroOrden"       => (string)$niubiz->idtransaccion,
+    //             "CodigoOperacion"   => (string)$niubiz->idtransaccion,
+    //             "TipoFicha"         => 2
+    //         ];
+
+    //         // DEBUG: Descomenta la siguiente línea para ver el JSON en el navegador antes de enviar
+    //          dd(json_encode($data_ws, JSON_PRETTY_PRINT));
+
+    //         // 5. ENVÍO AL WEB SERVICE
+    //         $response = $this->sendWS($url, json_encode($data_ws));
+
+    //         // 6. VALIDACIÓN DE RESPUESTA
+    //         if (isset($response->Response) && $response->Response->Status) {
+    //             return [
+    //                 'status'   => true,
+    //                 'qr'       => $response->Response->QR,
+    //                 'sie_code' => $response->Response->SieCode,
+    //                 'password' => $response->Response->Password
+    //             ];
+    //         } else {
+    //             return [
+    //                 'status'  => false,
+    //                 'message' => $response->Response->Message ?? 'Error en el servicio de inscripción WMC'
+    //             ];
+    //         }
+    //     } catch (\Exception $e) {
+    //         return ['status' => false, 'message' => "Excepción: " . $e->getMessage()];
+    //     }
+    // }
+
+    // public function wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz)
+    // {
+    //     try {
+    //         $url = "https://secure2.iimp.org:8443/KBServiciosPruebaIIMPJavaEnvironment/rest/servicioinscripcionwmc";
+
+    //         // 1. Lógica de cargo y asistencia (se mantiene igual)
+    //         $cargo = (($persona->id_ocupacion == 2795) && (strlen($inscripcion->texto_cargo)) > 0)
+    //             ? $inscripcion->texto_cargo
+    //             : ($persona->ocupacion->name ?? 'PARTICIPANTE');
+
+    //         $lunes = $martes = $miercoles = $jueves = $viernes = 1;
+    //         $ficha_condicion = $inscripcion->categoria_inscripcion->condicion;
+
+    //         if (str_contains(strtoupper($inscripcion->categoria_inscripcion->nombre_es), 'DIA')) {
+    //             $lunes = $martes = $miercoles = $jueves = $viernes = 0;
+    //             $dias = json_decode($inscripcion->dias, true);
+    //             if ($dias) {
+    //                 $lunes = ($dias['lun'] ?? 0) ? 1 : 0;
+    //                 $martes = ($dias['mar'] ?? 0) ? 1 : 0;
+    //                 $miercoles = ($dias['mie'] ?? 0) ? 1 : 0;
+    //                 $jueves = ($dias['jue'] ?? 0) ? 1 : 0;
+    //                 $viernes = ($dias['vie'] ?? 0) ? 1 : 0;
+    //                 foreach ($dias as $key => $v) {
+    //                     if ($v) {
+    //                         $ficha_condicion = strtoupper(substr($key, 0, 2));
+    //                         break;
+    //                     }
+    //                 }
+    //             }
+    //         }
+
+    //         // 2. CONSTRUCCIÓN DINÁMICA DE TARIFAS
+    //         $tarifas_ws = [];
+    //         $moneda_simbolo = $facturacion->id_moneda == 1 ? "S/." : "US$";
+
+    //         // A. Agregar la Inscripción Base
+    //         $tarifas_ws[] = [
+    //             "Control"   => (string)$inscripcion->categoria_inscripcion->control,
+    //             "Categoria" => (string)$inscripcion->categoria_inscripcion->categoria,
+    //             "Condicion" => (string)$ficha_condicion,
+    //             "Moneda"    => $moneda_simbolo,
+    //             "Importe"   => (int)($inscripcion->monto_base ?? 0) // Verifica este campo en tu BD
+    //         ];
+
+    //         // B. Agregar Cursos/Visitas Técnicas (Los "Extras")
+    //         // IMPORTANTE: Asegúrate que la relación 'detalles' esté cargada
+    //         if ($inscripcion->detalles && count($inscripcion->detalles) > 0) {
+    //             foreach ($inscripcion->detalles as $extra) {
+    //                 $tarifas_ws[] = [
+    //                     "Control"   => (string)$extra->categoria_extra->control,
+    //                     "Categoria" => (string)$extra->categoria_extra->categoria,
+    //                     "Condicion" => "NS", // Condición por defecto para adicionales
+    //                     "Moneda"    => $moneda_simbolo,
+    //                     "Importe"   => (int)($extra->monto ?? 0)
+    //                 ];
+    //             }
+    //         }
+
+    //         // 3. ARMADO DEL JSON FINAL
+    //         $data_ws = [
+    //             "TipEvCod"          => 13,
+    //             "EvenCod"           => 1,
+    //             "TipoDocumento"     => (string)$persona->tipoDocumento->sie_code,
+    //             "NumDocumento"      => (string)$persona->documento,
+    //             "Nombres"           => $persona->nombres,
+    //             "ApellidoPaterno"   => $persona->apellido_paterno,
+    //             "ApellidoMaterno"   => $persona->apellido_materno ?? "",
+    //             "Empresa"           => substr($facturacion->nombre_facturador ?? $persona->nombres, 0, 100),
+    //             "Cargo"             => substr($cargo, 0, 60),
+    //             "Pais"              => (int)($persona->direccion->id_pais ?? 75),
+    //             "Departamento"      => (int)($persona->direccion->id_departamento ?? 0),
+    //             "Provincia"         => (int)($persona->direccion->id_provincia ?? 0),
+    //             "Distrito"          => (int)($persona->direccion->id_distrito ?? 0),
+    //             "Direccion"         => substr($persona->direccion->direccion ?? "LURIN CITY", 0, 100),
+    //             "Telefono"          => substr($persona->celular ?? "2222222", 0, 20),
+    //             "Email"             => $persona->correo,
+
+    //             "Tarifas"           => $tarifas_ws, // Aquí ya irán los 3 objetos
+
+    //             "Lunes"             => $lunes,
+    //             "Martes"            => $martes,
+    //             "Miercoles"         => $miercoles,
+    //             "Jueves"            => $jueves,
+    //             "Viernes"           => $viernes,
+    //             "TipoFacturacion"   => $facturacion->tipo_doc_pago == 1 ? "01" : "03",
+    //             "TipDocFacturacion" => (string)$facturacion->tipoDocumentoFacturador->sie_code,
+    //             "NumDocFacturacion" => (string)$facturacion->numero_doc_facturador,
+    //             "RazonSocial"       => substr($facturacion->nombre_facturador, 0, 100),
+    //             "DirFacturacion"    => substr($facturacion->direccion_facturador, 0, 100),
+    //             "NombreContactoFact" => substr($facturacion->responsable_facturador ?? $persona->nombres, 0, 90),
+    //             "CorreoContactoFact" => $persona->correo,
+    //             "MetodoPago"        => 1,
+    //             "NroTarjeta"        => $niubiz->card_num ?? "**** **** **** ****",
+    //             "NumeroOrden"       => (string)$niubiz->idtransaccion,
+    //             "CodigoOperacion"   => (string)$niubiz->idtransaccion,
+    //             "TipoFicha"         => 2
+    //         ];
+
+    //         dd([
+    //             'URL_DESTINO' => $url,
+    //             'JSON_A_ENVIAR' => $data_ws, // Aquí verás las Tarifas con sus 3 categorías
+    //             'JSON_FORMATEADO' => json_encode($data_ws, JSON_PRETTY_PRINT)
+    //         ]);
+
+    //         // 4. ENVÍO Y RESPUESTA
+    //         $response = $this->sendWS($url, json_encode($data_ws));
+
+    //         if (isset($response->Response) && $response->Response->Status) {
+    //             return [
+    //                 'status'   => true,
+    //                 'qr'       => $response->Response->QR,
+    //                 'sie_code' => $response->Response->SieCode,
+    //                 'password' => $response->Response->Password
+    //             ];
+    //         } else {
+    //             return [
+    //                 'status'  => false,
+    //                 'message' => $response->Response->Message ?? 'Error en el servicio WMC'
+    //             ];
+    //         }
+    //     } catch (\Exception $e) {
+    //         return ['status' => false, 'message' => $e->getMessage()];
+    //     }
+    // }
+
+    // public function wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz)
+    // {
+    //     try {
+    //         $url = "https://secure2.iimp.org:8443/KBServiciosPruebaIIMPJavaEnvironment/rest/servicioinscripcionwmc";
+
+    //         // 1. Lógica de cargo y asistencia
+    //         $cargo = (($persona->id_ocupacion == 2795) && (strlen($inscripcion->texto_cargo)) > 0)
+    //             ? $inscripcion->texto_cargo
+    //             : ($persona->ocupacion->name ?? 'PARTICIPANTE');
+
+    //         $lunes = $martes = $miercoles = $jueves = $viernes = 1;
+    //         $ficha_condicion = $inscripcion->categoria_inscripcion->condicion;
+    //         $hoy = Carbon::now();
+    //         $precio_categoria_base = $inscripcion->categoria_inscripcion->precio->filter(function ($p) use ($hoy) {
+    //             return Carbon::parse($p->fecha_inicio)->startOfDay() <= $hoy
+    //                 && Carbon::parse($p->fecha_fin)->endOfDay() >= $hoy;
+    //         })->first() ?? $inscripcion->categoria_inscripcion->precio->first();
+
+    //         if (str_contains(strtoupper($inscripcion->categoria_inscripcion->nombre_es), 'DIA')) {
+    //             $lunes = $martes = $miercoles = $jueves = $viernes = 0;
+    //             $dias = is_array($inscripcion->dias) ? $inscripcion->dias : json_decode($inscripcion->dias, true);
+    //             if ($dias) {
+    //                 $lunes = ($dias['lun'] ?? 0) ? 1 : 0;
+    //                 $martes = ($dias['mar'] ?? 0) ? 1 : 0;
+    //                 $miercoles = ($dias['mie'] ?? 0) ? 1 : 0;
+    //                 $jueves = ($dias['jue'] ?? 0) ? 1 : 0;
+    //                 $viernes = ($dias['vie'] ?? 0) ? 1 : 0;
+    //                 foreach ($dias as $key => $v) {
+    //                     if ($v) {
+    //                         $ficha_condicion = strtoupper(substr($key, 0, 2));
+    //                         break;
+    //                     }
+    //                 }
+    //             }
+    //         }
+
+    //         // 2. CONSTRUCCIÓN DINÁMICA DE TARIFAS
+    //         $tarifas_ws = [];
+    //         $moneda_simbolo = $facturacion->id_moneda == 1 ? "S/." : "US$";
+
+    //         // A. Agregar la Inscripción Base
+    //         // Calculamos el importe base restando los extras del total si es necesario,
+    //         // o usando el valor de la categoría principal.
+    //         $tarifas_ws[] = [
+    //             "Control"   => (string)$inscripcion->categoria_inscripcion->control,
+    //             "Categoria" => (string)$inscripcion->categoria_inscripcion->categoria,
+    //             "Condicion" => (string)$ficha_condicion,
+    //             "Moneda"    => $moneda_simbolo,
+    //             "Importe"   => (int)($precio_categoria_base ? $precio_categoria_base->valor : 0)
+    //         ];
+
+    //         // B. Agregar Cursos/Visitas Técnicas desde el campo JSONB
+    //         // Gracias al cast 'array' en el modelo, $inscripcion->id_categoria_cursos_viajes ya es un array [7, 1, 14]
+    //         $extras_ids = $inscripcion->id_categoria_cursos_viajes;
+
+    //         if (!empty($extras_ids) && is_array($extras_ids)) {
+    //             // Buscamos los modelos de los cursos seleccionados
+    //             $extras_bd = \App\Models\CategoriaCursoViaje::whereIn('id', $extras_ids)->get();
+
+    //             foreach ($extras_bd as $extra) {
+    //                 // Buscamos el precio que corresponde al perfil del usuario para este extra
+    //                 // Se asume que el perfil viene en la facturación o se puede obtener del request original
+    //                 $perfil_id = $facturacion->id_perfil ?? 6; // Ajustar según tu lógica de perfiles
+
+    //                 $precio_extra = $extra->precios()->where('id_perfil', $perfil_id)->first();
+
+    //                 $tarifas_ws[] = [
+    //                     "Control"   => (string)$extra->control,
+    //                     "Categoria" => (string)$extra->categoria,
+    //                     "Condicion" => "NS",
+    //                     "Moneda"    => $moneda_simbolo,
+    //                     "Importe"   => (int)($precio_extra->valor ?? 0)
+    //                 ];
+    //             }
+    //         }
+
+    //         // 3. ARMADO DEL JSON FINAL
+    //         $data_ws = [
+    //             "TipEvCod"          => 13,
+    //             "EvenCod"           => 1,
+    //             "TipoDocumento"     => (string)$persona->tipoDocumento->sie_code,
+    //             "NumDocumento"      => (string)$persona->documento,
+    //             "Nombres"           => $persona->nombres,
+    //             "ApellidoPaterno"   => $persona->apellido_paterno,
+    //             "ApellidoMaterno"   => $persona->apellido_materno ?? "",
+    //             "Empresa"           => substr($facturacion->nombre_facturador ?? $persona->nombres, 0, 100),
+    //             "Cargo"             => substr($cargo, 0, 60),
+    //             "Pais"              => (int)($persona->direccion->id_pais ?? 75),
+    //             "Departamento"      => (int)($persona->direccion->id_departamento ?? 0),
+    //             "Provincia"         => (int)($persona->direccion->id_provincia ?? 0),
+    //             "Distrito"          => (int)($persona->direccion->id_distrito ?? 0),
+    //             "Direccion"         => substr($persona->direccion->direccion ?? "LURIN CITY", 0, 100),
+    //             "Telefono"          => substr($persona->celular ?? "2222222", 0, 20),
+    //             "Email"             => $persona->correo,
+
+    //             "Tarifas"           => $tarifas_ws,
+
+    //             "Lunes"             => $lunes,
+    //             "Martes"            => $martes,
+    //             "Miercoles"         => $miercoles,
+    //             "Jueves"            => $jueves,
+    //             "Viernes"           => $viernes,
+    //             "TipoFacturacion"   => $facturacion->tipo_doc_pago == 1 ? "01" : "03",
+    //             "TipDocFacturacion" => (string)$facturacion->tipoDocumentoFacturador->sie_code,
+    //             "NumDocFacturacion" => (string)$facturacion->numero_doc_facturador,
+    //             "RazonSocial"       => substr($facturacion->nombre_facturador, 0, 100),
+    //             "DirFacturacion"    => substr($facturacion->direccion_facturador, 0, 100),
+    //             "NombreContactoFact" => substr($facturacion->responsable_facturador ?? $persona->nombres, 0, 90),
+    //             "CorreoContactoFact" => $persona->correo,
+    //             "MetodoPago"        => 1,
+    //             "NroTarjeta"        => $niubiz->card_num ?? "**** **** **** ****",
+    //             "NumeroOrden"       => (string)$niubiz->idtransaccion,
+    //             "CodigoOperacion"   => (string)$niubiz->idtransaccion,
+    //             "TipoFicha"         => 2
+    //         ];
+
+    //         // Debug visual antes del envío
+
+
+    //         // 4. ENVÍO Y RESPUESTA
+    //         $response = $this->sendWS($url, json_encode($data_ws));
+
+    //         dd([
+    //             "INFO" => "RESPUESTA CRUDA DEL SERVICIO JAVA",
+    //             "URL_POST" => $url,
+    //             "JSON_ENVIADO" => $data_ws,
+    //             "RESPUESTA_DE_JAVA" => $response, // Aquí verás el QR, SieCode, etc.
+    //             "HTTP_CODE" => (isset($response->Response)) ? "Conexión Exitosa" : "Posible Error de Conexión"
+    //         ]);
+
+    //         if (isset($response->Response) && $response->Response->Status) {
+    //             return [
+    //                 'status'   => true,
+    //                 'qr'       => $response->Response->QR,
+    //                 'sie_code' => $response->Response->SieCode,
+    //                 'password' => $response->Response->Password
+    //             ];
+    //         } else {
+    //             return [
+    //                 'status'  => false,
+    //                 'message' => $response->Response->Message ?? 'Error en el servicio WMC'
+    //             ];
+    //         }
+    //     } catch (\Exception $e) {
+    //         return ['status' => false, 'message' => $e->getMessage()];
+    //     }
+    // }
+
     public function wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz)
     {
         try {
-            // Nueva URL de pruebas WMC
             $url = "https://secure2.iimp.org:8443/KBServiciosPruebaIIMPJavaEnvironment/rest/servicioinscripcionwmc";
 
-            // Lógica de cargo/ocupación
-            if (($persona->id_ocupacion == 2795) && (strlen($inscripcion->texto_cargo)) > 0) {
-                $cargo = $inscripcion->texto_cargo;
-            } else {
-                $cargo = $persona->ocupacion->name ?? 'PARTICIPANTE';
-            }
+            // Función para limpiar tildes y caracteres especiales
+            $clean = function ($str) {
+                $unwanted = array('Š' => 'S', 'š' => 's', 'Ž' => 'Z', 'ž' => 'z', 'À' => 'A', 'Á' => 'A', 'Â' => 'A', 'Ã' => 'A', 'Ä' => 'A', 'Å' => 'A', 'Æ' => 'A', 'Ç' => 'C', 'È' => 'E', 'É' => 'E', 'Ê' => 'E', 'Ë' => 'E', 'Ì' => 'I', 'Í' => 'I', 'Î' => 'I', 'Ï' => 'I', 'Ñ' => 'N', 'Ò' => 'O', 'Ó' => 'O', 'Ô' => 'O', 'Õ' => 'O', 'Ö' => 'O', 'Ø' => 'O', 'Ù' => 'U', 'Ú' => 'U', 'Û' => 'U', 'Ü' => 'U', 'Ý' => 'Y', 'Þ' => 'B', 'ß' => 'Ss', 'à' => 'a', 'á' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'a', 'å' => 'a', 'æ' => 'a', 'ç' => 'c', 'è' => 'e', 'é' => 'e', 'ê' => 'e', 'ë' => 'e', 'ì' => 'i', 'í' => 'i', 'î' => 'i', 'ï' => 'i', 'ð' => 'o', 'ñ' => 'n', 'ò' => 'o', 'ó' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o', 'ø' => 'o', 'ù' => 'u', 'ú' => 'u', 'û' => 'u', 'ü' => 'u', 'ý' => 'y', 'þ' => 'b', 'ÿ' => 'y');
+                return strtr($str, $unwanted);
+            };
 
-            // Lógica de Asistencia por días
-            $lunes = $martes = $miercoles = $jueves = $viernes = 1; // Default todos los días
-            $ficha_condicion = $inscripcion->categoria_inscripcion->condicion;
+            $cargo = substr(strtoupper($clean($persona->id_ocupacion == 2795 ? ($inscripcion->texto_cargo ?? 'PARTICIPANTE') : ($persona->ocupacion->name ?? 'PARTICIPANTE'))), 0, 60);
 
-            if (str_contains(strtoupper($inscripcion->categoria_inscripcion->nombre_es), 'DIA')) {
-                $lunes = $martes = $miercoles = $jueves = $viernes = 0;
-                $dias = json_decode($inscripcion->dias, true);
+            $tarifas_ws = [];
+            $moneda_ws = ($facturacion->id_moneda == 1) ? "US$" : "S/.";
+            $hoy = \Carbon\Carbon::now();
 
-                if ($dias) {
-                    $lunes = isset($dias['lun']) && $dias['lun'] ? 1 : 0;
-                    $martes = isset($dias['mar']) && $dias['mar'] ? 1 : 0;
-                    $miercoles = isset($dias['mie']) && $dias['mie'] ? 1 : 0;
-                    $jueves = isset($dias['jue']) && $dias['jue'] ? 1 : 0;
-                    $viernes = isset($dias['vie']) && $dias['vie'] ? 1 : 0;
+            // 1. TARIFA BASE (Debe ser 1200 según tu imagen)
+            $precio_cat = $inscripcion->categoria_inscripcion->precio->filter(function ($p) use ($hoy) {
+                return \Carbon\Carbon::parse($p->fecha_inicio)->startOfDay() <= $hoy && \Carbon\Carbon::parse($p->fecha_fin)->endOfDay() >= $hoy;
+            })->first() ?? $inscripcion->categoria_inscripcion->precio->first();
 
-                    // Buscar la primera condición de día marcada
-                    foreach ($dias as $key => $valor) {
-                        if ($valor) {
-                            $ficha_condicion = strtoupper(substr($key, 0, 2));
-                            break;
-                        }
+            // Detectamos el perfil real para que los extras también coincidan en precio
+            $perfil_real = ($precio_cat && $precio_cat->pivot) ? $precio_cat->pivot->id_perfil : 6;
+
+            $tarifas_ws[] = [
+                "Control"   => (string)$inscripcion->categoria_inscripcion->control,
+                "Categoria" => (string)$inscripcion->categoria_inscripcion->categoria,
+                "Condicion" => substr((string)$inscripcion->categoria_inscripcion->condicion, 0, 2),
+                "Moneda"    => (string)$moneda_ws,
+                "Importe"   => (int)($precio_cat->valor ?? 0)
+            ];
+
+            // 2. EXTRAS (Debe ser 1000 según tu imagen)
+            $extras_ids = $inscripcion->id_categoria_cursos_viajes;
+            if (!empty($extras_ids) && is_array($extras_ids)) {
+                $extras_bd = \App\Models\CategoriaCursoViaje::whereIn('id', $extras_ids)->get();
+                foreach ($extras_bd as $extra) {
+                    // Buscamos el precio que coincida exactamente con el perfil del usuario
+                    $precio_extra = $extra->precios()->where('id_perfil', $perfil_real)->first();
+
+                    if ($precio_extra) {
+                        $tarifas_ws[] = [
+                            "Control"   => (string)$extra->control,
+                            "Categoria" => (string)$extra->categoria,
+                            "Condicion" => "NS",
+                            "Moneda"    => (string)$moneda_ws,
+                            "Importe"   => (int)$precio_extra->valor
+                        ];
                     }
                 }
             }
 
-            // Construcción del nuevo JSON (Request Body)
             $data_ws = [
-                "TipEvCod"          => 13, // Fijo según doc
-                "EvenCod"           => 1,  // Fijo según doc
-                "TipoDocumento"     => (string)$persona->tipoDocumento->sie_code,
+                "TipEvCod"          => 13,
+                "EvenCod"           => 1,
+                "TipoDocumento"     => (string)($persona->tipoDocumento->sie_code ?? "1"),
                 "NumDocumento"      => (string)$persona->documento,
-                "Nombres"           => $persona->nombres,
-                "ApellidoPaterno"   => $persona->apellido_paterno,
-                "ApellidoMaterno"   => $persona->apellido_materno ?? "",
-                "Empresa"           => $facturacion->observacion ?? "IIMP",
-                "Cargo"             => substr($cargo, 0, 60),
+                "Nombres"           => substr(strtoupper($clean($persona->nombres)), 0, 30),
+                "ApellidoPaterno"   => substr(strtoupper($clean($persona->apellido_paterno)), 0, 30),
+                "ApellidoMaterno"   => substr(strtoupper($clean($persona->apellido_materno ?? " ")), 0, 30),
+                "Empresa"           => substr(strtoupper($clean($facturacion->nombre_facturador ?? $persona->nombres)), 0, 100),
+                "Cargo"             => $cargo,
                 "Pais"              => (int)($persona->direccion->id_pais ?? 75),
                 "Departamento"      => (int)($persona->direccion->id_departamento ?? 0),
                 "Provincia"         => (int)($persona->direccion->id_provincia ?? 0),
                 "Distrito"          => (int)($persona->direccion->id_distrito ?? 0),
-                "Direccion"         => substr($persona->direccion->direccion ?? "", 0, 100),
-                "Telefono"          => $persona->celular,
-                "Email"             => $persona->correo,
-
-                "Control"           => (string)$inscripcion->categoria_inscripcion->control,
-                "Categoria"         => (string)$inscripcion->categoria_inscripcion->categoria,
-                "Condicion"         => (string)$ficha_condicion,
-
-                "Lunes"             => $lunes,
-                "Martes"            => $martes,
-                "Miercoles"         => $miercoles,
-                "Jueves"            => $jueves,
-                "Viernes"           => $viernes,
-
-                "Moneda"            => $facturacion->id_moneda == 1 ? "S/." : "US$",
-                "ImporteTotal"      => (int)$facturacion->total,
-
-                "TipoFacturacion"   => $facturacion->tipo_doc_pago == 1 ? "01" : "03", // 01: Factura, 03: Boleta
-                "TipDocFacturacion" => (string)$facturacion->tipoDocumentoFacturador->sie_code,
+                "Direccion"         => substr(strtoupper($clean($persona->direccion->direccion ?? "LURIN")), 0, 100),
+                "Telefono"          => substr($persona->celular ?? "999999999", 0, 20),
+                "Email"             => (string)$persona->correo,
+                "Tarifas"           => $tarifas_ws,
+                "Lunes"             => 1,
+                "Martes" => 1,
+                "Miercoles" => 1,
+                "Jueves" => 1,
+                "Viernes" => 1,
+                "TipoFacturacion"   => (string)($facturacion->tipo_doc_pago == 1 ? "01" : "03"),
+                "TipDocFacturacion" => (string)($facturacion->tipoDocumentoFacturador->sie_code ?? "1"),
                 "NumDocFacturacion" => (string)$facturacion->numero_doc_facturador,
-                "RazonSocial"       => substr($facturacion->nombre_facturador, 0, 20),
-                "DirFacturacion"    => substr($facturacion->direccion_facturador, 0, 100),
-                "NombreContactoFact" => substr($facturacion->responsable_facturador, 0, 90),
-                "TelContactoFact"   => $persona->celular,
-
-                "MetodoPago"        => 1, // 1: VISA/MASTERCARD (Niubiz)
-                "NroTarjeta"        => $niubiz->card_num ?? "**** **** **** ****",
+                "RazonSocial"       => substr(strtoupper($clean($facturacion->nombre_facturador)), 0, 100),
+                "DirFacturacion"    => substr(strtoupper($clean($facturacion->direccion_facturador)), 0, 100),
+                "NombreContactoFact" => substr(strtoupper($clean($facturacion->responsable_facturador ?? $persona->nombres)), 0, 90),
+                "CorreoContactoFact" => (string)$persona->correo,
+                "MetodoPago"        => 1,
+                "NroTarjeta"        => (string)($niubiz->card_num ?? "0000"),
+                "NumeroOrden"       => (string)$niubiz->idtransaccion,
                 "CodigoOperacion"   => (string)$niubiz->idtransaccion,
-                "TipoFicha"         => 2  // 2: INDIVIDUAL
+                "TipoFicha"         => 2
             ];
 
-            // Enviar usando el método sendWS que ya tienes (usa CURL interno)
+            \Illuminate\Support\Facades\Log::info("JSON WMC SEND FINAL:", $data_ws);
+
+
             $response = $this->sendWS($url, json_encode($data_ws));
 
-            // Validación de respuesta según el nuevo formato
-            if (isset($response->Response) && $response->Response->Status) {
-                return [
-                    'status'   => true,
-                    'qr'       => $response->Response->QR,
-                    'sie_code' => $response->Response->SieCode,
-                    'password' => $response->Response->Password
-                ];
-            } else {
-                return [
-                    'status'  => false,
-                    'message' => $response->Response->Message ?? 'Error desconocido en el servicio WMC'
-                ];
-            }
+
+            //  dd([
+            //     "INFO" => "RESPUESTA CRUDA DEL SERVICIO JAVA",
+            //     "URL_POST" => $url,
+            //     "JSON_ENVIADO" => $data_ws,
+            //     "RESPUESTA_DE_JAVA" => $response, // Aquí verás el QR, SieCode, etc.
+            //     "HTTP_CODE" => (isset($response->Response)) ? "Conexión Exitosa" : "Posible Error de Conexión"
+            // ]);
+
+
+            return $response;
         } catch (\Exception $e) {
-            // Log::error("Error WMC Service: " . $e->getMessage());
-            return ['status' => false, 'message' => $e->getMessage()];
+            return (object)['Response' => (object)['Status' => false, 'Message' => $e->getMessage()]];
         }
     }
+
     private function validateService($request)
     {
         if ($request->ok()) {

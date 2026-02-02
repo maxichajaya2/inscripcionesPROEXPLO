@@ -13,6 +13,10 @@ class Inscripcion extends Model
     protected $connection = 'pgsql_second';
     protected $table = "inscripcion";
 
+    protected $casts = [
+        'id_categoria_cursos_viajes' => 'array',
+    ];
+
     public function categoria_inscripcion(): BelongsTo
     {
         return $this->belongsTo(CategoriaInscripcion::class, 'id_categoria_inscripcion');

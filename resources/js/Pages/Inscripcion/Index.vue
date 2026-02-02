@@ -14,7 +14,7 @@ const props = defineProps({
         default: () => []
     }
 });
-
+const showSupport = ref(false);
 
 const grupoSeleccionado = ref(null);
 const macroSeccion = ref(null); // 'inscripciones' o 'viajes'
@@ -45,7 +45,7 @@ const categoriasVisibles = computed(() => {
     }
     // Filtramos por el grupo (autor/participante)
     // y podrías añadir un filtro extra si tu base de datos tiene algo para "viajes"
-   return filtradas;
+    return filtradas;
 })
 
 const volverAMacro = () => {
@@ -117,22 +117,55 @@ const scrollToCategories = () => {
                     </div>
                 </div>
             </div>
+            <!-- <div class="mb-10 w-full max-w-2xl mx-auto">
+                <div class="flex items-center justify-between relative">
+                    <div class="absolute top-1/2 left-0 w-full h-0.5 bg-white/10 -translate-y-1/2 z-0"></div>
+                    <div class="absolute top-1/2 left-0 h-0.5 bg-blue-500 transition-all duration-500 -translate-y-1/2 z-0"
+                        :style="{ width: grupoSeleccionado ? '50%' : '15%' }"></div>
+
+                    <div class="relative z-10 flex flex-col items-center gap-2">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300"
+                            :class="!macroSeccion ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'bg-blue-900 text-blue-200'">
+                            1
+                        </div>
+                        <span class="text-[10px] uppercase tracking-tighter font-black text-blue-400">Type</span>
+                    </div>
+
+                    <div class="relative z-10 flex flex-col items-center gap-2">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300"
+                            :class="macroSeccion && !grupoSeleccionado ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)]' : (grupoSeleccionado ? 'bg-blue-900 text-blue-200' : 'bg-gray-800 text-gray-500')">
+                            2
+                        </div>
+                        <span class="text-[10px] uppercase tracking-tighter font-black"
+                            :class="macroSeccion ? 'text-blue-400' : 'text-gray-500'">Profile</span>
+                    </div>
+
+                    <div class="relative z-10 flex flex-col items-center gap-2">
+                        <div
+                            class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-gray-800 text-gray-500 transition-all duration-300 border border-white/5">
+                            3
+                        </div>
+                        <span class="text-[10px] uppercase tracking-tighter font-black text-gray-500">Checkout</span>
+                    </div>
+                </div>
+            </div> -->
             <div id="titulo_inicial" class="mb-12 text-left animate-fade-in-down">
                 <h1 class="text-4xl md:text-5xl font-black text-yellow-price tracking-tight mb-2">
                     World Mining Congress <span class="text-white">2026</span>
                 </h1>
                 <h3 class="text-xl md:text-2xl text-cyan-50 font-medium opacity-90 mb-4">
-                    Select your profile
+                    Select registration type
                 </h3>
                 <colorbar class="block w-48 h-1.5 rounded-full" />
             </div>
 
             <div class="flex flex-col lg:flex-row gap-8 items-start">
 
+
                 <div class="w-full lg:w-5/12 space-y-6">
 
                     <div v-if="!macroSeccion" class="space-y-6 animate-fade-in">
-                        <button @click="macroSeccion = 'inscripciones'"
+                        <!-- <button @click="macroSeccion = 'inscripciones'"
                             class="w-full group relative flex items-center justify-between p-8 bg-white/5 border border-white/10 rounded-3xl backdrop-blur-md transition-all duration-300 hover:border-blue-500 hover:bg-white/10 hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] text-left">
                             <div class="flex flex-col z-10">
                                 <div class="flex flex-col z-10">
@@ -143,23 +176,72 @@ const scrollToCategories = () => {
                                         class="text-2xl font-black text-white group-hover:text-blue-200 transition-colors">
                                         REGISTRATION TO EVENT
                                     </h5>
+                                    <span class="text-yellow-price text-xs uppercase tracking-widest font-bold mb-1">
+                                        Register as a partcipant, select your category, and complete payment
+                                    </span>
+
                                 </div>
                             </div>
                             <div
                                 class="p-4 rounded-2xl bg-white/10 group-hover:bg-blue-600 transition-all duration-300">
                                 <GreenArrowRight class="w-6 h-6 invert brightness-200" />
                             </div>
-                        </button>
+                        </button> -->
 
+                        <button @click="macroSeccion = 'inscripciones'"
+                            class="w-full group relative flex items-center justify-between p-8 bg-blue-600/10 border-2 border-blue-500/50 rounded-3xl backdrop-blur-xl transition-all duration-500 hover:border-blue-400 hover:bg-blue-600/20 text-left overflow-hidden border-loading-effect glow-intense">
+
+                            <div class="absolute inset-0 border-anim-line pointer-events-none opacity-100"></div>
+
+                            <div
+                                class="absolute inset-0 bg-blue-400/20 animate-soft-glow pointer-events-none filter blur-xl">
+                            </div>
+
+                            <div
+                                class="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-shimmer-effect pointer-events-none">
+                            </div>
+
+                            <div class="flex flex-col z-10">
+                                <div class="flex flex-col z-10">
+                                    <span class="text-yellow-400 text-xs uppercase tracking-widest font-bold mb-1">
+                                        Register as a participant, select your category, and complete payment
+                                    </span>
+                                    <!-- <span
+                                        class="text-blue-300 text-xs uppercase tracking-widest font-black mb-1 drop-shadow-[0_0_5px_rgba(59,130,246,0.8)]">
+                                        Register now and get access to shorts courses and technical visits
+                                    </span> -->
+                                    <h5
+                                        class="text-2xl font-black text-white group-hover:text-blue-200 transition-colors flex items-center gap-3 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+                                        REGISTRATION TO EVENT
+                                        <span class="relative flex h-3 w-3">
+                                            <span
+                                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-300 opacity-90"></span>
+                                            <span
+                                                class="relative inline-flex rounded-full h-3 w-3 bg-blue-400 shadow-[0_0_15px_#3b82f6]"></span>
+                                        </span>
+                                    </h5>
+
+                                </div>
+                            </div>
+
+                            <div
+                                class="p-4 rounded-2xl bg-blue-500/20 border-2 border-blue-400/50 group-hover:bg-blue-600 group-hover:shadow-[0_0_30px_rgba(59,130,246,0.8)] transition-all duration-300 z-10">
+                                <GreenArrowRight class="w-6 h-6 invert brightness-200" />
+                            </div>
+                        </button>
                         <button @click="macroSeccion = 'viajes'"
                             class="w-full group relative flex items-center justify-between p-8 bg-white/5 border border-white/10 rounded-3xl backdrop-blur-md transition-all duration-300 hover:border-green-500 hover:bg-white/10 hover:shadow-[0_0_20px_rgba(34,197,94,0.3)] text-left">
                             <div class="flex flex-col z-10">
-                                <span class="text-green-400 text-xs uppercase tracking-widest font-bold mb-1">
+                                <!-- <span class="text-blue-400 text-xs uppercase tracking-widest font-bold mb-1">
                                     Exclusive technical visits and specialized training
+                                </span> -->
+                                <span class="text-yellow-price text-xs uppercase tracking-widest font-bold mb-1">
+                                    Sign up for optional site visits and training programs
                                 </span>
                                 <h5 class="text-2xl font-black text-white group-hover:text-green-200 transition-colors">
                                     TECHNICAL VISITS AND SHORT COURSES
                                 </h5>
+
                             </div>
                             <div
                                 class="p-4 rounded-2xl bg-white/10 group-hover:bg-green-600 transition-all duration-300">
@@ -178,10 +260,10 @@ const scrollToCategories = () => {
                             </span>
                         </button>
 
-                        <h4 class="text-white/60 font-bold text-[15px] uppercase tracking-[0.2em] mb-4">
+                        <!-- <h4 class="text-white/60 font-bold text-[15px] uppercase tracking-[0.2em] mb-4">
                             Select your profile for <span class="text-yellow-price">{{ macroSeccion === 'inscripciones'
                                 ? 'REGISTRATION' : 'TOURS & COURSES' }}</span>:
-                        </h4>
+                        </h4> -->
                         <button @click="seleccionarGrupo('participante')"
                             :class="grupoSeleccionado === 'participante'
                                 ? 'bg-blue-900/40 border-blue-400 shadow-[0_0_35px_rgba(59,130,246,0.6)] scale-105 ring-1 ring-blue-300'
@@ -196,8 +278,9 @@ const scrollToCategories = () => {
                                 <h5 class="text-2xl font-black text-white group-hover:text-blue-200 transition-colors">
                                     GENERAL PARTICIPANT
                                 </h5>
-                                <p  class="text-xs text-gray-400 mt-1  group-hover:text-yellow-100/70 transition-colors">
-                                    General access for professionals, students, and attendees interested in participating in the event, conferences, and scheduled activities.
+                                <p class="text-xs text-gray-400 mt-1  group-hover:text-yellow-100/70 transition-colors">
+                                    General access for professionals, students, and attendees interested in
+                                    participating in the event, conferences, and scheduled activities.
                                 </p>
                             </div>
 
@@ -209,7 +292,7 @@ const scrollToCategories = () => {
                             </div>
                         </button>
 
-                        <button @click="seleccionarGrupo('autor')" v-if="macroSeccion === 'inscripciones'"
+                        <!-- <button @click="seleccionarGrupo('autor')" v-if="macroSeccion === 'inscripciones'"
                             :class="grupoSeleccionado === 'autor'
                                 ? 'bg-cyan-900/40 border-cyan-400 shadow-[0_0_35px_rgba(34,211,238,0.6)] scale-105 ring-1 ring-cyan-300'
                                 : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-cyan-500 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]'"
@@ -223,8 +306,9 @@ const scrollToCategories = () => {
                                 <h5 class="text-2xl font-black text-white group-hover:text-cyan-200 transition-colors">
                                     SPECIAL AUTHOR
                                 </h5>
-                                <p  class="text-xs text-gray-400 mt-1 group-hover:text-yellow-100/70 transition-colors">
-                                    Exclusive registration for authors whose papers have been accepted and selected as winners for presentation at the event.
+                                <p class="text-xs text-gray-400 mt-1 group-hover:text-yellow-100/70 transition-colors">
+                                    Exclusive registration for authors whose papers have been accepted and selected as
+                                    winners for presentation at the event.
                                 </p>
                             </div>
 
@@ -234,7 +318,7 @@ const scrollToCategories = () => {
                                 class="p-4 rounded-2xl transition-all duration-300">
                                 <GreenArrowRight class="w-6 h-6 invert brightness-200" />
                             </div>
-                        </button>
+                        </button> -->
                     </div>
                 </div>
 
@@ -283,9 +367,10 @@ const scrollToCategories = () => {
                                     {{ cat.precio_disponible?.moneda?.simbolo || '$' }}{{ cat.precio_disponible?.valor
                                         || '0' }}
                                 </span> -->
-                                <span v-if="macroSeccion === 'inscripciones'"
+                                <span v-if="macroSeccion === 'inscripciones'" translate="no"
                                     class="text-2xl md:text-4xl font-black text-yellow-price drop-shadow-[0_2px_10px_rgba(234,179,8,0.3)] group-hover:scale-110 transition-transform duration-300 origin-right">
-                                    {{ cat.precio_disponible?.moneda?.simbolo || 'USD ' }}{{ cat.precio_disponible?.valor
+                                    {{ cat.precio_disponible?.moneda?.simbolo || 'USD ' }}{{
+                                        cat.precio_disponible?.valor
                                         || '0' }}
                                 </span>
                                 <!--    <span class="text-[9px] uppercase text-gray-400 font-bold mb-3 block tracking-wider">
@@ -323,6 +408,7 @@ const scrollToCategories = () => {
 
                         </div>
                     </div>
+
 
                 </div>
             </div>
@@ -443,6 +529,227 @@ const scrollToCategories = () => {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+/* Animación de parpadeo suave del fondo */
+@keyframes soft-glow {
+
+    0%,
+    100% {
+        opacity: 0.3;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+}
+
+.animate-soft-glow {
+    animation: soft-glow 3s ease-in-out infinite;
+}
+
+/* Animación de destello que cruza el botón */
+@keyframes shimmer-effect {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    30% {
+        transform: translateX(100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.animate-shimmer-effect {
+    animation: shimmer-effect 4s infinite cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Mejora la escala al cargar para que se sienta dinámico */
+button {
+    backface-visibility: hidden;
+    transform: translateZ(0);
+}
+
+/* --- EFECTO DE BORDE CARGANDO / PARPADEANTE --- */
+
+.border-loading-effect {
+    position: relative;
+    /* Asegura que el contenido esté sobre el efecto */
+}
+
+/* El resplandor parpadeante general del borde */
+@keyframes border-pulse {
+
+    0%,
+    100% {
+        border-color: rgba(59, 130, 246, 0.2);
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.1);
+    }
+
+    50% {
+        border-color: rgba(59, 130, 246, 0.8);
+        box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
+    }
+}
+
+.border-loading-effect {
+    animation: border-pulse 4s infinite ease-in-out;
+}
+
+/* La línea que recorre el borde (opcional, muy profesional) */
+.border-anim-line::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(transparent,
+            transparent,
+            transparent,
+            #3b82f6
+            /* Azul principal */
+        );
+    animation: rotate-border 4s linear infinite;
+    z-index: 0;
+}
+
+/* Máscara para que el efecto solo se vea en el borde de 2px */
+.border-loading-effect::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    /* Grosor del borde */
+
+    /* Debe coincidir con el fondo oscuro de tu app */
+    border-radius: 22px;
+    /* Ajustado al rounded-3xl menos el inset */
+    z-index: 0;
+}
+
+/* Asegurar que el contenido del botón esté arriba de todo */
+.border-loading-effect>div {
+    position: relative;
+    z-index: 10;
+}
+
+@keyframes rotate-border {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Estilo para los círculos de los pasos */
+.stepper-circle {
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Animación para que la barra de progreso se sienta suave */
+.progress-bar-glow {
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+/* --- EFECTO DE RESPLANDOR EXTREMO --- */
+
+.glow-intense {
+    /* Crea un halo de luz alrededor del botón */
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2), inset 0 0 15px rgba(59, 130, 246, 0.2);
+}
+
+@keyframes border-pulse {
+
+    0%,
+    100% {
+        border-color: rgba(59, 130, 246, 0.4);
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.3), inset 0 0 10px rgba(59, 130, 246, 0.2);
+    }
+
+    50% {
+        border-color: rgba(147, 197, 253, 1);
+        /* Azul muy claro */
+        box-shadow: 0 0 40px rgba(59, 130, 246, 0.8), inset 0 0 20px rgba(59, 130, 246, 0.4);
+    }
+}
+
+.border-loading-effect {
+    animation: border-pulse 2.5s infinite ease-in-out;
+    /* Más rápido para dar energía */
+}
+
+/* La línea que recorre el borde ahora es un "Láser" */
+.border-anim-line::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(transparent,
+            transparent,
+            rgba(59, 130, 246, 0.1),
+            #3b82f6,
+            /* Azul neón */
+            #ffffff,
+            /* Núcleo blanco del láser */
+            #3b82f6,
+            transparent);
+    animation: rotate-border 3s linear infinite;
+    z-index: 0;
+    filter: blur(2px);
+    /* Efecto neón */
+}
+
+.border-loading-effect::after {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    /* Borde un poco más delgado para que se vea más la luz */
+
+    /* Color oscuro de tu fondo */
+    border-radius: 22px;
+    z-index: 0;
+}
+
+/* Shimmer más rápido y brillante */
+@keyframes shimmer-effect {
+    0% {
+        transform: translateX(-100%) skewX(-15deg);
+    }
+
+    25% {
+        transform: translateX(100%) skewX(-15deg);
+    }
+
+    100% {
+        transform: translateX(100%) skewX(-15deg);
+    }
+}
+
+.animate-shimmer-effect {
+    animation: shimmer-effect 3s infinite cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Resplandor interno que "respira" */
+@keyframes soft-glow {
+
+    0%,
+    100% {
+        opacity: 0.4;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.9;
+        transform: scale(1.05);
     }
 }
 </style>

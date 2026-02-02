@@ -152,7 +152,11 @@ const validate = async (value) => {
                     }
                 } catch (error) {
                     console.error("Error:", error);
-                    toast.add({ severity: 'error', summary: 'Error', detail: 'Error al procesar el pago' });
+                    toast.add({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: 'Payment processing failed. Please try again.'
+                    });
                 }
             }
             break;
@@ -258,7 +262,11 @@ const confirmarYProcesar = async (extras = []) => {
 
     } catch (error) {
         console.error("Error en confirmarYProcesar:", error);
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Ocurrió un error al procesar la solicitud.' });
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'An error occurred while processing your request.'
+        });
         loading.value = false;
     }
 };
@@ -701,7 +709,7 @@ watch(activeStep, () => {
 
         <!-- CONFIRM VIAJES Y CURSOS =======
          ============================== -->
-        <Dialog v-model:visible="showConfirmNoExtrasModal" modal :showHeader="false" :closable="false"
+        <!-- <Dialog v-model:visible="showConfirmNoExtrasModal" modal :showHeader="false" :closable="false"
             :style="{ width: '550px' }" class="rounded-3xl overflow-hidden border-none shadow-2xl animate-modal-entry">
 
             <div class="p-0 relative overflow-hidden">
@@ -757,8 +765,65 @@ watch(activeStep, () => {
                     </div>
                 </div>
             </div>
-        </Dialog>
+        </Dialog> -->
 
+        <Dialog v-model:visible="showConfirmNoExtrasModal" modal :showHeader="false" :closable="false"
+            :style="{ width: '550px' }" class="rounded-3xl overflow-hidden border-none shadow-2xl animate-modal-entry">
+
+            <div class="p-0 relative overflow-hidden">
+                <div
+                    class="bg-gradient-to-r from-blue-900 via-blue-700 to-blue-900 p-8 text-center relative overflow-hidden">
+                    <div class="absolute inset-0 shine-effect"></div>
+
+                    <div class="relative z-10">
+                        <div
+                            class="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-md border border-white/20 animate-bounce-slow">
+                            <i
+                                class="pi pi-sparkles text-yellow-400 text-4xl drop-shadow-[0_0_15px_rgba(250,204,21,0.6)]"></i>
+                        </div>
+                        <h3 class="text-2xl font-black text-white uppercase tracking-tighter italic">
+                            Upgrade Your Registration
+                        </h3>
+                        <div class="h-1 w-20 bg-yellow-400 mx-auto mt-2 rounded-full"></div>
+                    </div>
+                </div>
+
+                <div class="p-10 bg-white text-center">
+                    <p class="text-slate-700 text-xl leading-tight font-bold mb-4">
+                        Would you like to add <span class="text-blue-700">Short Courses</span> or <span
+                            class="text-blue-700">Technical Visits</span> to enhance your experience?
+                    </p>
+
+                    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                        Don't miss this unique opportunity to specialize with global experts and get an exclusive
+                        on-site look at the most significant mining operations in Peru.
+                    </p>
+
+                    <p
+                        class="text-blue-500 text-xs font-black uppercase tracking-[0.1em] bg-blue-50 p-4 rounded-2xl border border-blue-100">
+                        "Excellence is achieved through continuous training and hands-on field experience."
+                    </p>
+
+                    <div class="mt-8 flex flex-col gap-4">
+                        <button @click="handleIrACursosDesdeModal"
+                            class="group relative w-full py-4 px-6 rounded-2xl bg-blue-900 text-white font-black uppercase tracking-widest overflow-hidden transition-all hover:scale-[1.02] active:scale-95 shadow-[0_10px_20px_rgba(30,58,138,0.3)]">
+                            <div
+                                class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine-fast">
+                            </div>
+                            <span class="relative flex items-center justify-center gap-3">
+                                <i class="pi pi-plus-circle"></i>
+                                Yes, I want to add them now!
+                            </span>
+                        </button>
+
+                        <button @click="handleSaltarCursosEIrAPago"
+                            class="w-full py-2 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] hover:text-red-500 transition-colors duration-300">
+                            Not for now, proceed to standard checkout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Dialog>
 
     </AppLayout>
 </template>

@@ -376,7 +376,7 @@ watch(selected_categoria, (newId) => {
     if (cat) {
         // Solo ejecutamos changeCategory si el total actual es 0
         // o si la categoría cambió realmente por una acción que no sea el llenado inicial
-        console.log("Watcher detectó cambio de categoría a:", newId);
+        // console.log("Watcher detectó cambio de categoría a:", newId);
         changeCategory(newId, cat.precio_disponible?.valor || 0);
     }
 });
@@ -420,7 +420,7 @@ watch(tipoDocumentoEmpresa, (newVal, oldVal) => {
 
         setTipoDocPago();
     } else {
-        console.log("Cambio entre documentos extranjeros: Se mantiene la información.");
+        // console.log("Cambio entre documentos extranjeros: Se mantiene la información.");
     }
 });
 
@@ -658,19 +658,19 @@ const filteredDocTypes = computed(() => {
         p?.tipo_doc == 2 ||
         p?.nacionalidad?.toLowerCase() === 'peruano';
 
-    console.log("¿Es detectado como Peruano?:", esPeruano);
+    // console.log("¿Es detectado como Peruano?:", esPeruano);
 
     if (!tipoDocumento.value) return [];
 
     if (esPeruano) {
         // Retorna SOLO DNI (1) y RUC (2)
         const filtrados = tipoDocumento.value.filter(d => d.id == 1 || d.id == 2);
-        console.log("Documentos para Peruano:", filtrados);
+        // console.log("Documentos para Peruano:", filtrados);
         return filtrados;
     } else {
         // Retorna PASAPORTE, CE, etc. (quita DNI y RUC)
         const filtrados = tipoDocumento.value.filter(d => d.id != 1 && d.id != 2);
-        console.log("Documentos para Extranjero:", filtrados);
+        // console.log("Documentos para Extranjero:", filtrados);
         return filtrados;
     }
 });
@@ -921,8 +921,8 @@ defineExpose({ getInscripcion });
                         <div class="flex flex-col">
                             <span class="font-black text-[12px] uppercase tracking-wider"
                                 :class="tipoDocumentoEmpresa === 1 ? 'text-blue-800' : 'text-purple-800'">
-                                {{ tipoDocumentoEmpresa === 1 ? 'Información de Boleta / Receipt Information' :
-                                    'Información de Factura / Invoice Information' }}
+                                {{ tipoDocumentoEmpresa === 1 ? ' Receipt Information' :
+                                    'Invoice Information' }}
                             </span>
 
                             <p v-if="tipoDocumentoEmpresa === 1" class="text-xs font-medium text-blue-700">

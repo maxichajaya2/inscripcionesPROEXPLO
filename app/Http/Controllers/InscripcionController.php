@@ -64,8 +64,6 @@ class InscripcionController extends Controller
         return Inertia::render('Inscripcion/Index', compact('categorias', 'title'));
     }
 
-
-
     public function autor(Request $request)
     {
         return $this->renderInscripcion($request, '%AUTHOR%', "Author with special rate");
@@ -105,23 +103,7 @@ class InscripcionController extends Controller
             });
 
         $perfilesPermitidos = [1, 2, 3, 5, 6, 7];
-        // $adicionales = CategoriaCursoViaje::with(['precios' => $filtroPrecios])
-        //     ->where('isactive', true)
-        //     ->get()
-        //     ->map(function ($item) use ($perfil_id) {
-        //         // Buscamos dentro de la relación el precio que tenga el id_perfil seleccionado en el pivot
-        //         $precioEspecifico = $item->precios->first(function ($p) use ($perfil_id) {
-        //             return $p->pivot->id_perfil == $perfil_id;
-        //         });
 
-        //         // Asignamos el precio encontrado (o el primero si no hay filtro)
-        //         $item->precio_disponible = $precioEspecifico ?? $item->precios->first();
-
-        //         return $item;
-        //     })
-        //     // Opcional: Si quieres ocultar cursos que no tengan precio para ese perfil
-        //     ->filter(fn($item) => $item->precio_disponible !== null)
-        //     ->values();
 
         // 2. Adicionales (Cursos/Tours) con validación de perfiles
         if (!in_array($perfil_id, $perfilesPermitidos)) {
@@ -155,203 +137,17 @@ class InscripcionController extends Controller
         return Inertia::render($componente, compact('categorias', 'adicionales', 'title', 'section'));
     }
 
-
-
-    // public function getForm(Request $request)
-    // {
-    //     // 1. Seguridad básica
-    //     if (!str_contains($request->headers->get('referer'), 'registro') || (csrf_token() === null)) {
-    //         abort(403, 'Unauthorized POST request.');
-    //     }
-
-    //     // 2. Captura de datos iniciales
-    //     $id_tipo_documento = $request->input('id_tipo_documento') ?? $request->input('tipo_doc');
-    //     $documento = trim($request->input('documento') ?? '');
-
-    //     if (empty($id_tipo_documento) || empty($documento)) {
-    //         return response()->json(['status' => false, 'message' => 'Document info missing'], 400);
-    //     }
-
-    //     // 3. Procesar Persona
-    //     $persona = Persona::where('id_tipo_documento', $id_tipo_documento)
-    //         ->where('documento', $documento)
-    //         ->firstOrNew();
-
-    //     // 4. Procesar Ocupación y Categoría
-    //     $cargo = $request->input('cargo', '');
-    //     $ocupacion_obj = Ocupacion::whereRaw("name like '%" . $cargo . "%'")
-    //         ->where('isactive', true)
-    //         ->first();
-
-    //     $id_ocupacion = $ocupacion_obj ? $ocupacion_obj->id : 2795;
-
-    //     $categoria = CategoriaInscripcion::findOrFail($request->input('selected_categoria'));
-
-    //     $precio_disponible = $categoria->precio->filter(function ($p) {
-    //         $hoy = Carbon::now();
-    //         return $hoy->between(
-    //             Carbon::parse($p->fecha_inicio)->startOfDay(),
-    //             Carbon::parse($p->fecha_fin)->endOfDay()
-    //         );
-    //     })->first();
-
-    //     // 2. Si por algún motivo el filtro de fechas falla, toma el precio por defecto de la categoría
-    //     if (!$precio_disponible) {
-    //         $precio_disponible = $categoria->precio->first();
-    //     }
-
-    //     // 3. Verificamos el valor
-    //     $total = ($precio_disponible) ? $precio_disponible->valor : 0;
-
-
-
-    //     $total = $precio_disponible->valor;
-
-    //     $dias = '{"lun":1,"mar":1,"mie":1,"jue":1,"vie":1}';
-
-    //     // 5. Lógica de One Day (CORREGIDA para evitar error de count())
-    //     // if (str_contains(strtoupper($categoria->nombre_en), 'DAY') || str_contains(strtoupper($categoria->nombre_es), 'DIA')) {
-    //     if (
-    //         str_contains(strtoupper($categoria->nombre_en), ' DAY') ||
-    //         (str_contains(strtoupper($categoria->nombre_es), ' DIA') && !str_contains(strtoupper($categoria->nombre_es), 'ESTUDIANTE'))
-    //     ) {
-    //         $selectedDays = $request->input('selectedDays', []);
-
-    //         // Convertir string "mar,mie" a array si es necesario (FormData lo envía así aveces)
-    //         if (is_string($selectedDays)) {
-    //             $selectedDays = explode(',', $selectedDays);
-    //         }
-
-    //         $total = count($selectedDays) * $precio_disponible->valor;
-    //         $dias_array = ["lun" => 0, "mar" => 0, "mie" => 0, "jue" => 0, "vie" => 0];
-
-    //         foreach ($selectedDays as $sd) {
-    //             $dia_key = strtolower(trim($sd));
-    //             if (array_key_exists($dia_key, $dias_array)) {
-    //                 $dias_array[$dia_key] = 1;
-    //             }
-    //         }
-    //         $dias = json_encode($dias_array);
-    //     }
-
-    //     // 6. Guardar Dirección
-    //     $direccion = ($persona->id_direccion > 0) ? Direccion::find($persona->id_direccion) : new Direccion;
-    //     $direccion->id_pais = $request->input('pais');
-    //     $direccion->id_departamento = $request->input('departamento', 0);
-    //     $direccion->id_provincia = $request->input('provincia', 0);
-    //     $direccion->id_distrito = $request->input('distrito', 0);
-    //     $direccion->direccion = trim($request->input('direccionPersona', ''));
-    //     $direccion->save();
-
-    //     // 7. Guardar Persona
-    //     $persona->id_direccion = $direccion->id;
-    //     $persona->nombres = trim($request->input('nombres'));
-    //     $persona->apellido_paterno = trim($request->input('apellido_paterno'));
-    //     $persona->apellido_materno = $request->input('apellido_materno', '');
-    //     $persona->correo = trim($request->input('correo'));
-    //     $persona->celular = trim($request->input('celular'));
-    //     $persona->sexo = $request->input('sexo');
-    //     $persona->id_ocupacion = $id_ocupacion;
-    //     $persona->id_nacionalidad = $request->input('nacionalidad', $request->input('pais')); // Fallback al país si no hay nacionalidad
-
-    //     if ($request->filled('fecha_nacimiento')) {
-    //         try {
-    //             $persona->fecha_nacimiento = Carbon::parse($request->input('fecha_nacimiento'))->format('Y-m-d');
-    //         } catch (\Exception $e) {
-    //             Log::error("Error parseando fecha: " . $e->getMessage());
-    //         }
-    //     }
-
-    //     if (!$persona->exists) {
-    //         $persona->id_tipo_documento = $id_tipo_documento;
-    //         $persona->documento = $documento;
-    //     }
-    //     $persona->save();
-
-    //     // 8. Crear Facturación
-    //     $IGV = round(($total * 0.18), 2);
-
-    //     $facturacion = new Facturacion;
-    //     $facturacion->id_tipo_servicio = 4;
-    //     $facturacion->id_moneda = $precio_disponible->moneda->id;
-    //     $facturacion->id_tipo_pago = $request->input('selectTipoPago');
-    //     $facturacion->tipo_doc_pago = $request->input('selectTipoDocPago');
-    //     $facturacion->id_tipo_doc_facturador = $request->input('tipoDocumentoEmpresa');
-    //     $facturacion->numero_doc_facturador = trim($request->input('documentoEmpresa'));
-    //     $facturacion->nombre_facturador = trim($request->input('razonSocial'));
-    //     $facturacion->direccion_facturador = trim($request->input('direccionEmpresa'));
-    //     $facturacion->responsable_facturador = trim($request->input('responsable'));
-    //     $facturacion->correo_facturador = trim($request->input('correo_facturador'));
-    //     $facturacion->id_comprador = $persona->id;
-    //     $facturacion->tipo_comprador = 'persona';
-    //     $facturacion->IGV = $IGV;
-    //     $facturacion->sub_total = floatval($total) - $IGV;
-    //     $facturacion->detraccion = 0;
-    //     $facturacion->total = $total;
-    //     $facturacion->observacion = trim($request->input('empresa', ''));
-    //     $facturacion->save();
-
-    //     // 9. Crear Cuota (Agregado isactive para evitar error SQL)
-    //     $cuota = new Cuota;
-    //     $cuota->id_facturacion = $facturacion->id;
-    //     $cuota->estado_pago = 'PENDIENTE';
-    //     $cuota->isactive = true;
-    //     $cuota->informacion = json_encode([
-    //         "cuota" => "1",
-    //         "valor" => (string)$total,
-    //         "porcentaje" => "100",
-    //         "estado_pago" => false
-    //     ]);
-
-    //     // dd($cuota);
-    //     $cuota->save();
-
-    //     // 10. Crear Inscripción
-    //     $inscripcion = new Inscripcion;
-    //     $inscripcion->id_persona = $persona->id;
-    //     $inscripcion->id_categoria_inscripcion = $categoria->id;
-    //     $inscripcion->id_facturacion = $facturacion->id;
-    //     $inscripcion->usuario_creacion = $persona->id;
-    //     $inscripcion->origen = 'web';
-    //     $inscripcion->texto_cargo = $cargo;
-    //     $inscripcion->dias = $dias;
-    //     $inscripcion->autorizacion_datos = $request->input('auth', false);
-
-    //     if ($request->hasFile('uploadDocument')) {
-    //         $file = $request->file('uploadDocument');
-    //         $name = 'insc_' . time() . '.' . $file->getClientOriginalExtension();
-    //         $file->move(storage_path('app/public/documents'), $name);
-    //         $inscripcion->document_path = asset('storage/documents/' . $name);
-    //     }
-    //     $inscripcion->save();
-
-    //     // 11. Generar formulario de Niubiz
-    //     try {
-    //         $formNiubiz = app(\App\Http\Controllers\NiubizController::class)->getForm(
-    //             $persona,
-    //             $inscripcion,
-    //             $facturacion,
-    //             url()->previous(),
-    //             url()->current()
-    //         );
-
-    //         $cuota->respuesta_api = $formNiubiz->k;
-    //         $cuota->update();
-
-    //         return response()->json([
-    //             'status' => true,
-    //             'formulario' => json_decode(base64_decode($formNiubiz->frm))
-    //         ]);
-    //     } catch (\Exception $e) {
-    //         Log::error("Error en Niubiz: " . $e->getMessage());
-    //         return response()->json(['status' => false, 'message' => 'Error al contactar pasarela'], 500);
-    //     }
-    // }
-
-
     public function getForm(Request $request)
     {
 
+        // dd([
+        //     'MENSAJE' => 'DEPURANDO DATOS RECIBIDOS DEL FRONTEND',
+        //     'TODO_EL_REQUEST' => $request->all(),
+        //     'CATEGORIA_PRINCIPAL_ID' => $request->selected_categoria,
+        //     'EXTRAS_JSON' => $request->extras_seleccionados,
+        //     'EXTRAS_DECODIFICADOS' => json_decode($request->extras_seleccionados, true),
+        //     'SECCION' => $request->section
+        // ]);
         //  dd($request->all());
         // dd($request->all());
         // 1. Validaciones iniciales
@@ -451,140 +247,14 @@ class InscripcionController extends Controller
         return $persona;
     }
 
-    // private function calculateTotal(Request $request, $categoria)
-    // {
-    //     // 1. Precio Base
-    //     $precio_disponible = $categoria->precio->filter(function ($p) {
-    //         return Carbon::now()->between(
-    //             Carbon::parse($p->fecha_inicio)->startOfDay(),
-    //             Carbon::parse($p->fecha_fin)->endOfDay()
-    //         );
-    //     })->first() ?? $categoria->precio->first();
-
-    //     $total = ($precio_disponible) ? $precio_disponible->valor : 0;
-
-    //     // 2. Lógica One Day
-    //     $dias_json = '{"lun":1,"mar":1,"mie":1,"jue":1,"vie":1}';
-
-    //     if (
-    //         str_contains(strtoupper($categoria->nombre_en), ' DAY') ||
-    //         (str_contains(strtoupper($categoria->nombre_es), ' DIA') && !str_contains(strtoupper($categoria->nombre_es), 'ESTUDIANTE'))
-    //     ) {
-    //         $selectedDays = $request->input('selectedDays', []);
-    //         if (is_string($selectedDays)) $selectedDays = explode(',', $selectedDays);
-
-    //         $total = count($selectedDays) * $precio_disponible->valor;
-
-    //         $dias_array = ["lun" => 0, "mar" => 0, "mie" => 0, "jue" => 0, "vie" => 0];
-    //         foreach ($selectedDays as $sd) {
-    //             $dia_key = strtolower(trim($sd));
-    //             if (array_key_exists($dia_key, $dias_array)) $dias_array[$dia_key] = 1;
-    //         }
-    //         $dias_json = json_encode($dias_array);
-    //     }
-
-    //     // 3. Lógica Extras (Cursos/Tours)
-    //     $extras_seleccionados = json_decode($request->input('extras_seleccionados'), true);
-    //     $nombres_extras = [];
-
-    //     if (!empty($extras_seleccionados) && is_array($extras_seleccionados)) {
-    //         $extras_bd = CategoriaInscripcion::whereIn('id', $extras_seleccionados)->get();
-    //         foreach ($extras_bd as $extra) {
-    //             $precio_extra = $extra->precio->filter(function ($p) {
-    //                 return Carbon::now()->between(
-    //                     Carbon::parse($p->fecha_inicio)->startOfDay(),
-    //                     Carbon::parse($p->fecha_fin)->endOfDay()
-    //                 );
-    //             })->first() ?? $extra->precio->first();
-
-    //             if ($precio_extra) {
-    //                 $total += $precio_extra->valor;
-    //                 $nombres_extras[] = $extra->nombre_en;
-    //             }
-    //         }
-    //     }
-
-    //     return [
-    //         'total' => $total,
-    //         'nombres_extras' => $nombres_extras,
-    //         'dias_json' => $dias_json,
-    //         'moneda' => $precio_disponible ? $precio_disponible->moneda->id : 1 // Asumiendo 1 como default
-    //     ];
-    // }
-
-    // private function calculateTotal(Request $request, $categoria)
-    // {
-    //     // 1. Obtener precio actual de la Categoría Principal (Relación 'precio')
-    //     $hoy = Carbon::now();
-    //     $precio_disponible = $categoria->precio->first(function ($p) use ($hoy) {
-    //         return $hoy->between(
-    //             Carbon::parse($p->fecha_inicio)->startOfDay(),
-    //             Carbon::parse($p->fecha_fin)->endOfDay()
-    //         );
-    //     }) ?? $categoria->precio->first();
-
-    //     $total = $precio_disponible ? (float)$precio_disponible->valor : 0;
-
-    //     // 2. Lógica por Días (Ej: Categoría 39)
-    //     $dias_json = '{"lun":1,"mar":1,"mie":1,"jue":1,"vie":1}';
-    //     $nombre_upper = strtoupper($categoria->nombre_en);
-
-    //     if (str_contains($nombre_upper, ' DAY') || (str_contains(strtoupper($categoria->nombre_es), ' DIA') && !str_contains($nombre_upper, 'STUDENT'))) {
-    //         $selectedDays = $request->input('selectedDays', []);
-    //         if (is_string($selectedDays)) $selectedDays = explode(',', $selectedDays);
-
-    //         // El total para categorías "por día" es: (días) * (precio_base)
-    //         $total = count($selectedDays) * ($precio_disponible ? $precio_disponible->valor : 0);
-
-    //         $dias_array = ["lun" => 0, "mar" => 0, "mie" => 0, "jue" => 0, "vie" => 0];
-    //         foreach ($selectedDays as $sd) {
-    //             $dia_key = strtolower(trim($sd));
-    //             if (array_key_exists($dia_key, $dias_array)) $dias_array[$dia_key] = 1;
-    //         }
-    //         $dias_json = json_encode($dias_array);
-    //     }
-
-    //     // 3. Lógica Extras (Cursos/Tours) - ¡CORREGIDO!
-    //     // Decodificamos los IDs que vienen del frontend [5, 4]
-    //     $extras_seleccionados = json_decode($request->input('extras_seleccionados'), true);
-    //     $nombres_extras = [];
-
-    //     if (!empty($extras_seleccionados) && is_array($extras_seleccionados)) {
-    //         // IMPORTANTE: Usamos el modelo CategoriaCursoViaje para los extras
-    //         $extras_bd = \App\Models\CategoriaCursoViaje::whereIn('id', $extras_seleccionados)->get();
-
-    //         foreach ($extras_bd as $extra) {
-    //             // En CategoriaCursoViaje la relación de precios es 'precios' (en plural)
-    //             $precio_extra = $extra->precios->first(function ($p) use ($hoy) {
-    //                 return $hoy->between(
-    //                     Carbon::parse($p->fecha_inicio)->startOfDay(),
-    //                     Carbon::parse($p->fecha_fin)->endOfDay()
-    //                 );
-    //             }) ?? $extra->precios->first();
-
-    //             if ($precio_extra) {
-    //                 $total += (float)$precio_extra->valor;
-    //                 $nombres_extras[] = $extra->nombre_en;
-    //             }
-    //         }
-    //     }
-
-    //     return [
-    //         'total' => $total,
-    //         'nombres_extras' => $nombres_extras,
-    //         'dias_json' => $dias_json,
-    //         'moneda' => $precio_disponible ? $precio_disponible->id_moneda : 1
-    //     ];
-    // }
-
-
     private function calculateTotal(Request $request, $categoria)
     {
         $hoy = Carbon::now();
         $total_inscripcion = 0.0;
         $total_extras = 0.0;
         $nombres_extras = [];
-        $dias_json = '{"lun":1,"mar":1,"mie":1,"jue":1,"vie":1}';
+        // $dias_json = '{"lun":1,"mar":1,"mie":1,"jue":1,"vie":1}';
+        $dias_json = null;
 
         // 1. OBTENER PRECIO DE LA CATEGORÍA (Relación: precio)
         $precio_base_obj = $categoria->precio->first(function ($p) use ($hoy) {
@@ -603,17 +273,43 @@ class InscripcionController extends Controller
             $total_inscripcion = 0.0;
         } else {
             // Si es inscripción normal, verificamos si es por día (ID 39 o similares)
-            $nombre_en_upper = strtoupper($categoria->nombre_en);
-            $es_por_dia = str_contains($nombre_en_upper, ' DAY') ||
-                (str_contains(strtoupper($categoria->nombre_es), ' DIA') && !str_contains($nombre_en_upper, 'STUDENT'));
+            // $nombre_en_upper = strtoupper($categoria->nombre_en);
 
+            $nombre_en = strtoupper($categoria->nombre_en);
+            $nombre_es = strtoupper($categoria->nombre_es);
+
+            // $es_por_dia = str_contains($nombre_en_upper, ' DAY') ||
+            //     (str_contains(strtoupper($categoria->nombre_es), ' DIA') && !str_contains($nombre_en_upper, 'STUDENT'));
+
+            // Si contiene STUDENT o ESTUDIANTE, NUNCA es por día (es Full Event)
+            $es_estudiante = str_contains($nombre_en, 'STUDENT') || str_contains($nombre_es, 'ESTUDIANTE');
+
+            // Es por día SOLO si tiene la palabra "DAY" o "DIA" pero NO es estudiante
+            $es_por_dia = !$es_estudiante && (str_contains($nombre_en, ' DAY') || str_contains($nombre_es, ' DIA'));
+
+            // if ($es_por_dia) {
+            //     $selectedDays = $request->input('selectedDays', []);
+            //     if (is_string($selectedDays)) $selectedDays = explode(',', $selectedDays);
+
+            //     $total_inscripcion = count($selectedDays) * $valor_unitario_cat;
+
+            //     // Guardar qué días seleccionó
+            //     $dias_array = ["lun" => 0, "mar" => 0, "mie" => 0, "jue" => 0, "vie" => 0];
+            //     foreach ($selectedDays as $sd) {
+            //         $dia_key = strtolower(trim($sd));
+            //         if (array_key_exists($dia_key, $dias_array)) $dias_array[$dia_key] = 1;
+            //     }
+            //     $dias_json = json_encode($dias_array);
+            // } else {
+            //     // Inscripción de evento completo
+            //     $total_inscripcion = $valor_unitario_cat;
+            // }
             if ($es_por_dia) {
                 $selectedDays = $request->input('selectedDays', []);
                 if (is_string($selectedDays)) $selectedDays = explode(',', $selectedDays);
 
                 $total_inscripcion = count($selectedDays) * $valor_unitario_cat;
 
-                // Guardar qué días seleccionó
                 $dias_array = ["lun" => 0, "mar" => 0, "mie" => 0, "jue" => 0, "vie" => 0];
                 foreach ($selectedDays as $sd) {
                     $dia_key = strtolower(trim($sd));
@@ -621,8 +317,9 @@ class InscripcionController extends Controller
                 }
                 $dias_json = json_encode($dias_array);
             } else {
-                // Inscripción de evento completo
+                // Caso Estudiantes, Autores o Full Pass
                 $total_inscripcion = $valor_unitario_cat;
+                $dias_json = null; // Mantenemos null para que no se guarde "lun:1, mar:1..."
             }
         }
 
@@ -721,9 +418,22 @@ class InscripcionController extends Controller
 
     private function createInscripcion(Request $request, $persona, $categoria, $facturacion, $dias_json)
     {
+        $extras_ids = json_decode($request->input('extras_seleccionados'), true);
+
+
+        // dd([
+        //     'MENSAJE' => 'REVISANDO DATA EN CREATE_INSCRIPCION',
+        //     'CATEGORIA_BASE' => $categoria->id,
+        //     'EXTRAS_RECIBIDOS_JSON' => $request->input('extras_seleccionados'),
+        //     'EXTRAS_DECODIFICADOS' => $extras_ids,
+        //     'PERSONA_ID' => $persona->id,
+        //     'FACTURACION_ID' => $facturacion->id
+        // ]);
+
         $inscripcion = new Inscripcion;
         $inscripcion->id_persona = $persona->id;
         $inscripcion->id_categoria_inscripcion = $categoria->id;
+        $inscripcion->id_categoria_cursos_viajes = json_decode($request->input('extras_seleccionados'), true);
         $inscripcion->id_facturacion = $facturacion->id;
         $inscripcion->usuario_creacion = $persona->id;
         $inscripcion->origen = 'web';
@@ -738,6 +448,14 @@ class InscripcionController extends Controller
             $inscripcion->document_path = asset('storage/documents/' . $name);
         }
         $inscripcion->save();
+
+        // dd('INSCRIPCIÓN CREADA CORRECTAMENTE', [
+        //     'INSCRIPCION_ID' => $inscripcion->id,
+        //     'CATEGORIA_ID' => $categoria->id,
+        //     'EXTRAS_IDS' => $extras_ids,
+        //     'PERSONA_ID' => $persona->id,
+        //     'FACTURACION_ID' => $facturacion->id
+        // ]);
 
         return $inscripcion;
     }
@@ -769,11 +487,9 @@ class InscripcionController extends Controller
         }
     }
 
-
-
-
     public function niubizPayment($id, $order)
     {
+        // dd('NIUBIZ PAYMENT LLEGÓ CORRECTAMENTE', ['id' => $id, 'order' => $order]);
         $facturacion = Facturacion::findOrFail($id);
         $cuota = $facturacion->cuotas->first();
 
@@ -784,6 +500,65 @@ class InscripcionController extends Controller
         }
 
         $respuesta = app(\App\Http\Controllers\NiubizController::class)->authorization($cuota->respuesta_api, $facturacion->total, $transactiontoken, $order);
+
+        // $respuesta = '{
+        //     "header": {
+        //         "ecoreTransactionUUID": "3746e2a1-19bb-4251-b920-f7d2cc7c7c6e",
+        //         "ecoreTransactionDate": 1749744006879,
+        //         "millis": 958
+        //     },
+        //     "fulfillment": {
+        //         "channel": "web",
+        //         "merchantId": "456879853",
+        //         "terminalId": "00000001",
+        //         "captureType": "manual",
+        //         "countable": true,
+        //         "fastPayment": false,
+        //         "signature": "3746e2a1-19bb-4251-b920-f7d2cc7c7c6e"
+        //     },
+        //     "order": {
+        //         "tokenId": "3624210E49BA4F80A4210E49BA4F80E0",
+        //         "purchaseNumber": "8291",
+        //         "amount": 2200,
+        //         "installment": 0,
+        //         "currency": "USD",
+        //         "authorizedAmount": 2200,
+        //         "authorizationCode": "091800",
+        //         "actionCode": "000",
+        //         "traceNumber": "31645",
+        //         "transactionDate": "250612110006",
+        //         "transactionId": "993211570048581"
+        //     },
+        //     "dataMap": {
+        //         "TERMINAL": "00000001",
+        //         "BRAND_ACTION_CODE": "00",
+        //         "BRAND_HOST_DATE_TIME": "201222141839",
+        //         "TRACE_NUMBER": "31645",
+        //         "CARD_TYPE": "D",
+        //         "ECI_DESCRIPTION": "Transaccion no autenticada pero enviada en canal seguro",
+        //         "SIGNATURE": "3746e2a1-19bb-4251-b920-f7d2cc7c7c6e",
+        //         "CARD": "447411******2240",
+        //         "MERCHANT": "109705108",
+        //         "STATUS": "Authorized",
+        //         "ACTION_DESCRIPTION": "Aprobado y completado con exito",
+        //         "ID_UNICO": "993211570048581",
+        //         "AMOUNT": "1900.0",
+        //         "AUTHORIZATION_CODE": "091800",
+        //         "YAPE_ID": "",
+        //         "CURRENCY": "0604",
+        //         "TRANSACTION_DATE": "250612110006",
+        //         "ACTION_CODE": "000",
+        //         "CVV2_VALIDATION_RESULT": "M",
+        //         "ECI": "07",
+        //         "ID_RESOLUTOR": "420201222142237",
+        //         "BRAND": "visa",
+        //         "ADQUIRENTE": "570002",
+        //         "BRAND_NAME": "VI",
+        //         "PROCESS_CODE": "000000",
+        //         "TRANSACTION_ID": "993211570048581"
+        //     }
+        // }';
+
         $filtered_response = app(\App\Http\Controllers\NiubizController::class)->filterResponse($respuesta);
 
         $pasarela = Pasarela::where('id_evento', config('app.id_evento'))->where('codigo_tipo_pago', 'niubiz_tarjeta')->first();
@@ -851,20 +626,30 @@ class InscripcionController extends Controller
 
             $persona = Persona::find($inscripcion->id_persona);
 
-            // $service_wmc = app(\App\Http\Controllers\WebServiceController::class)
-            //     ->wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz);
+            //  dd($facturacion, $persona, $inscripcion, $niubiz);
+            $service_wmc = app(\App\Http\Controllers\WebServiceController::class)
+                ->wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz);
 
-            // dd($service_wmc);
-            try {
-                Mail::to($persona->correo)->send(new \App\Mail\MailInscripcion($inscripcion, $niubiz));
-            } catch (\Exception $e) {
-                Log::error("Mail Error: " . $e->getMessage());
+
+            if (isset($service_wmc->Response) && $service_wmc->Response->Status === true) {
+                $inscripcion->qr = (string)$service_wmc->Response->QR;
+                // $inscripcion->sie_code = (string)$service_wmc->Response->SieCode;
+                $inscripcion->save();
+
+                try {
+                    Mail::to($persona->correo)->send(new \App\Mail\MailInscripcion($inscripcion, $niubiz));
+                } catch (\Exception $e) {
+                    Log::error("Error enviando correo: " . $e->getMessage());
+                }
+            } else {
+                // Si llegamos aquí, service_wmc tiene el error 500 o un Status false
+                Log::error("ERROR SIE WMC:", (array)$service_wmc);
             }
+
 
             return redirect('/pago/confirmar/' . $inscripcion->id);
         }
     }
-
 
     public function confirmPayment($id)
     {

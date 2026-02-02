@@ -150,21 +150,30 @@ defineExpose({
 
                     <div class="flex flex-col">
                         <span class="text-blue-900 font-black text-sm uppercase tracking-wider">
-                            Personalize your participation
+                            Enhance Your Congress Experience
                         </span>
-                        <p class="text-blue-800 text-sm font-medium leading-relaxed mt-1">
-                            This section is <strong>optional</strong>. You have the opportunity to add
-                            <span class="font-bold text-blue-900">Short Courses</span> or
-                            <span class="font-bold text-blue-900">Technical Visits</span> to your experience.
+                        <p class="text-blue-800 text-sm font-medium leading-relaxed">
+                            Go beyond the main programme with expert-led <b>short courses</b>  and on-site <b>technical
+                            visits</b> designed to turn insight into action. Learn directly from industry leaders and gain
+                            practical knowledge you can apply the moment you return to work.
 
-                            <span class="block mt-2 text-xs italic opacity-90">
-                                Please note that these specialized activities have an <strong>additional cost</strong>
-                                independent of your main registration fee.
+                            <span class="block mt-3">
+                                These optional sessions offer deeper dives into emerging technologies and strategic
+                                challenges shaping the future of mining.
                             </span>
 
-                            <br>
-                            If you prefer not to add extras at this moment, feel free to click
-                            <strong>"Continue"</strong> to proceed with your registration.
+                            <span
+                                class="block mt-4 p-3 bg-blue-600/20 rounded-xl border border-blue-500/30 text-xs italic text-blue-800">
+                                <strong>Note:</strong> Select the courses or visits that match your interests or
+                                continue to only core congress programme. These specialized activities have an
+                                <strong>additional cost</strong> independent of your main registration fee.
+                            </span>
+
+                            <span class="block mt-4 text-blue-800 font-bold">
+                                If you prefer not to add extras at this moment, feel free to click
+                                <span class="text-yellow-price uppercase">"Continue"</span> to proceed with your
+                                registration.
+                            </span>
                         </p>
                     </div>
                 </div>

@@ -116,7 +116,11 @@ const validate = async (value) => {
                     }
                 } catch (error) {
                     console.error("Error:", error);
-                    toast.add({ severity: 'error', summary: 'Error', detail: 'Error al procesar el pago' });
+                    toast.add({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: 'Payment processing failed. Please try again.'
+                    });
                 }
             }
             break;
@@ -655,7 +659,8 @@ watch(activeStep, () => {
                                     }" />
                             </div> -->
 
-                            <div class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-end gap-3 rounded-b-2xl">
+                            <div
+                                class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-end gap-3 rounded-b-2xl">
 
                                 <Button label="Validate" icon="pi pi-arrow-right" iconPos="right"
                                     class="bg-degradient border-rounded-full" :loading="loading"
@@ -796,7 +801,8 @@ watch(activeStep, () => {
                                 :formulario="formDataPayment" :categoria_seleccionada="categoria_seleccionada"
                                 :extras_seleccionados="extras_para_mostrar" />
 
-                            <div   class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-between gap-3 rounded-b-2xl">
+                            <div
+                                class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-between gap-3 rounded-b-2xl">
                                 <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
                                     @click="activateCallback('3')" />
                             </div>
@@ -1052,7 +1058,6 @@ watch(activeStep, () => {
 </template>
 
 <style scoped>
-
 /* 1. Aseguramos que el panel del Stepper permita el posicionamiento sticky */
 :deep(.p-steppanel) {
     display: flex;
@@ -1068,12 +1073,15 @@ watch(activeStep, () => {
 
 /* 3. Estilo para el contenedor Sticky */
 .sticky {
-    position: -webkit-sticky; /* Soporte para Safari */
+    position: -webkit-sticky;
+    /* Soporte para Safari */
     position: sticky;
-    bottom: -2px; /* Un pequeño ajuste para que encaje perfecto con el borde */
+    bottom: -2px;
+    /* Un pequeño ajuste para que encaje perfecto con el borde */
     background-color: rgba(255, 255, 255, 0.98);
     z-index: 40;
-    margin-top: auto; /* Empuja el div al final si el contenido es corto */
+    margin-top: auto;
+    /* Empuja el div al final si el contenido es corto */
 }
 
 /* 4. En Web, le damos un redondeado inferior para que coincida con el Card */

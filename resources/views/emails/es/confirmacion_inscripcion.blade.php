@@ -8,11 +8,23 @@
     ];
     $dias_seleccionados = [];
 
-    if (str_contains($inscripcion->categoria_inscripcion->nombre_es, 'DIA')) {
+    $nombre_cat_es = strtoupper($inscripcion->categoria_inscripcion->nombre_es);
+    $nombre_cat_en = strtoupper($inscripcion->categoria_inscripcion->nombre_en);
+
+    // Verificamos: 1. Que existan datos de días. 2. Que NO sea estudiante. 3. Que el nombre SI sea de tipo DIA/DAY
+    $es_estudiante = str_contains($nombre_cat_en, 'STUDENT') || str_contains($nombre_cat_es, 'ESTUDIANTE');
+
+    if (
+        !empty($inscripcion->dias) &&
+        !$es_estudiante &&
+        (str_contains($nombre_cat_es, ' DIA') || str_contains($nombre_cat_en, ' DAY'))
+    ) {
         $dias_inscripcion = json_decode($inscripcion->dias, true);
-        foreach ($dias_inscripcion as $key => $dia) {
-            if ($dia) {
-                $dias_seleccionados[] = $dias_nombres[$key];
+        if (is_array($dias_inscripcion)) {
+            foreach ($dias_inscripcion as $key => $dia) {
+                if ($dia == 1) {
+                    $dias_seleccionados[] = $dias_nombres[$key];
+                }
             }
         }
     }
@@ -59,7 +71,7 @@
                                 processed.</p>
                         </td>
                     </tr>
-
+                    {{-- PERSONAL DETAILS --}}
                     <tr>
                         <td style="padding: 0 40px;">
                             <div
@@ -101,7 +113,95 @@
                             </div>
                         </td>
                     </tr>
+                    {{-- ORDER SUMMARY --}}
+                    <tr>
+                        <td style="padding: 20px 40px 0 40px;">
+                            <div
+                                style="background-color: #f8fafc; border-radius: 12px; padding: 25px; border: 1px solid #e2e8f0;">
+                                <h3
+                                    style="color: #1d4ed8; font-size: 14px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+                                    Order Summary
+                                </h3>
 
+                                <table width="100%" style="font-size: 14px; color: #334155;">
+                                    <thead>
+                                        <tr style="color: #64748b; font-size: 12px; text-transform: uppercase;">
+                                            <th align="left" style="padding-bottom: 10px;">Description</th>
+                                            <th align="right" style="padding-bottom: 10px;">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @php
+                                            // 1. PRIMERO CALCULAMOS LOS EXTRAS PARA TENER EL SUBTOTAL
+                                            $extras_ids = $inscripcion->id_categoria_cursos_viajes ?? [];
+                                            $perfil_id =
+                                                $inscripcion->categoria_inscripcion->precio->first()->pivot
+                                                    ->id_perfil ?? null;
+
+                                            $extras = \App\Models\CategoriaCursoViaje::whereIn('id', $extras_ids)
+                                                ->with([
+                                                    'precios' => function ($query) use ($perfil_id) {
+                                                        $query->where(
+                                                            'detalle_categoria_cursos_viajes.id_perfil',
+                                                            $perfil_id,
+                                                        );
+                                                    },
+                                                ])
+                                                ->get();
+
+                                            $subtotal_extras = 0;
+                                            foreach ($extras as $e) {
+                                                $subtotal_extras += $e->precios->first()->valor ?? 0;
+                                            }
+
+                                            // 2. AHORA CALCULAMOS EL COSTO BASE SIN ERRORES
+                                            $total_factura = (float) $inscripcion->facturacion->total;
+                                            $costo_base = $total_factura - $subtotal_extras;
+                                        @endphp
+
+                                        {{-- MOSTRAR REGISTRO BASE --}}
+                                        @if ($costo_base > 0)
+                                            <tr>
+                                                <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
+                                                    <span
+                                                        style="font-weight: 600; color: #1e3a8a; display: block;">Registration
+                                                        to event</span>
+                                                    <span
+                                                        style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">
+                                                        {{ $inscripcion->categoria_inscripcion->nombre_en }}
+                                                    </span>
+                                                </td>
+                                                <td align="right"
+                                                    style="padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-weight: 700; color: #334155;">
+                                                    USD {{ number_format($costo_base, 2) }}
+                                                </td>
+                                            </tr>
+                                        @endif
+
+                                        {{-- MOSTRAR EXTRAS --}}
+                                        @foreach ($extras as $extra)
+                                            @php $precio_item = $extra->precios->first()->valor ?? 0; @endphp
+                                            <tr>
+                                                <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
+                                                    <span
+                                                        style="font-weight: 600; color: #1e3a8a; display: block;">{{ $extra->nombre_en }}</span>
+                                                    <span
+                                                        style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Additional
+                                                        Activity</span>
+                                                </td>
+                                                <td align="right"
+                                                    style="padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-weight: 700; color: #334155;">
+                                                    USD {{ number_format($precio_item, 2) }}
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {{-- BILLING SUMMARY --}}
                     <tr>
                         <td style="padding: 20px 40px 40px 40px;">
                             <div style="background-color: #1e3a8a; border-radius: 12px; padding: 25px; color: #ffffff;">
@@ -134,6 +234,27 @@
                                     </tr>
                                 </table>
                             </div>
+                        </td>
+                    </tr>
+                    {{-- QR --}}
+                    <tr>
+                        <td style="padding: 0 40px 30px 40px; text-align: center;">
+                            <div
+                                style="display: inline-block; padding: 15px; background-color: #ffffff; border: 2px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                                <p
+                                    style="margin: 0 0 10px 0; font-size: 12px; font-weight: bold; color: #64748b; text-transform: uppercase;">
+                                    Entry Pass / QR Code</p>
+
+                                <img src="{{ $qr_url }}" alt="Access QR Code" width="180" height="180"
+                                    style="display: block; margin: 0 auto;">
+
+                                {{-- <p
+                                    style="margin: 10px 0 0 0; font-family: monospace; font-size: 16px; font-weight: bold; color: #1e3a8a;">
+                                    {{ $inscripcion->qr }}
+                                </p> --}}
+                            </div>
+                            <p style="margin: 15px 0 0 0; font-size: 13px; color: #64748b;">Please present this code at
+                                the registration desk.</p>
                         </td>
                     </tr>
                     <tr>
