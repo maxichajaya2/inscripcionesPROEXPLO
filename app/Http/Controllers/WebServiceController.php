@@ -194,8 +194,13 @@ class WebServiceController extends Controller
     public function wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz)
     {
         try {
-            $url = "https://secure2.iimp.org:8443/KBServiciosPruebaIIMPJavaEnvironment/rest/servicioinscripcionwmc";
-            // $url=
+            /** ******* LOCAL *********/
+            // =========================
+            // $url = "https://secure2.iimp.org:8443/KBServiciosPruebaIIMPJavaEnvironment/rest/servicioinscripcionwmc";
+
+             /** ******* PRODUCCION *********/
+            // =========================
+            $url ="https://secure2.iimp.org:8443/KBServiciosIIMPJavaEnvironment/rest/servicioinscripcionwmc";
 
             // Función para limpiar tildes y caracteres especiales
             $clean = function ($str) {
