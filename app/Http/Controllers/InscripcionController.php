@@ -148,7 +148,7 @@ class InscripcionController extends Controller
         //     'EXTRAS_DECODIFICADOS' => json_decode($request->extras_seleccionados, true),
         //     'SECCION' => $request->section
         // ]);
-        //  dd($request->all());
+        // dd($request->all());
         // dd($request->all());
         // 1. Validaciones iniciales
         $this->validateRequest($request);
@@ -169,6 +169,8 @@ class InscripcionController extends Controller
 
         // 5. Crear Facturación y Cuota
         $facturacion = $this->createFacturacion($request, $persona, $categoria, $total, $nombres_extras);
+
+        // dd($facturacion);
 
         // 6. Crear Inscripción (y subir archivo)
         $inscripcion = $this->createInscripcion($request, $persona, $categoria, $facturacion, $dias_json);
@@ -228,6 +230,7 @@ class InscripcionController extends Controller
         $persona->sexo = $request->input('sexo');
         $persona->id_ocupacion = $id_ocupacion;
         $persona->id_nacionalidad = $request->input('nacionalidad', $request->input('pais'));
+        $persona->company = trim($request->input('empresa'));
 
         if (!$persona->exists) {
             $persona->id_tipo_documento = $request->input('id_tipo_documento') ?? $request->input('tipo_doc');
@@ -489,6 +492,7 @@ class InscripcionController extends Controller
 
     public function niubizPayment($id, $order)
     {
+
         // dd('NIUBIZ PAYMENT LLEGÓ CORRECTAMENTE', ['id' => $id, 'order' => $order]);
         $facturacion = Facturacion::findOrFail($id);
         $cuota = $facturacion->cuotas->first();
@@ -626,7 +630,6 @@ class InscripcionController extends Controller
 
             $persona = Persona::find($inscripcion->id_persona);
 
-            //  dd($facturacion, $persona, $inscripcion, $niubiz);
             $service_wmc = app(\App\Http\Controllers\WebServiceController::class)
                 ->wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz);
 

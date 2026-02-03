@@ -328,8 +328,10 @@ const handleInscripcionHaciaCursos = async () => {
 
     if (resIns.validate) {
         tempResIns.value = resIns;
+
         // ESTO ES LO QUE DISPARA EL MODAL
-        showConfirmNoExtrasModal.value = true;
+        // showConfirmNoExtrasModal.value = true;
+        await confirmarYProcesar([]);
     }
     loading.value = false;
 };
