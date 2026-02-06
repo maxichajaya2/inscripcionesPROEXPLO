@@ -458,6 +458,8 @@ const getEmpresaData = async () => {
             // Mostrar Alerta de Éxito
             showSuccessAlert.value = true;
 
+            block_direction.value = false;
+            isEditingBilling.value = true;
             // Actualizar vee-validate
             setValues({
                 ...values,
@@ -526,68 +528,6 @@ function selectDays(id) {
     let count = Object.values(current_days).filter(v => v).length;
     total.value = count * current_price;
 }
-
-
-// const getInscripcion = async () => {
-//     const result = await validate(); // Validación de vee-validate
-
-//     formManualErrors.value.total = null;
-
-//     if (selected_categoria.value == 39) {
-//         const tieneDias = Object.values(current_days).some(v => v === true);
-//         if (!tieneDias) {
-//             // ASIGNAMOS EL ERROR AQUÍ (Esto activará la alerta en el HTML)
-//             formManualErrors.value.total = "Attention: You must select at least one day to proceed with your registration.";
-
-//             // Hacemos scroll suave hacia la alerta para que el usuario la vea
-//             const el = document.getElementById('days-section');
-//             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-//             return { validate: false };
-//         }
-//     }
-
-//     // Agrega aquí tus validaciones manuales (reglamento, total, etc.)
-//     if (!result.valid || total.value <= 0 || (show_document.value && !uploadDocument.value)) {
-//         // toast.add({ severity: 'error', summary: 'Error', detail: 'Please fill all fields' });
-//         return { validate: false };
-//     }
-
-//     return {
-//         validate: true,
-//         formInscription: values,// "values" viene de vee-validate
-//         total_final: total.value
-//     };
-// };
-
-// const getInscripcion = async () => {
-//     const result = await validate();
-//     formManualErrors.value.total = null;
-
-//     // Validación manual de días para categoría 39
-//     if (selected_categoria.value == 39) {
-//         const tieneDias = Object.values(current_days).some(v => v === true);
-//         if (!tieneDias) {
-//             formManualErrors.value.total = "Attention: You must select at least one day to proceed with your registration.";
-//             return { validate: false };
-//         }
-//     }
-
-//     // LÓGICA DE VALIDACIÓN MODIFICADA:
-//     // Si NO es sección viajes, el total debe ser mayor a 0.
-//     // Si ES sección viajes, permitimos total 0 (porque pagará en el paso de adicionales).
-//     const totalValido = esSeccionViajes.value ? true : (total.value > 0);
-
-//     if (!result.valid || !totalValido || (show_document.value && !uploadDocument.value)) {
-//         return { validate: false };
-//     }
-
-//     return {
-//         validate: true,
-//         formInscription: values,
-//         total_final: total.value
-//     };
-// };
 
 function setTipoDocPago() {
     if (tipoDocumentoEmpresa.value == 2) {
@@ -711,6 +651,18 @@ const onlyNumberKey = (event) => {
     }
     return true;
 }
+
+const onlyAlphanumericKey = (event) => {
+    const charCode = event.which ? event.which : event.keyCode;
+    const charStr = String.fromCharCode(charCode);
+
+    // Regex: Permite solo letras (a-z, A-Z) y números (0-9)
+    if (!/^[a-zA-Z0-9]+$/.test(charStr)) {
+        event.preventDefault();
+        return false;
+    }
+    return true;
+};
 
 
 defineExpose({ getInscripcion });
@@ -1001,7 +953,7 @@ defineExpose({ getInscripcion });
                                 <label class="block mb-1">Document Number <span class="text-red-600">*</span></label>
                                 <InputGroup>
                                     <InputText v-model="documentoEmpresa" :readonly="!isEditingBilling"
-                                        class="border-green-iimp" @keypress="onlyNumberKey" @paste="onlyNumberKey"
+                                        class="border-green-iimp" @keypress="onlyAlphanumericKey" @paste="onlyNumberKey" :maxlength="12"
                                         :disabled="!isEditingBilling" />
                                     <Button icon="pi pi-search" class="bg-green-iimp" @click="getEmpresaData"
                                         :loading="loading_doc" :disabled="!isEditingBilling || !documentoEmpresa" />

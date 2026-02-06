@@ -84,19 +84,24 @@
                                     <tr>
                                         <td style="padding: 5px 0; color: #64748b; width: 40%;">Full Name:</td>
                                         <td style="padding: 5px 0; font-weight: 600;">
-                                            {{ $inscripcion->persona->nombres }}
-                                            {{ $inscripcion->persona->apellido_paterno }}</td>
+                                            {{ $inscripcion->persona->nombres ?? '' }}
+                                            {{ $inscripcion->persona->apellido_paterno ?? '' }}</td>
                                     </tr>
                                     <tr>
                                         <td style="padding: 5px 0; color: #64748b;">
-                                            {{ $inscripcion->persona->tipoDocumento->name_en }}:</td>
+                                            {{ $inscripcion->persona->tipoDocumento->name_en ?? '' }}:</td>
                                         <td style="padding: 5px 0; font-weight: 600;">
-                                            {{ $inscripcion->persona->documento }}</td>
+                                            {{ $inscripcion->persona->documento ?? '' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 5px 0; color: #64748b;">Phone Number:</td>
+                                        <td style="padding: 5px 0; font-weight: 600;">
+                                            {{ $inscripcion->persona->celular ?? '' }}</td>
                                     </tr>
                                     <tr>
                                         <td style="padding: 5px 0; color: #64748b;">Category:</td>
                                         <td style="padding: 5px 0; font-weight: 700; color: #1e3a8a;">
-                                            {{ $inscripcion->categoria_inscripcion->nombre_en }}</td>
+                                            {{ $inscripcion->categoria_inscripcion->nombre_en ?? '' }}</td>
                                     </tr>
                                     @if (count($dias_seleccionados) > 0)
                                         <tr>
@@ -168,7 +173,7 @@
                                                         to event</span>
                                                     <span
                                                         style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">
-                                                        {{ $inscripcion->categoria_inscripcion->nombre_en }}
+                                                        {{ $inscripcion->categoria_inscripcion->nombre_en ?? '' }}
                                                     </span>
                                                 </td>
                                                 <td align="right"
@@ -184,7 +189,7 @@
                                             <tr>
                                                 <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
                                                     <span
-                                                        style="font-weight: 600; color: #1e3a8a; display: block;">{{ $extra->nombre_en }}</span>
+                                                        style="font-weight: 600; color: #1e3a8a; display: block;">{{ $extra->nombre_en ?? '' }}</span>
                                                     <span
                                                         style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Additional
                                                         Activity</span>
@@ -211,19 +216,61 @@
 
                                 <table width="100%" style="font-size: 14px;">
                                     <tr>
-                                        <td style="padding: 5px 0; color: #bfdbfe;">Company / Tax Name:</td>
-                                        <td style="padding: 5px 0; font-weight: 500; text-align: right;">
-                                            {{ $inscripcion->facturacion->nombre_facturador }}</td>
-                                    </tr>
-                                    <tr>
                                         <td style="padding: 5px 0; color: #bfdbfe;">Transaction ID:</td>
                                         <td style="padding: 5px 0; font-weight: 500; text-align: right;">
-                                            #{{ $pago->idtransaccion }}</td>
+                                            #{{ $pago->idtransaccion ?? '' }}</td>
                                     </tr>
                                     <tr>
                                         <td style="padding: 5px 0; color: #bfdbfe;">Card:</td>
                                         <td style="padding: 5px 0; font-weight: 500; text-align: right;">••••
-                                            {{ $digitos }}</td>
+                                            {{ $digitos ?? '' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 5px 0; color: #bfdbfe;">Company / Tax Name:</td>
+                                        <td style="padding: 5px 0; font-weight: 500; text-align: right;">
+                                            {{ $inscripcion->facturacion->nombre_facturador ?? '' }}</td>
+                                    </tr>
+
+                                    <tr>
+                                        <td style="padding: 5px 0; color: #bfdbfe;">Tax ID / Document Number</td>
+                                        <td style="padding: 5px 0; font-weight: 500; text-align: right;">
+                                            {{ $inscripcion->facturacion->numero_doc_facturador ?? 'N/A' }}
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td style="padding: 5px 0; color: #bfdbfe;">Address</td>
+                                        <td style="padding: 5px 0; font-weight: 500; text-align: right;">
+                                            {{ $inscripcion->facturacion->direccion_facturador ?? 'N/A' }}
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td style="padding: 5px 0; color: #bfdbfe;">Contact Person</td>
+                                        <td style="padding: 5px 0; font-weight: 500; text-align: right;">
+                                            {{ $inscripcion->facturacion->responsable_facturador ?? 'N/A' }}
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td style="padding: 5px 0; color: #bfdbfe;">Billing Email</td>
+                                        <td style="padding: 5px 0; font-weight: 500; text-align: right;">
+                                            {{ $inscripcion->facturacion->correo_facturador ?? 'N/A' }}
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td style="padding: 5px 0; color: #bfdbfe;">Payment Method</td>
+                                        <td style="padding: 5px 0; font-weight: 500; text-align: right;">
+                                            {{ $inscripcion->facturacion->tipoPago->nombre ?? 'Niubiz Tarjeta' }}
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td style="padding: 5px 0; color: #bfdbfe;">Receipt Type</td>
+                                        <td style="padding: 5px 0; font-weight: 500; text-align: right;">
+                                            {{ $inscripcion->facturacion->tipoDocumentoPago->nombre ?? 'N/A' }}
+                                        </td>
                                     </tr>
                                     <tr>
                                         <td style="padding: 20px 0 0 0; font-size: 18px; font-weight: 800;">TOTAL PAID:
@@ -237,6 +284,7 @@
                         </td>
                     </tr>
                     {{-- QR --}}
+                    @if($inscripcion->qr)
                     <tr>
                         <td style="padding: 0 40px 30px 40px; text-align: center;">
                             <div
@@ -247,16 +295,12 @@
 
                                 <img src="{{ $qr_url }}" alt="Access QR Code" width="180" height="180"
                                     style="display: block; margin: 0 auto;">
-
-                                {{-- <p
-                                    style="margin: 10px 0 0 0; font-family: monospace; font-size: 16px; font-weight: bold; color: #1e3a8a;">
-                                    {{ $inscripcion->qr }}
-                                </p> --}}
                             </div>
                             <p style="margin: 15px 0 0 0; font-size: 13px; color: #64748b;">Please present this code at
                                 the registration desk.</p>
                         </td>
                     </tr>
+                    @endif
                     <tr>
                         <td style="padding: 0 40px 40px 40px;">
                             <table width="100%" border="0" cellspacing="0" cellpadding="0"

@@ -33,7 +33,6 @@ const props = defineProps({
     tipo_origen: Number
 });
 
-
 const dniMessage = ref('');
 const schema = yup.object({
     tipo_doc: yup.mixed().required('Document type is required'),
@@ -164,14 +163,6 @@ const searchPerson = async () => {
     }
 };
 
-// const onlyNumberKey = (event) => {
-//     if (tipo_doc.value == 1) {
-//         const charCode = event.charCode ? event.charCode : event.keyCode
-//         if (charCode < 48 || charCode > 57) event.preventDefault();
-//         if (documento.value?.length >= 8) event.preventDefault();
-//     }
-// }
-
 const onlyNumberKey = (event) => {
     const charCode = event.which ? event.which : event.keyCode;
 
@@ -212,38 +203,6 @@ const onlyNumberKey = (event) => {
     }
     return true;
 };
-// const clearDocument = () => {
-//     documento.value = "";
-//     setValues({
-//         nombres: '',
-//         apellido_paterno: '',
-//         empresa: ''
-//     });
-// }
-
-
-
-// const clearDocument = () => {
-//     documento.value = "";
-//     hasSearched.value = false; // <-- CRUCIAL: Esto vuelve a bloquear los campos
-//     setValues({
-//         nombres: '',
-//         apellido_paterno: '',
-//         empresa: '',
-//         correo: '',
-//         celular: '',
-//         direccionPersona: '',
-//         sexo: '',
-//         fecha_nacimiento: null
-//     });
-// }
-
-
-
-// const camposBloqueados = computed(() => {
-//     // Bloqueamos si es peruano (tipo_origen === 1) y aún no ha buscado
-//     return esPeruano.value && !hasSearched.value;
-// });
 
 const camposBloqueados = computed(() => {
     return esPeruano.value && !hasSearched.value;
@@ -303,25 +262,12 @@ const getValidacionDoc = async () => {
     }
 }
 
-// onMounted(() => {
-//     if (!tipo_doc.value) tipo_doc.value = 5;
-
-//     if (esPeruano.value) {
-//         tipo_doc.value = 1;
-//         pais.value = 75; // Respetamos tu ID de Perú
-//         loadDepartamentos();
-//     }
-// })
-
-
-
 defineExpose({
     getValidacionDoc,
     esSocio,
     hasSearched,
     esCategoriaDeSocio
 });
-
 
 const onlyPhoneKeys = (event) => {
     const charCode = event.charCode ? event.charCode : event.keyCode;
@@ -347,50 +293,6 @@ const goToHome = () => {
         router.get('/');
     }
 };
-
-// const clearDocument = async () => {
-//     documento.value = "";
-//     // Si es extranjero (2), mantenemos los campos abiertos
-//     hasSearched.value = (props.tipo_origen === 2);
-
-//     setValues({
-//         nombres: '',
-//         apellido_paterno: '',
-//         empresa: '',
-//         correo: '',
-//         celular: '',
-//         direccionPersona: '',
-//         sexo: '',
-//         fecha_nacimiento: null
-//     });
-
-//     if (props.tipo_origen === 2) {
-//         await nextTick();
-//         validate();
-//     }
-// }
-
-// const clearDocument = async () => {
-//     documento.value = "";
-
-//     // Si es peruano, al limpiar el documento debemos permitir que vuelva a buscar
-//     if (props.tipo_origen === 1) {
-//         hasSearched.value = false; // Esto "desbloquea" la lógica de búsqueda
-//     } else {
-//         hasSearched.value = true; // Si es extranjero, los campos siguen abiertos
-//     }
-
-//     setValues({
-//         nombres: '',
-//         apellido_paterno: '',
-//         empresa: '',
-//         correo: '',
-//         celular: '',
-//         direccionPersona: '',
-//         sexo: '',
-//         fecha_nacimiento: null
-//     });
-// }
 
 const clearDocument = async () => {
     // Siempre limpiamos el número de documento al cambiar el tipo
@@ -419,31 +321,17 @@ const clearDocument = async () => {
     }
 };
 
+const onlyAlphanumericKey = (event) => {
+    const charCode = event.which ? event.which : event.keyCode;
+    const charStr = String.fromCharCode(charCode);
 
-
-// UNICO WATCHER PARA TIPO_ORIGEN
-// watch(() => props.tipo_origen, async (newOrigen) => {
-//     if (newOrigen === 1) {
-//         // --- LÓGICA NACIONAL ---
-//         tipo_doc.value = 1;
-//         pais.value = 75;
-//         await loadDepartamentos();
-//         setValues({ ...values, pais: 75, tipo_doc: 1 });
-//         hasSearched.value = false; // Bloquea campos hasta que busquen DNI
-
-//     } else if (newOrigen === 2) {
-//         // --- LÓGICA INTERNACIONAL ---
-//         if (tipo_doc.value === 1) tipo_doc.value = null;
-
-//         pais.value = null;
-//         esSocio.value = true;
-//         hasSearched.value = true; // DESBLOQUEA CAMPOS PARA EXTRANJEROS
-
-//         // FORZAR VALIDACIÓN DE TODO EL FORMULARIO
-//         await nextTick();
-//         validate();
-//     }
-// }, { immediate: true });
+    // Regex: Permite solo letras (a-z, A-Z) y números (0-9)
+    if (!/^[a-zA-Z0-9]+$/.test(charStr)) {
+        event.preventDefault();
+        return false;
+    }
+    return true;
+};
 
 // UNICO WATCHER PARA TIPO_ORIGEN - BLINDADO
 watch(() => props.tipo_origen, async (newOrigen) => {
@@ -493,36 +381,6 @@ onMounted(() => {
     }
 });
 
-// watch(() => props.tipo_origen, async (newOrigen) => {
-//     if (newOrigen === 1) {
-//         tipo_doc.value = 1;
-//         pais.value = 75;
-//         await loadDepartamentos();
-//         hasSearched.value = false;
-//     } else if (newOrigen === 2) {
-//         // Al pasar a extranjero, marcamos como "buscado" para que los campos
-//         // se desbloqueen inmediatamente sin borrar lo que el usuario ya escribió
-//         hasSearched.value = true;
-//         esSocio.value = true;
-//     }
-// }, { immediate: true });
-
-// const handleBeforeUnload = (event) => {
-//     // Solo bloquea si hay algún dato (ejemplo: documento o nombres)
-//     if (props.data_persona?.documento || props.data_persona?.nombres) {
-//         event.preventDefault();
-//         event.returnValue = '';
-//     }
-// };
-
-// onMounted(() => {
-//     window.addEventListener('beforeunload', handleBeforeUnload);
-// });
-
-// onUnmounted(() => {
-//     // ESTO ES VITAL: Si no lo pones, la alerta te seguirá al Paso 3
-//     window.removeEventListener('beforeunload', handleBeforeUnload);
-// });
 
 </script>
 
@@ -583,8 +441,8 @@ onMounted(() => {
                 </div>
 
                 <div class="flex gap-6 p-2 w-full justify-around">
-                    <div class="text-green-iimp font-bold max-w-[650px] w-full p-4 grid grid-cols-1 md:grid-cols-2 gap-4"
-                        >
+                    <div
+                        class="text-green-iimp font-bold max-w-[650px] w-full p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="col-span-1">
                             <label for="tipo_doc">Document Type <span class="text-red-600">*</span></label>
                             <Select name="tipo_doc" v-model="tipo_doc" v-bind="tipo_docAttrs" translate="no"
@@ -609,7 +467,7 @@ onMounted(() => {
                                     :loading="loadingSearch" />
                             </InputGroup>
                             <InputText v-else name="documento" v-model="documento" v-bind="documentoAttrs"
-                                class="w-full border-green-iimp" :maxlength="25" placeholder="Enter number" />
+                                class="w-full border-green-iimp" :maxlength="15" placeholder="Enter number" @keypress="onlyAlphanumericKey" />
                             <small v-if="dniMessage" class="text-orange-600 font-bold block mt-1">
                                 <i class="pi pi-info-circle mr-1"></i> {{ dniMessage }}
                             </small>
@@ -660,12 +518,12 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <div class="grid gap-6 m-6 grid-cols-1 md:grid-cols-4" >
-                        <div class="w-full md:col-span-2" >
+                    <div class="grid gap-6 m-6 grid-cols-1 md:grid-cols-4">
+                        <div class="w-full md:col-span-2">
                             <label for="pais">Country <span class="text-red-600">*</span></label>
                             <Select name="pais" v-model="pais" v-bind="paisAttrs" :options="paises" optionLabel="name"
-                                optionValue="id" placeholder="Select" showClear filter @change="loadDepartamentos" translate="no"
-                                :disabled="esPeruano" class="w-full border-green-iimp" />
+                                optionValue="id" placeholder="Select" showClear filter @change="loadDepartamentos"
+                                translate="no" :disabled="esPeruano" class="w-full border-green-iimp" />
                             <small class="text-red-600">{{ errors.pais }}</small>
                         </div>
                         <div class="w-full md:col-span-2">
