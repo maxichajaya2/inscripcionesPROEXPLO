@@ -39,6 +39,7 @@ const fieldNames = {
     uploadDocument: 'Category Required Document'
 };
 
+
 const es_socio = ref(false);
 const loading_doc = ref(false);
 const show_days = ref(false);
@@ -53,9 +54,10 @@ const fileErrors = ref([]);
 const maxSize = 6291456;
 const allowedTypes = ['application/pdf', 'image/png', 'image/jpg', 'image/jpeg'];
 const fileupload = ref(null);
+const alphanumericMessage = ref('');
 // Agregamos un estado para controlar si el usuario puede editar manualmente
 const isEditingBilling = ref(false);
-
+const dniMessage = ref('');
 let current_price = 0;
 const tipoDocumento = computed(() => page.props.general.tipDocEmp)
 
@@ -116,124 +118,6 @@ const is_category_fixed = ref(false);
 const urlParams = new URLSearchParams(window.location.search);
 const esSeccionViajes = computed(() => urlParams.get('section') === 'viajes');
 
-// function changeCategory(id, precioRecibido) {
-//     if (!id) return;
-
-//     // 1. Buscamos el objeto en la lista de props
-//     const categoria = props.categorias.find(c => c.id === id);
-//     if (!categoria) {
-//         console.error("DEBUG: No se encontró la categoría con ID:", id);
-//         return;
-//     }
-
-//     // 2. Determinamos qué precio usar
-//     // Si precioRecibido es > 0, es el que manda porque es el que el usuario "vio" al hacer click
-//     current_price = (precioRecibido > 0) ? precioRecibido : (categoria.precio_disponible?.valor || 0);
-
-
-//     nextTick(() => {
-//         // Lógica de documentos
-//         show_document.value = Boolean(categoria.requiere_documento);
-//         if (show_document.value) {
-//             const nombre = categoria.nombre_en.toUpperCase();
-//             if (nombre.includes('STUDENT') || nombre.includes('ESTUDIANTE')) {
-//                 upload_instruction.value = "Rate applicable to undergraduate students, presentation of enrollment proof required.";
-//             } else if (nombre.includes('FACULTY') || nombre.includes('DOCENTE')) {
-//                 upload_instruction.value = "Special rate for faculty members, valid proof required.";
-//             } else {
-//                 upload_instruction.value = "Please upload the required document for this category.";
-//             }
-//         }
-
-//         // Lógica de Días y asignación final al TOTAL
-//         if (id == 39) {
-//             show_days.value = true;
-//             let count = Object.values(current_days).filter(v => v).length;
-//             total.value = count * current_price;
-//         } else {
-//             show_days.value = false;
-//             // ASIGNACIÓN AL REF REACTIVO QUE SE VE EN LA UI
-//             total.value = current_price;
-//         }
-
-//     });
-// }
-
-// function changeCategory(id, precioRecibido) {
-//     if (!id) return;
-
-//     // 1. Buscamos el objeto en la lista de props
-//     const categoria = props.categorias.find(c => c.id === id);
-//     if (!categoria) {
-//         console.error("DEBUG: No se encontró la categoría con ID:", id);
-//         return;
-//     }
-
-//     // 2. Determinamos qué precio usar
-//     // LÓGICA: Si es sección "viajes", el precio de inscripción es SIEMPRE 0.
-//     // De lo contrario, usamos el precio recibido o el disponible de la categoría.
-//     if (esSeccionViajes.value) {
-//         current_price = 0;
-//     } else {
-//         current_price = (precioRecibido > 0) ? precioRecibido : (categoria.precio_disponible?.valor || 0);
-//     }
-
-//     nextTick(() => {
-//         // 3. Lógica de documentos (Se mantiene activa aunque sea sección viajes)
-//         show_document.value = Boolean(categoria.requiere_documento);
-
-//         if (show_document.value) {
-//             const nombre = categoria.nombre_en.toUpperCase();
-//             if (nombre.includes('STUDENT') || nombre.includes('ESTUDIANTE')) {
-//                 upload_instruction.value = "Rate applicable to undergraduate students, presentation of enrollment proof required.";
-//             } else if (nombre.includes('FACULTY') || nombre.includes('DOCENTE')) {
-//                 upload_instruction.value = "Special rate for faculty members, valid proof required.";
-//             } else {
-//                 upload_instruction.value = "Please upload the required document for this category.";
-//             }
-//         }
-
-//         // 4. Lógica de Días (Categoría 39 - Participante por día)
-//         if (id == 39) {
-//             show_days.value = true;
-//             // Contamos los días marcados en el objeto current_days
-//             let count = Object.values(current_days).filter(v => v).length;
-//             total.value = count * current_price; // Si es viajes, 0 * count = 0
-//         } else {
-//             show_days.value = false;
-//             total.value = current_price; // Si es viajes, esto es 0
-//         }
-//     });
-// }
-
-// function changeCategory(id, precioRecibido) {
-//     if (!id) return;
-
-//     const categoria = props.categorias.find(c => c.id === id);
-//     if (!categoria) return;
-
-//     // Si es sección viajes, forzamos el precio interno a 0
-//     if (esSeccionViajes.value) {
-//         current_price = 0;
-//     } else {
-//         current_price = (precioRecibido > 0) ? precioRecibido : (categoria.precio_disponible?.valor || 0);
-//     }
-
-//     nextTick(() => {
-//         show_document.value = Boolean(categoria.requiere_documento);
-
-//         if (id == 39) {
-//             show_days.value = true;
-//             let count = Object.values(current_days).filter(v => v).length;
-//             total.value = count * current_price;
-//         } else {
-//             show_days.value = false;
-//             total.value = current_price;
-//         }
-//     });
-// }
-
-
 function changeCategory(id, precioRecibido) {
     if (!id) return;
 
@@ -273,31 +157,7 @@ function changeCategory(id, precioRecibido) {
     });
 }
 
-// const getInscripcion = async () => {
-//     const result = await validate();
-//     formManualErrors.value.total = null;
 
-//     if (selected_categoria.value == 39) {
-//         const tieneDias = Object.values(current_days).some(v => v === true);
-//         if (!tieneDias) {
-//             formManualErrors.value.total = "Attention: You must select at least one day.";
-//             return { validate: false };
-//         }
-//     }
-
-//     // LÓGICA DE TOTAL: Si es viajes, el total 0 es válido.
-//     const totalValido = esSeccionViajes.value ? true : (total.value > 0);
-
-//     if (!result.valid || !totalValido || (show_document.value && !uploadDocument.value)) {
-//         return { validate: false };
-//     }
-
-//     return {
-//         validate: true,
-//         formInscription: values,
-//         total_final: total.value // Será 0 si es sección viajes
-//     };
-// };
 
 const getInscripcion = async () => {
     const result = await validate();
@@ -395,6 +255,50 @@ watch(documentoEmpresa, (newVal) => {
         // 3. Aplicar recortes si excede el largo
         if (newVal !== cleanedValue || newVal.length > maxLength) {
             documentoEmpresa.value = cleanedValue.slice(0, maxLength);
+        }
+    }
+});
+
+const onlyAlphanumericKey = (event) => {
+    const charCode = event.which ? event.which : event.keyCode;
+    const charStr = String.fromCharCode(charCode);
+
+    // 1. Permitir teclas de control
+    if ([8, 9, 13, 27, 37, 38, 39, 40].includes(charCode)) return true;
+
+    // 2. Validar Alfanumérico
+    if (!/^[a-zA-Z0-9]+$/.test(charStr)) {
+        event.preventDefault();
+        alphanumericMessage.value = "Only letters and numbers are allowed (no spaces or symbols)";
+
+        setTimeout(() => {
+            alphanumericMessage.value = '';
+        }, 3000);
+
+        return false;
+    }
+    return true;
+};
+
+// EXTREMA SEGURIDAD: Watcher para limpiar si pegan texto con símbolos
+// watch(documentoEmpresa, (newValue) => {
+//     if (tipo_doc.value !== 1 && newValue) { // Solo si NO es DNI
+//         const cleaned = newValue.replace(/[^a-zA-Z0-9]/g, '');
+//         if (cleaned !== newValue) {
+//             documentoEmpresa.value = cleaned;
+//             alphanumericMessage.value = "Special characters were removed";
+//             setTimeout(() => { alphanumericMessage.value = ''; }, 3000);
+//         }
+//     }
+// });
+watch(documentoEmpresa, (newValue) => {
+    // CAMBIO AQUÍ: tipoDocumentoEmpresa en lugar de tipo_doc
+    if (tipoDocumentoEmpresa.value !== 1 && newValue) {
+        const cleaned = newValue.replace(/[^a-zA-Z0-9]/g, '');
+        if (cleaned !== newValue) {
+            documentoEmpresa.value = cleaned;
+            alphanumericMessage.value = "Special characters were removed";
+            setTimeout(() => { alphanumericMessage.value = ''; }, 3000);
         }
     }
 });
@@ -652,17 +556,17 @@ const onlyNumberKey = (event) => {
     return true;
 }
 
-const onlyAlphanumericKey = (event) => {
-    const charCode = event.which ? event.which : event.keyCode;
-    const charStr = String.fromCharCode(charCode);
+// const onlyAlphanumericKey = (event) => {
+//     const charCode = event.which ? event.which : event.keyCode;
+//     const charStr = String.fromCharCode(charCode);
 
-    // Regex: Permite solo letras (a-z, A-Z) y números (0-9)
-    if (!/^[a-zA-Z0-9]+$/.test(charStr)) {
-        event.preventDefault();
-        return false;
-    }
-    return true;
-};
+//     // Regex: Permite solo letras (a-z, A-Z) y números (0-9)
+//     if (!/^[a-zA-Z0-9]+$/.test(charStr)) {
+//         event.preventDefault();
+//         return false;
+//     }
+//     return true;
+// };
 
 
 defineExpose({ getInscripcion });
@@ -953,8 +857,8 @@ defineExpose({ getInscripcion });
                                 <label class="block mb-1">Document Number <span class="text-red-600">*</span></label>
                                 <InputGroup>
                                     <InputText v-model="documentoEmpresa" :readonly="!isEditingBilling"
-                                        class="border-green-iimp" @keypress="onlyAlphanumericKey" @paste="onlyNumberKey" :maxlength="12"
-                                        :disabled="!isEditingBilling" />
+                                        class="border-green-iimp" @keypress="onlyAlphanumericKey" @paste="onlyNumberKey"
+                                        :maxlength="12" :disabled="!isEditingBilling" />
                                     <Button icon="pi pi-search" class="bg-green-iimp" @click="getEmpresaData"
                                         :loading="loading_doc" :disabled="!isEditingBilling || !documentoEmpresa" />
                                 </InputGroup>
@@ -962,6 +866,10 @@ defineExpose({ getInscripcion });
                                     <i class="pi pi-info-circle mr-1"></i> {{ dniMessageEmpresa }}
                                 </small>
 
+                                <div v-if="alphanumericMessage"
+                                    class="text-orange-600 font-bold block mt-1 animate-bounce">
+                                    <i class="pi pi-exclamation-triangle mr-1"></i> {{ alphanumericMessage }}
+                                </div>
                                 <small v-else-if="errors.documentoEmpresa" class="text-red-600 block mt-1">
                                     {{ errors.documentoEmpresa }}
                                 </small>
@@ -985,7 +893,7 @@ defineExpose({ getInscripcion });
                                 :readonly="!isEditingBilling || block_direction"
                                 :disabled="!isEditingBilling || loading_doc" />
                             <small class="text-red-600" v-if="errors.direccionEmpresa">{{ errors.direccionEmpresa
-                                }}</small>
+                            }}</small>
                         </div>
 
                         <div class="grid gap-6 md:grid-cols-2">
@@ -1001,7 +909,7 @@ defineExpose({ getInscripcion });
                                 <InputText v-model="correo_facturador" :readonly="!isEditingBilling"
                                     class="w-full border-green-iimp" :disabled="!isEditingBilling || loading_doc" />
                                 <small class="text-red-600" v-if="errors.correo_facturador">{{ errors.correo_facturador
-                                    }}</small>
+                                }}</small>
                             </div>
                         </div>
                     </div>

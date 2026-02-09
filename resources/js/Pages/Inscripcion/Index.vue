@@ -274,7 +274,7 @@ const scrollToCategories = () => {
                                     Registration
                                 </span>
                                 <h5 class="text-2xl font-black text-white group-hover:text-blue-200 transition-colors">
-                                    GENERAL PARTICIPANT
+                                    PARTICIPANT
                                 </h5>
                                 <p class="text-xs text-gray-400 mt-1  group-hover:text-yellow-100/70 transition-colors">
                                     General access for professionals, students, and attendees interested in
@@ -353,7 +353,7 @@ const scrollToCategories = () => {
                                     {{ cat.nombre_en }}
                                 </h4>
                                 <p
-                                    class="text-xs text-gray-400 mt-1 line-clamp-2 group-hover:text-yellow-100/70 transition-colors">
+                                    class="text-xs text-gray-400 mt-1  group-hover:text-yellow-100/70 transition-colors">
                                     {{ cat.categoria_description }}
                                 </p>
                             </div>

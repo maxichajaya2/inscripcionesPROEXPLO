@@ -35,7 +35,7 @@ class InscripcionController extends Controller
             ->where('isactive', true)
             ->where(function ($query) {
                 $query->where('nombre_en', 'LIKE', '%AUTHOR%')
-                    ->orWhere('nombre_en', 'LIKE', '%GENERAL ATTENDEE%');
+                    ->orWhere('nombre_en', 'LIKE', '%PARTICIPANT%');
             })
             ->orderBy('orden_es', 'ASC')
             ->get();
@@ -71,13 +71,13 @@ class InscripcionController extends Controller
 
     public function participante(Request $request)
     {
-        return $this->renderInscripcion($request, '%GENERAL ATTENDEE%', "General Attendee");
+        return $this->renderInscripcion($request, '%PARTICIPANT%', "General Attendee");
     }
 
     public function cursosViajes(Request $request)
     {
 
-        return $this->renderInscripcion($request, '%GENERAL ATTENDEE%', "Tours & Courses");
+        return $this->renderInscripcion($request, '%PARTICIPANT%', "Tours & Courses");
     }
     private function renderInscripcion(Request $request, string $filtro, string $defaultTitle)
     {

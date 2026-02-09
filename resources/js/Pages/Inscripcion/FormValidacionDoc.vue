@@ -27,6 +27,7 @@ const today = new Date();
 const esSocio = ref(false);
 const hasSearched = ref(false);
 const noEncontrado = ref(false);
+const alphanumericMessage = ref('');
 
 const props = defineProps({
     saved_values: Object,
@@ -321,18 +322,51 @@ const clearDocument = async () => {
     }
 };
 
+// const onlyAlphanumericKey = (event) => {
+//     const charCode = event.which ? event.which : event.keyCode;
+//     const charStr = String.fromCharCode(charCode);
+
+//     // Regex: Permite solo letras (a-z, A-Z) y números (0-9)
+//     if (!/^[a-zA-Z0-9]+$/.test(charStr)) {
+//         event.preventDefault();
+//         alphanumericMessage.value = "Only letters and numbers are allowed (no spaces or symbols)";
+//         return false;
+//     }
+//     return true;
+// };
+
 const onlyAlphanumericKey = (event) => {
     const charCode = event.which ? event.which : event.keyCode;
     const charStr = String.fromCharCode(charCode);
 
-    // Regex: Permite solo letras (a-z, A-Z) y números (0-9)
+    // 1. Permitir teclas de control
+    if ([8, 9, 13, 27, 37, 38, 39, 40].includes(charCode)) return true;
+
+    // 2. Validar Alfanumérico
     if (!/^[a-zA-Z0-9]+$/.test(charStr)) {
         event.preventDefault();
+        alphanumericMessage.value = "Only letters and numbers are allowed (no spaces or symbols)";
+
+        setTimeout(() => {
+            alphanumericMessage.value = '';
+        }, 3000);
+
         return false;
     }
     return true;
 };
 
+// EXTREMA SEGURIDAD: Watcher para limpiar si pegan texto con símbolos
+watch(documento, (newValue) => {
+    if (tipo_doc.value !== 1 && newValue) { // Solo si NO es DNI
+        const cleaned = newValue.replace(/[^a-zA-Z0-9]/g, '');
+        if (cleaned !== newValue) {
+            documento.value = cleaned;
+            alphanumericMessage.value = "Special characters were removed";
+            setTimeout(() => { alphanumericMessage.value = ''; }, 3000);
+        }
+    }
+});
 // UNICO WATCHER PARA TIPO_ORIGEN - BLINDADO
 watch(() => props.tipo_origen, async (newOrigen) => {
     // Si el origen no es 1 ni 2, no hacemos nada para evitar resets accidentales
@@ -457,6 +491,7 @@ onMounted(() => {
                                 {{ esPeruano ? 'Document Number' : 'Identity Card / Passport Number' }} <span
                                     class="text-red-600">*</span>
                             </label>
+                            <!-- PERUANO -->
                             <InputGroup v-if="esPeruano">
                                 <!-- <InputText name="documento" v-model="documento" v-bind="documentoAttrs"
                                     class="w-full border-green-iimp" @keypress="onlyNumberKey" :maxlength="25" /> -->
@@ -466,12 +501,16 @@ onMounted(() => {
                                 <Button icon="pi pi-search" severity="info" @click="searchPerson"
                                     :loading="loadingSearch" />
                             </InputGroup>
+                            <!-- EXTRANJERO -->
                             <InputText v-else name="documento" v-model="documento" v-bind="documentoAttrs"
-                                class="w-full border-green-iimp" :maxlength="15" placeholder="Enter number" @keypress="onlyAlphanumericKey" />
+                                class="w-full border-green-iimp" :maxlength="15" placeholder="Enter number"
+                                @keypress="onlyAlphanumericKey" />
                             <small v-if="dniMessage" class="text-orange-600 font-bold block mt-1">
                                 <i class="pi pi-info-circle mr-1"></i> {{ dniMessage }}
                             </small>
-
+                            <div v-if="alphanumericMessage" class="text-orange-600 font-bold block mt-1 animate-pulse">
+                                <i class="pi pi-exclamation-triangle mr-1"></i> {{ alphanumericMessage }}
+                            </div>
                             <small v-else class="text-red-600 block mt-1">{{ errors.documento }}</small>
                         </div>
                     </div>
