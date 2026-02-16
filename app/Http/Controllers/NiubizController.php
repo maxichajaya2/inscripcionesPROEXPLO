@@ -128,7 +128,7 @@ class NiubizController extends Controller
         $data['token'] = $transactionToken;
         $data['purchasenumber'] = $purchaseNumber;
         $data['process'] = "get_authorization";
-        $data['website'] = "https://inscripciones.wmc2026.org/";
+        $data['website'] = "https://registration.wmc2026.org/";
         $niubiz_data['data'] = $data;
 
         return app(\App\Http\Controllers\WebServiceController::class)->sendWS($url, json_encode($niubiz_data));
