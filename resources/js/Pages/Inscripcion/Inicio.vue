@@ -32,6 +32,7 @@ const props = defineProps({
     categorias: Object,
     adicionales: Array,
     section: String,
+    perfil_id: Number
 })
 
 
@@ -72,11 +73,29 @@ const pasosCompletos = [
 ];
 
 // Esta es la clave: Filtramos el paso 3 si saltoCursos es true
+// const pasosVisibles = computed(() => {
+//     if (saltoCursos.value) {
+//         return pasosCompletos.filter(p => p.value !== "3");
+//     }
+//     return pasosCompletos;
+// });
+
 const pasosVisibles = computed(() => {
-    if (saltoCursos.value) {
-        return pasosCompletos.filter(p => p.value !== "3");
-    }
-    return pasosCompletos;
+    // 1. Filtramos para quitar el paso de cursos si es necesario
+    let listaFiltrada = pasosCompletos.filter(p => {
+        if (saltoCursos.value) return p.value !== "3";
+        return true;
+    });
+
+    // 2. REASIGNAMOS los valores para que siempre sean "1", "2", "3"...
+    return listaFiltrada.map((paso, index) => {
+        const nuevoValor = (index + 1).toString();
+        return {
+            ...paso,
+            value: nuevoValor, // <--- Esto convierte el "4" en "3" automáticamente
+            labelReal: paso.label
+        };
+    });
 });
 
 const handleIrACursosDesdeModal = () => {
@@ -171,8 +190,8 @@ const seleccionarOrigen = (origen, id_numerico) => {
     tipo_origen.value = id_numerico;         // Guarda el número 1 o 2
     visible.value = false;
 
-    console.log("Nacionalidad:", origen);
-    console.log("ID Numérico:", tipo_origen.value); // Para que veas en consola que se guardó
+    // console.log("Nacionalidad:", origen);
+    // console.log("ID Numérico:", tipo_origen.value); // Para que veas en consola que se guardó
 };
 
 const goStart = () => {
@@ -432,23 +451,31 @@ watch(activeStep, () => {
                         <Step value="4">Payment Process</Step>
                     </StepList> -->
 
-                    <StepList class="text-black-price bg-degradient">
+                    <!-- <StepList class="text-black-price bg-degradient">
                         <Step v-for="paso in pasosVisibles" :key="paso.value" :value="paso.value">
                             {{ paso.label }}
                         </Step>
-                    </StepList>
+                    </StepList> -->
 
+                    <StepList class="text-black-price bg-degradient">
+                        <Step v-for="paso in pasosVisibles" :key="paso.value" :value="paso.value"
+                            :class="{ 'pointer-events-none': activeStep !== paso.value }">
+                            {{ paso.labelReal }}
+                        </Step>
+                    </StepList>
                     <StepPanels>
                         <!-- ========== Personal Details ==========
                          ==========================================  -->
                         <StepPanel v-slot="{ activateCallback }" value="1"
                             class="rounded-2xl border-2 border-green-iimp bg-white-price shadow-wmc">
-                            <FormValidacionDoc ref="childFormValidacionDoc" :tipo_origen="tipo_origen" />
+                            <FormValidacionDoc ref="childFormValidacionDoc" :tipo_origen="tipo_origen"
+                                :perfil_id="props.perfil_id" />
                             <div
                                 class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-end gap-3 rounded-b-2xl">
 
                                 <Button label="Validate" icon="pi pi-arrow-right" iconPos="right"
                                     class="bg-degradient border-rounded-full" :loading="loading"
+                                    :perfil_id="props.perfil_id"
                                     :disabled="childFormValidacionDoc?.esCategoriaDeSocio && childFormValidacionDoc?.hasSearched && !childFormValidacionDoc?.esSocio"
                                     @click="async () => {
                                         const isValid = await validate('Documento');
@@ -538,18 +565,10 @@ watch(activeStep, () => {
                 mask: { class: 'bg-slate-900/90 backdrop-blur-md' },
                 content: { class: 'bg-transparent px-0 py-0 border-none shadow-none overflow-hidden' }
             }">
-            <div class="bg-white rounded-3xl overflow-hidden shadow-2xl animate-fade-in-down px-0">
 
-                <div
-                    class="bg-gradient-to-r from-[#001e3d] via-[#002855] to-[#003366] px-8 py-8 border-b-4 border-yellow-500 flex items-center justify-between relative overflow-hidden">
 
-                    <div
-                        class="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
-                    </div>
+                <div class="bg-gradient-to-r from-[#001e3d] via-[#002855] to-[#003366] px-8 py-8 border-b-4 border-yellow-500 flex items-left justify-left text-left relative overflow-hidden">
 
-                    <div
-                        class="bg-white rounded-3xl overflow-hidden shadow-2xl animate-fade-in-down px-0 flex flex-col max-h-[90vh]">
-                    </div>
 
                     <div class="relative z-10">
                         <div class="mb-3 animate-fade-in-up" style="animation-delay: 0.1s;">
@@ -685,7 +704,6 @@ watch(activeStep, () => {
                     </button>
                 </div>
 
-            </div>
         </Dialog>
 
         <!-- REQUERIMIENTOS MODAL =======
@@ -837,6 +855,7 @@ watch(activeStep, () => {
     flex-direction: column;
     height: 100%;
     position: relative;
+
 }
 
 /* 2. El contenido del formulario debe empujar los botones hacia abajo */
@@ -844,6 +863,9 @@ watch(activeStep, () => {
     flex: 1;
 }
 
+/* :deep(.p-step) {
+    cursor: not-allowed;
+} */
 /* 3. Estilo para el contenedor Sticky */
 .sticky {
     position: -webkit-sticky;

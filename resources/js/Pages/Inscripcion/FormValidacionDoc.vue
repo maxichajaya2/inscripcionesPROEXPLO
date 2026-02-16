@@ -31,7 +31,8 @@ const alphanumericMessage = ref('');
 
 const props = defineProps({
     saved_values: Object,
-    tipo_origen: Number
+    tipo_origen: Number,
+    perfil_id: Number
 });
 
 const dniMessage = ref('');
@@ -205,8 +206,27 @@ const onlyNumberKey = (event) => {
     return true;
 };
 
+const mostrarBannerBloqueo = computed(() => {
+    // Si ya buscó y NO es perfil 1 o 5, el banner debe desaparecer
+    if (hasSearched.value && ![1, 5].includes(props.perfil_id)) {
+        return false;
+    }
+    // De lo contrario, sigue las reglas normales de bloqueo
+    return camposBloqueados.value;
+});
+// const camposBloqueados = computed(() => {
+//     return esPeruano.value && !hasSearched.value;
+// });
+
 const camposBloqueados = computed(() => {
-    return esPeruano.value && !hasSearched.value;
+    // 1. Condición de búsqueda (Solo para peruanos que no han buscado aún)
+    const faltaBuscarPeruano = esPeruano.value && !hasSearched.value;
+
+    // 2. Condición de Perfil Crítico (Bloqueo TOTAL e incondicional para perfil 1 o 5)
+    const esPerfilBloqueado = [1, 5].includes(props.perfil_id);
+
+    // Si cualquiera de las dos es verdadera, el campo se bloquea
+    return faltaBuscarPeruano || esPerfilBloqueado;
 });
 
 const tiposDocumentoFiltrados = computed(() => {
@@ -420,7 +440,6 @@ onMounted(() => {
 
 <template>
     <div class="font-bold p-4 relative">
-
         <div class="flex justify-end pr-2 mb-4">
             <Button @click="goToHome" class="wmc-btn-international shadow-xl flex items-center">
                 <i class="pi pi-home mr-3 text-lg"></i>
@@ -438,12 +457,45 @@ onMounted(() => {
             </template>
             <template #content>
                 <div class="w-full px-4 pb-4">
-                    <div v-if="hasSearched && esSocio && !noEncontrado && esCategoriaDeSocio"
+                    <!-- <div v-if="hasSearched && esSocio && !noEncontrado && esCategoriaDeSocio"
                         class="flex items-center p-4 mb-4 text-green-800 border-t-4 border-green-300 bg-green-50 rounded-lg"
                         role="alert">
                         <i class="pi pi-check-circle mr-2 text-xl"></i>
                         <div class="text-sm font-medium">Verification successful. You are an <strong>Active
                                 Member</strong>.</div>
+                    </div> -->
+                    <div v-if="hasSearched && esSocio && !noEncontrado && esCategoriaDeSocio"
+                        class="flex flex-col p-4 mb-4 text-green-800 border-t-4 border-green-300 bg-green-50 rounded-lg"
+                        role="alert">
+
+                        <div class="flex items-center">
+                            <i class="pi pi-check-circle mr-2 text-xl"></i>
+                            <div class="text-sm font-medium">
+                                Verification successful. You are an <strong>Active Member</strong>.
+                            </div>
+                        </div>
+
+                        <div v-if="[1, 5].includes(props.perfil_id)" class="mt-3 ml-7 pt-3 border-t border-green-200">
+                            <p class="text-xs leading-relaxed">
+                                If you wish to <strong>edit your personal details</strong>, please contact our Associate
+                                Coordinator:
+                            </p>
+                            <div class="mt-2 flex flex-col sm:flex-row sm:gap-6 text-xs italic">
+                                <span class="font-bold text-green-900">
+                                    <i class="pi pi-user mr-1"></i> Liset Otoya
+                                </span>
+                                <span>
+                                    <i class="pi pi-whatsapp mr-1"></i>
+                                    <a href="https://wa.me/51982097019" target="_blank" class="hover:underline">+51 982
+                                        097 019</a>
+                                </span>
+                                <span>
+                                    <i class="pi pi-envelope mr-1"></i>
+                                    <a href="mailto:Liset.otoya@iimp.org.pe"
+                                        class="hover:underline">Liset.otoya@iimp.org.pe</a>
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
                     <div v-if="hasSearched && !esSocio && esCategoriaDeSocio"
@@ -469,11 +521,21 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <div v-if="camposBloqueados"
+                <!-- <div v-if="camposBloqueados"
                     class="mx-6 mb-2 p-2 bg-yellow-50 text-yellow-700 border-l-4 border-yellow-400 text-xs font-semibold">
                     <i class="pi pi-lock mr-2"></i> PLEASE SEARCH BY DOCUMENT NUMBER TO UNLOCK THESE FIELDS
-                </div>
+                </div> -->
 
+                <div v-if="mostrarBannerBloqueo"
+                    class="mx-6 mb-2 p-2 bg-yellow-50 text-yellow-700 border-l-4 border-yellow-400 text-xs font-semibold">
+                    <i class="pi pi-lock mr-2"></i>
+                    <span v-if="[1, 5].includes(props.perfil_id)">
+                        YOUR DATA IS PRE-LOADED BY YOUR PROFILE AND CANNOT BE MODIFIED.
+                    </span>
+                    <span v-else>
+                        PLEASE SEARCH BY DOCUMENT NUMBER TO UNLOCK THESE FIELDS.
+                    </span>
+                </div>
                 <div class="flex gap-6 p-2 w-full justify-around">
                     <div
                         class="text-green-iimp font-bold max-w-[650px] w-full p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -496,7 +558,7 @@ onMounted(() => {
                                 <!-- <InputText name="documento" v-model="documento" v-bind="documentoAttrs"
                                     class="w-full border-green-iimp" @keypress="onlyNumberKey" :maxlength="25" /> -->
                                 <InputText name="documento" v-model="documento" v-bind="documentoAttrs"
-                                    class="w-full border-green-iimp" @keypress="onlyNumberKey" :maxlength="25"
+                                    class="w-full border-green-iimp" @keypress="onlyNumberKey" :maxlength="8"
                                     :disabled="loadingSearch" />
                                 <Button icon="pi pi-search" severity="info" @click="searchPerson"
                                     :loading="loadingSearch" />
@@ -593,7 +655,7 @@ onMounted(() => {
                             <label for="empresa" class="">Company <span
                                     class="font-normal text-gray-500 ml-1">(Optional)</span></label>
                             <InputText name="empresa" v-model="empresa" v-bind="empresaAttrs"
-                                :disabled="camposBloqueados" class="w-full border-green-iimp" />
+                                class="w-full border-green-iimp" />
                             <span class="font-normal text-red-600">{{ errors.empresa }}</span>
                         </div>
                     </div>

@@ -241,15 +241,6 @@ class WebServiceController extends Controller
                 }
             }
 
-
-            // $tarifas_ws[] = [
-            //     "Control"   => (string)$inscripcion->categoria_inscripcion->control,
-            //     "Categoria" => (string)$inscripcion->categoria_inscripcion->categoria,
-            //     "Condicion" => substr((string)$inscripcion->categoria_inscripcion->condicion, 0, 2),
-            //     "Moneda"    => (string)$moneda_ws,
-            //     "Importe"   => (int)($precio_cat->valor ?? 0)
-            // ];
-
             // 2. EXTRAS (Debe ser 1000 según tu imagen)
             $extras_ids = $inscripcion->id_categoria_cursos_viajes;
             if (!empty($extras_ids) && is_array($extras_ids)) {
@@ -319,11 +310,11 @@ class WebServiceController extends Controller
                 "Telefono"          => substr($persona->celular ?? "999999999", 0, 20),
                 "Email"             => (string)$persona->correo,
                 "Tarifas"           => $tarifas_ws,
-                "Lunes"             => $lunes?? 0,
-                "Martes" => $martes?? 0,
-                "Miercoles" => $miercoles ?? 0,
-                "Jueves" => $jueves ?? 0,
-                "Viernes" => $viernes ?? 0,
+                "Lunes"             => $lunes?? 1,
+                "Martes" => $martes?? 1,
+                "Miercoles" => $miercoles ?? 1,
+                "Jueves" => $jueves ?? 1,
+                "Viernes" => $viernes ?? 1,
                 "TipoFacturacion"   => (string)($facturacion->tipo_doc_pago == 1 ? "01" : "03"),
                 "TipDocFacturacion" => (string)($facturacion->tipoDocumentoFacturador->sie_code ?? "1"),
                 "NumDocFacturacion" => (string)$facturacion->numero_doc_facturador,
