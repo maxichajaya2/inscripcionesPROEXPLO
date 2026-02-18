@@ -206,19 +206,90 @@ class InscripcionController extends Controller
         }
     }
 
+    // private function handlePersona(Request $request)
+    // {
+    //     // A. Resolver Ocupación
+    //     $cargo = $request->input('cargo', '');
+    //     $ocupacion_obj = Ocupacion::whereRaw("name like '%" . $cargo . "%'")->where('isactive', true)->first();
+    //     $id_ocupacion = $ocupacion_obj ? $ocupacion_obj->id : 2795;
+
+    //     // B. Buscar o Instanciar Persona
+    //     $persona = Persona::where('id_tipo_documento', $request->input('id_tipo_documento') ?? $request->input('tipo_doc'))
+    //         ->where('documento', trim($request->input('documento')))
+    //         ->firstOrNew();
+
+    //     // C. Guardar Dirección
+    //     $direccion = ($persona->id_direccion > 0) ? Direccion::find($persona->id_direccion) : new Direccion;
+    //     $direccion->id_pais = $request->input('pais');
+    //     $direccion->id_departamento = $request->input('departamento', 0);
+    //     $direccion->id_provincia = $request->input('provincia', 0);
+    //     $direccion->id_distrito = $request->input('distrito', 0);
+    //     $direccion->direccion = trim($request->input('direccionPersona', ''));
+    //     $direccion->save();
+
+    //     // D. Guardar Datos Persona
+    //     $persona->id_direccion = $direccion->id;
+    //     $persona->nombres = trim($request->input('nombres'));
+    //     $persona->apellido_paterno = trim($request->input('apellido_paterno'));
+    //     $persona->apellido_materno = $request->input('apellido_materno', '');
+    //     $persona->correo = trim($request->input('correo'));
+    //     $persona->celular = trim($request->input('celular'));
+    //     $persona->sexo = $request->input('sexo');
+    //     $persona->id_ocupacion = $id_ocupacion;
+    //     $persona->id_nacionalidad = $request->input('nacionalidad', $request->input('pais'));
+    //     $persona->company = trim($request->input('empresa'));
+
+    //     if (!$persona->exists) {
+    //         $persona->id_tipo_documento = $request->input('id_tipo_documento') ?? $request->input('tipo_doc');
+    //         $persona->documento = trim($request->input('documento'));
+    //     }
+
+    //     if ($request->filled('fecha_nacimiento')) {
+    //         try {
+    //             $persona->fecha_nacimiento = Carbon::parse($request->input('fecha_nacimiento'))->format('Y-m-d');
+    //         } catch (\Exception $e) {
+    //             Log::error("Error parseando fecha: " . $e->getMessage());
+    //         }
+    //     }
+
+    //     $persona->save();
+
+    //     return $persona;
+    // }
+
     private function handlePersona(Request $request)
     {
+        // ---------------------------------------------------------
         // A. Resolver Ocupación
+        // ---------------------------------------------------------
         $cargo = $request->input('cargo', '');
         $ocupacion_obj = Ocupacion::whereRaw("name like '%" . $cargo . "%'")->where('isactive', true)->first();
         $id_ocupacion = $ocupacion_obj ? $ocupacion_obj->id : 2795;
 
-        // B. Buscar o Instanciar Persona
+        // ---------------------------------------------------------
+        // B. Buscar o Instanciar Persona (MODIFICADO PARA SEGURIDAD)
+        // ---------------------------------------------------------
+
+        // 1. Obtenemos el documento limpio del input
+        $documentoInput = trim($request->input('documento'));
+        $tipoDocumentoId = $request->input('id_tipo_documento') ?? $request->input('tipo_doc');
+
+        // 2. Generamos el Hash manualmente para poder buscar
+        // Como en la BD el documento es ilegible (encriptado), buscamos por su huella digital (hash)
+        $documentoHash = hash_hmac('sha256', $documentoInput, config('app.key'));
+
+        // 3. Realizamos la búsqueda usando el Hash
+        // $persona = Persona::where('id_tipo_documento', $tipoDocumentoId)
+        //     ->where('documento_hash', $documentoHash) // <--- AQUÍ ESTÁ EL CAMBIO CLAVE
+        //     ->firstOrNew();
+
         $persona = Persona::where('id_tipo_documento', $request->input('id_tipo_documento') ?? $request->input('tipo_doc'))
             ->where('documento', trim($request->input('documento')))
             ->firstOrNew();
 
+        // ---------------------------------------------------------
         // C. Guardar Dirección
+        // ---------------------------------------------------------
         $direccion = ($persona->id_direccion > 0) ? Direccion::find($persona->id_direccion) : new Direccion;
         $direccion->id_pais = $request->input('pais');
         $direccion->id_departamento = $request->input('departamento', 0);
@@ -227,7 +298,9 @@ class InscripcionController extends Controller
         $direccion->direccion = trim($request->input('direccionPersona', ''));
         $direccion->save();
 
+        // ---------------------------------------------------------
         // D. Guardar Datos Persona
+        // ---------------------------------------------------------
         $persona->id_direccion = $direccion->id;
         $persona->nombres = trim($request->input('nombres'));
         $persona->apellido_paterno = trim($request->input('apellido_paterno'));
@@ -239,16 +312,25 @@ class InscripcionController extends Controller
         $persona->id_nacionalidad = $request->input('nacionalidad', $request->input('pais'));
         $persona->company = trim($request->input('empresa'));
 
+        // Lógica para Nuevos Registros
         if (!$persona->exists) {
-            $persona->id_tipo_documento = $request->input('id_tipo_documento') ?? $request->input('tipo_doc');
-            $persona->documento = trim($request->input('documento'));
+            $persona->id_tipo_documento = $tipoDocumentoId;
+
+            // ASIGNACIÓN DEL DOCUMENTO:
+            // Le pasamos el dato real ($documentoInput).
+            // Tu Modelo Persona.php se encargará automáticamente de:
+            // 1. Encriptarlo (gracias a protected $casts)
+            // 2. Llenar 'documento_hash' (gracias a la función booted/saving)
+            $persona->documento = $documentoInput;
         }
 
+        // Lógica de Fecha de Nacimiento
         if ($request->filled('fecha_nacimiento')) {
             try {
-                $persona->fecha_nacimiento = Carbon::parse($request->input('fecha_nacimiento'))->format('Y-m-d');
+                // Asegúrate de tener: use Carbon\Carbon; y use Illuminate\Support\Facades\Log; arriba
+                $persona->fecha_nacimiento = \Carbon\Carbon::parse($request->input('fecha_nacimiento'))->format('Y-m-d');
             } catch (\Exception $e) {
-                Log::error("Error parseando fecha: " . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error("Error parseando fecha: " . $e->getMessage());
             }
         }
 
@@ -659,7 +741,7 @@ class InscripcionController extends Controller
             // Ejecutar el servicio
             $service_wmc = app(\App\Http\Controllers\WebServiceController::class)
                 ->wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz);
-            // dd($service_wmc);
+            //  dd($service_wmc);
 
             // $service_wmc->Response->Status = false;
             if (isset($service_wmc->Response) && $service_wmc->Response->Status === true) {

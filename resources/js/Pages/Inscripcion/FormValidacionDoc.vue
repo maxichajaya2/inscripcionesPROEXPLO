@@ -229,6 +229,20 @@ const camposBloqueados = computed(() => {
     return faltaBuscarPeruano || esPerfilBloqueado;
 });
 
+const esCampoBloqueado = (valorCampo) => {
+    // 1. Si es peruano y no ha buscado, todo bloqueado
+    if (esPeruano.value && !hasSearched.value) return true;
+
+    // 2. Si es perfil crítico (1 o 5)
+    if ([1, 5].includes(props.perfil_id)) {
+        // BLOQUEA solo si el campo NO está vacío (tiene contenido previo)
+        // Usamos trim() para evitar espacios en blanco
+        return valorCampo !== null && valorCampo !== undefined && String(valorCampo).trim() !== '';
+    }
+
+    return false;
+};
+
 const tiposDocumentoFiltrados = computed(() => {
     const todos = page.props.general.tipDocPer || [];
     if (props.tipo_origen === 1) {
@@ -342,18 +356,6 @@ const clearDocument = async () => {
     }
 };
 
-// const onlyAlphanumericKey = (event) => {
-//     const charCode = event.which ? event.which : event.keyCode;
-//     const charStr = String.fromCharCode(charCode);
-
-//     // Regex: Permite solo letras (a-z, A-Z) y números (0-9)
-//     if (!/^[a-zA-Z0-9]+$/.test(charStr)) {
-//         event.preventDefault();
-//         alphanumericMessage.value = "Only letters and numbers are allowed (no spaces or symbols)";
-//         return false;
-//     }
-//     return true;
-// };
 
 const onlyAlphanumericKey = (event) => {
     const charCode = event.which ? event.which : event.keyCode;
@@ -375,6 +377,15 @@ const onlyAlphanumericKey = (event) => {
     }
     return true;
 };
+
+// Creamos estados individuales para los campos principales
+const bloqueoNombres = computed(() => esCampoBloqueado(nombres.value));
+const bloqueoApellidos = computed(() => esCampoBloqueado(apellido_paterno.value));
+const bloqueoCorreo = computed(() => esCampoBloqueado(correo.value));
+const bloqueoCelular = computed(() => esCampoBloqueado(celular.value));
+const bloqueoFechaNac = computed(() => esCampoBloqueado(fecha_nacimiento.value));
+const bloqueoSexo = computed(() => esCampoBloqueado(sexo.value));
+const bloqueoDireccion = computed(() => esCampoBloqueado(direccionPersona.value));
 
 // EXTREMA SEGURIDAD: Watcher para limpiar si pegan texto con símbolos
 watch(documento, (newValue) => {
@@ -608,13 +619,13 @@ onMounted(() => {
                         <div class="w-full">
                             <label for="nombres">First Name <span class="text-red-600">*</span></label>
                             <InputText name="nombres" v-model="nombres" v-bind="nombresAttrs"
-                                :disabled="camposBloqueados" class="w-full border-green-iimp" />
+                                :disabled="bloqueoNombres" class="w-full border-green-iimp" />
                             <small class="text-red-600">{{ errors.nombres }}</small>
                         </div>
                         <div class="w-full">
                             <label for="apellido_paterno">Last Name <span class="text-red-600">*</span></label>
                             <InputText name="apellido_paterno" v-model="apellido_paterno" v-bind="apellido_paternoAttrs"
-                                :disabled="camposBloqueados" class="w-full border-green-iimp" />
+                                :disabled="bloqueoApellidos" class="w-full border-green-iimp" />
                             <small class="text-red-600">{{ errors.apellido_paterno }}</small>
                         </div>
                     </div>
@@ -630,7 +641,7 @@ onMounted(() => {
                         <div class="w-full md:col-span-2">
                             <label for="direccionPersona">Address <span class="text-red-600">*</span></label>
                             <InputText name="direccionPersona" v-model="direccionPersona" v-bind="direccionPersonaAttrs"
-                                :disabled="camposBloqueados" class="w-full border-green-iimp" />
+                                :disabled="bloqueoDireccion" class="w-full border-green-iimp" />
                             <small class="text-red-600">{{ errors.direccionPersona }}</small>
                         </div>
                     </div>
@@ -639,7 +650,7 @@ onMounted(() => {
                         <div class="w-full">
                             <label for="correo" class="">Email Address <span
                                     class="font-normal text-red-600">*</span></label>
-                            <InputText name="correo" v-model="correo" v-bind="correoAttrs" :disabled="camposBloqueados"
+                            <InputText name="correo" v-model="correo" v-bind="correoAttrs" :disabled="bloqueoCorreo"
                                 class="w-full border-green-iimp" />
                             <span class="font-normal text-red-600">{{ errors.correo }}</span>
                         </div>
@@ -647,7 +658,7 @@ onMounted(() => {
                             <label for="celular" class="">Phone Number <span
                                     class="font-normal text-red-600">*</span></label>
                             <InputText name="celular" v-model="celular" v-bind="celularAttrs" @keypress="onlyPhoneKeys"
-                                :disabled="camposBloqueados" class="w-full border-green-iimp"
+                                :disabled="bloqueoCelular" class="w-full border-green-iimp"
                                 placeholder="+51999888777 or 999888777" />
                             <span class="font-normal text-red-600">{{ errors.celular }}</span>
                         </div>
@@ -670,7 +681,7 @@ onMounted(() => {
                                 <Calendar name="fecha_nacimiento" v-model="fecha_nacimiento"
                                     v-bind="fecha_nacimientoAttrs" :maxDate="today" dateFormat="yy-mm-dd"
                                     :showTime="false" placeholder="YYYY-MM-DD" class="w-full"
-                                    :disabled="camposBloqueados"
+                                    :disabled="bloqueoFechaNac"
                                     inputClass="w-full border-green-iimp border-l-0 shadow-none outline-none bg-white" />
                             </InputGroup>
                             <span class="font-normal text-red-600">{{ errors.fecha_nacimiento }}</span>
@@ -679,7 +690,7 @@ onMounted(() => {
                             <label for="sexo" class="">Gender <span class="font-normal text-red-600"> *</span></label>
                             <Select name="sexo" v-model="sexo" v-bind="sexoAttrs" optionLabel="label"
                                 optionValue="value" placeholder="Select" showClear checkmark :options="generos"
-                                :disabled="camposBloqueados" class="w-full border-green-iimp" />
+                                :disabled="bloqueoSexo" class="w-full border-green-iimp" />
                             <span class="font-normal text-red-600">{{ errors.sexo }}</span>
                         </div>
                     </div>

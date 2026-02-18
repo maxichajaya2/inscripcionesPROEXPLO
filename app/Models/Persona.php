@@ -20,16 +20,45 @@ class Persona extends Model
         'apellido_materno',
         'id_tipo_documento',
         'documento',
+        // 'documento_hash',
         'sexo',
         'fecha_nacimiento',
         'correo',
+        // 'correo_hash',
         'celular',
+        // 'celular_hash',
         'id_ocupacion',
         'id_direccion',
         'id_nacionalidad',
         'id_empresa',
         'isactive',
     ];
+
+    // 1. ENCRIPTACIÓN AUTOMÁTICA
+    // protected $casts = [
+    //     'documento' => 'encrypted',
+    //     'correo'    => 'encrypted',
+    //     'celular'   => 'encrypted',
+    // ];
+
+
+    // protected static function booted()
+    // {
+    //     static::saving(function ($persona) {
+    //         $key = config('app.key');
+
+    //         // Lista de campos que necesitan Hash
+    //         $campos = ['documento', 'correo', 'celular'];
+
+    //         foreach ($campos as $campo) {
+    //             // Si el campo cambió o es nuevo, regeneramos su hash
+    //             if ($persona->isDirty($campo) && !empty($persona->$campo)) {
+    //                 $campoHash = $campo . '_hash'; // ej: correo_hash
+    //                 $persona->$campoHash = hash_hmac('sha256', $persona->$campo, $key);
+    //             }
+    //         }
+    //     });
+    // }
 
     public function tipoDocumento(): BelongsTo
     {

@@ -130,11 +130,110 @@ class DocumentApiController extends Controller
         $persona->es_socio = app(\App\Http\Controllers\WebServiceController::class)
             ->validatePersonMember($request->id_tipo_documento, $request->numero_documento);
 
-            // $persona->es_socio =true;
+        // $persona->es_socio =true;
 
         return json_encode(['persona' => $persona, 'status' => $status]);
     }
 
+    // public function getPersonData(Request $request)
+    // {
+    //     // 1. Validación de Seguridad
+    //     if (!str_contains($request->headers->get('referer'), 'registro') || (csrf_token() === null)) {
+    //         abort(403, 'Unauthorized POST request.');
+    //         exit;
+    //     }
+
+    //     // ---------------------------------------------------------
+    //     // CORRECCIÓN: BÚSQUEDA POR HASH (BLIND INDEX)
+    //     // ---------------------------------------------------------
+
+    //     // A. Generamos el Hash del documento que ingresó el usuario
+    //     // Usamos la misma 'app.key' que usamos para guardar en la BD.
+    //     $docHash = hash_hmac('sha256', $request->numero_documento, config('app.key'));
+
+    //     // B. Buscamos usando la columna HASH
+    //     $persona = Persona::where('id_tipo_documento', $request->id_tipo_documento)
+    //         ->where('documento_hash', $docHash) // <--- AQUÍ ESTÁ EL CAMBIO CLAVE
+    //         ->first();
+
+    //     $status = true;
+
+    //     if ($persona) {
+    //         // SI ENCONTRAMOS (BÚSQUEDA LOCAL):
+    //         // Llenamos los datos desde nuestra BD.
+    //         // Nota: Al acceder a $persona->direccion, Laravel desencripta solo si es necesario.
+    //         $persona->pais = $persona->direccion->id_pais ?? 0;
+    //         $persona->departamento  = $persona->direccion->id_departamento ?? 0;
+    //         $persona->provincia  = $persona->direccion->id_provincia ?? 0;
+    //         $persona->distrito  = $persona->direccion->id_distrito ?? 0;
+    //         $persona->nacionalidad  = $persona->id_nacionalidad ?? 0;
+    //         $persona->direccionPersona  = $persona->direccion->direccion ?? '';
+    //         $persona->cargo = $persona->ocupacion->name ?? '';
+    //         $persona->ocupacion = $persona->ocupacion->name ?? '';
+    //     } else {
+    //         // SI NO ENCONTRAMOS (NUEVO REGISTRO):
+    //         // Creamos el objeto vacío para llenarlo
+    //         $persona = new \stdClass();
+    //         $persona->id_tipo_documento = $request->id_tipo_documento;
+    //         $persona->documento = $request->numero_documento; // Pasamos el dato real para el form
+    //         $persona->pais = 0;
+    //         $persona->departamento  = 0;
+    //         $persona->provincia  = 0;
+    //         $persona->distrito  = 0;
+    //         $persona->nacionalidad  = 0;
+    //         $persona->direccionPersona  = "";
+    //         $persona->cargo = "";
+    //         $persona->ocupacion = "";
+    //         $persona->celular = "";
+    //         $persona->correo = "";
+    //         $persona->sexo = 0;
+    //         $persona->nombres = "";
+    //         $persona->apellido_paterno = "";
+    //         $persona->apellido_materno = "";
+    //         $persona->fecha_nacimiento = $this->now;
+    //     }
+
+    //     // ---------------------------------------------------------
+    //     // CONSULTA A RENIEC / API EXTERNA (SI ES DNI)
+    //     // ---------------------------------------------------------
+    //     if ($request->id_tipo_documento == 1) {
+    //         try {
+    //             $fakeRequest = new \Illuminate\Http\Request();
+    //             $fakeRequest->merge(['tipo_doc' => 1, 'documento' => $request->numero_documento]);
+
+    //             // Usamos un Try-Catch interno en getData si es posible, o aquí mismo
+    //             $api_persona = $this->getData($fakeRequest);
+
+    //             if (isset($api_persona['status']) && $api_persona['status']) {
+    //                 // Si la API externa responde, llenamos los datos
+    //                 // Usamos null coalescing (??) para evitar errores si falta algún campo
+    //                 $persona->nombres = $api_persona['persona']->nombres ?? $persona->nombres;
+    //                 $persona->apellido_paterno = $api_persona['persona']->apellidoPaterno ?? $persona->apellido_paterno;
+    //                 $persona->apellido_materno = $api_persona['persona']->apellidoMaterno ?? $persona->apellido_materno;
+    //             } else {
+    //                 // Si la API dice false, no marcamos error general, dejamos que el usuario llene manual
+    //                 // $status = false; // COMENTADO: Mejor dejar status true para que el usuario pueda escribir
+    //             }
+    //         } catch (\Exception $e) {
+    //             // Si la API falla (Timeout), ignoramos y dejamos que el usuario llene manual
+    //             \Illuminate\Support\Facades\Log::error("Error API DNI: " . $e->getMessage());
+    //         }
+    //     }
+
+    //     // ---------------------------------------------------------
+    //     // VALIDACIÓN DE SOCIO (WEBSERVICE)
+    //     // ---------------------------------------------------------
+    //     try {
+    //         // Envolvemos en Try-Catch para evitar el error "cURL error 28" (Timeout)
+    //         $persona->es_socio = app(\App\Http\Controllers\WebServiceController::class)
+    //             ->validatePersonMember($request->id_tipo_documento, $request->numero_documento);
+    //     } catch (\Exception $e) {
+    //         \Illuminate\Support\Facades\Log::error("Error Validando Socio: " . $e->getMessage());
+    //         $persona->es_socio = false; // Asumimos false si falla la conexión
+    //     }
+
+    //     return json_encode(['persona' => $persona, 'status' => $status]);
+    // }
 
     public function getEmpresaData(Request $request)
     {

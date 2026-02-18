@@ -73,13 +73,57 @@ const total_extras = computed(() => {
         }, 0);
 });
 
+// const toggleSelection = (id) => {
+//     if (extras_seleccionados.value.includes(id)) {
+//         extras_seleccionados.value = extras_seleccionados.value.filter(i => i !== id);
+//     } else {
+//         extras_seleccionados.value.push(id);
+//     }
+// };
 const toggleSelection = (id) => {
     if (extras_seleccionados.value.includes(id)) {
+        // Si ya está, lo quitamos normalmente
         extras_seleccionados.value = extras_seleccionados.value.filter(i => i !== id);
     } else {
+        // Si no está, validamos antes de agregar
+        const nuevoItem = props.adicionales.find(i => i.id === id);
+
+        // Buscamos si hay algún item seleccionado que tenga el mismo horario/fecha
+        // Asumiendo que 'horario_texto' y 'fecha_texto' son los campos comparables
+        const conflicto = (props.adicionales || []).find(item =>
+            extras_seleccionados.value.includes(item.id) &&
+            item.fecha_texto === nuevoItem.fecha_texto &&
+            item.horario_texto === nuevoItem.horario_texto
+        );
+
+        if (conflicto) {
+            // Aquí puedes usar un Toast de PrimeVue o una alerta simple
+            alert(`Schedule Conflict: This activity overlaps with "${conflicto.nombre_en}".`);
+            return;
+        }
+
         extras_seleccionados.value.push(id);
     }
 };
+
+const idsBloqueados = computed(() => {
+    const bloqueados = [];
+    const seleccionados = (props.adicionales || []).filter(item =>
+        extras_seleccionados.value.includes(item.id)
+    );
+
+    (props.adicionales || []).forEach(item => {
+        // Si no está seleccionado, revisamos si choca con alguno que SÍ esté seleccionado
+        if (!extras_seleccionados.value.includes(item.id)) {
+            const tieneConflicto = seleccionados.some(s =>
+                s.fecha_texto === item.fecha_texto &&
+                s.horario_texto === item.horario_texto
+            );
+            if (tieneConflicto) bloqueados.push(item.id);
+        }
+    });
+    return bloqueados;
+});
 
 const selectedObjects = computed(() => {
     return (props.adicionales || []).filter(item => extras_seleccionados.value.includes(item.id));
@@ -153,8 +197,9 @@ defineExpose({
                             Enhance Your Congress Experience
                         </span>
                         <p class="text-blue-800 text-sm font-medium leading-relaxed">
-                            Go beyond the main programme with expert-led <b>short courses</b>  and on-site <b>technical
-                            visits</b> designed to turn insight into action. Learn directly from industry leaders and gain
+                            Go beyond the main programme with expert-led <b>short courses</b> and on-site <b>technical
+                                visits</b> designed to turn insight into action. Learn directly from industry leaders
+                            and gain
                             practical knowledge you can apply the moment you return to work.
 
                             <span class="block mt-3">
@@ -189,9 +234,10 @@ defineExpose({
                             </template>
 
                             <div class="space-y-4 py-2">
-                                <div v-for="item in adicionales.filter(i => i.tipo === 'curso')" :key="item.id"
-                                    class="w-full border rounded-lg transition-all duration-200 shadow-sm"
-                                    :class="extras_seleccionados.includes(item.id) ? 'bg-blue-50 border-blue-300' : 'border-gray-100 bg-white'">
+                                <div v-for="item in adicionales.filter(i => i.tipo === 'curso')" :key="item.id" :class="[
+                                    extras_seleccionados.includes(item.id) ? 'bg-blue-50 border-blue-300' : 'border-gray-100 bg-white',
+                                    idsBloqueados.includes(item.id) ? 'opacity-50 grayscale pointer-events-none' : ''
+                                ]">
 
                                     <!-- <div class="flex items-center justify-between p-3 gap-3">
                                         <div class="flex items-center flex-1 cursor-pointer"
@@ -231,7 +277,11 @@ defineExpose({
 
                                         <div class="flex items-center flex-1 cursor-pointer w-full"
                                             @click="toggleSelection(item.id)">
-                                            <Checkbox v-model="extras_seleccionados" :value="item.id" @click.stop
+
+                                            <!-- <Checkbox v-model="extras_seleccionados" :value="item.id" @click.stop
+                                                class="mr-3 flex-none" /> -->
+                                            <Checkbox v-model="extras_seleccionados" :value="item.id"
+                                                :disabled="idsBloqueados.includes(item.id)" @click.stop
                                                 class="mr-3 flex-none" />
                                             <div class="flex flex-col min-w-0">
                                                 <label

@@ -196,11 +196,11 @@ class WebServiceController extends Controller
         try {
             /** ******* LOCAL *********/
             // =========================
-            // $url = "https://secure2.iimp.org:8443/KBServiciosPruebaIIMPJavaEnvironment/rest/servicioinscripcionwmc";
+            $url = "https://secure2.iimp.org:8443/KBServiciosPruebaIIMPJavaEnvironment/rest/servicioinscripcionwmc";
 
              /** ******* PRODUCCION *********/
             // =========================
-            $url ="https://secure2.iimp.org:8443/KBServiciosIIMPJavaEnvironment/rest/servicioinscripcionwmc";
+            // $url ="https://secure2.iimp.org:8443/KBServiciosIIMPJavaEnvironment/rest/servicioinscripcionwmc";
 
             // Función para limpiar tildes y caracteres especiales
             $clean = function ($str) {
