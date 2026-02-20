@@ -56,7 +56,24 @@ const schema = yup.object({
         .matches(/^\+?[0-9]*$/, 'Only numbers are allowed (the + at the beginning is optional)')
         .required('Phone is required'),
     sexo: yup.string().required('Gender is required'),
-    fecha_nacimiento: yup.date().required('Date of Birth is required'),
+    fecha_nacimiento: yup.date().required('Date of Birth is required')
+    .nullable()
+        .test('is-18', 'You must be at least 18 years old', (value) => {
+            if (!value) return false;
+
+            const today = new Date();
+            const birthDate = new Date(value);
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+
+            // Ajuste si el mes actual es menor al de nacimiento
+            // o si es el mismo mes pero el día actual es menor al de nacimiento
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+
+            return age >= 18;
+        })
 });
 
 const { defineField, errors, values, setValues, validate } = useForm({
@@ -205,6 +222,12 @@ const onlyNumberKey = (event) => {
     }
     return true;
 };
+
+const maxAdultDate = computed(() => {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() - 18);
+    return date;
+});
 
 const mostrarBannerBloqueo = computed(() => {
     // Si ya buscó y NO es perfil 1 o 5, el banner debe desaparecer
@@ -679,7 +702,7 @@ onMounted(() => {
                                     <i class="pi pi-calendar"></i>
                                 </InputGroupAddon>
                                 <Calendar name="fecha_nacimiento" v-model="fecha_nacimiento"
-                                    v-bind="fecha_nacimientoAttrs" :maxDate="today" dateFormat="yy-mm-dd"
+                                    v-bind="fecha_nacimientoAttrs" :maxDate="maxAdultDate" dateFormat="yy-mm-dd"
                                     :showTime="false" placeholder="YYYY-MM-DD" class="w-full"
                                     :disabled="bloqueoFechaNac"
                                     inputClass="w-full border-green-iimp border-l-0 shadow-none outline-none bg-white" />

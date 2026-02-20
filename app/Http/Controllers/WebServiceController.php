@@ -198,7 +198,7 @@ class WebServiceController extends Controller
             // =========================
             // $url = "https://secure2.iimp.org:8443/KBServiciosPruebaIIMPJavaEnvironment/rest/servicioinscripcionwmc";
 
-             /** ******* PRODUCCION *********/
+            /** ******* PRODUCCION *********/
             // =========================
             $url ="https://secure2.iimp.org:8443/KBServiciosIIMPJavaEnvironment/rest/servicioinscripcionwmc";
 
@@ -223,7 +223,7 @@ class WebServiceController extends Controller
             $perfil_real = ($precio_cat && $precio_cat->pivot) ? $precio_cat->pivot->id_perfil : 6;
 
 
-          if (preg_match('/\bDIA\b/u', strtoupper($inscripcion->categoria_inscripcion->nombre_es))){
+            if (preg_match('/\bDIA\b/u', strtoupper($inscripcion->categoria_inscripcion->nombre_es))) {
                 $lunes = $martes = $miercoles = $jueves = $viernes = 0;
                 $dias = is_array($inscripcion->dias) ? $inscripcion->dias : json_decode($inscripcion->dias, true);
                 if ($dias) {
@@ -242,27 +242,10 @@ class WebServiceController extends Controller
             }
 
             // 2. EXTRAS (Debe ser 1000 según tu imagen)
-            $extras_ids = $inscripcion->id_categoria_cursos_viajes;
-            if (!empty($extras_ids) && is_array($extras_ids)) {
-                $extras_bd = \App\Models\CategoriaCursoViaje::whereIn('id', $extras_ids)->get();
-                foreach ($extras_bd as $extra) {
-                    // Buscamos el precio que coincida exactamente con el perfil del usuario
-                    $precio_extra = $extra->precios()->where('id_perfil', $perfil_real)->first();
-
-                    if ($precio_extra) {
-                        $tarifas_ws[] = [
-                            "Control"   => (string)$extra->control,
-                            "Categoria" => (string)$extra->categoria,
-                            "Condicion" => (string)$extra->condicion,
-                            "Moneda"    => (string)$moneda_ws,
-                            "Importe"   => (int)$precio_extra->valor
-                        ];
-                    }
-                }
-            }
 
 
-        if (preg_match('/\bDIA\b/u', strtoupper($inscripcion->categoria_inscripcion->nombre_es))){
+
+            if (preg_match('/\bDIA\b/u', strtoupper($inscripcion->categoria_inscripcion->nombre_es))) {
                 $dias = is_array($inscripcion->dias) ? $inscripcion->dias : json_decode($inscripcion->dias, true);
 
                 if ($dias) {
@@ -292,6 +275,25 @@ class WebServiceController extends Controller
             }
 
 
+            $extras_ids = $inscripcion->id_categoria_cursos_viajes;
+            if (!empty($extras_ids) && is_array($extras_ids)) {
+                $extras_bd = \App\Models\CategoriaCursoViaje::whereIn('id', $extras_ids)->get();
+                foreach ($extras_bd as $extra) {
+                    // Buscamos el precio que coincida exactamente con el perfil del usuario
+                    $precio_extra = $extra->precios()->where('id_perfil', $perfil_real)->first();
+
+                    if ($precio_extra) {
+                        $tarifas_ws[] = [
+                            "Control"   => (string)$extra->control,
+                            "Categoria" => (string)$extra->categoria,
+                            "Condicion" => (string)$extra->condicion,
+                            "Moneda"    => (string)$moneda_ws,
+                            "Importe"   => (int)$precio_extra->valor
+                        ];
+                    }
+                }
+            }
+
             $data_ws = [
                 "TipEvCod"          => 13,
                 "EvenCod"           => 1,
@@ -301,7 +303,8 @@ class WebServiceController extends Controller
                 "ApellidoPaterno"   => substr(strtoupper($clean($persona->apellido_paterno)), 0, 30),
                 "ApellidoMaterno"   => substr(strtoupper($clean($persona->apellido_materno ?? " ")), 0, 30),
                 "FechaNacimiento"   => (string)$persona->fecha_nacimiento,
-                "Empresa"           => (string)$persona->company ?? "",                "Cargo"             => '',
+                "Empresa"           => (string)$persona->company ?? "",
+                "Cargo"             => '',
                 "Pais"              => (int)($persona->direccion->id_pais ?? 75),
                 "Departamento"      => (int)($persona->direccion->id_departamento ?? 0),
                 "Provincia"         => (int)($persona->direccion->id_provincia ?? 0),
@@ -310,8 +313,8 @@ class WebServiceController extends Controller
                 "Telefono"          => substr($persona->celular ?? "999999999", 0, 20),
                 "Email"             => (string)$persona->correo,
                 "Tarifas"           => $tarifas_ws,
-                "Lunes"             => $lunes?? 1,
-                "Martes" => $martes?? 1,
+                "Lunes"             => $lunes ?? 1,
+                "Martes" => $martes ?? 1,
                 "Miercoles" => $miercoles ?? 1,
                 "Jueves" => $jueves ?? 1,
                 "Viernes" => $viernes ?? 1,

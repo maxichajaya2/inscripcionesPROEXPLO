@@ -229,7 +229,7 @@ const scrollToCategories = () => {
                                 <GreenArrowRight class="w-6 h-6 invert brightness-200" />
                             </div>
                         </button>
-                        <!-- <button @click="macroSeccion = 'viajes'"
+                        <button @click="macroSeccion = 'viajes'"
                             class="w-full group relative flex items-center justify-between p-8 bg-white/5 border border-white/10 rounded-3xl backdrop-blur-md transition-all duration-300 hover:border-green-500 hover:bg-white/10 hover:shadow-[0_0_20px_rgba(34,197,94,0.3)] text-left">
                             <div class="flex flex-col z-10">
 
@@ -245,7 +245,7 @@ const scrollToCategories = () => {
                                 class="p-4 rounded-2xl bg-white/10 group-hover:bg-green-600 transition-all duration-300">
                                 <GreenArrowRight class="w-6 h-6 invert brightness-200" />
                             </div>
-                        </button> -->
+                        </button>
                     </div>
                     <div v-else class="space-y-6 animate-fade-in-right">
                         <button @click="volverAMacro"
