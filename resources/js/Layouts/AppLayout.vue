@@ -33,7 +33,7 @@ const toast = useToast();
             </main>
 
             <!-- Footer Content -->
-            <!-- <Footer /> -->
+            <Footer />
         </div>
         <Toast />
         <!-- <SupportChatbot /> -->

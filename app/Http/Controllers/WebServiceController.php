@@ -241,9 +241,6 @@ class WebServiceController extends Controller
                 }
             }
 
-            // 2. EXTRAS (Debe ser 1000 según tu imagen)
-
-
 
             if (preg_match('/\bDIA\b/u', strtoupper($inscripcion->categoria_inscripcion->nombre_es))) {
                 $dias = is_array($inscripcion->dias) ? $inscripcion->dias : json_decode($inscripcion->dias, true);

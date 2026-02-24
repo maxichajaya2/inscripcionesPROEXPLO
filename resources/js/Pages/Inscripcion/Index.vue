@@ -352,8 +352,7 @@ const scrollToCategories = () => {
                                     class="text-lg md:text-xl font-bold text-white leading-tight group-hover:text-yellow-100 transition-colors">
                                     {{ cat.nombre_en }}
                                 </h4>
-                                <p
-                                    class="text-xs text-gray-400 mt-1  group-hover:text-yellow-100/70 transition-colors">
+                                <p class="text-xs text-gray-400 mt-1  group-hover:text-yellow-100/70 transition-colors">
                                     {{ cat.categoria_description }}
                                 </p>
                             </div>
@@ -406,7 +405,6 @@ const scrollToCategories = () => {
 
                         </div>
                     </div>
-
 
                 </div>
             </div>

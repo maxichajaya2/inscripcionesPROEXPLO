@@ -57,7 +57,7 @@ const schema = yup.object({
         .required('Phone is required'),
     sexo: yup.string().required('Gender is required'),
     fecha_nacimiento: yup.date().required('Date of Birth is required')
-    .nullable()
+        .nullable()
         .test('is-18', 'You must be at least 18 years old', (value) => {
             if (!value) return false;
 
@@ -498,6 +498,21 @@ onMounted(() => {
                         <div class="text-sm font-medium">Verification successful. You are an <strong>Active
                                 Member</strong>.</div>
                     </div> -->
+                    <div class="flex items-start p-3 mb-5 bg-blue-50 border border-blue-200 rounded-lg shadow-sm">
+                        <i class="pi pi-shield text-blue-600 text-2xl mr-3 mt-1"></i>
+                        <div>
+                            <span class="block text-sm font-bold text-blue-900 mb-1">
+                                Data Protection Guaranteed
+                            </span>
+                            <p class="text-[11px] text-blue-800 leading-relaxed pr-2">
+                                All information provided is <b>securely encrypted and transmitted</b>.
+                                Your personal data is strictly protected under International Data Privacy Laws
+                                (including GDPR) and will be used
+                                <strong>exclusively</strong> for your registration and participation in the World Mining
+                                Congress 2026.
+                            </p>
+                        </div>
+                    </div>
                     <div v-if="hasSearched && esSocio && !noEncontrado && esCategoriaDeSocio"
                         class="flex flex-col p-4 mb-4 text-green-800 border-t-4 border-green-300 bg-green-50 rounded-lg"
                         role="alert">
@@ -641,8 +656,8 @@ onMounted(() => {
                     <div class="grid gap-6 m-6 md:grid-cols-2">
                         <div class="w-full">
                             <label for="nombres">First Name <span class="text-red-600">*</span></label>
-                            <InputText name="nombres" v-model="nombres" v-bind="nombresAttrs"
-                                :disabled="bloqueoNombres" class="w-full border-green-iimp" />
+                            <InputText name="nombres" v-model="nombres" v-bind="nombresAttrs" :disabled="bloqueoNombres"
+                                class="w-full border-green-iimp" />
                             <small class="text-red-600">{{ errors.nombres }}</small>
                         </div>
                         <div class="w-full">
