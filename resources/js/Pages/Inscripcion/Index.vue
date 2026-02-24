@@ -18,12 +18,23 @@ const showSupport = ref(false);
 
 const grupoSeleccionado = ref(null);
 const macroSeccion = ref(null); // 'inscripciones' o 'viajes'
+const copiado = ref(false);
 
 const seleccionarGrupo = (grupo) => {
     grupoSeleccionado.value = grupo;
     scrollToCategories();
 };
 
+const copiarCorreo = () => {
+    const email = 'wmc.itsupport@iimp.org.pe';
+    navigator.clipboard.writeText(email).then(() => {
+        copiado.value = true;
+        // El mensaje desaparece después de 2 segundos
+        setTimeout(() => {
+            copiado.value = false;
+        }, 3000);
+    });
+};
 // const categoriasVisibles = computed(() => {
 //     if (!grupoSeleccionado.value) return [];
 //     return props.categorias.filter(cat => cat.grupo === grupoSeleccionado.value);
@@ -388,23 +399,45 @@ const scrollToCategories = () => {
                     </div>
 
 
-                    <div v-else class="w-full  mt-8 md:mt-0">
+                    <div v-else class="w-full mt-8 md:mt-0">
                         <div class="p-8 bg-black/20 backdrop-blur-sm border-l-4 border-yellow-price rounded-r-2xl">
-                            <h6 class="text-yellow-price font-bold uppercase tracking-tighter mb-2">Important Note
+                            <h6 class="text-yellow-price font-bold uppercase tracking-tighter mb-2">
+                                Important Note
                             </h6>
-                            <p class="text-white/80 text-sm leading-relaxed">
-                                The World Mining Congress 2026 registration system is designed to manage participant
-                                registrations and payment processing.
-                                <br><br>
-                                For any questions or technical issues related to the system or paper submissions,
-                                please contact
-                                <a href="mailto:wmc.itsupport@iimp.org.pe"
-                                    class="text-cyan-400 font-bold underline hover:text-cyan-300 transition-colors">
-                                    wmc.itsupport@iimp.org.pe
-                                </a>
-                                for assistance.
-                            </p>
+                            <div class="text-white/80 text-sm leading-relaxed">
+                                <p>
+                                    The World Mining Congress 2026 registration system is designed to manage participant
+                                    registrations and payment processing.
+                                </p>
 
+                                <p class="mt-4">
+                                    For any questions or technical issues related to the system or paper submissions,
+                                    please contact us via:
+                                </p>
+
+                                <div class="flex flex-col gap-3 mt-4">
+                                    <a href="mailto:wmc.itsupport@iimp.org.pe" @click.prevent="copiarCorreo"
+                                        class="flex items-center gap-2 text-cyan-400 font-bold underline hover:text-cyan-300 transition-colors">
+                                        <i class="pi pi-envelope"></i>
+                                        wmc.itsupport@iimp.org.pe
+                                    </a>
+
+                                    <transition name="bounce">
+                                        <span v-if="copiado"
+                                            class="absolute -top-10 left-0 bg-green-500 text-white text-xs font-black py-1.5 px-3 rounded-full shadow-[0_0_15px_rgba(34,197,94,0.6)] flex items-center whitespace-nowrap z-50">
+                                            <i class="pi pi-check-circle mr-2"></i>
+                                            EMAIL COPIED!
+                                        </span>
+                                    </transition>
+
+                                    <a href="https://api.whatsapp.com/send/?phone=51987196080&text=Hello, I need assistance with WMC 2026 registration&type=phone_number&app_absent=0"
+                                        target="_blank"
+                                        class="flex items-center gap-2 text-green-400 font-bold underline hover:text-green-300 transition-colors">
+                                        <i class="pi pi-whatsapp"></i>
+                                        WhatsApp Support
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -748,6 +781,30 @@ button {
     50% {
         opacity: 0.9;
         transform: scale(1.05);
+    }
+}
+
+.bounce-enter-active {
+    animation: bounce-in 0.5s;
+}
+
+.bounce-leave-active {
+    animation: bounce-in 0.5s reverse;
+}
+
+@keyframes bounce-in {
+    0% {
+        transform: scale(0) translateY(10px);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.1) translateY(-5px);
+    }
+
+    100% {
+        transform: scale(1) translateY(0);
+        opacity: 1;
     }
 }
 </style>
