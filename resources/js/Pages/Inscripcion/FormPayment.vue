@@ -16,7 +16,9 @@ const urlParams = new URLSearchParams(window.location.search);
 const esSeccionViajes = computed(() => urlParams.get('section') === 'viajes');
 // Controla si el usuario aceptó los términos para habilitar el botón
 const termsAccepted = ref(false);
+const policiesAccepted = ref(false);
 const procesandoPago = ref(false);
+
 
 const precioInscripcion = computed(() => {
     return props.categoria_seleccionada?.precio_disponible?.valor || '0.00';
@@ -220,7 +222,14 @@ const scriptData = computed(() => {
                                     class="text-xs text-gray-700 leading-tight cursor-pointer select-none">
                                     I accept the
                                     <a href="/documents/reglamento.pdf" target="_blank"
-                                        class="text-blue-700 font-bold underline">Terms and Conditions</a> of WMC 2026.
+                                        class="text-blue-700 font-bold underline">Terms and Conditions</a>,
+                                    the
+                                    <a href="/documents/politicas.pdf" target="_blank"
+                                        class="text-blue-700 font-bold underline">Registration Policies</a>
+                                    and the
+                                    <a href="/documents/privacy_policy.pdf" target="_blank"
+                                        class="text-blue-700 font-bold underline">Privacy Policy</a>
+                                    of WMC 2026.
                                 </label>
                             </div>
                         </div>

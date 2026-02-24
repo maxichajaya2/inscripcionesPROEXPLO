@@ -397,9 +397,11 @@ const scrollToCategories = () => {
                                 registrations and payment processing.
                                 <br><br>
                                 For any questions or technical issues related to the system or paper submissions,
-                                please
-                                contact
-                                <span class="text-cyan-400 font-bold underline">wmc.itsupport@iimp.org.pe</span>
+                                please contact
+                                <a href="mailto:wmc.itsupport@iimp.org.pe"
+                                    class="text-cyan-400 font-bold underline hover:text-cyan-300 transition-colors">
+                                    wmc.itsupport@iimp.org.pe
+                                </a>
                                 for assistance.
                             </p>
 
