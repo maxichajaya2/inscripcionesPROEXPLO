@@ -426,7 +426,7 @@ const scrollToCategories = () => {
                                         <span v-if="copiado"
                                             class="absolute -top-10 left-0 bg-green-500 text-white text-xs font-black py-1.5 px-3 rounded-full shadow-[0_0_15px_rgba(34,197,94,0.6)] flex items-center whitespace-nowrap z-50">
                                             <i class="pi pi-check-circle mr-2"></i>
-                                            EMAIL COPIED!
+                                            Email copied. Please paste it into your email client.
                                         </span>
                                     </transition>
 
