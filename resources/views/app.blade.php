@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
     <link rel="icon" type="image/png"
-        href="https://wmc2026.org/wp-content/uploads/2025/06/cropped-image-removebg-preview-32x32.png">
+        href="https://www.proexplo.com.pe/favicon.ico?favicon.d96ec44c.ico">
 
     <!-- Scripts -->
     @routes

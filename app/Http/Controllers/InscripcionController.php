@@ -33,10 +33,7 @@ class InscripcionController extends Controller
     {
         $categorias = CategoriaInscripcion::query()
             ->where('isactive', true)
-            ->where(function ($query) {
-                $query->where('nombre_en', 'LIKE', '%AUTHOR%')
-                    ->orWhere('nombre_en', 'LIKE', '%PARTICIPANT%');
-            })
+            ->whereIn('id', [1, 2, 3, 4, 5])
             ->orderBy('orden_es', 'ASC')
             ->get();
 
@@ -83,7 +80,7 @@ class InscripcionController extends Controller
     {
         $section = $request->query('section', 'inscripciones');
         $perfil_id = $request->query('profile');
-        $perfilesPermitidos = [1, 2, 3, 5, 6, 7];
+        $perfilesPermitidos = [1, 2, 3, 4, 5, 6];
 
         // Función anónima para reutilizar la lógica de precios vigentes
         $filtroPrecios = function ($query) {
@@ -102,7 +99,7 @@ class InscripcionController extends Controller
                 return $cat;
             });
 
-        $perfilesPermitidos = [1, 2, 3, 5, 6, 7];
+        $perfilesPermitidos = [1, 2, 3, 5, 6];
 
 
         // 2. Adicionales (Cursos/Tours) con validación de perfiles
@@ -206,56 +203,6 @@ class InscripcionController extends Controller
         }
     }
 
-    // private function handlePersona(Request $request)
-    // {
-    //     // A. Resolver Ocupación
-    //     $cargo = $request->input('cargo', '');
-    //     $ocupacion_obj = Ocupacion::whereRaw("name like '%" . $cargo . "%'")->where('isactive', true)->first();
-    //     $id_ocupacion = $ocupacion_obj ? $ocupacion_obj->id : 2795;
-
-    //     // B. Buscar o Instanciar Persona
-    //     $persona = Persona::where('id_tipo_documento', $request->input('id_tipo_documento') ?? $request->input('tipo_doc'))
-    //         ->where('documento', trim($request->input('documento')))
-    //         ->firstOrNew();
-
-    //     // C. Guardar Dirección
-    //     $direccion = ($persona->id_direccion > 0) ? Direccion::find($persona->id_direccion) : new Direccion;
-    //     $direccion->id_pais = $request->input('pais');
-    //     $direccion->id_departamento = $request->input('departamento', 0);
-    //     $direccion->id_provincia = $request->input('provincia', 0);
-    //     $direccion->id_distrito = $request->input('distrito', 0);
-    //     $direccion->direccion = trim($request->input('direccionPersona', ''));
-    //     $direccion->save();
-
-    //     // D. Guardar Datos Persona
-    //     $persona->id_direccion = $direccion->id;
-    //     $persona->nombres = trim($request->input('nombres'));
-    //     $persona->apellido_paterno = trim($request->input('apellido_paterno'));
-    //     $persona->apellido_materno = $request->input('apellido_materno', '');
-    //     $persona->correo = trim($request->input('correo'));
-    //     $persona->celular = trim($request->input('celular'));
-    //     $persona->sexo = $request->input('sexo');
-    //     $persona->id_ocupacion = $id_ocupacion;
-    //     $persona->id_nacionalidad = $request->input('nacionalidad', $request->input('pais'));
-    //     $persona->company = trim($request->input('empresa'));
-
-    //     if (!$persona->exists) {
-    //         $persona->id_tipo_documento = $request->input('id_tipo_documento') ?? $request->input('tipo_doc');
-    //         $persona->documento = trim($request->input('documento'));
-    //     }
-
-    //     if ($request->filled('fecha_nacimiento')) {
-    //         try {
-    //             $persona->fecha_nacimiento = Carbon::parse($request->input('fecha_nacimiento'))->format('Y-m-d');
-    //         } catch (\Exception $e) {
-    //             Log::error("Error parseando fecha: " . $e->getMessage());
-    //         }
-    //     }
-
-    //     $persona->save();
-
-    //     return $persona;
-    // }
 
     private function handlePersona(Request $request)
     {
@@ -379,23 +326,6 @@ class InscripcionController extends Controller
             // Es por día SOLO si tiene la palabra "DAY" o "DIA" pero NO es estudiante
             $es_por_dia = !$es_estudiante && (str_contains($nombre_en, ' DAY') || str_contains($nombre_es, ' DIA'));
 
-            // if ($es_por_dia) {
-            //     $selectedDays = $request->input('selectedDays', []);
-            //     if (is_string($selectedDays)) $selectedDays = explode(',', $selectedDays);
-
-            //     $total_inscripcion = count($selectedDays) * $valor_unitario_cat;
-
-            //     // Guardar qué días seleccionó
-            //     $dias_array = ["lun" => 0, "mar" => 0, "mie" => 0, "jue" => 0, "vie" => 0];
-            //     foreach ($selectedDays as $sd) {
-            //         $dia_key = strtolower(trim($sd));
-            //         if (array_key_exists($dia_key, $dias_array)) $dias_array[$dia_key] = 1;
-            //     }
-            //     $dias_json = json_encode($dias_array);
-            // } else {
-            //     // Inscripción de evento completo
-            //     $total_inscripcion = $valor_unitario_cat;
-            // }
             if ($es_por_dia) {
                 $selectedDays = $request->input('selectedDays', []);
                 if (is_string($selectedDays)) $selectedDays = explode(',', $selectedDays);

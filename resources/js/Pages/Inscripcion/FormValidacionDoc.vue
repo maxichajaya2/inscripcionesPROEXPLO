@@ -31,34 +31,37 @@ const alphanumericMessage = ref('');
 
 const props = defineProps({
     saved_values: Object,
-    tipo_origen: Number,
+    // tipo_origen: Number,
     perfil_id: Number
 });
 
 const dniMessage = ref('');
 const schema = yup.object({
-    tipo_doc: yup.mixed().required('Document type is required'),
+    tipo_doc: yup.mixed().required('El tipo de documento es obligatorio'),
     documento: yup.string()
-        .required('Document number is required')
-        .test('len', 'DNI must be exactly 8 digits', (val, context) => {
+        .required('El número de documento es obligatorio')
+        .test('len', 'El DNI debe tener exactamente 8 dígitos', (val, context) => {
             // Solo aplicamos la regla de 8 dígitos si el tipo de doc es DNI (ID 1)
             if (context.parent.tipo_doc === 1) {
                 return val?.length === 8;
             }
             return true; // Para otros documentos, no aplicamos esta restricción
         }),
-    nombres: yup.string().required('First Name is required'),
-    apellido_paterno: yup.string().required('Last Name is required'),
-    pais: yup.mixed().required('Country is required'),
-    direccionPersona: yup.string().required('Address is required'),
-    correo: yup.string().email().required('Email is required'),
+    nombres: yup.string().required('Los nombres son obligatorios'),
+    apellido_paterno: yup.string().required('El apellido paterno es obligatorio'),
+    pais: yup.mixed().required('El país es obligatorio'),
+    direccionPersona: yup.string().required('La dirección es obligatoria'),
+    correo: yup.string()
+        .email('Ingrese un correo electrónico válido')
+        .required('El correo electrónico es obligatorio'),
     celular: yup.string()
-        .matches(/^\+?[0-9]*$/, 'Only numbers are allowed (the + at the beginning is optional)')
-        .required('Phone is required'),
-    sexo: yup.string().required('Gender is required'),
-    fecha_nacimiento: yup.date().required('Date of Birth is required')
+        .matches(/^\+?[0-9]*$/, 'Solo se permiten números (el + al inicio es opcional)')
+        .required('El teléfono es obligatorio'),
+    sexo: yup.string().required('El sexo es obligatorio'),
+    fecha_nacimiento: yup.date()
+        .required('La fecha de nacimiento es obligatoria')
         .nullable()
-        .test('is-18', 'You must be at least 18 years old', (value) => {
+        .test('is-18', 'Debes ser mayor de 18 años', (value) => {
             if (!value) return false;
 
             const today = new Date();
@@ -67,7 +70,6 @@ const schema = yup.object({
             const m = today.getMonth() - birthDate.getMonth();
 
             // Ajuste si el mes actual es menor al de nacimiento
-            // o si es el mismo mes pero el día actual es menor al de nacimiento
             if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
                 age--;
             }
@@ -94,16 +96,16 @@ const [fecha_nacimiento, fecha_nacimientoAttrs] = defineField('fecha_nacimiento'
 const [sexo, sexoAttrs] = defineField('sexo');
 
 const fieldNames = {
-    tipo_doc: 'Document Type',
-    documento: 'Document Number',
-    nombres: 'First Name',
-    apellido_paterno: 'Last Name',
-    pais: 'Country',
-    direccionPersona: 'Address',
-    correo: 'Email',
-    celular: 'Phone',
-    sexo: 'Gender',
-    fecha_nacimiento: 'Date of Birth'
+    tipo_doc: 'Tipo de Documento',
+    documento: 'Numero de Documento',
+    nombres: 'Nombres',
+    apellido_paterno: 'Apellido Paterno',
+    pais: 'Pais',
+    direccionPersona: 'Direccion',
+    correo: 'Correo Electronico',
+    celular: 'Celular',
+    sexo: 'Sexo',
+    fecha_nacimiento: 'Fecha de Nacimiento'
 };
 
 const missingFields = computed(() => {
@@ -237,13 +239,10 @@ const mostrarBannerBloqueo = computed(() => {
     // De lo contrario, sigue las reglas normales de bloqueo
     return camposBloqueados.value;
 });
-// const camposBloqueados = computed(() => {
-//     return esPeruano.value && !hasSearched.value;
-// });
 
 const camposBloqueados = computed(() => {
     // 1. Condición de búsqueda (Solo para peruanos que no han buscado aún)
-    const faltaBuscarPeruano = esPeruano.value && !hasSearched.value;
+    const faltaBuscarPeruano = esDNI.value && !hasSearched.value;
 
     // 2. Condición de Perfil Crítico (Bloqueo TOTAL e incondicional para perfil 1 o 5)
     const esPerfilBloqueado = [1, 5].includes(props.perfil_id);
@@ -254,7 +253,7 @@ const camposBloqueados = computed(() => {
 
 const esCampoBloqueado = (valorCampo) => {
     // 1. Si es peruano y no ha buscado, todo bloqueado
-    if (esPeruano.value && !hasSearched.value) return true;
+    if (esDNI.value && !hasSearched.value) return true;
 
     // 2. Si es perfil crítico (1 o 5)
     if ([1, 5].includes(props.perfil_id)) {
@@ -268,15 +267,8 @@ const esCampoBloqueado = (valorCampo) => {
 
 const tiposDocumentoFiltrados = computed(() => {
     const todos = page.props.general.tipDocPer || [];
-    if (props.tipo_origen === 1) {
-        return todos.filter(d => d.id === 1 || d.id === 2);
-    } else if (props.tipo_origen === 2) {
-        return todos.filter(d => d.id !== 1 && d.id !== 2);
-    }
     return todos;
 });
-
-const esPeruano = computed(() => props.tipo_origen === 1);
 
 const loadDepartamentos = async () => {
     if (pais.value) {
@@ -371,11 +363,7 @@ const clearDocument = async () => {
         });
     } else {
         // --- FLUJO EXTRANJERO: NO blanqueamos detalles personales ---
-        // Solo aseguramos que los campos sigan editables
         hasSearched.value = true;
-
-        // Mantenemos los valores actuales del formulario (nombres, correo, etc.)
-        // y solo reseteamos el documento que ya hicimos arriba.
     }
 };
 
@@ -401,6 +389,7 @@ const onlyAlphanumericKey = (event) => {
     return true;
 };
 
+const esDNI = computed(() => tipo_doc.value === 1);
 // Creamos estados individuales para los campos principales
 const bloqueoNombres = computed(() => esCampoBloqueado(nombres.value));
 const bloqueoApellidos = computed(() => esCampoBloqueado(apellido_paterno.value));
@@ -421,52 +410,10 @@ watch(documento, (newValue) => {
         }
     }
 });
-// UNICO WATCHER PARA TIPO_ORIGEN - BLINDADO
-watch(() => props.tipo_origen, async (newOrigen) => {
-    // Si el origen no es 1 ni 2, no hacemos nada para evitar resets accidentales
-    if (!newOrigen) return;
-
-    if (newOrigen === 1) {
-        // --- LÓGICA NACIONAL (DNI) ---
-        tipo_doc.value = 1; // Forzamos ID 1 (DNI)
-        pais.value = 75;    // Forzamos ID 75 (Perú)
-        await loadDepartamentos();
-
-        // Sincronizamos vee-validate de forma manual para asegurar el tiro
-        setValues({
-            ...values,
-            pais: 75,
-            tipo_doc: 1
-        });
-
-        hasSearched.value = false;
-
-    } else if (newOrigen === 2) {
-        // --- LÓGICA INTERNACIONAL (EXTRANJERO) ---
-        // Solo cambiamos a Passport si el documento actual es DNI
-        if (tipo_doc.value === 1 || !tipo_doc.value) {
-            tipo_doc.value = 3; // O el ID que corresponda a Pasaporte en tu BD
-        }
-
-        pais.value = null;
-        esSocio.value = true;
-        hasSearched.value = true;
-
-        await nextTick();
-        validate();
-    }
-}, { immediate: true });
-
 
 onMounted(() => {
-
-    if (esPeruano.value) {
-        tipo_doc.value = 1;
-        pais.value = 75;
-    } else {
-        // Si es extranjero, pon el ID de Passport por defecto, ej: 3
-        tipo_doc.value = 5;
-    }
+    tipo_doc.value = 1;
+    pais.value = 75;
 });
 
 
@@ -478,7 +425,7 @@ onMounted(() => {
             <Button @click="goToHome" class="wmc-btn-international shadow-xl flex items-center">
                 <i class="pi pi-home mr-3 text-lg"></i>
                 <div class="flex flex-col items-start leading-none">
-                    <span class="text-xs font-bold uppercase tracking-[0.3em] ml-4">Main Menu</span>
+                    <span class="text-xs font-bold uppercase tracking-[0.3em] ml-4">Menu Principal</span>
                 </div>
             </Button>
         </div>
@@ -486,30 +433,24 @@ onMounted(() => {
         <Card class="mt-5 overflow-hidden shadow-lg border border-gray-200">
             <template #header>
                 <div class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc">
-                    {{ esPeruano ? 'Search' : 'Identification' }}
+                    Buscar y Validar Documento
                 </div>
             </template>
             <template #content>
-                <div class="w-full px-4 pb-4">
-                    <!-- <div v-if="hasSearched && esSocio && !noEncontrado && esCategoriaDeSocio"
-                        class="flex items-center p-4 mb-4 text-green-800 border-t-4 border-green-300 bg-green-50 rounded-lg"
-                        role="alert">
-                        <i class="pi pi-check-circle mr-2 text-xl"></i>
-                        <div class="text-sm font-medium">Verification successful. You are an <strong>Active
-                                Member</strong>.</div>
-                    </div> -->
+                <div class="w-full px-4 pb-2">
                     <div class="flex items-start p-3 mb-5 bg-blue-50 border border-blue-200 rounded-lg shadow-sm">
                         <i class="pi pi-shield text-blue-600 text-2xl mr-3 mt-1"></i>
                         <div>
                             <span class="block text-sm font-bold text-blue-900 mb-1">
-                                Data Protection Guaranteed
+                                Protección de Datos Garantizada
                             </span>
                             <p class="text-[11px] text-blue-800 leading-relaxed pr-2">
-                                All information provided is <b>securely encrypted and transmitted</b>.
-                                Your personal data is strictly protected under International Data Privacy Laws
-                                (including GDPR) and will be used
-                                <strong>exclusively</strong> for your registration and participation in the World Mining
-                                Congress 2026.
+                                Toda la información proporcionada está <b>encriptada y se transmite de forma segura</b>.
+                                Sus datos personales están estrictamente protegidos bajo las Leyes Internacionales de
+                                Privacidad de Datos
+                                (incluyendo el RGPD) y serán utilizados <b>exclusivamente</b> para su registro y
+                                participación en
+                                <strong>PROEXPLO 2026</strong>.
                             </p>
                         </div>
                     </div>
@@ -576,50 +517,53 @@ onMounted(() => {
                 </div> -->
 
                 <div v-if="mostrarBannerBloqueo"
-                    class="mx-6 mb-2 p-2 bg-yellow-50 text-yellow-700 border-l-4 border-yellow-400 text-xs font-semibold">
-                    <i class="pi pi-lock mr-2"></i>
+                    class="mx-6 mb-2 p-2 bg-orange-50 text-orange-700 border-l-4 border-orange-400 text-xs font-semibold">
+                    <i class="pi pi-lock mr-2 text-[10px]"></i>
+
                     <span v-if="[1, 5].includes(props.perfil_id)">
-                        YOUR DATA IS PRE-LOADED BY YOUR PROFILE AND CANNOT BE MODIFIED.
+                        Sus datos están precargados por su perfil y no pueden ser modificados.
                     </span>
+
                     <span v-else>
-                        PLEASE SEARCH BY DOCUMENT NUMBER TO UNLOCK THESE FIELDS.
+                        Por favor, busque por número de documento para desbloquear estos campos.
                     </span>
                 </div>
                 <div class="flex gap-6 p-2 w-full justify-around">
                     <div
                         class="text-green-iimp font-bold max-w-[650px] w-full p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="col-span-1">
-                            <label for="tipo_doc">Document Type <span class="text-red-600">*</span></label>
+                            <label for="tipo_doc">Tipo de Documento <span class="text-red-600">*</span></label>
                             <Select name="tipo_doc" v-model="tipo_doc" v-bind="tipo_docAttrs" translate="no"
                                 :options="tiposDocumentoFiltrados" @change="clearDocument" optionLabel="name_en"
                                 optionValue="id" placeholder="Select Document" showClear checkmark
-                                class="w-full border-green-iimp" :disabled="esPeruano"
-                                :class="{ 'bg-gray-100 opacity-70': esPeruano }" />
+                                class="w-full border-green-iimp"
+                                :class="{ 'bg-gray-100 opacity-70': esDNI }" />
                             <small class="text-red-600">{{ errors.tipo_doc }}</small>
                         </div>
                         <div class="col-span-1">
                             <label for="documento" translate="no">
-                                {{ esPeruano ? 'Document Number' : 'Identity Card / Passport Number' }} <span
-                                    class="text-red-600">*</span>
+                                {{ 'Numero de Documento' }} <span class="text-red-600">*</span>
                             </label>
-                            <!-- PERUANO -->
-                            <InputGroup v-if="esPeruano">
-                                <!-- <InputText name="documento" v-model="documento" v-bind="documentoAttrs"
-                                    class="w-full border-green-iimp" @keypress="onlyNumberKey" :maxlength="25" /> -->
+                            <InputGroup>
                                 <InputText name="documento" v-model="documento" v-bind="documentoAttrs"
-                                    class="w-full border-green-iimp" @keypress="onlyNumberKey" :maxlength="8"
-                                    :disabled="loadingSearch" />
-                                <Button icon="pi pi-search" severity="info" @click="searchPerson"
-                                    :loading="loadingSearch" />
+                                    class="w-full border-green-iimp"
+                                    :placeholder="esDNI ? 'Ingrese 8 dígitos' : 'Ingrese número de documento'"
+                                    :maxlength="esDNI ? 8 : 15" :disabled="loadingSearch"
+                                    @keypress="esDNI ? onlyNumberKey($event) : onlyAlphanumericKey($event)" />
+
+                                <Button icon="pi pi-search" @click="searchPerson" :loading="loadingSearch"
+                                    class="!bg-orange-600 !border-orange-600 hover:!bg-orange-500 hover:!border-orange-500 !text-white !shadow-none"
+                                    :pt="{
+                                        root: { class: 'bg-orange-600 border-orange-600' },
+                                        loadingIcon: { class: 'text-white' }
+                                    }" />
                             </InputGroup>
-                            <!-- EXTRANJERO -->
-                            <InputText v-else name="documento" v-model="documento" v-bind="documentoAttrs"
-                                class="w-full border-green-iimp" :maxlength="15" placeholder="Enter number"
-                                @keypress="onlyAlphanumericKey" />
+
                             <small v-if="dniMessage" class="text-orange-600 font-bold block mt-1">
                                 <i class="pi pi-info-circle mr-1"></i> {{ dniMessage }}
                             </small>
-                            <div v-if="alphanumericMessage" class="text-orange-600 font-bold block mt-1 animate-pulse">
+                            <div v-else-if="alphanumericMessage"
+                                class="text-orange-600 font-bold block mt-1 animate-pulse">
                                 <i class="pi pi-exclamation-triangle mr-1"></i> {{ alphanumericMessage }}
                             </div>
                             <small v-else class="text-red-600 block mt-1">{{ errors.documento }}</small>
@@ -632,7 +576,8 @@ onMounted(() => {
         /==============================  -->
         <Card class="mt-5 overflow-hidden shadow-lg border border-gray-200">
             <template #header>
-                <div class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc">Personal Details
+                <div class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc">Detalles
+                    Personales
                 </div>
             </template>
             <template #content>
@@ -643,10 +588,10 @@ onMounted(() => {
                             role="alert">
                             <div class="flex items-center">
                                 <i class="pi pi-exclamation-circle mr-2 text-xl"></i>
-                                <span class="text-sm font-bold">Required Information Missing</span>
+                                <span class="text-sm font-bold">Información Requerida</span>
                             </div>
                             <div class="mt-2 text-sm">
-                                Please complete the following fields to proceed:
+                                Por favor complete los siguientes campos para continuar con su inscripción:
                                 <ul class="list-disc ml-5 mt-1">
                                     <li v-for="field in missingFields" :key="field">{{ field }}</li>
                                 </ul>
@@ -655,13 +600,13 @@ onMounted(() => {
                     </div>
                     <div class="grid gap-6 m-6 md:grid-cols-2">
                         <div class="w-full">
-                            <label for="nombres">First Name <span class="text-red-600">*</span></label>
+                            <label for="nombres">Nombres <span class="text-red-600">*</span></label>
                             <InputText name="nombres" v-model="nombres" v-bind="nombresAttrs" :disabled="bloqueoNombres"
                                 class="w-full border-green-iimp" />
                             <small class="text-red-600">{{ errors.nombres }}</small>
                         </div>
                         <div class="w-full">
-                            <label for="apellido_paterno">Last Name <span class="text-red-600">*</span></label>
+                            <label for="apellido_paterno">Apellido Paterno <span class="text-red-600">*</span></label>
                             <InputText name="apellido_paterno" v-model="apellido_paterno" v-bind="apellido_paternoAttrs"
                                 :disabled="bloqueoApellidos" class="w-full border-green-iimp" />
                             <small class="text-red-600">{{ errors.apellido_paterno }}</small>
@@ -670,14 +615,14 @@ onMounted(() => {
 
                     <div class="grid gap-6 m-6 grid-cols-1 md:grid-cols-4">
                         <div class="w-full md:col-span-2">
-                            <label for="pais">Country <span class="text-red-600">*</span></label>
+                            <label for="pais">Pais <span class="text-red-600">*</span></label>
                             <Select name="pais" v-model="pais" v-bind="paisAttrs" :options="paises" optionLabel="name"
                                 optionValue="id" placeholder="Select" showClear filter @change="loadDepartamentos"
-                                translate="no" :disabled="esPeruano" class="w-full border-green-iimp" />
+                                translate="no" :disabled="esDNI" class="w-full border-green-iimp" />
                             <small class="text-red-600">{{ errors.pais }}</small>
                         </div>
                         <div class="w-full md:col-span-2">
-                            <label for="direccionPersona">Address <span class="text-red-600">*</span></label>
+                            <label for="direccionPersona">Dirección <span class="text-red-600">*</span></label>
                             <InputText name="direccionPersona" v-model="direccionPersona" v-bind="direccionPersonaAttrs"
                                 :disabled="bloqueoDireccion" class="w-full border-green-iimp" />
                             <small class="text-red-600">{{ errors.direccionPersona }}</small>
@@ -686,32 +631,33 @@ onMounted(() => {
 
                     <div class="grid gap-6 m-6 md:grid-cols-3">
                         <div class="w-full">
-                            <label for="correo" class="">Email Address <span
+                            <label for="correo" class="">Correo Electronico <span
                                     class="font-normal text-red-600">*</span></label>
                             <InputText name="correo" v-model="correo" v-bind="correoAttrs" :disabled="bloqueoCorreo"
                                 class="w-full border-green-iimp" />
-                            <span class="font-normal text-red-600">{{ errors.correo }}</span>
+                            <small class=" text-red-600">{{ errors.correo }}</small>
                         </div>
                         <div class="w-full">
-                            <label for="celular" class="">Phone Number <span
+                            <label for="celular" class="">Celular <span
                                     class="font-normal text-red-600">*</span></label>
                             <InputText name="celular" v-model="celular" v-bind="celularAttrs" @keypress="onlyPhoneKeys"
                                 :disabled="bloqueoCelular" class="w-full border-green-iimp"
                                 placeholder="+51999888777 or 999888777" />
-                            <span class="font-normal text-red-600">{{ errors.celular }}</span>
+                            <small class="text-red-600">{{ errors.celular }}</small>
                         </div>
                         <div class="w-full">
-                            <label for="empresa" class="">Company <span
-                                    class="font-normal text-gray-500 ml-1">(Optional)</span></label>
+                            <label for="empresa" class="">Empresa <span
+                                    class="font-normal text-gray-500 ml-1">(Opcional)</span></label>
                             <InputText name="empresa" v-model="empresa" v-bind="empresaAttrs"
                                 class="w-full border-green-iimp" />
-                            <span class="font-normal text-red-600">{{ errors.empresa }}</span>
+                            <small class=" text-red-600">{{ errors.empresa }}</small>
                         </div>
                     </div>
 
                     <div class="grid gap-6 m-6 grid-cols-1 md:grid-cols-4">
                         <div class="w-full">
-                            <label for="fecha_nacimiento">Date of Birth <span class="text-red-600">*</span></label>
+                            <label for="fecha_nacimiento">Fecha de Nacimiento <span
+                                    class="text-red-600">*</span></label>
                             <InputGroup class="w-full h-[42px]">
                                 <InputGroupAddon class="border-green-iimp border-r-0 bg-white text-green-iimp">
                                     <i class="pi pi-calendar"></i>
@@ -722,14 +668,14 @@ onMounted(() => {
                                     :disabled="bloqueoFechaNac"
                                     inputClass="w-full border-green-iimp border-l-0 shadow-none outline-none bg-white" />
                             </InputGroup>
-                            <span class="font-normal text-red-600">{{ errors.fecha_nacimiento }}</span>
+                            <small class=" text-red-600">{{ errors.fecha_nacimiento }}</small>
                         </div>
                         <div class="w-full">
-                            <label for="sexo" class="">Gender <span class="font-normal text-red-600"> *</span></label>
+                            <label for="sexo" class="">Sexo <span class="font-normal text-red-600"> *</span></label>
                             <Select name="sexo" v-model="sexo" v-bind="sexoAttrs" optionLabel="label"
                                 optionValue="value" placeholder="Select" showClear checkmark :options="generos"
                                 :disabled="bloqueoSexo" class="w-full border-green-iimp" />
-                            <span class="font-normal text-red-600">{{ errors.sexo }}</span>
+                            <small class=" text-red-600">{{ errors.sexo }}</small>
                         </div>
                     </div>
                 </div>

@@ -135,8 +135,7 @@ import LogoIIMPRender from '@/Components/LogoIIMPRender.vue';
             <div class="mt-6 pt-6 border-t border-gray-100 text-center space-y-4 pb-2">
                 <div class="text-[13px] text-gray-500 flex flex-col items-center justify-center space-y-1">
                     <p>
-                        &copy; {{ new Date().getFullYear() }} <strong class="text-slate-800">World Mining
-                            Congress</strong>. All rights reserved.
+                        &copy; {{ new Date().getFullYear() }} <strong class="text-slate-800">XV Congreso Internacional de Prospectores y Exploradores</strong>. All rights reserved.
                     </p>
                     <!-- <p class="text-[14px] text-gray-400">
                         Organized by Instituto de Ingenieros de Minas del Perú (IIMP)

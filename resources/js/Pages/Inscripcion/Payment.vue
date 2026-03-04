@@ -53,7 +53,7 @@ function pagar() {
                     <p class="text-4xl font-black text-green-600 mb-8">USD {{ amount }}</p>
 
                     <div class="flex justify-center mb-6">
-                        <img src="/images/logo-wmc.png" alt="World Mining Congress Logo"
+                        <img src="/images/logo-proexplo.png" alt="World Mining Congress Logo"
                             class="h-20 w-auto object-contain" />
                     </div>
                     <button @click="pagar"

@@ -70,32 +70,31 @@ const formManualErrors = ref({ reglamento: null, total: null, uploadDocument: nu
 
 const { defineField, errors, setValues, values, validate } = useForm({
     validationSchema: yup.object({
-        selected_categoria: yup.mixed().required('Category is required'),
-        tipoDocumentoEmpresa: yup.mixed().required('Document type is required'),
-        documentoEmpresa: yup.string()
-            .required('Document number is required')
-            .test('len', 'Invalid format', function (value) {
-                const { tipoDocumentoEmpresa } = this.parent;
+        // selected_categoria: yup.mixed().required('La categoría es obligatoria'),
+        // tipoDocumentoEmpresa: yup.mixed().required('El tipo de documento es obligatorio'),
+        // documentoEmpresa: yup.string()
+        //     .required('El número de documento es obligatorio')
+        //     .test('len', 'Formato inválido', function (value) {
+        //         const { tipoDocumentoEmpresa } = this.parent;
 
-                // --- VALIDACIÓN PARA PERUANOS ---
-                if (tipoDocumentoEmpresa === 1) { // DNI
-                    return value?.length === 8 || this.createError({ message: 'DNI must be exactly 8 digits' });
-                }
-                if (tipoDocumentoEmpresa === 2) { // RUC
-                    return value?.length === 11 || this.createError({ message: 'RUC must be exactly 11 digits' });
-                }
+        //         // --- VALIDACIÓN PARA PERUANOS ---
+        //         if (tipoDocumentoEmpresa === 1) { // DNI
+        //             return value?.length === 8 || this.createError({ message: 'El DNI debe tener exactamente 8 dígitos' });
+        //         }
+        //         if (tipoDocumentoEmpresa === 2) { // RUC
+        //             return value?.length === 11 || this.createError({ message: 'El RUC debe tener exactamente 11 dígitos' });
+        //         }
 
-                // --- FLUJO EXTRANJERO ---
-                // Permitimos cualquier longitud alfanumérica, solo validamos que exista
-                return value?.length > 0;
-            }),
-        razonSocial: yup.string().required('Business name is required'),
-        direccionEmpresa: yup.string().required('Company address is required'),
-        responsable: yup.string().required('Responsible party name is required'),
-        correo_facturador: yup.string()
-            .email('Invalid email format')
-            .required('Billing email is required'),
-        reglamento: yup.boolean().oneOf([true], 'You must accept the regulations'),
+        //         // --- FLUJO EXTRANJERO ---
+        //         return value?.length > 0;
+        //     }),
+        // razonSocial: yup.string().required('La razón social es obligatoria'),
+        // direccionEmpresa: yup.string().required('La dirección de la empresa es obligatoria'),
+        // responsable: yup.string().required('El nombre del responsable es obligatorio'),
+        // correo_facturador: yup.string()
+        //     .email('Formato de correo inválido')
+        //     .required('El correo de facturación es obligatorio'),
+        // reglamento: yup.boolean().oneOf([true], 'Debe aceptar el reglamento'),
     })
 });
 
@@ -174,9 +173,17 @@ const getInscripcion = async () => {
     // Si es viajes, permitimos pasar con 0
     const totalValido = esSeccionViajes.value ? true : (total.value > 0);
 
-    if (!result.valid || !totalValido || (show_document.value && !uploadDocument.value)) {
-        return { validate: false };
-    }
+    console.log("Validación de formulario:", {
+        valid: result.valid,
+        total: total.value,
+        show_document: show_document.value,
+        uploadDocument: uploadDocument.value,
+        totalValido
+    });
+
+    // if (!result.valid || !totalValido || (show_document.value && !uploadDocument.value)) {
+    //     return { validate: false };
+    // }
 
     return {
         validate: true,
@@ -229,15 +236,27 @@ watch(() => props.data_persona, (newVal) => {
 }, { immediate: true, deep: true });
 
 // Busca este watcher en tu código y modifícalo así:
-watch(selected_categoria, (newId) => {
-    if (!newId) return; // Si es nulo, no hacer nada
+// watch(selected_categoria, (newId) => {
+//     if (!newId) return; // Si es nulo, no hacer nada
 
-    const cat = props.categorias.find(c => c.id === newId);
+//     const cat = props.categorias.find(c => c.id === newId);
+//     if (cat) {
+//         changeCategory(newId, cat.precio_disponible?.valor || 0);
+//     }
+// });
+
+// Busca esto y cámbialo para asegurar que encuentre el precio
+watch(selected_categoria, (newId) => {
+    if (!newId) return;
+
+    // Forzamos la búsqueda en el array de categorías
+    const lista = Object.values(props.categorias); // Por si viene como objeto desde PHP
+    const cat = lista.find(c => c.id == newId);
+
     if (cat) {
-        // Solo ejecutamos changeCategory si el total actual es 0
-        // o si la categoría cambió realmente por una acción que no sea el llenado inicial
-        // console.log("Watcher detectó cambio de categoría a:", newId);
-        changeCategory(newId, cat.precio_disponible?.valor || 0);
+        // Asegúrate de pasar el valor numérico
+        const precio = cat.precio_disponible?.valor || 0;
+        changeCategory(newId, precio);
     }
 });
 
@@ -269,7 +288,7 @@ const onlyAlphanumericKey = (event) => {
     // 2. Validar Alfanumérico
     if (!/^[a-zA-Z0-9]+$/.test(charStr)) {
         event.preventDefault();
-        alphanumericMessage.value = "Only letters and numbers are allowed (no spaces or symbols)";
+        alphanumericMessage.value = "Solo se permiten letras y números (sin espacios ni símbolos)";
 
         setTimeout(() => {
             alphanumericMessage.value = '';
@@ -280,17 +299,7 @@ const onlyAlphanumericKey = (event) => {
     return true;
 };
 
-// EXTREMA SEGURIDAD: Watcher para limpiar si pegan texto con símbolos
-// watch(documentoEmpresa, (newValue) => {
-//     if (tipo_doc.value !== 1 && newValue) { // Solo si NO es DNI
-//         const cleaned = newValue.replace(/[^a-zA-Z0-9]/g, '');
-//         if (cleaned !== newValue) {
-//             documentoEmpresa.value = cleaned;
-//             alphanumericMessage.value = "Special characters were removed";
-//             setTimeout(() => { alphanumericMessage.value = ''; }, 3000);
-//         }
-//     }
-// });
+
 watch(documentoEmpresa, (newValue) => {
     // CAMBIO AQUÍ: tipoDocumentoEmpresa en lugar de tipo_doc
     if (tipoDocumentoEmpresa.value !== 1 && newValue) {
@@ -583,7 +592,7 @@ defineExpose({ getInscripcion });
                 <template #header>
                     <div
                         class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc text-blue-900">
-                        Category Details
+                        Detalles de Categoria
                     </div>
                 </template>
 
@@ -616,11 +625,6 @@ defineExpose({ getInscripcion });
                                 }">
                                 <div class="flex items-start w-full">
                                     <div class="flex-none pt-1">
-                                        <!-- <RadioButton v-model="selected_categoria" v-bind="selected_categoriaAttrs"
-                                            name="selected_categoria" :value='categoria.id' class="radio-green-iimp"
-                                            @click="changeCategory(categoria.id, categoria.precio_disponible.valor)" /> -->
-                                        <!-- <RadioButton v-model="selected_categoria" :value="categoria.id"
-                                            @click="changeCategory(categoria.id, categoria.precio_disponible?.valor)" /> -->
                                         <RadioButton v-model="selected_categoria" :value="categoria.id" />
                                     </div>
                                     <div class="flex flex-col sm:flex-row sm:justify-between w-full pl-3 cursor-pointer"
@@ -747,18 +751,18 @@ defineExpose({ getInscripcion });
         <div class="text-green-iimp font-bold p-4">
             <Card class="mt-5 overflow-hidden">
                 <template #header>
-                    <div class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc">
-                        Billing Information
+                    <div class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc mb-2">
+                        Información de Facturación
                     </div>
                     <div v-if="missingFields.length > 0"
                         class="flex flex-col p-4 mb-6 text-orange-800 border-t-4 border-orange-300 bg-orange-50 rounded-lg shadow-sm"
                         role="alert">
                         <div class="flex items-center">
                             <i class="pi pi-exclamation-circle mr-2 text-xl"></i>
-                            <span class="text-sm font-bold">Billing Information Incomplete</span>
+                            <span class="text-sm font-bold">Información de facturación incompleta</span>
                         </div>
                         <div class="mt-2 text-sm">
-                            Please complete the following required fields to proceed to payment:
+                            Por favor, complete los siguientes campos obligatorios para continuar con el pago:
                             <ul class="list-disc ml-5 mt-1 font-semibold">
                                 <li v-for="field in missingFields" :key="field">{{ field }}</li>
                             </ul>
@@ -777,21 +781,22 @@ defineExpose({ getInscripcion });
                         <div class="flex flex-col">
                             <span class="font-black text-[12px] uppercase tracking-wider"
                                 :class="tipoDocumentoEmpresa === 1 ? 'text-blue-800' : 'text-purple-800'">
-                                {{ tipoDocumentoEmpresa === 1 ? ' Receipt Information' :
-                                    'Invoice Information' }}
+                                {{ tipoDocumentoEmpresa === 1 ? 'Información de Boleta' : 'Información de Factura' }}
                             </span>
 
                             <p v-if="tipoDocumentoEmpresa === 1" class="text-xs font-medium text-blue-700">
                                 <span class="italic opacity-80">
-                                    By selecting <strong>DNI</strong>, an electronic <strong>Sales Receipt</strong> will
-                                    be issued in the name of the individual.
+                                    Al seleccionar <strong>DNI</strong>, se emitirá una <strong>Boleta de Venta</strong>
+                                    electrónica
+                                    a nombre de la persona natural.
                                 </span>
                             </p>
 
                             <p v-else class="text-xs font-medium text-purple-700">
                                 <span class="italic opacity-80">
-                                    By selecting <strong>RUC</strong>, an electronic <strong>Commercial Invoice</strong>
-                                    will be issued in the name of the company or legal entity.
+                                    Al seleccionar <strong>RUC</strong>, se emitirá una <strong>Factura
+                                        Comercial</strong> electrónica
+                                    a nombre de la empresa o entidad legal.
                                 </span>
                             </p>
                         </div>
@@ -833,11 +838,11 @@ defineExpose({ getInscripcion });
 
                     <div class="flex justify-center md:justify-end px-6 mb-6">
                         <Button v-if="!isEditingBilling" icon="pi pi-exclamation-circle"
-                            label="The information is incorrect? Click here to modify"
+                            label="¿La información es incorrecta? Haz clic aquí para modificar"
                             class="p-button-raised p-button-warning font-bold p-4 shadow-md w-full md:w-auto"
                             style="background-color: #f59e0b; border-color: #d97706; color: #ffffff;"
                             @click="enableManualEdit" />
-                        <Button v-else icon="pi pi-check-circle" label="I'm done editing, save changes"
+                        <Button v-else icon="pi pi-check-circle" label="He terminado de editar, guardar cambios"
                             class="p-button-raised p-button-success font-bold p-4 shadow-md w-full md:w-auto"
                             style="background-color: #10b981; border-color: #059669; color: #ffffff;"
                             @click="isEditingBilling = false" />
@@ -845,7 +850,7 @@ defineExpose({ getInscripcion });
                     <div class="grid gap-6 m-6 md:grid-cols-2">
                         <div class="grid gap-6 md:grid-cols-2">
                             <div class="col-span-3 sm:col-span-1">
-                                <label class="block mb-1">Document Type <span class="text-red-600">*</span></label>
+                                <label class="block mb-1">Tipo de Documento <span class="text-red-600">*</span></label>
                                 <Select v-model="tipoDocumentoEmpresa" :options="filteredDocTypes" optionLabel="name_en"
                                     optionValue="id" :disabled="!isEditingBilling" class="w-full border-green-iimp"
                                     @change="setTipoDocPago" />
@@ -854,13 +859,16 @@ defineExpose({ getInscripcion });
                             </div>
 
                             <div class="col-span-3 sm:col-span-1">
-                                <label class="block mb-1">Document Number <span class="text-red-600">*</span></label>
+                                <label class="block mb-1">Numero de Documento <span
+                                        class="text-red-600">*</span></label>
                                 <InputGroup>
                                     <InputText v-model="documentoEmpresa" :readonly="!isEditingBilling"
                                         class="border-green-iimp" @keypress="onlyAlphanumericKey" @paste="onlyNumberKey"
                                         :maxlength="12" :disabled="!isEditingBilling" />
-                                    <Button icon="pi pi-search" class="bg-green-iimp" @click="getEmpresaData"
-                                        :loading="loading_doc" :disabled="!isEditingBilling || !documentoEmpresa" />
+                                    <Button icon="pi pi-search"
+                                        class="!bg-orange-600 !border-orange-600 hover:!bg-orange-500 hover:!border-orange-500 !text-white !shadow-none"
+                                        @click="getEmpresaData" :loading="loading_doc"
+                                        :disabled="!isEditingBilling || !documentoEmpresa" />
                                 </InputGroup>
                                 <small v-if="dniMessageEmpresa" class="text-orange-600 font-bold block mt-1">
                                     <i class="pi pi-info-circle mr-1"></i> {{ dniMessageEmpresa }}
@@ -877,8 +885,7 @@ defineExpose({ getInscripcion });
                         </div>
 
                         <div class="w-full sm:col-span-1">
-                            <label class="block mb-1">Business Name / Full Name <span
-                                    class="text-red-600">*</span></label>
+                            <label class="block mb-1">Nombre o Razon Social <span class="text-red-600">*</span></label>
                             <InputText v-model="razonSocial" class="w-full border-green-iimp"
                                 :disabled="!isEditingBilling || loading_doc"
                                 :readonly="!isEditingBilling || block_direction" />
@@ -888,28 +895,29 @@ defineExpose({ getInscripcion });
 
                     <div class="grid gap-6 m-6 md:grid-cols-2">
                         <div class="w-full sm:col-span-1">
-                            <label class="block mb-1">Address <span class="text-red-600">*</span></label>
+                            <label class="block mb-1">Dirección Fiscal <span class="text-red-600">*</span></label>
                             <InputText v-model="direccionEmpresa" class="w-full border-green-iimp"
                                 :readonly="!isEditingBilling || block_direction"
                                 :disabled="!isEditingBilling || loading_doc" />
                             <small class="text-red-600" v-if="errors.direccionEmpresa">{{ errors.direccionEmpresa
-                            }}</small>
+                                }}</small>
                         </div>
 
                         <div class="grid gap-6 md:grid-cols-2">
                             <div class="w-full sm:col-span-1">
-                                <label class="block mb-1">Billing Contact <span class="text-red-600">*</span></label>
+                                <label class="block mb-1">Responsable Facturación <span
+                                        class="text-red-600">*</span></label>
                                 <InputText v-model="responsable" :readonly="!isEditingBilling"
                                     class="w-full border-green-iimp" :disabled="!isEditingBilling || loading_doc" />
                                 <small class="text-red-600" v-if="errors.responsable">{{ errors.responsable }}</small>
                             </div>
 
                             <div class="w-full sm:col-span-1">
-                                <label class="block mb-1">Billing Email <span class="text-red-600">*</span></label>
+                                <label class="block mb-1">Email Facturación <span class="text-red-600">*</span></label>
                                 <InputText v-model="correo_facturador" :readonly="!isEditingBilling"
                                     class="w-full border-green-iimp" :disabled="!isEditingBilling || loading_doc" />
                                 <small class="text-red-600" v-if="errors.correo_facturador">{{ errors.correo_facturador
-                                }}</small>
+                                    }}</small>
                             </div>
                         </div>
                     </div>

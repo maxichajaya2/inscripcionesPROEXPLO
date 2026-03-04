@@ -5,7 +5,7 @@ import GreenArrowRight from '@/Components/GreenArrowRight.vue';
 import { router, usePage } from '@inertiajs/vue3';
 import { ref, computed, onMounted, nextTick } from 'vue';
 
-// Estilos globales
+// Estilos globales de Proexplo
 import "../../../css/inscripciones.css";
 
 const props = defineProps({
@@ -14,10 +14,10 @@ const props = defineProps({
         default: () => []
     }
 });
-const showSupport = ref(false);
 
-const grupoSeleccionado = ref(null);
-const macroSeccion = ref(null); // 'inscripciones' o 'viajes'
+const showSupport = ref(false);
+const grupoSeleccionado = ref(null); // 'general', 'docente', 'estudiante'
+const macroSeccion = ref(null);      // 'inscripciones' o 'viajes'
 const copiado = ref(false);
 
 const seleccionarGrupo = (grupo) => {
@@ -26,81 +26,63 @@ const seleccionarGrupo = (grupo) => {
 };
 
 const copiarCorreo = () => {
-    const email = 'wmc.itsupport@iimp.org.pe';
+    const email = 'soporte@proexplo.com.pe';
     navigator.clipboard.writeText(email).then(() => {
         copiado.value = true;
-        // El mensaje desaparece después de 2 segundos
         setTimeout(() => {
             copiado.value = false;
         }, 3000);
     });
 };
-// const categoriasVisibles = computed(() => {
-//     if (!grupoSeleccionado.value) return [];
-//     return props.categorias.filter(cat => cat.grupo === grupoSeleccionado.value);
-// });
 
 const categoriasVisibles = computed(() => {
     if (!grupoSeleccionado.value) return [];
 
-    // 1. Filtramos primero por el grupo (autor/participante)
-    let filtradas = props.categorias.filter(cat => cat.grupo === grupoSeleccionado.value);
+    return props.categorias.filter(cat => {
+        const nombreEn = cat.nombre_en.toUpperCase();
 
-    // 2. Si estamos en la sección de VIAJES, ocultamos Student y One Day
-    if (macroSeccion.value === 'viajes') {
-        filtradas = filtradas.filter(cat => {
-            const nombre = cat.nombre_en.toUpperCase();
-            // Retorna falso para los que NO queremos mostrar
-            return !nombre.includes('STUDENT') && !nombre.includes('ONE DAY');
-        });
-    }
-    // Filtramos por el grupo (autor/participante)
-    // y podrías añadir un filtro extra si tu base de datos tiene algo para "viajes"
-    return filtradas;
-})
+        if (grupoSeleccionado.value === 'general') {
+            // Filtra los que NO sean estudiantes ni docentes
+            return !nombreEn.includes('ESTUDIANTE') && !nombreEn.includes('DOCENTE') && !nombreEn.includes('STUDENT');
+        }
+
+        if (grupoSeleccionado.value === 'estudiante') {
+            // Solo los que digan Estudiante
+            return nombreEn.includes('ESTUDIANTE') || nombreEn.includes('STUDENT');
+        }
+
+        if (grupoSeleccionado.value === 'docente') {
+            // Solo los que digan Docente
+            return nombreEn.includes('DOCENTE');
+        }
+
+        return false;
+    });
+});
+
+console.log('Categorías recibidas:', props.categorias);
 
 const volverAMacro = () => {
     macroSeccion.value = null;
     grupoSeleccionado.value = null;
 };
 
-// const irAlFormulario = (id) => {
-//     // Buscamos la categoría para saber su grupo
-//     const categoria = props.categorias.find(c => c.id === id);
-
-//     if (categoria.grupo === 'autor') {
-//         router.get(route('inscripcion.autor'), { category: id });
-//     } else {
-//         router.get(route('inscripcion.participante'), { category: id });
-//     }
-// };
-
 const irAlFormulario = (id) => {
     const categoria = props.categorias.find(c => c.id === id);
-
-    // Preparamos los parámetros
     const params = {
         category: id,
-        section: macroSeccion.value,// Esto enviará 'inscripciones' o 'viajes'
+        section: macroSeccion.value,
         profile: categoria.id_perfil
     };
-
-    if (categoria.grupo === 'autor') {
-        router.get(route('inscripcion.autor'), params);
-    } else {
-        router.get(route('inscripcion.participante'), params);
-    }
+    router.get(route('inscripcion.participante'), params);
 };
 
 const scrollToCategories = () => {
     nextTick(() => {
-        // Buscamos el ID que pusimos en el HTML
         const element = document.getElementById('section-categories');
         if (element) {
-            // Ajuste: offset para que no quede pegado al borde superior
             const yOffset = -20;
             const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
-
             window.scrollTo({ top: y, behavior: 'smooth' });
         }
     });
@@ -108,226 +90,123 @@ const scrollToCategories = () => {
 </script>
 
 <template>
-    <AppLayout class="bg-gradient-wmc">
+    <AppLayout class="bg-proexplo-dark">
         <div class="px-6 py-12 mx-auto max-w-6xl min-h-[80vh] flex flex-col justify-center font-sans">
-            <div class="preventa-banner-home animate-fade-in-down mb-8">
-                <div class="banner-home-content p-3 md:p-6 flex items-center gap-3">
-                    <div class="banner-home-icon shrink-0">
-                        <span class="text-xl md:text-2xl">⏳</span>
+
+            <div class="banner-proexplo-early animate-fade-in-down mb-8">
+                <div class="p-3 md:p-6 flex items-center gap-3">
+                    <div class="banner-icon-orange shrink-0">
+                        <span class="text-xl md:text-2xl text-white">🔥</span>
                     </div>
-                    <div class="banner-home-text text-left">
+                    <div class="text-left">
                         <div class="flex items-center gap-2 mb-0.5">
-                            <span class="tag-early-bird text-[10px] md:text-xs px-2 py-0.5">EARLY BIRD RATES</span>
+                            <span class="tag-proexplo text-[10px] md:text-xs px-2 py-0.5">TARIFAS PREVENTA</span>
                         </div>
-                        <h2 class="text-base md:text-2xl font-black text-white leading-tight">
-                            Take advantage of Early Bird rates!
+                        <h2 class="text-base md:text-2xl font-black text-slate-800 leading-tight">
+                            ¡Aprovecha los precios preventa de PROEXPLO!
                         </h2>
-                        <p class="text-white/80 text-xs md:text-base leading-snug">
-                            Register by <strong>March 31st</strong> and secure your spot.
+                        <p class="text-slate-600 text-xs md:text-base leading-snug">
+                            Inscríbete antes del <strong>15 de Abril</strong> y asegura tu participación.
                         </p>
                     </div>
                 </div>
             </div>
-            <!-- <div class="mb-10 w-full max-w-2xl mx-auto">
-                <div class="flex items-center justify-between relative">
-                    <div class="absolute top-1/2 left-0 w-full h-0.5 bg-white/10 -translate-y-1/2 z-0"></div>
-                    <div class="absolute top-1/2 left-0 h-0.5 bg-blue-500 transition-all duration-500 -translate-y-1/2 z-0"
-                        :style="{ width: grupoSeleccionado ? '50%' : '15%' }"></div>
 
-                    <div class="relative z-10 flex flex-col items-center gap-2">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300"
-                            :class="!macroSeccion ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'bg-blue-900 text-blue-200'">
-                            1
-                        </div>
-                        <span class="text-[10px] uppercase tracking-tighter font-black text-blue-400">Type</span>
-                    </div>
-
-                    <div class="relative z-10 flex flex-col items-center gap-2">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300"
-                            :class="macroSeccion && !grupoSeleccionado ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)]' : (grupoSeleccionado ? 'bg-blue-900 text-blue-200' : 'bg-gray-800 text-gray-500')">
-                            2
-                        </div>
-                        <span class="text-[10px] uppercase tracking-tighter font-black"
-                            :class="macroSeccion ? 'text-blue-400' : 'text-gray-500'">Profile</span>
-                    </div>
-
-                    <div class="relative z-10 flex flex-col items-center gap-2">
-                        <div
-                            class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-gray-800 text-gray-500 transition-all duration-300 border border-white/5">
-                            3
-                        </div>
-                        <span class="text-[10px] uppercase tracking-tighter font-black text-gray-500">Checkout</span>
-                    </div>
-                </div>
-            </div> -->
             <div id="titulo_inicial" class="mb-12 text-left animate-fade-in-down">
-                <h1 class="text-4xl md:text-5xl font-black text-yellow-price tracking-tight mb-2">
-                    World Mining Congress <span class="text-white">2026</span>
+                <h1 class="text-4xl md:text-5xl font-black text-orange-500 tracking-tight mb-2">
+                    XV Congreso Internacional de Prospectores y Exploradores <span class="text-green-500">PROEXPLO
+                        2026</span>
                 </h1>
-                <h3 class="text-xl md:text-2xl text-cyan-50 font-medium opacity-90 mb-4">
-                    Select registration type
+                <h3 class="text-xl md:text-2xl text-white font-medium opacity-90 mb-4">
+                    Seleccione su tipo de inscripción
                 </h3>
-                <colorbar class="block w-48 h-1.5 rounded-full" />
+                <div class="block w-48 h-1.5 rounded-full bg-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.5)]"></div>
             </div>
 
             <div class="flex flex-col lg:flex-row gap-8 items-start">
 
-
                 <div class="w-full lg:w-5/12 space-y-6">
 
                     <div v-if="!macroSeccion" class="space-y-6 animate-fade-in">
-                        <!-- <button @click="macroSeccion = 'inscripciones'"
-                            class="w-full group relative flex items-center justify-between p-8 bg-white/5 border border-white/10 rounded-3xl backdrop-blur-md transition-all duration-300 hover:border-blue-500 hover:bg-white/10 hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] text-left">
-                            <div class="flex flex-col z-10">
-                                <div class="flex flex-col z-10">
-                                    <span class="text-blue-400 text-xs uppercase tracking-widest font-bold mb-1">
-                                        Register now and get access to shorts courses and technical visits
-                                    </span>
-                                    <h5
-                                        class="text-2xl font-black text-white group-hover:text-blue-200 transition-colors">
-                                        REGISTRATION TO EVENT
-                                    </h5>
-                                    <span class="text-yellow-price text-xs uppercase tracking-widest font-bold mb-1">
-                                        Register as a partcipant, select your category, and complete payment
-                                    </span>
-
-                                </div>
-                            </div>
-                            <div
-                                class="p-4 rounded-2xl bg-white/10 group-hover:bg-blue-600 transition-all duration-300">
-                                <GreenArrowRight class="w-6 h-6 invert brightness-200" />
-                            </div>
-                        </button> -->
-
                         <button @click="macroSeccion = 'inscripciones'"
-                            class="w-full group relative flex items-center justify-between p-8 bg-blue-600/10 border-2 border-blue-500/50 rounded-3xl backdrop-blur-xl transition-all duration-500 hover:border-blue-400 hover:bg-blue-600/20 text-left overflow-hidden border-loading-effect glow-intense">
+                            class="w-full group relative flex items-center justify-between p-8 bg-gradient-to-br from-[#fb923c] via-[#f97316] to-[#ea580c] border-2 border-orange-600 rounded-3xl transition-all duration-500 hover:scale-[1.02] text-left border-proexplo-loading glow-orange overflow-hidden">
 
-                            <div class="absolute inset-0 border-anim-line pointer-events-none opacity-100"></div>
-
-                            <div
-                                class="absolute inset-0 bg-blue-400/20 animate-soft-glow pointer-events-none filter blur-xl">
-                            </div>
-
-                            <div
-                                class="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-shimmer-effect pointer-events-none">
-                            </div>
+                            <div class="absolute inset-0 border-anim-orange pointer-events-none opacity-100"></div>
 
                             <div class="flex flex-col z-10">
-                                <div class="flex flex-col z-10">
-                                    <span class="text-yellow-400 text-xs uppercase tracking-widest font-bold mb-1">
-                                        Register as a participant, select your category, and complete payment
+                                <span
+                                    class="text-orange-100 text-xs uppercase tracking-widest font-bold mb-1 drop-shadow-sm">
+                                    Registro Oficial
+                                </span>
+                                <h5
+                                    class="text-2xl font-black text-white group-hover:text-orange-50 transition-colors flex items-center gap-3 uppercase drop-shadow-md">
+                                    Inscripción al Evento
+                                    <span class="relative flex h-3 w-3">
+                                        <span
+                                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                        <span
+                                            class="relative inline-flex rounded-full h-3 w-3 bg-white shadow-[0_0_10px_#ffffff]"></span>
                                     </span>
-                                    <!-- <span
-                                        class="text-blue-300 text-xs uppercase tracking-widest font-black mb-1 drop-shadow-[0_0_5px_rgba(59,130,246,0.8)]">
-                                        Register now and get access to shorts courses and technical visits
-                                    </span> -->
-                                    <h5
-                                        class="text-2xl font-black text-white group-hover:text-blue-200 transition-colors flex items-center gap-3 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
-                                        REGISTRATION TO EVENT
-                                        <span class="relative flex h-3 w-3">
-                                            <span
-                                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-300 opacity-90"></span>
-                                            <span
-                                                class="relative inline-flex rounded-full h-3 w-3 bg-blue-400 shadow-[0_0_15px_#3b82f6]"></span>
-                                        </span>
-                                    </h5>
-
-                                </div>
+                                </h5>
                             </div>
 
                             <div
-                                class="p-4 rounded-2xl bg-blue-500/20 border-2 border-blue-400/50 group-hover:bg-blue-600 group-hover:shadow-[0_0_30px_rgba(59,130,246,0.8)] transition-all duration-300 z-10">
-                                <GreenArrowRight class="w-6 h-6 invert brightness-200" />
+                                class="p-4 rounded-2xl bg-white/20 backdrop-blur-md text-white z-10 shadow-lg group-hover:bg-white/30 transition-all border border-white/30">
+                                <GreenArrowRight class="w-6 h-6 invert" />
                             </div>
                         </button>
+
                         <button @click="macroSeccion = 'viajes'"
-                            class="w-full group relative flex items-center justify-between p-8 bg-white/5 border border-white/10 rounded-3xl backdrop-blur-md transition-all duration-300 hover:border-green-500 hover:bg-white/10 hover:shadow-[0_0_20px_rgba(34,197,94,0.3)] text-left">
+                            class="w-full group relative flex items-center justify-between p-8 bg-green-50 border border-green-200 rounded-3xl transition-all duration-300 hover:border-green-500 hover:bg-green-100 text-left shadow-sm">
+
                             <div class="flex flex-col z-10">
-
-                                <span class="text-yellow-price text-xs uppercase tracking-widest font-bold mb-1">
-                                    Sign up for optional site visits and training programs
+                                <span class="text-green-600 text-xs uppercase tracking-widest font-bold mb-1">
+                                    Actividades Extras
                                 </span>
-                                <h5 class="text-2xl font-black text-white group-hover:text-green-200 transition-colors">
-                                    TECHNICAL VISITS AND SHORT COURSES
+                                <h5
+                                    class="text-2xl font-black text-slate-800 group-hover:text-green-700 transition-colors uppercase leading-tight">
+                                    Cursos Cortos y Visitas Técnicas
                                 </h5>
-
                             </div>
+
                             <div
-                                class="p-4 rounded-2xl bg-white/10 group-hover:bg-green-600 transition-all duration-300">
-                                <GreenArrowRight class="w-6 h-6 invert brightness-200" />
+                                class="p-4 rounded-2xl bg-green-500 text-white shadow-lg group-hover:bg-green-600 transition-all duration-300">
+                                <GreenArrowRight class="w-6 h-6" />
                             </div>
                         </button>
                     </div>
-                    <div v-else class="space-y-6 animate-fade-in-right">
+
+                    <div v-else class="space-y-4 animate-fade-in-right">
                         <button @click="volverAMacro"
-                            class="group flex items-center gap-3 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 rounded-xl transition-all duration-300 mb-8 w-fit shadow-lg backdrop-blur-sm">
-                            <div class="rotate-180 transition-transform group-hover:-translate-x-1">
-                                <GreenArrowRight class="w-4 h-4 invert brightness-200" />
+                            class="group flex items-center gap-3 px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl transition-all mb-8 w-fit shadow-sm">
+                            <div class="rotate-180">
+                                <GreenArrowRight class="w-4 h-4 text-slate-600" />
                             </div>
-                            <span class="text-white text-xs font-black uppercase tracking-[0.15em]">
-                                Back to Start
-                            </span>
+                            <span class="text-slate-700 text-xs font-black uppercase">Volver</span>
                         </button>
 
-                        <!-- <h4 class="text-white/60 font-bold text-[15px] uppercase tracking-[0.2em] mb-4">
-                            Select your profile for <span class="text-yellow-price">{{ macroSeccion === 'inscripciones'
-                                ? 'REGISTRATION' : 'TOURS & COURSES' }}</span>:
-                        </h4> -->
-                        <button @click="seleccionarGrupo('participante')"
-                            :class="grupoSeleccionado === 'participante'
-                                ? 'bg-blue-900/40 border-blue-400 shadow-[0_0_35px_rgba(59,130,246,0.6)] scale-105 ring-1 ring-blue-300'
-                                : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]'"
-                            class="w-full group relative flex items-center justify-between p-6 backdrop-blur-md border rounded-3xl transition-all duration-300 ease-out text-left">
+                        <button v-for="perfil in ['general', 'docente', 'estudiante']" :key="perfil"
+                            @click="seleccionarGrupo(perfil)" :class="grupoSeleccionado === perfil
+                                ? 'bg-orange-600 border-orange-600 shadow-lg shadow-orange-500/30 scale-[1.02]'
+                                : 'bg-white border-slate-200 hover:border-orange-400 hover:bg-orange-50 shadow-sm'"
+                            class="w-full group p-6 rounded-3xl transition-all text-left flex justify-between items-center border uppercase">
 
-                            <div class="flex flex-col z-10">
-                                <span :class="grupoSeleccionado === 'participante' ? 'text-blue-200' : 'text-blue-400'"
-                                    class="text-xs uppercase tracking-widest font-bold mb-1 transition-colors">
-                                    Registration
+                            <div class="z-10">
+                                <span :class="grupoSeleccionado === perfil ? 'text-orange-200' : 'text-orange-600'"
+                                    class="text-[10px] font-bold uppercase tracking-widest mb-1 block">
+                                    Perfil
                                 </span>
-                                <h5 class="text-2xl font-black text-white group-hover:text-blue-200 transition-colors">
-                                    PARTICIPANT
+                                <h5 :class="grupoSeleccionado === perfil ? 'text-white' : 'text-slate-800'"
+                                    class="text-2xl font-black transition-colors">
+                                    {{ perfil }}
                                 </h5>
-                                <p class="text-xs text-gray-400 mt-1  group-hover:text-yellow-100/70 transition-colors">
-                                    General access for professionals, students, and attendees interested in
-                                    participating in the event, conferences, and scheduled activities.
-                                </p>
                             </div>
 
-                            <div :class="grupoSeleccionado === 'participante'
-                                ? 'bg-blue-600 shadow-lg scale-110 rotate-0'
-                                : 'bg-white/10 group-hover:bg-blue-600 group-hover:rotate-[-45deg]'"
-                                class="p-4 rounded-2xl transition-all duration-300">
-                                <GreenArrowRight class="w-6 h-6 invert brightness-200" />
+                            <div :class="grupoSeleccionado === perfil ? 'bg-white/20' : 'bg-slate-100 group-hover:bg-orange-100'"
+                                class="p-4 rounded-2xl transition-all">
+                                <GreenArrowRight :class="grupoSeleccionado === perfil ? 'w-5 h-5 invert' : 'w-5 h-5'" />
                             </div>
                         </button>
-
-                        <!-- <button @click="seleccionarGrupo('autor')" v-if="macroSeccion === 'inscripciones'"
-                            :class="grupoSeleccionado === 'autor'
-                                ? 'bg-cyan-900/40 border-cyan-400 shadow-[0_0_35px_rgba(34,211,238,0.6)] scale-105 ring-1 ring-cyan-300'
-                                : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-cyan-500 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]'"
-                            class="w-full group relative flex items-center justify-between p-6 backdrop-blur-md border rounded-3xl transition-all duration-300 ease-out text-left">
-
-                            <div class="flex flex-col z-10">
-                                <span :class="grupoSeleccionado === 'autor' ? 'text-cyan-200' : 'text-cyan-400'"
-                                    class="text-xs uppercase tracking-widest font-bold mb-1 transition-colors">
-                                    Registration
-                                </span>
-                                <h5 class="text-2xl font-black text-white group-hover:text-cyan-200 transition-colors">
-                                    SPECIAL AUTHOR
-                                </h5>
-                                <p class="text-xs text-gray-400 mt-1 group-hover:text-yellow-100/70 transition-colors">
-                                    Exclusive registration for authors whose papers have been accepted and selected as
-                                    winners for presentation at the event.
-                                </p>
-                            </div>
-
-                            <div :class="grupoSeleccionado === 'autor'
-                                ? 'bg-cyan-600 shadow-lg scale-110 rotate-0'
-                                : 'bg-white/10 group-hover:bg-cyan-600 group-hover:rotate-[-45deg]'"
-                                class="p-4 rounded-2xl transition-all duration-300">
-                                <GreenArrowRight class="w-6 h-6 invert brightness-200" />
-                            </div>
-                        </button> -->
                     </div>
                 </div>
 
@@ -336,111 +215,96 @@ const scrollToCategories = () => {
                         class="flex flex-col gap-5 animate-fade-in-right">
 
                         <div class="flex items-center justify-between px-2 mb-1">
-                            <h6 class="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em]">
-                                SELECT CATEGORY
+                            <h6 class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em]">
+                                Seleccione una categoría
                             </h6>
                         </div>
 
                         <div v-for="cat in categoriasVisibles" :key="cat.id" @click="irAlFormulario(cat.id)"
-                            class="w-full cursor-pointer group relative flex flex-row items-center justify-between p-6 rounded-3xl
-                                    bg-white/5 backdrop-blur-xl border border-white/10
-                                    transition-all duration-300 ease-out overflow-hidden
-                                    hover:bg-gradient-to-r hover:from-yellow-900/40 hover:to-transparent
-                                    hover:border-yellow-400/80 hover:shadow-[0_0_35px_rgba(234,179,8,0.4)] hover:scale-[1.02] hover:-translate-y-1">
-
-                            <div
-                                class="absolute inset-0 bg-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl">
-                            </div>
+                            class="w-full cursor-pointer group relative flex flex-row items-center justify-between p-6 rounded-3xl bg-white border border-slate-200 transition-all hover:bg-orange-50 hover:border-orange-500 hover:scale-[1.02] shadow-sm hover:shadow-md">
 
                             <div class="relative z-10 flex-1 pr-6">
                                 <div class="flex items-center gap-2 mb-2">
                                     <span
-                                        class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white/10 text-white/60 group-hover:bg-yellow-500/20 group-hover:text-yellow-200 transition-colors">
-                                        {{ cat.grupo === 'autor' ? 'Author Rate' : 'Attendee Rate' }}
+                                        class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-600 transition-colors">
+                                        PROEXPLO 2026
                                     </span>
                                 </div>
                                 <h4
-                                    class="text-lg md:text-xl font-bold text-white leading-tight group-hover:text-yellow-100 transition-colors">
+                                    class="text-lg md:text-xl font-bold text-slate-800 leading-tight group-hover:text-orange-700 transition-colors">
                                     {{ cat.nombre_en }}
                                 </h4>
-                                <p class="text-xs text-gray-400 mt-1  group-hover:text-yellow-100/70 transition-colors">
+                                <p class="text-xs text-slate-500 mt-1 group-hover:text-slate-600 transition-colors">
                                     {{ cat.categoria_description }}
                                 </p>
                             </div>
 
                             <div
-                                class="relative z-10 text-right flex flex-col items-end border-l border-white/10 pl-6 group-hover:border-yellow-500/30 transition-colors">
-                                <!-- <span
-                                    class="text-2xl md:text-4xl font-black text-yellow-price drop-shadow-[0_2px_10px_rgba(234,179,8,0.3)] group-hover:scale-110 transition-transform duration-300 origin-right">
-                                    {{ cat.precio_disponible?.moneda?.simbolo || '$' }}{{ cat.precio_disponible?.valor
-                                        || '0' }}
-                                </span> -->
-                                <span v-if="macroSeccion === 'inscripciones'" translate="no"
-                                    class="text-2xl md:text-4xl font-black text-yellow-price drop-shadow-[0_2px_10px_rgba(234,179,8,0.3)] group-hover:scale-110 transition-transform duration-300 origin-right">
+                                class="relative z-10 text-right flex flex-col items-end border-l border-slate-100 pl-6 group-hover:border-orange-200 transition-colors">
+                                <span
+                                    class="text-2xl md:text-4xl font-black text-slate-900 group-hover:text-orange-600 transition-colors">
                                     {{ cat.precio_disponible?.moneda?.simbolo || 'USD ' }}{{
-                                        cat.precio_disponible?.valor
-                                        || '0' }}
+                                        cat.precio_disponible?.valor || '0' }}
                                 </span>
-                                <!--    <span class="text-[9px] uppercase text-gray-400 font-bold mb-3 block tracking-wider">
-                                    + TAX / IVA
-                                </span>
-                            -->
                                 <div
-                                    class="px-4 py-2 rounded-full flex items-center gap-2 text-xs font-bold transition-all duration-300
-                                            border border-yellow-500/30 text-yellow-400 bg-yellow-500/5
-                                            group-hover:bg-yellow-500 group-hover:text-black group-hover:shadow-[0_0_15px_rgba(234,179,8,0.6)]">
-                                    {{ macroSeccion === 'inscripciones' ? 'Select' : 'View Details' }}
-                                    <GreenArrowRight
-                                        class="w-3 h-3 transition-all duration-300 group-hover:invert group-hover:brightness-0" />
+                                    class="mt-3 px-4 py-2 rounded-full border border-orange-500 text-orange-600 bg-white text-xs font-bold group-hover:bg-orange-600 group-hover:text-white transition-all shadow-sm">
+                                    Seleccionar
                                 </div>
                             </div>
                         </div>
-
                     </div>
-
 
                     <div v-else class="w-full mt-8 md:mt-0">
-                        <div class="p-8 bg-black/20 backdrop-blur-sm border-l-4 border-yellow-price rounded-r-2xl">
-                            <h6 class="text-yellow-price font-bold uppercase tracking-tighter mb-2">
-                                Important Note
+                        <div
+                            class="p-8 bg-[#FFF7ED] border-l-4 border-orange-500 rounded-r-2xl shadow-sm animate-fade-in">
+                            <h6
+                                class="text-orange-600 font-black uppercase tracking-widest mb-4 flex items-center gap-2 text-xs md:text-sm">
+                                ℹ️ Los inscritos en PROEXPLO 2026 tendrán los siguientes beneficios:
                             </h6>
-                            <div class="text-white/80 text-sm leading-relaxed">
-                                <p>
-                                    The World Mining Congress 2026 registration system is designed to manage participant
-                                    registrations and payment processing.
+
+                            <ul class="space-y-2 text-slate-700 text-sm">
+                                <li class="flex items-start gap-2">
+                                    <span class="shrink-0">✅</span>
+                                    <span class="leading-relaxed">Asistencia a las conferencias con interpretación
+                                        simultánea (inglés - español)</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="shrink-0">✅</span>
+                                    <span class="leading-relaxed">Ingreso a la Exhibición Técnica</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="shrink-0">✅</span>
+                                    <span class="leading-relaxed">Participación en las ceremonias de inauguración y
+                                        clausura</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="shrink-0">✅</span>
+                                    <span class="leading-relaxed">Acceso a las presentaciones en PDF
+                                        (autorizadas)</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="shrink-0">✅</span>
+                                    <span class="leading-relaxed">Certificado digital de participación a
+                                        solicitud</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="shrink-0">✅</span>
+                                    <span class="leading-relaxed">Almuerzo incluido</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="shrink-0">✅</span>
+                                    <span class="leading-relaxed">Recesos de café</span>
+                                </li>
+                            </ul>
+
+                            <div class="mt-4 pt-4 border-t border-orange-200 flex items-center gap-3">
+                                <div class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
+                                <p class="text-orange-600 text-[10px] md:text-xs font-bold tracking-wider uppercase">
+                                    Selecciona tu perfil a la izquierda para continuar
                                 </p>
-
-                                <p class="mt-4">
-                                    For any questions or technical issues related to the system or paper submissions,
-                                    please contact us via:
-                                </p>
-
-                                <div class="flex flex-col gap-3 mt-4">
-                                    <a href="mailto:wmc.itsupport@iimp.org.pe" @click.prevent="copiarCorreo"
-                                        class="flex items-center gap-2 text-cyan-400 font-bold underline hover:text-cyan-300 transition-colors">
-                                        <i class="pi pi-envelope"></i>
-                                        wmc.itsupport@iimp.org.pe
-                                    </a>
-
-                                    <transition name="bounce">
-                                        <span v-if="copiado"
-                                            class="absolute -top-10 left-0 bg-green-500 text-white text-xs font-black py-1.5 px-3 rounded-full shadow-[0_0_15px_rgba(34,197,94,0.6)] flex items-center whitespace-nowrap z-50">
-                                            <i class="pi pi-check-circle mr-2"></i>
-                                            Email copied. Please paste it into your email client.
-                                        </span>
-                                    </transition>
-
-                                    <a href="https://api.whatsapp.com/send/?phone=51987196080&text=Hello, I need assistance with WMC 2026 registration&type=phone_number&app_absent=0"
-                                        target="_blank"
-                                        class="flex items-center gap-2 text-green-400 font-bold underline hover:text-green-300 transition-colors">
-                                        <i class="pi pi-whatsapp"></i>
-                                        WhatsApp Support
-                                    </a>
-                                </div>
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -448,107 +312,102 @@ const scrollToCategories = () => {
 </template>
 
 <style scoped>
-.animate-fade-in-right {
-    animation: fadeInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* Fondo Proexplo Dark */
+.bg-proexplo-dark {
+    background: radial-gradient(circle at top right, #ffffff 0%, #ffffff 100%);
 }
 
-@keyframes fadeInRight {
-    from {
-        opacity: 0;
-        transform: translateX(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-.animate-fade-in {
-    animation: fadeIn 0.8s ease-out;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
-}
-
-.preventa-banner-home {
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%);
-    border: 1px solid rgba(245, 158, 11, 0.3);
-    border-left: 6px solid #f59e0b;
+/* Banner de Preventa Naranja */
+.banner-proexplo-early {
+    background: #fff7ed;
+    /* Naranja muy clarito */
+    border: 1px solid #ffedd5;
+    border-left: 6px solid #f97316;
     border-radius: 24px;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    /* Para soporte en Safari/iPhone */
-    position: relative;
-    overflow: hidden;
 }
 
-.banner-home-content {
-    display: flex;
-    align-items: center;
-    padding: 1.5rem;
-    gap: 1.25rem;
-}
-
-.banner-home-icon {
-    background: rgba(245, 158, 11, 0.2);
+.banner-icon-orange {
+    background: rgba(249, 115, 22, 0.2);
     width: 56px;
     height: 56px;
     border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
-    border: 1px solid rgba(245, 158, 11, 0.2);
+    border: 1px solid rgba(249, 115, 22, 0.3);
 }
 
-.tag-early-bird {
-    background: #f59e0b;
-    color: #000;
-    font-size: 0.65rem;
+.tag-proexplo {
+    background: #f97316;
+    color: white;
     font-weight: 900;
-    padding: 2px 8px;
     border-radius: 6px;
-    letter-spacing: 0.05em;
 }
 
-.banner-home-text h2 {
-    line-height: 1.2;
-    margin-bottom: 4px;
-}
-
-/* Adaptación para Mobile */
-@media (max-width: 640px) {
-    .banner-home-content {
-        padding: 1.25rem;
-        flex-direction: column;
-        text-align: center;
+/* Efecto Laser Naranja */
+@keyframes rotate-border {
+    from {
+        transform: rotate(0deg);
     }
 
-    .banner-home-icon {
-        width: 48px;
-        height: 48px;
-    }
-
-    .banner-home-text h2 {
-        font-size: 1.25rem;
-    }
-
-    .banner-home-text p {
-        font-size: 0.85rem;
+    to {
+        transform: rotate(360deg);
     }
 }
 
-/* Animación de entrada igual a la de tus títulos */
+.border-proexplo-loading {
+    position: relative;
+    overflow: hidden;
+    animation: border-pulse 2.5s infinite ease-in-out;
+}
+
+.border-anim-orange::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(transparent, transparent, transparent, #f97316, #ffffff, #f97316, transparent);
+    animation: rotate-border 3s linear infinite;
+    z-index: 0;
+}
+
+.border-proexplo-loading::after {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    /* Espacio para que se vea el borde animado */
+    background: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%);
+    border-radius: 22px;
+    z-index: 0;
+}
+
+@keyframes border-pulse {
+
+    0%,
+    100% {
+        border-color: rgba(249, 115, 22, 0.4);
+        box-shadow: 0 0 15px rgba(249, 115, 22, 0.2);
+    }
+
+    50% {
+        border-color: #fb923c;
+        box-shadow: 0 0 30px rgba(249, 115, 22, 0.5);
+    }
+}
+
+.glow-orange {
+    box-shadow: 0 0 20px rgba(249, 115, 22, 0.2);
+}
+
+/* Animaciones */
 .animate-fade-in-down {
     animation: fadeInDown 0.6s ease-out forwards;
+}
+
+.animate-fade-in-right {
+    animation: fadeInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes fadeInDown {
@@ -563,248 +422,15 @@ const scrollToCategories = () => {
     }
 }
 
-/* Animación de parpadeo suave del fondo */
-@keyframes soft-glow {
-
-    0%,
-    100% {
-        opacity: 0.3;
-    }
-
-    50% {
-        opacity: 0.8;
-    }
-}
-
-.animate-soft-glow {
-    animation: soft-glow 3s ease-in-out infinite;
-}
-
-/* Animación de destello que cruza el botón */
-@keyframes shimmer-effect {
-    0% {
-        transform: translateX(-100%);
-    }
-
-    30% {
-        transform: translateX(100%);
-    }
-
-    100% {
-        transform: translateX(100%);
-    }
-}
-
-.animate-shimmer-effect {
-    animation: shimmer-effect 4s infinite cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Mejora la escala al cargar para que se sienta dinámico */
-button {
-    backface-visibility: hidden;
-    transform: translateZ(0);
-}
-
-/* --- EFECTO DE BORDE CARGANDO / PARPADEANTE --- */
-
-.border-loading-effect {
-    position: relative;
-    /* Asegura que el contenido esté sobre el efecto */
-}
-
-/* El resplandor parpadeante general del borde */
-@keyframes border-pulse {
-
-    0%,
-    100% {
-        border-color: rgba(59, 130, 246, 0.2);
-        box-shadow: 0 0 10px rgba(59, 130, 246, 0.1);
-    }
-
-    50% {
-        border-color: rgba(59, 130, 246, 0.8);
-        box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
-    }
-}
-
-.border-loading-effect {
-    animation: border-pulse 4s infinite ease-in-out;
-}
-
-/* La línea que recorre el borde (opcional, muy profesional) */
-.border-anim-line::before {
-    content: "";
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: conic-gradient(transparent,
-            transparent,
-            transparent,
-            #3b82f6
-            /* Azul principal */
-        );
-    animation: rotate-border 4s linear infinite;
-    z-index: 0;
-}
-
-/* Máscara para que el efecto solo se vea en el borde de 2px */
-.border-loading-effect::after {
-    content: "";
-    position: absolute;
-    inset: 4px;
-    /* Grosor del borde */
-
-    /* Debe coincidir con el fondo oscuro de tu app */
-    border-radius: 22px;
-    /* Ajustado al rounded-3xl menos el inset */
-    z-index: 0;
-}
-
-/* Asegurar que el contenido del botón esté arriba de todo */
-.border-loading-effect>div {
-    position: relative;
-    z-index: 10;
-}
-
-@keyframes rotate-border {
+@keyframes fadeInRight {
     from {
-        transform: rotate(0deg);
+        opacity: 0;
+        transform: translateX(20px);
     }
 
     to {
-        transform: rotate(360deg);
-    }
-}
-
-/* Estilo para los círculos de los pasos */
-.stepper-circle {
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Animación para que la barra de progreso se sienta suave */
-.progress-bar-glow {
-    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-}
-
-/* --- EFECTO DE RESPLANDOR EXTREMO --- */
-
-.glow-intense {
-    /* Crea un halo de luz alrededor del botón */
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2), inset 0 0 15px rgba(59, 130, 246, 0.2);
-}
-
-@keyframes border-pulse {
-
-    0%,
-    100% {
-        border-color: rgba(59, 130, 246, 0.4);
-        box-shadow: 0 0 15px rgba(59, 130, 246, 0.3), inset 0 0 10px rgba(59, 130, 246, 0.2);
-    }
-
-    50% {
-        border-color: rgba(147, 197, 253, 1);
-        /* Azul muy claro */
-        box-shadow: 0 0 40px rgba(59, 130, 246, 0.8), inset 0 0 20px rgba(59, 130, 246, 0.4);
-    }
-}
-
-.border-loading-effect {
-    animation: border-pulse 2.5s infinite ease-in-out;
-    /* Más rápido para dar energía */
-}
-
-/* La línea que recorre el borde ahora es un "Láser" */
-.border-anim-line::before {
-    content: "";
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: conic-gradient(transparent,
-            transparent,
-            rgba(59, 130, 246, 0.1),
-            #3b82f6,
-            /* Azul neón */
-            #ffffff,
-            /* Núcleo blanco del láser */
-            #3b82f6,
-            transparent);
-    animation: rotate-border 3s linear infinite;
-    z-index: 0;
-    filter: blur(2px);
-    /* Efecto neón */
-}
-
-.border-loading-effect::after {
-    content: "";
-    position: absolute;
-    inset: 3px;
-    /* Borde un poco más delgado para que se vea más la luz */
-
-    /* Color oscuro de tu fondo */
-    border-radius: 22px;
-    z-index: 0;
-}
-
-/* Shimmer más rápido y brillante */
-@keyframes shimmer-effect {
-    0% {
-        transform: translateX(-100%) skewX(-15deg);
-    }
-
-    25% {
-        transform: translateX(100%) skewX(-15deg);
-    }
-
-    100% {
-        transform: translateX(100%) skewX(-15deg);
-    }
-}
-
-.animate-shimmer-effect {
-    animation: shimmer-effect 3s infinite cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Resplandor interno que "respira" */
-@keyframes soft-glow {
-
-    0%,
-    100% {
-        opacity: 0.4;
-        transform: scale(1);
-    }
-
-    50% {
-        opacity: 0.9;
-        transform: scale(1.05);
-    }
-}
-
-.bounce-enter-active {
-    animation: bounce-in 0.5s;
-}
-
-.bounce-leave-active {
-    animation: bounce-in 0.5s reverse;
-}
-
-@keyframes bounce-in {
-    0% {
-        transform: scale(0) translateY(10px);
-        opacity: 0;
-    }
-
-    50% {
-        transform: scale(1.1) translateY(-5px);
-    }
-
-    100% {
-        transform: scale(1) translateY(0);
         opacity: 1;
+        transform: translateX(0);
     }
 }
 </style>

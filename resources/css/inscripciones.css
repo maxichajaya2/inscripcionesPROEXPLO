@@ -56,11 +56,20 @@
   background: linear-gradient(to bottom right, #00b3dc, #0124e0, #00023f);
 } */
 
-.bg-gradient-wmc {
+/* .bg-gradient-wmc {
     background-image: url("/images/fondo-wmc.png");
     background-size: 100% 100%;
     background-position: center;
     background-repeat: no-repeat;
+} */
+
+.bg-degradient {
+    background: linear-gradient(
+        to bottom right,
+        #fb923c 0%,    /* Naranja claro (brillo) */
+        #f97316 50%,   /* Naranja Proexplo base */
+        #ea580c 100%   /* Naranja oscuro (sombra) */
+    ) !important;
 }
 
 .p-radiobutton-checked .p-radiobutton-box {
@@ -238,8 +247,16 @@ table {
 }
 
 /* Fondo Azul Claro (Para reemplazar bg-lightgreen-iimp si quisieras) */
-.bg-lightblue-wmc {
+/* .bg-lightblue-wmc {
     background: linear-gradient(90deg, rgba(29, 78, 216, 0.1) 0%, rgba(6, 182, 212, 0.15) 100%) !important;
+} */
+
+.bg-lightblue-wmc {
+    background: linear-gradient(
+        90deg,
+        rgba(249, 115, 22, 0.1) 0%,   /* Naranja Proexplo con 10% de opacidad */
+        rgba(234, 88, 12, 0.15) 100%   /* Naranja más intenso con 15% de opacidad */
+    ) !important;
 }
 
 /* Texto Azul Oscuro */
