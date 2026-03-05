@@ -43,7 +43,7 @@ const verItinerario = (item) => {
 const validarSeleccion = () => {
     // Si es sección viajes y no hay nada seleccionado
     if (props.section === 'viajes' && extras_seleccionados.value.length === 0) {
-        formManualErrors.value.total = "Please select at least one course or technical visit to proceed with your registration.";
+       formManualErrors.value.total = "Por favor, seleccione al menos un curso o visita técnica para continuar con su registro.";
 
         // Scroll automático al error para que no haya pierde
         const el = document.getElementById('error-container-extras');
@@ -73,13 +73,7 @@ const total_extras = computed(() => {
         }, 0);
 });
 
-// const toggleSelection = (id) => {
-//     if (extras_seleccionados.value.includes(id)) {
-//         extras_seleccionados.value = extras_seleccionados.value.filter(i => i !== id);
-//     } else {
-//         extras_seleccionados.value.push(id);
-//     }
-// };
+
 const toggleSelection = (id) => {
     if (extras_seleccionados.value.includes(id)) {
         // Si ya está, lo quitamos normalmente
@@ -273,9 +267,9 @@ defineExpose({
                                                     class="px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 text-[9px] font-black uppercase tracking-wider border border-blue-200">
                                                     {{ item.evento }}
                                                 </span>
-                                                <Button v-if="item.tipo === 'curso'" icon="pi pi-eye" label="Abstract"
+                                                <!-- <Button v-if="item.tipo === 'curso'" icon="pi pi-eye" label="Abstract"
                                                     class="p-button-text p-button-sm text-blue-500 font-bold uppercase text-[10px]"
-                                                    @click.stop="abrirAbstract(item.abstract)" />
+                                                    @click.stop="abrirAbstract(item.abstract)" /> -->
 
                                                 <Button v-if="item.tipo === 'viaje' && item.itinerario" icon="pi pi-map"
                                                     label="Itinerary"
@@ -298,7 +292,7 @@ defineExpose({
                                                     <i class="pi pi-info-circle text-blue-400 text-xs"></i>
                                                     <span
                                                         class="text-[10px] font-black text-blue-400 uppercase tracking-widest italic underline">
-                                                        Technical Sheet
+                                                        Ficha Técnica
                                                     </span>
                                                 </div>
                                             </template>
@@ -309,7 +303,7 @@ defineExpose({
                                                         <p class="mb-0">
                                                             <strong>
                                                                 <i class="pi pi-users mr-1 text-blue-400"></i>
-                                                                Speakers:
+                                                                Instructor(es):
                                                             </strong>
                                                         </p>
 
@@ -330,7 +324,7 @@ defineExpose({
                                                     <p>
                                                         <strong>
                                                             <i class="pi pi-language mr-1 text-blue-400"></i>
-                                                            Language:
+                                                            Lenguaje:
                                                         </strong>
                                                         {{ item.idioma_texto || 'English / Spanish' }}
                                                     </p>
@@ -338,15 +332,15 @@ defineExpose({
                                                 <div class="space-y-1.5">
                                                     <p><strong>
                                                             <i class="pi pi-calendar mr-1 text-blue-400"></i>
-                                                            Date:
+                                                            Fecha:
                                                         </strong> {{ item.fecha_texto || 'To be defined' }}</p>
                                                     <p><strong>
                                                             <i class="pi pi-clock mr-1 text-blue-400"></i>
-                                                            Schedule:
+                                                            Horario:
                                                         </strong> {{ item.horario_texto || 'Full Day' }}</p>
                                                     <p><strong>
                                                             <i class="pi pi-map-marker mr-1 text-blue-400"></i>
-                                                            Location:
+                                                            Lugar:
                                                         </strong> {{ item.lugar_texto || 'Convention Center'
                                                         }}
                                                     </p>

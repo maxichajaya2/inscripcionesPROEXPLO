@@ -32,7 +32,7 @@
                 </div>
             </div>
             <div class="mt-8 pt-4 border-t border-gray-200 text-center text-[10px] text-gray-400 uppercase tracking-widest">
-                © 2026 El XV Congreso Internacional de Prospectores y Exploradores (proEXPLO 2026) - All Rights Reserved
+                © 2026 El XV Congreso Internacional de Prospectores y Exploradores (proEXPLO 2026) - Todos los derechos reservados.
             </div>
         </div>
     </footer>

@@ -151,24 +151,24 @@ const scriptData = computed(() => {
     <div id="FormPaymentFinish" class="w-full">
         <div class="flex flex-col items-center p-6 w-full">
             <div class="text-blue-900 font-bold text-center text-2xl mb-6 tracking-wide uppercase">
-                Finalize Registration
+                Finalizar Inscripción
             </div>
 
-            <Card class="w-full max-w-md shadow-2xl border-t-4 border-blue-600 rounded-xl bg-white overflow-hidden">
+            <Card class="w-full max-w-md shadow-2xl border-t-4 border-orange-600 rounded-xl bg-white overflow-hidden">
                 <template #content>
                     <div v-if="formulario">
 
                         <div class="mb-4 border-b pb-6 p-4">
                             <div class="flex justify-between items-center py-3 border-b border-gray-100">
                                 <span
-                                    class="font-bold text-gray-500 uppercase text-xs tracking-wider">Participant</span>
+                                    class="font-bold text-gray-500 uppercase text-xs tracking-wider">Participante</span>
                                 <span class="text-gray-800 font-semibold text-right">
                                     {{ data_persona?.nombres }} {{ data_persona?.apellido_paterno }}
                                 </span>
                             </div>
 
                             <div class="flex justify-between items-center py-3 border-b border-gray-100">
-                                <span class="font-bold text-gray-500 uppercase text-xs tracking-wider">Category</span>
+                                <span class="font-bold text-gray-500 uppercase text-xs tracking-wider">Categoria</span>
                                 <span class="text-blue-600 font-bold text-right">
                                     {{ (categoria_seleccionada && categoria_seleccionada.nombre_en) ?
                                         categoria_seleccionada.nombre_en : (categoria_seleccionada &&
@@ -180,7 +180,7 @@ const scriptData = computed(() => {
                                 class="flex justify-between items-start mb-1 text-sm pl-2 border-l-2 border-gray-100 p-1 ">
                                 <div class="flex flex-col w-2/3">
                                     <span class="text-blue-600 font-medium leading-tight">
-                                        Register
+                                        Registro
                                     </span>
                                 </div>
                                 <span class="text-gray-600 font-medium text-right w-1/3">
@@ -196,7 +196,7 @@ const scriptData = computed(() => {
                                         {{ extra.titulo || extra.nombre_en }}
                                     </span>
                                     <span class="text-[10px] text-gray-400 uppercase">
-                                        {{ extra.tipo === 'viaje' ? 'Technical Visit' : 'Course' }}
+                                        {{ extra.tipo === 'viaje' ? 'Visita Técnica' : 'Curso Corto' }}
                                     </span>
                                 </div>
                                 <span class="text-gray-600 font-medium text-right w-1/3">
@@ -207,29 +207,28 @@ const scriptData = computed(() => {
 
                             <div
                                 class="flex justify-between items-center py-4 mt-4 bg-blue-50 px-3 rounded-lg border border-blue-100">
-                                <span class="font-bold text-blue-800">Total to Pay</span>
+                                <span class="font-bold text-blue-800">Total a Pagar</span>
                                 <span class="font-bold text-blue-900 text-2xl">
                                     USD {{ scriptData?.amount }}
                                 </span>
                             </div>
                         </div>
 
-                        <div class="px-4 mb-6">
+                        <div class="px-4 mb-6 text-align-center">
                             <div class="flex items-start gap-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
                                 <input type="checkbox" id="check_terms" v-model="termsAccepted"
                                     class="mt-1 w-5 h-5 cursor-pointer accent-blue-600" />
                                 <label for="check_terms"
                                     class="text-xs text-gray-700 leading-tight cursor-pointer select-none">
-                                    I accept the
+                                    Acepto las
                                     <a href="/documents/reglamento.pdf" target="_blank"
-                                        class="text-blue-700 font-bold underline">Terms and Conditions</a>,
-                                    the
-                                    <a href="/documents/politicas.pdf" target="_blank"
-                                        class="text-blue-700 font-bold underline">Registration Policies</a>
-                                    and the
+                                        class="text-blue-700 font-bold underline">Reglas de Participación</a>
+                                    <!-- <a href="/documents/politicas.pdf" target="_blank"
+                                        class="text-blue-700 font-bold underline">Pólitas de Registro</a>
+                                    así como la
                                     <a href="/documents/privacy_policy.pdf" target="_blank"
-                                        class="text-blue-700 font-bold underline">Privacy Policy</a>
-                                    of WMC 2026.
+                                        class="text-blue-700 font-bold underline">Política de Privacidad</a> -->
+                                    de PROEXPLO 2026.
                                 </label>
                             </div>
                         </div>
@@ -249,7 +248,7 @@ const scriptData = computed(() => {
                         </div>
 
                         <p class="text-[9px] text-center text-gray-400 mt-6 uppercase tracking-widest">
-                            Secure payment gateway by Niubiz
+                            Pasarela de pago segura de Niubiz
                         </p>
                     </div>
 

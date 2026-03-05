@@ -29,32 +29,32 @@ class MailInscripcion extends Mailable
             if (strlen($this->inscripcion->facturacion->correo_facturador) > 0) {
                 return new Envelope(
                     from: new Address('inscripciones.wmc@iimp.org.pe', config('app.event_name')),
-                    subject: config('app.event_name') . " - World Mining Congress 2026 Registration Confirmation",
-                    cc: ['inscripciones.wmc@iimp.org.pe','cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
-                    bcc: ['wmc.itsupport@iimp.org.pe' ,'john.moron@iimp.org.pe']
+                    subject: config('app.event_name') . " - ProExplo 2026 Confirmación de Inscripción",
+                    // cc: ['inscripciones.wmc@iimp.org.pe','cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
+                    // bcc: ['wmc.itsupport@iimp.org.pe' ,'john.moron@iimp.org.pe']
                 );
             } else {
                 return new Envelope(
                     from: new Address('inscripciones.wmc@iimp.org.pe', config('app.event_name')),
-                    subject: config('app.event_name') . " - World Mining Congress 2026 Registration Confirmation",
-                    cc: ['inscripciones.wmc@iimp.org.pe','cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
-                    bcc: ['wmc.itsupport@iimp.org.pe', 'john.moron@iimp.org.pe']
+                    subject: config('app.event_name') . " - ProExplo 2026 Confirmación de Inscripción",
+                    // cc: ['inscripciones.wmc@iimp.org.pe','cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
+                    // bcc: ['wmc.itsupport@iimp.org.pe', 'john.moron@iimp.org.pe']
                 );
             }
         } else {
             if (strlen($this->inscripcion->facturacion->correo_facturador) > 0) {
                 return new Envelope(
                     from: new Address('inscripciones.wmc@iimp.org.pe', config('app.event_name')),
-                    subject: config('app.event_name') . " - World Mining Congress 2026 Registration Confirmation",
-                    cc: ['inscripciones.wmc@iimp.org.pe','cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
-                    bcc: ['wmc.itsupport@iimp.org.pe', 'john.moron@iimp.org.pe' ]
+                    subject: config('app.event_name') . " - ProExplo 2026 Confirmación de Inscripción",
+                    // cc: ['inscripciones.wmc@iimp.org.pe','cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
+                    // bcc: ['wmc.itsupport@iimp.org.pe', 'john.moron@iimp.org.pe' ]
                 );
             } else {
                 return new Envelope(
                     from: new Address('inscripciones.wmc@iimp.org.pe', config('app.event_name')),
-                    subject: config('app.event_name') . " - World Mining Congress 2026 Registration Confirmation",
-                    cc: ['inscripciones.wmc@iimp.org.pe','cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
-                    bcc: ['wmc.itsupport@iimp.org.pe' ,'john.moron@iimp.org.pe']
+                    subject: config('app.event_name') . " - ProExplo 2026 Confirmación de Inscripción",
+                    // cc: ['inscripciones.wmc@iimp.org.pe','cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
+                    // bcc: ['wmc.itsupport@iimp.org.pe' ,'john.moron@iimp.org.pe']
                 );
             }
         }

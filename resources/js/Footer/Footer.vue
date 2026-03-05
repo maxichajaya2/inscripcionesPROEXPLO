@@ -12,8 +12,7 @@ import LogoIIMPRender from '@/Components/LogoIIMPRender.vue';
                     <div class="flex flex-col space-y-4">
                         <LogoIIMPRender class="block w-auto" />
                         <div class="border-l-2 border-[#b8904d] pl-4">
-                            <span class="block text-[10px] uppercase tracking-tighter text-gray-500">Organized
-                                by:</span>
+                            <span class="block text-[10px] uppercase tracking-tighter text-gray-500">Organizado por:</span>
                             <span class="text-xs font-bold text-slate-900">IIMP - Instituto de Ingenieros de Minas del
                                 Perú</span>
                         </div>
@@ -22,7 +21,7 @@ import LogoIIMPRender from '@/Components/LogoIIMPRender.vue';
 
                 <div>
                     <h3 class="text-xs font-bold mb-5 uppercase text-[#b8904d] tracking-widest flex items-center">
-                        <i class="pi pi-shield mr-2"></i> Information & Trust
+                        <i class="pi pi-shield mr-2"></i> Información Legal
                     </h3>
 
                     <div class="space-y-2">
@@ -33,7 +32,7 @@ import LogoIIMPRender from '@/Components/LogoIIMPRender.vue';
                                     class="pi pi-file-pdf text-gray-400 group-hover:text-[#b8904d] transition-colors text-[11px]"></i>
                                 <span
                                     class="text-[9px] text-gray-600 uppercase tracking-widest font-medium group-hover:text-slate-900 transition-colors">
-                                    Terms & Conditions
+                                    Términos y Condiciones
                                 </span>
                             </div>
                             <i
@@ -47,7 +46,7 @@ import LogoIIMPRender from '@/Components/LogoIIMPRender.vue';
                                     class="pi pi-list text-gray-400 group-hover:text-[#b8904d] transition-colors text-[11px]"></i>
                                 <span
                                     class="text-[9px] text-gray-600 uppercase tracking-widest font-medium group-hover:text-slate-900 transition-colors">
-                                    Registration Policies
+                                    Políticas de Registro
                                 </span>
                             </div>
                             <i
@@ -61,7 +60,7 @@ import LogoIIMPRender from '@/Components/LogoIIMPRender.vue';
                                     class="pi pi-verified text-gray-400 group-hover:text-[#b8904d] transition-colors text-[11px]"></i>
                                 <span
                                     class="text-[9px] text-gray-600 uppercase tracking-widest font-medium group-hover:text-slate-900 transition-colors">
-                                    Privacy Policy
+                                    Privacidad y Politica
                                 </span>
                             </div>
                             <i
@@ -71,7 +70,7 @@ import LogoIIMPRender from '@/Components/LogoIIMPRender.vue';
                 </div>
 
                 <div>
-                    <h3 class="text-xs font-bold mb-5 uppercase text-[#b8904d] tracking-widest">Platform Security</h3>
+                    <h3 class="text-xs font-bold mb-5 uppercase text-[#b8904d] tracking-widest">Seguridad de Plataforma</h3>
                     <div class="space-y-4">
                         <a href="https://aws.amazon.com/security/" target="_blank" rel="noopener noreferrer"
                             class="flex items-center space-x-3 bg-gray-50 p-3 rounded border border-gray-200 shadow-sm hover:bg-gray-100 transition-all duration-300 group cursor-pointer w-full">
@@ -109,7 +108,7 @@ import LogoIIMPRender from '@/Components/LogoIIMPRender.vue';
                 </div>
 
                 <div>
-                    <h3 class="text-xs font-bold mb-5 uppercase text-[#b8904d] tracking-widest">Secure Payments</h3>
+                    <h3 class="text-xs font-bold mb-5 uppercase text-[#b8904d] tracking-widest">Pagos Seguros</h3>
                     <a href="https://www.pcisecuritystandards.org/about_us/" target="_blank" rel="noopener noreferrer"
                         class="block group">
                         <div
@@ -118,7 +117,7 @@ import LogoIIMPRender from '@/Components/LogoIIMPRender.vue';
                                 alt="PCI Compliant"
                                 class="h-9 bg-white p-1 rounded shadow-sm group-hover:shadow-md transition-shadow">
                             <div class="leading-none">
-                                <span class="block text-[8px] font-bold text-gray-500 uppercase">Certified</span>
+                                <span class="block text-[8px] font-bold text-gray-500 uppercase">Certificado</span>
                                 <span
                                     class="text-[9px] text-slate-900 font-medium uppercase tracking-tighter group-hover:text-blue-600 transition-colors">
                                     PCI-DSS Compliant
@@ -135,7 +134,7 @@ import LogoIIMPRender from '@/Components/LogoIIMPRender.vue';
             <div class="mt-6 pt-6 border-t border-gray-100 text-center space-y-4 pb-2">
                 <div class="text-[13px] text-gray-500 flex flex-col items-center justify-center space-y-1">
                     <p>
-                        &copy; {{ new Date().getFullYear() }} <strong class="text-slate-800">XV Congreso Internacional de Prospectores y Exploradores</strong>. All rights reserved.
+                        &copy; {{ new Date().getFullYear() }} <strong class="text-slate-800">XV Congreso Internacional de Prospectores y Exploradores</strong>. Todos los derechos reservados.
                     </p>
                     <!-- <p class="text-[14px] text-gray-400">
                         Organized by Instituto de Ingenieros de Minas del Perú (IIMP)

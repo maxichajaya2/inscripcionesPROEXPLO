@@ -270,11 +270,14 @@ const scrollToCategories = () => {
 
                             <div
                                 class="relative z-10 text-right flex flex-col items-end border-l border-slate-100 pl-6 group-hover:border-orange-200 transition-colors">
-                                <span
-                                    class="text-2xl md:text-4xl font-black text-slate-900 group-hover:text-orange-600 transition-colors">
-                                    {{ cat.precio_disponible?.moneda?.simbolo || 'USD ' }}{{
-                                        cat.precio_disponible?.valor || '0' }}
-                                </span>
+                                <div v-if="macroSeccion !== 'viajes'"
+                                    class="text-right flex flex-col items-end border-l border-slate-100 pl-6">
+                                    <span
+                                        class="text-2xl md:text-4xl font-black text-slate-900 group-hover:text-orange-600 transition-colors">
+                                        {{ cat.precio_disponible?.moneda?.simbolo || 'USD ' }}{{
+                                            cat.precio_disponible?.valor || '0' }}
+                                    </span>
+                                </div>
                                 <div
                                     class="mt-3 px-4 py-2 rounded-full border border-orange-500 text-orange-600 bg-white text-xs font-bold group-hover:bg-orange-600 group-hover:text-white transition-all shadow-sm">
                                     Seleccionar

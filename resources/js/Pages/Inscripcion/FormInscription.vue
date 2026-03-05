@@ -135,12 +135,18 @@ function changeCategory(id, precioRecibido) {
 
         if (show_document.value) {
             const nombre = categoria.nombre_en.toUpperCase();
+
             if (nombre.includes('STUDENT') || nombre.includes('ESTUDIANTE')) {
-                upload_instruction.value = "Rate applicable to undergraduate students, presentation of enrollment proof required.";
-            } else if (nombre.includes('FACULTY') || nombre.includes('DOCENTE')) {
-                upload_instruction.value = "Special rate for undergraduate faculty members, who must present valid proof of their status.";
-            } else {
-                upload_instruction.value = "Please upload the required document for this category.";
+                // Mensaje para Estudiantes (Quinto Superior)
+                upload_instruction.value = "Para acceder a esta tarifa es obligatorio presentar una constancia de pertenencia al quinto superior.";
+            }
+            else if (nombre.includes('FACULTY') || nombre.includes('DOCENTE')) {
+                // Mensaje para Docentes (Carta de institución)
+                upload_instruction.value = "Para acceder a esta tarifa es obligatorio presentar una carta de la institución donde labora. (No aplica a docentes de postgrado).";
+            }
+            else {
+                // Mensaje por defecto para otras categorías que pidan documento
+                upload_instruction.value = "Por favor, adjunte el documento de sustento requerido para esta categoría.";
             }
         }
 
@@ -658,7 +664,7 @@ defineExpose({ getInscripcion });
                                     <i class="pi pi-exclamation-triangle text-white text-lg"></i>
                                 </div>
                                 <div class="flex flex-col">
-                                    <span class="text-red-800 font-black text-sm uppercase">Selection Required</span>
+                                    <span class="text-red-800 font-black text-sm uppercase">Selección Requerida</span>
                                     <p class="text-red-700 text-sm font-medium leading-tight">
                                         {{ formManualErrors.total }}
                                     </p>
@@ -701,19 +707,17 @@ defineExpose({ getInscripcion });
                                     <i class="pi pi-exclamation-triangle text-white text-lg"></i>
                                 </div>
                                 <div class="flex flex-col">
-                                    <span class="text-red-800 font-black text-sm uppercase">Selection Required</span>
+                                    <span class="text-red-800 font-black text-sm uppercase">Documento Requerido</span>
                                     <p class="text-red-700 text-sm font-medium leading-tight">
-                                        The selected category requires an <strong>attachment</strong>. Please upload
-                                        your
-                                        document
-                                        below.
+                                        La categoría seleccionada requiere un <strong>archivo adjunto</strong>. Por
+                                        favor, cargue su documento a continuación.
                                     </p>
                                 </div>
                             </div>
 
                             <div v-if="upload_instruction"
                                 class="mb-4 p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-700">
-                                <p class="text-sm font-bold">Requirement:</p>
+                                <p class="text-sm font-bold">Requerimiento:</p>
                                 <p class="text-sm">{{ upload_instruction }}</p>
                             </div>
 
@@ -738,10 +742,10 @@ defineExpose({ getInscripcion });
                                 </div>
                                 <FileUpload ref="fileupload" mode="basic"
                                     class="p-button-outlined text-green-iimp mx-auto" :auto="true" customUpload
-                                    :chooseLabel="'Upload Document'" @select="onFileSelect" name="uploadDocument" />
+                                    :chooseLabel="'Adjuntar Documento'" @select="onFileSelect" name="uploadDocument" />
 
                                 <small class="text-slate-500 mt-3 text-center block text-xs">
-                                    Accepted: PDF, JPG, PNG (Max 6MB)
+                                    Aceptado: PDF, JPG, PNG (Máx. 6MB)
                                 </small>
                             </div>
                         </template>

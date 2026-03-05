@@ -667,39 +667,21 @@ class InscripcionController extends Controller
 
             $persona = Persona::find($inscripcion->id_persona);
 
-            // $service_wmc = app(\App\Http\Controllers\WebServiceController::class)
-            //     ->wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz);
-
-
-            // if (isset($service_wmc->Response) && $service_wmc->Response->Status === true) {
-            //     $inscripcion->qr = (string)$service_wmc->Response->QR;
-            //     // $inscripcion->sie_code = (string)$service_wmc->Response->SieCode;
-            //     $inscripcion->save();
-
-            //     try {
-            //         Mail::to($persona->correo)->send(new \App\Mail\MailInscripcion($inscripcion, $niubiz));
-            //     } catch (\Exception $e) {
-            //         Log::error("Error enviando correo: " . $e->getMessage());
-            //     }
-            // } else {
-            //     // Si llegamos aquí, service_wmc tiene el error 500 o un Status false
-            //     Log::error("ERROR SIE WMC:", (array)$service_wmc);
-            // }
 
             // Ejecutar el servicio
-            $service_wmc = app(\App\Http\Controllers\WebServiceController::class)
-                ->wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz);
-            //  dd($service_wmc);
+            // $service_wmc = app(\App\Http\Controllers\WebServiceController::class)
+            //     ->wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz);
+            // //  dd($service_wmc);
 
-            // $service_wmc->Response->Status = false;
-            if (isset($service_wmc->Response) && $service_wmc->Response->Status === true) {
-                $inscripcion->qr = (string)$service_wmc->Response->QR;
-                $inscripcion->ws_status = true; // Campo nuevo
-            } else {
-                // Si falla el servicio, registramos el error pero no matamos el proceso
-                $inscripcion->ws_status = false;
-                Log::error("ERROR SIE WMC para Inscripcion ID: " . $inscripcion->id, (array)$service_wmc);
-            }
+            // // $service_wmc->Response->Status = false;
+            // if (isset($service_wmc->Response) && $service_wmc->Response->Status === true) {
+            //     $inscripcion->qr = (string)$service_wmc->Response->QR;
+            //     $inscripcion->ws_status = true; // Campo nuevo
+            // } else {
+            //     // Si falla el servicio, registramos el error pero no matamos el proceso
+            //     $inscripcion->ws_status = false;
+            //     Log::error("ERROR SIE WMC para Inscripcion ID: " . $inscripcion->id, (array)$service_wmc);
+            // }
 
             // Guardamos los cambios (ya sea que tenga QR o que solo guardemos el status false)
             $inscripcion->save();
