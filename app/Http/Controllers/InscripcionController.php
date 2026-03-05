@@ -540,7 +540,15 @@ class InscripcionController extends Controller
             return redirect('/')->with('error', 'Token de transacción no encontrado.');
         }
 
+        // dd('DATOS RECIBIDOS DE NIUBIZ', [
+        //     'transactionToken' => $transactiontoken,
+        //     'cuota_respuesta_api' => $cuota->respuesta_api,
+        //     'facturacion_total' => $facturacion->total,
+        //     'order' => $order
+        // ]);
         $respuesta = app(\App\Http\Controllers\NiubizController::class)->authorization($cuota->respuesta_api, $facturacion->total, $transactiontoken, $order);
+
+        // dd('RESPUESTA DE NIUBIZ', $respuesta);
 
         $respuesta = '{
             "header": {
@@ -669,19 +677,19 @@ class InscripcionController extends Controller
 
 
             // Ejecutar el servicio
-            // $service_wmc = app(\App\Http\Controllers\WebServiceController::class)
-            //     ->wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz);
-            // //  dd($service_wmc);
+            $service_wmc = app(\App\Http\Controllers\WebServiceController::class)
+                ->wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz);
+            //  dd($service_wmc);
 
-            // // $service_wmc->Response->Status = false;
-            // if (isset($service_wmc->Response) && $service_wmc->Response->Status === true) {
-            //     $inscripcion->qr = (string)$service_wmc->Response->QR;
-            //     $inscripcion->ws_status = true; // Campo nuevo
-            // } else {
-            //     // Si falla el servicio, registramos el error pero no matamos el proceso
-            //     $inscripcion->ws_status = false;
-            //     Log::error("ERROR SIE WMC para Inscripcion ID: " . $inscripcion->id, (array)$service_wmc);
-            // }
+            // $service_wmc->Response->Status = false;
+            if (isset($service_wmc->Response) && $service_wmc->Response->Status === true) {
+                $inscripcion->qr = (string)$service_wmc->Response->QR;
+                $inscripcion->ws_status = true; // Campo nuevo
+            } else {
+                // Si falla el servicio, registramos el error pero no matamos el proceso
+                $inscripcion->ws_status = false;
+                Log::error("ERROR SIE WMC para Inscripcion ID: " . $inscripcion->id, (array)$service_wmc);
+            }
 
             // Guardamos los cambios (ya sea que tenga QR o que solo guardemos el status false)
             $inscripcion->save();

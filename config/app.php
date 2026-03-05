@@ -17,13 +17,15 @@ return [
     */
 
     // 'event_name'=> "WORLD MINING CONGRESS 2026",
-    'event_name'=> "PROEXPLO 2026",
+    'event_name' => "PROEXPLO 2026",
 
-     //PROEXPLO 2026
-    'id_evento'=> "5",
-    'event_type'=> "13",
-    'evento'=> "wmc2026",
-    'event_code'=> "1",
+    //PROEXPLO 2026
+    'id_evento' => "6",
+    'id_pasarela' => "7",
+    'event_type' => "1",
+    'event_code' => "28",
+    'evento' => "proexplo",
+
 
     //WCMC 2026
     // 'id_evento'=> "5",
@@ -38,14 +40,16 @@ return [
     // 'evento'=> "perumin",
 
 
-    'valid_ip'=> "200.37.185.4",
+
+
+    'valid_ip' => "200.37.185.4",
     'valid_pass' => "$2y$10EoqWZuIEQ4vnwtm2IU3bruqmBD9yDiLrdIGNTHnSIRgAAatpBE9YK",
-    "reglamento_es"=>"https://ecommerce.perumin.com/files_perumin/reglamentos/es/REGLAMENTOS_DE_EXHIBICION.pdf",
-    "reglamento_proveedores_es"=>"https://ecommerce.perumin.com/files_perumin/reglamentos/es/REGLAMENTO_DE_PROVEEDOR.pdf",
+    "reglamento_es" => "https://ecommerce.perumin.com/files_perumin/reglamentos/es/REGLAMENTOS_DE_EXHIBICION.pdf",
+    "reglamento_proveedores_es" => "https://ecommerce.perumin.com/files_perumin/reglamentos/es/REGLAMENTO_DE_PROVEEDOR.pdf",
     "reglamento_inscripciones" => "http://127.0.0.1:8000/documents/reglamento.pdf",
-    "mapa"=>"https://ecommerce.perumin.com/files_perumin/mapa/PERUMIN%2037.pdf",
+    "mapa" => "https://ecommerce.perumin.com/files_perumin/mapa/PERUMIN%2037.pdf",
     "url_logo_niubiz" => "https://inscripciones.proexplo.com.pe/images/logo-proexplo.webp",
-    "cache_duration"=>43200,//12 horas
+    "cache_duration" => 43200, //12 horas
 
     'name' => env('APP_NAME', 'Laravel'),
 
@@ -86,7 +90,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'https://inscripciones.perumin.com'),
+    'url' => env('APP_URL', 'https://inscripciones.proexplo.com.pe/'),
 
     'asset_url' => env('ASSET_URL'),
     /*

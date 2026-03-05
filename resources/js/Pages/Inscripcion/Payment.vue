@@ -20,6 +20,8 @@ onMounted(() => {
     }
 })
 
+
+
 function pagar() {
     if (!window.VisanetCheckout) return;
 
