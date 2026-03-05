@@ -435,8 +435,7 @@ watch(activeStep, () => {
                          ==========================================  -->
                         <StepPanel v-slot="{ activateCallback }" value="1"
                             class="rounded-2xl border-2 border-green-iimp bg-white-price shadow-wmc">
-                            <FormValidacionDoc ref="childFormValidacionDoc"
-                                :perfil_id="props.perfil_id" />
+                            <FormValidacionDoc ref="childFormValidacionDoc" :perfil_id="props.perfil_id" />
                             <div
                                 class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-end gap-3 rounded-b-2xl">
 
@@ -488,9 +487,9 @@ watch(activeStep, () => {
                                 class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-between gap-3 rounded-b-2xl">
                                 <!-- <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
                                     class="flex-1 md:flex-none p-3 font-bold" @click="activateCallback('2')" /> -->
-                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
+                                <Button label="Atras" severity="secondary" icon="pi pi-arrow-left"
                                     class="flex-1 md:flex-none p-3 font-bold" @click="activeStep = '2'" />
-                                <Button label="Continue to Billing" iconPos="right" icon="pi pi-arrow-right"
+                                <Button label="Continuar" iconPos="right" icon="pi pi-arrow-right"
                                     class="bg-degradient border-rounded-full flex-1 md:flex-none" :loading="loading"
                                     @click="handleFinalizarTodo" />
                             </div>
@@ -509,7 +508,7 @@ watch(activeStep, () => {
                                 class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-between gap-3 rounded-b-2xl">
                                 <!-- <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
                                     @click="activateCallback('3')" /> -->
-                                <Button label="Back" severity="secondary" icon="pi pi-arrow-left" @click="() => {
+                                <Button label="Atras" severity="secondary" icon="pi pi-arrow-left" @click="() => {
                                     if (saltoCursos) {
                                         activeStep = '2'; // Si no hay cursos visibles, regresa a Billing
                                     } else {
@@ -695,7 +694,7 @@ watch(activeStep, () => {
             </div>
         </Dialog>
 
-        <Dialog v-model:visible="showConfirmNoExtrasModal" modal :showHeader="false" :closable="false"
+        <!-- <Dialog v-model:visible="showConfirmNoExtrasModal" modal :showHeader="false" :closable="false"
             :style="{ width: '550px' }" class="rounded-3xl overflow-hidden border-none shadow-2xl animate-modal-entry">
 
             <div class="p-0 relative overflow-hidden">
@@ -751,8 +750,65 @@ watch(activeStep, () => {
                     </div>
                 </div>
             </div>
-        </Dialog>
+        </Dialog> -->
 
+        <Dialog v-model:visible="showConfirmNoExtrasModal" modal :showHeader="false" :closable="false"
+            :style="{ width: '550px' }" class="rounded-3xl overflow-hidden border-none shadow-2xl animate-modal-entry">
+
+            <div class="p-0 relative overflow-hidden">
+                <div
+                    class="bg-gradient-to-r from-orange-600 via-orange-500 to-orange-600 p-8 text-center relative overflow-hidden">
+                    <div class="absolute inset-0 shine-effect"></div>
+
+                    <div class="relative z-10">
+                        <div
+                            class="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-md border border-white/20 animate-bounce-slow">
+                            <i
+                                class="pi pi-star-fill text-yellow-300 text-4xl drop-shadow-[0_0_15px_rgba(253,224,71,0.6)]"></i>
+                        </div>
+                        <h3 class="text-2xl font-black text-white uppercase tracking-tighter italic">
+                            Potencia tu Inscripción
+                        </h3>
+                        <div class="h-1 w-20 bg-white mx-auto mt-2 rounded-full opacity-50"></div>
+                    </div>
+                </div>
+
+                <div class="p-10 bg-white text-center">
+                    <p class="text-slate-700 text-xl leading-tight font-bold mb-4">
+                        ¿Deseas agregar <span class="text-orange-600">Cursos Cortos</span> o <span
+                            class="text-orange-600">Visitas Técnicas</span> a tu experiencia?
+                    </p>
+
+                    <p class="text-slate-600 text-sm leading-relaxed mb-6">
+                        No pierdas la oportunidad única de especializarte con expertos globales y conocer de cerca
+                        las operaciones mineras más importantes del país en <strong>PROEXPLO 2026</strong>.
+                    </p>
+
+                    <p
+                        class="text-green-600 text-xs font-black uppercase tracking-[0.1em] bg-green-50 p-4 rounded-2xl border border-green-100">
+                        "La excelencia se logra con capacitación constante y experiencia directa en el campo."
+                    </p>
+
+                    <div class="mt-8 flex flex-col gap-4">
+                        <button @click="handleIrACursosDesdeModal"
+                            class="group relative w-full py-4 px-6 rounded-2xl bg-orange-600 text-white font-black uppercase tracking-widest overflow-hidden transition-all hover:scale-[1.02] active:scale-95 shadow-[0_10px_20px_rgba(249,115,22,0.3)] hover:bg-orange-500">
+                            <div
+                                class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine-fast">
+                            </div>
+                            <span class="relative flex items-center justify-center gap-3">
+                                <i class="pi pi-plus-circle"></i>
+                                ¡Sí, deseo agregarlos ahora!
+                            </span>
+                        </button>
+
+                        <button @click="handleSaltarCursosEIrAPago"
+                            class="w-full py-2 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] hover:text-orange-600 transition-colors duration-300">
+                            Por ahora no, continuar al pago estándar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Dialog>
     </AppLayout>
 </template>
 

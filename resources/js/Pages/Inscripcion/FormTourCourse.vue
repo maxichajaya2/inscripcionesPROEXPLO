@@ -148,7 +148,7 @@ defineExpose({
             <template #header>
                 <div
                     class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc text-blue-900 uppercase tracking-tight">
-                    Courses & Technical Visits
+                    CURSOS CORTOS Y VISITAS TÉCNICAS
                 </div>
             </template>
 
@@ -160,13 +160,14 @@ defineExpose({
                             <i class="pi pi-exclamation-triangle text-white text-lg"></i>
                         </div>
                         <div class="flex flex-col">
-                            <span class="text-red-800 font-black text-sm uppercase">Selection Required</span>
+                            <span class="text-red-800 font-black text-sm uppercase">Selección Requerida</span>
                             <p class="text-red-700 text-sm font-medium leading-tight">
                                 {{ formManualErrors.total }}
                             </p>
                         </div>
                     </div>
                 </div>
+
                 <div v-if="estaVacio"
                     class="mb-6 p-6 rounded-3xl bg-blue-50 border border-blue-200 flex items-center gap-5 animate-fade-in-down shadow-sm">
                     <div class="bg-blue-600 rounded-full p-3 flex-none shadow-md">
@@ -174,13 +175,13 @@ defineExpose({
                     </div>
                     <div class="flex flex-col">
                         <span class="text-blue-900 font-black text-sm uppercase tracking-wider">
-                            Information for your profile
+                            Información para tu perfil
                         </span>
                         <p class="text-blue-800 text-sm font-medium leading-relaxed mt-1">
-                            Dear students or day participants: this option for courses and technical visits is not
-                            enabled for your
-                            profile.
-                            <br><strong>You may continue to the next step without any issues.</strong> Thank you!
+                            Estimados estudiantes o participantes por día: esta opción de cursos y visitas técnicas no
+                            está
+                            habilitada para su perfil.
+                            <br><strong>Puede continuar con el siguiente paso sin inconvenientes.</strong> ¡Gracias!
                         </p>
                     </div>
                 </div>
@@ -194,30 +195,34 @@ defineExpose({
 
                     <div class="flex flex-col">
                         <span class="text-blue-900 font-black text-sm uppercase tracking-wider">
-                            Enhance Your Congress Experience
+                            Mejora tu Experiencia en el Congreso
                         </span>
                         <p class="text-blue-800 text-sm font-medium leading-relaxed">
-                            Go beyond the main programme with expert-led <b>short courses</b> and on-site <b>technical
-                                visits</b> designed to turn insight into action. Learn directly from industry leaders
-                            and gain
-                            practical knowledge you can apply the moment you return to work.
+                            Ve más allá del programa principal con <b>cursos cortos</b> guiados por expertos y
+                            <b>visitas técnicas</b>
+                            en el campo, diseñadas para transformar el conocimiento en acción. Aprende directamente de
+                            los líderes
+                            de la industria y adquiere conocimientos prácticos que podrás aplicar desde el primer día de
+                            regreso al trabajo.
 
                             <span class="block mt-3">
-                                These optional sessions offer deeper dives into emerging technologies and strategic
-                                challenges shaping the future of mining.
+                                Estas sesiones opcionales ofrecen una inmersión profunda en las tecnologías emergentes y
+                                los
+                                desafíos estratégicos que están moldeando el futuro de la minería.
                             </span>
 
                             <span
                                 class="block mt-4 p-3 bg-blue-600/20 rounded-xl border border-blue-500/30 text-xs italic text-blue-800">
-                                <strong>Note:</strong> Select the courses or visits that match your interests or
-                                continue to only core congress programme. These specialized activities have an
-                                <strong>additional cost</strong> independent of your main registration fee.
+                                <strong>Nota:</strong> Selecciona los cursos o visitas que coincidan con tus intereses o
+                                continúa solo con el programa principal del congreso. Estas actividades especializadas
+                                tienen un
+                                <strong>costo adicional</strong> independiente de tu tarifa de inscripción principal.
                             </span>
 
                             <span class="block mt-4 text-blue-800 font-bold">
-                                If you prefer not to add extras at this moment, feel free to click
-                                <span class="text-yellow-price uppercase">"Continue"</span> to proceed with your
-                                registration.
+                                Si prefieres no agregar extras en este momento, no dudes en hacer clic en
+                                <span class="text-yellow-price uppercase">"Continuar"</span> para proceder con tu
+                                registro.
                             </span>
                         </p>
                     </div>
@@ -230,7 +235,7 @@ defineExpose({
                         ================================ -->
                         <AccordionTab>
                             <template #header>
-                                <span class="font-bold text-blue-900 uppercase text-sm italic">Short Courses</span>
+                                <span class="font-bold text-blue-900 uppercase text-sm italic">Cursos Cortos</span>
                             </template>
 
                             <div class="space-y-4 py-2">
@@ -239,58 +244,23 @@ defineExpose({
                                     idsBloqueados.includes(item.id) ? 'opacity-50 grayscale pointer-events-none' : ''
                                 ]">
 
-                                    <!-- <div class="flex items-center justify-between p-3 gap-3">
-                                        <div class="flex items-center flex-1 cursor-pointer"
-                                            @click="toggleSelection(item.id)">
-                                            <Checkbox v-model="extras_seleccionados" :value="item.id" @click.stop
-                                                class="mr-3" />
-                                            <div class="flex flex-col">
-                                                <label
-                                                    class="text-sm font-black text-blue-900 leading-tight cursor-pointer">
-                                                    {{ item.nombre_en }}
-                                                </label>
-                                                <span
-                                                    class="text-[10px] text-slate-500 font-medium italic uppercase tracking-tighter leading-none mt-1">
-                                                    {{ item.subtitulo_en || 'WMC 2026 Special Course' }}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <div class="flex items-center gap-4 border-l pl-4 border-gray-100">
-                                            <a :href="item.pdf_url" target="_blank" class="no-underline">
-                                                <Button icon="pi pi-file-pdf" label="Details"
-                                                    class="p-button-text p-button-sm text-blue-500 font-bold uppercase text-[10px]" />
-                                            </a>
-                                            <Button icon="pi pi-eye" label="Abstract"
-                                                class="p-button-text p-button-sm text-blue-500 font-bold uppercase text-[10px]"
-                                                @click="abrirAbstract(item.abstract)" />
-                                            <div class="text-right">
-                                                <p class="text-yellow-price font-black text-lg">
-                                                    USD {{ item.precio_disponible?.valor || 0 }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div> -->
-
                                     <div
                                         class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 gap-3">
 
                                         <div class="flex items-center flex-1 cursor-pointer w-full"
                                             @click="toggleSelection(item.id)">
 
-                                            <!-- <Checkbox v-model="extras_seleccionados" :value="item.id" @click.stop
-                                                class="mr-3 flex-none" /> -->
                                             <Checkbox v-model="extras_seleccionados" :value="item.id"
                                                 :disabled="idsBloqueados.includes(item.id)" @click.stop
                                                 class="mr-3 flex-none" />
                                             <div class="flex flex-col min-w-0">
                                                 <label
                                                     class="text-sm font-black text-blue-900 leading-tight cursor-pointer break-words">
-                                                    {{ item.nombre_en }}
+                                                    {{ item.nombre_es }}
                                                 </label>
                                                 <span
                                                     class="text-[10px] text-slate-500 font-medium italic uppercase tracking-tighter leading-none mt-1">
-                                                    {{ item.subtitulo_en || (item.tipo === 'curso' ? 'WMC 2026 Special Course' : 'Technical Trip')
+                                                    {{ item.subtitulo_en || (item.tipo === 'curso' ? 'Curso Proexplo 2026' : 'Visita Técnica')
                                                     }}
                                                 </span>
                                             </div>
@@ -389,7 +359,7 @@ defineExpose({
                         </AccordionTab>
                         <!-- ========= VIAJES =========
                         ================================ -->
-                        | <AccordionTab>
+                        <!-- | <AccordionTab>
                             <template #header>
                                 <span class="font-bold text-blue-900 uppercase text-sm italic">Technical Visits</span>
                             </template>
@@ -397,36 +367,6 @@ defineExpose({
                                 <div v-for="item in adicionales.filter(i => i.tipo === 'viaje')" :key="item.id"
                                     class="w-full border rounded-lg transition-all shadow-sm"
                                     :class="extras_seleccionados.includes(item.id) ? 'bg-blue-50 border-blue-300' : 'border-gray-100 bg-white'">
-
-                                    <!-- <div class="flex items-center justify-between p-3 gap-3">
-                                        <div class="flex items-center flex-1 cursor-pointer"
-                                            @click="toggleSelection(item.id)">
-                                            <Checkbox v-model="extras_seleccionados" :value="item.id" @click.stop
-                                                class="mr-3" />
-                                            <div class="flex flex-col">
-                                                <label
-                                                    class="text-sm font-black text-blue-900 leading-tight cursor-pointer">
-                                                    {{ item.nombre_en }}
-                                                </label>
-                                                <span
-                                                    class="text-[10px] text-slate-500 font-medium italic uppercase tracking-tighter leading-none mt-1">
-                                                    {{ item.subtitulo_en || 'Technical Trip' }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center gap-4 border-l pl-4 border-gray-100">
-                                            <Button v-if="item.itinerario" icon="pi pi-map" label="View Itinerary"
-                                                class="p-button-text p-button-sm text-green-600 font-bold uppercase text-[10px]"
-                                                @click="verItinerario(item)" />
-
-                                            <div class="text-right">
-                                                <p class="text-yellow-price font-black text-lg">
-                                                    USD {{ item.precio_disponible?.valor || 0 }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div> -->
-
                                     <div
                                         class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 gap-3">
                                         <div class="flex items-start flex-1 cursor-pointer w-full min-w-0"
@@ -509,14 +449,14 @@ defineExpose({
                                     </Accordion>
                                 </div>
                             </div>
-                        </AccordionTab>
+                        </AccordionTab> -->
                     </Accordion>
 
                     <div v-if="extras_seleccionados.length > 0"
                         class="mt-8 p-5 bg-lightblue-wmc border border-blue-wmc rounded-xl flex justify-between items-center shadow-md animate-fade-in">
                         <div class="flex flex-col">
                             <span class="text-[10px] uppercase text-blue-500 font-black tracking-widest">
-                                Additional Selection ({{ extras_seleccionados.length }})
+                                Seleccion Adicional({{ extras_seleccionados.length }})
                             </span>
                             <span class="text-xl font-bold uppercase tracking-tighter text-blue-900">
                                 Subtotal Extras

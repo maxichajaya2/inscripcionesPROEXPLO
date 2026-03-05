@@ -68,13 +68,42 @@ const volverAMacro = () => {
 };
 
 const irAlFormulario = (id) => {
-    const categoria = props.categorias.find(c => c.id === id);
+    // 1. Definir la categoría primero (usando Object.values por seguridad si es un objeto)
+    const categoriasLista = Object.values(props.categorias);
+    const categoria = categoriasLista.find(c => c.id === id);
+
+    if (!categoria) {
+        console.error("No se encontró la categoría con ID:", id);
+        return;
+    }
+
+    // 3. Determinar la ruta según el id_perfil
+    let nombreRuta = '';
+    const perfilId = categoria.id_perfil;
+
+    if (perfilId === 1 || perfilId === 2) {
+        nombreRuta = 'inscripcion.general';
+    }
+    else if (perfilId === 3 || perfilId === 4) {
+        nombreRuta = 'inscripcion.estudiante';
+    }
+    else if (perfilId === 5) {
+        nombreRuta = 'inscripcion.docente';
+    }
+    else {
+        // Ruta por defecto en caso de que venga un ID no mapeado
+        nombreRuta = 'inscripcion.participante';
+    }
+
+    // 4. Configurar parámetros
     const params = {
         category: id,
         section: macroSeccion.value,
-        profile: categoria.id_perfil
+        profile: perfilId
     };
-    router.get(route('inscripcion.participante'), params);
+
+    // 5. Navegar
+    router.get(route(nombreRuta), params);
 };
 
 const scrollToCategories = () => {

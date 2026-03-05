@@ -63,24 +63,39 @@ class InscripcionController extends Controller
 
     public function autor(Request $request)
     {
-        return $this->renderInscripcion($request, '%AUTHOR%', "Author with special rate");
+        return $this->renderInscripcion($request, '%GENERAL%', "Author with special rate");
     }
 
     public function participante(Request $request)
     {
-        return $this->renderInscripcion($request, '%PARTICIPANT%', "General Attendee");
+        return $this->renderInscripcion($request, '%GENERAL%', "PARTICPANTE GENERAL");
+    }
+
+    public function general(Request $request)
+    {
+        return $this->renderInscripcion($request, '%GENERAL%', "PARTICIPANTE GENERAL");
+    }
+
+    public function estudiante(Request $request)
+    {
+        return $this->renderInscripcion($request, '%ESTUDIANTE%', "PARTICIPANTE ESTUDIANTE");
+    }
+
+    public function docente(Request $request)
+    {
+        return $this->renderInscripcion($request, '%DOCENTE%', "PARTICIPANTE DOCENTE");
     }
 
     public function cursosViajes(Request $request)
     {
-
         return $this->renderInscripcion($request, '%PARTICIPANT%', "Tours & Courses");
     }
+
     private function renderInscripcion(Request $request, string $filtro, string $defaultTitle)
     {
         $section = $request->query('section', 'inscripciones');
         $perfil_id = $request->query('profile');
-        $perfilesPermitidos = [1, 2, 3, 4, 5, 6];
+        $perfilesPermitidos = [1, 2, 3, 4, 5];
 
         // Función anónima para reutilizar la lógica de precios vigentes
         $filtroPrecios = function ($query) {
@@ -88,6 +103,7 @@ class InscripcionController extends Controller
                 ->where('precio.fecha_fin', '>=', $this->now)
                 ->where('precio.isactive', true); // <--- CAMBIO AQUÍ
         };
+
         // 1. Cargamos los Perfiles Principales (Inscripción al Congreso)
         $categorias = CategoriaInscripcion::with(['precio' => $filtroPrecios])
             ->where('nombre_en', 'LIKE', $filtro)
@@ -99,7 +115,9 @@ class InscripcionController extends Controller
                 return $cat;
             });
 
-        $perfilesPermitidos = [1, 2, 3, 5, 6];
+        // dd($categorias->toArray());
+
+        $perfilesPermitidos = [1, 2, 3, 5];
 
 
         // 2. Adicionales (Cursos/Tours) con validación de perfiles

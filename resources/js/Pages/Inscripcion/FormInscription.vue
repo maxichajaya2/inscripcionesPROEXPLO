@@ -227,7 +227,11 @@ onMounted(() => {
     }
 
 
+    console.log("Mounted FormInscription with props.data_persona:", props.data_persona);
+
 });
+
+
 
 watch(() => props.data_persona, (newVal) => {
     if (newVal && newVal.persona) {

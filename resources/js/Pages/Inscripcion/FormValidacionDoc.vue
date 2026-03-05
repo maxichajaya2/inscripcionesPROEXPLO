@@ -19,7 +19,7 @@ import "../../../css/inscripciones.css";
 const toast = useToast();
 const page = usePage();
 
-const generos = ref([{ label: 'Male', value: 'M' }, { label: 'Female', value: 'F' }]);
+const generos = ref([{ label: 'Masculino', value: 'M' }, { label: 'Femenino', value: 'F' }]);
 const paises = ref(page.props.general.paises || []);
 const departamentos = ref([]);
 const loadingSearch = ref(false);
@@ -245,7 +245,7 @@ const camposBloqueados = computed(() => {
     const faltaBuscarPeruano = esDNI.value && !hasSearched.value;
 
     // 2. Condición de Perfil Crítico (Bloqueo TOTAL e incondicional para perfil 1 o 5)
-    const esPerfilBloqueado = [1, 5].includes(props.perfil_id);
+    const esPerfilBloqueado = [1, 4].includes(props.perfil_id);
 
     // Si cualquiera de las dos es verdadera, el campo se bloquea
     return faltaBuscarPeruano || esPerfilBloqueado;
@@ -256,7 +256,7 @@ const esCampoBloqueado = (valorCampo) => {
     if (esDNI.value && !hasSearched.value) return true;
 
     // 2. Si es perfil crítico (1 o 5)
-    if ([1, 5].includes(props.perfil_id)) {
+    if ([1, 4].includes(props.perfil_id)) {
         // BLOQUEA solo si el campo NO está vacío (tiene contenido previo)
         // Usamos trim() para evitar espacios en blanco
         return valorCampo !== null && valorCampo !== undefined && String(valorCampo).trim() !== '';
@@ -282,12 +282,10 @@ const loadDepartamentos = async () => {
 };
 
 const esCategoriaDeSocio = computed(() => {
-    // CAMBIO CLAVE: Si es extranjero (2), NUNCA bloqueamos por socio
-    if (props.tipo_origen === 2) return false;
 
     const urlParams = new URLSearchParams(window.location.search);
     const categoryId = urlParams.get('category');
-    const categoriasSocio = ['35', '29'];
+    const categoriasSocio = ['1', '4'];
     return categoriasSocio.includes(categoryId);
 });
 
