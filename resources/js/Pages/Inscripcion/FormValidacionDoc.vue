@@ -334,6 +334,7 @@ const esCategoriaDeSocio = computed(() => {
 const getValidacionDoc = async () => {
     const result = await validate();
 
+
     // Validamos socio solo para las categorías que lo exigen Y si no es extranjero
     if (esCategoriaDeSocio.value) {
         if (!hasSearched.value || !esSocio.value) {
@@ -342,6 +343,7 @@ const getValidacionDoc = async () => {
     }
 
     if (result.valid) {
+
         return {
             validate: true,
             formValidacionDoc: values
@@ -723,33 +725,34 @@ onMounted(() => {
                         <div class="w-full md:col-span-1">
                             <label for="pais">Pais <span class="text-red-600">*</span></label>
                             <Select name="pais" v-model="pais" v-bind="paisAttrs" :options="paises" optionLabel="name"
-                                optionValue="id" placeholder="Select" showClear filter @change="loadDepartamentos" :disabled="bloqueoPais"
-                                translate="no" class="w-full border-green-iimp" />
+                                optionValue="id" placeholder="Select" showClear filter @change="loadDepartamentos"
+                                :disabled="bloqueoPais" translate="no" class="w-full border-green-iimp" />
                             <small class="text-red-600">{{ errors.pais }}</small>
                         </div>
 
                         <div class="col-span-3 sm:col-span-1">
                             <label for="departamento" class="">Departamento</label>
                             <Select name="departamento" v-model="departamento" v-bind="departamentoAttrs" filter
-                                @change="loadProvincias" :options="departamentos" optionLabel="name" :disabled="bloqueoDepartamento"
-                                optionValue="id_departamento" placeholder="Elegir" showClear
-                                class="w-full border-green-iimp" />
+                                @change="loadProvincias" :options="departamentos" optionLabel="name"
+                                :disabled="bloqueoDepartamento" optionValue="id_departamento" placeholder="Elegir"
+                                showClear class="w-full border-green-iimp" />
                             <span class="font-normal text-red-600">{{ errors.departamento }}</span>
                         </div>
 
                         <div class="w-full sm:col-span-1">
                             <label for="provincia" class="">Provincia</label>
                             <Select name="provincia" v-model="provincia" v-bind="provinciaAttrs" filter
-                                @change="loadDistritos" :options="provincias" optionLabel="name"  :disabled="bloqueoProvincia"
-                                optionValue="id_provincia" placeholder="Elegir" showClear
+                                @change="loadDistritos" :options="provincias" optionLabel="name"
+                                :disabled="bloqueoProvincia" optionValue="id_provincia" placeholder="Elegir" showClear
                                 class="w-full border-green-iimp" />
                             <span class="font-normal text-red-600">{{ errors.provincia }}</span>
                         </div>
                         <div class="w-full sm:col-span-1">
                             <label for="distrito" class="">Distrito</label>
-                            <Select name="distrito" v-model="distrito" v-bind="distritoAttrs" filter :disabled="bloqueoDistrito"
-                                :options="distritos" optionLabel="name" optionValue="id_distrito" placeholder="Elegir"
-                                showClear class="w-full border-green-iimp" />
+                            <Select name="distrito" v-model="distrito" v-bind="distritoAttrs" filter
+                                :disabled="bloqueoDistrito" :options="distritos" optionLabel="name"
+                                optionValue="id_distrito" placeholder="Elegir" showClear
+                                class="w-full border-green-iimp" />
                             <span class="font-normal text-red-600">{{ errors.distrito }}</span>
                         </div>
                     </div>

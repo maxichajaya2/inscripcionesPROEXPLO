@@ -39,7 +39,7 @@ import LogoIIMPRender from '@/Components/LogoIIMPRender.vue';
                                 class="pi pi-external-link text-[7px] text-gray-400 group-hover:text-[#b8904d] transition-colors"></i>
                         </a>
 
-                        <a href="/documents/politicas.pdf" target="_blank"
+                        <!-- <a href="/documents/politicas.pdf" target="_blank"
                             class="flex items-center justify-between bg-gray-50 p-2 rounded border border-gray-200 shadow-sm hover:bg-gray-100 transition-all duration-300 group">
                             <div class="flex items-center space-x-2">
                                 <i
@@ -51,9 +51,9 @@ import LogoIIMPRender from '@/Components/LogoIIMPRender.vue';
                             </div>
                             <i
                                 class="pi pi-external-link text-[7px] text-gray-400 group-hover:text-[#b8904d] transition-colors"></i>
-                        </a>
+                        </a> -->
 
-                        <a href="/documents/privacy_policy.pdf" target="_blank"
+                        <!-- <a href="/documents/privacy_policy.pdf" target="_blank"
                             class="flex items-center justify-between bg-gray-50 p-2 rounded border border-gray-200 shadow-sm hover:bg-gray-100 transition-all duration-300 group">
                             <div class="flex items-center space-x-2">
                                 <i
@@ -65,7 +65,7 @@ import LogoIIMPRender from '@/Components/LogoIIMPRender.vue';
                             </div>
                             <i
                                 class="pi pi-external-link text-[7px] text-gray-400 group-hover:text-[#b8904d] transition-colors"></i>
-                        </a>
+                        </a> -->
                     </div>
                 </div>
 

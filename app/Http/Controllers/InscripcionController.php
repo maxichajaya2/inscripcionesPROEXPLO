@@ -159,6 +159,7 @@ class InscripcionController extends Controller
     public function getForm(Request $request)
     {
 
+        // dd($request->all());
         // dd([
         //     'MENSAJE' => 'DEPURANDO DATOS RECIBIDOS DEL FRONTEND',
         //     'TODO_EL_REQUEST' => $request->all(),
@@ -253,9 +254,13 @@ class InscripcionController extends Controller
         // ---------------------------------------------------------
         $direccion = ($persona->id_direccion > 0) ? Direccion::find($persona->id_direccion) : new Direccion;
         $direccion->id_pais = $request->input('pais');
-        $direccion->id_departamento = $request->input('departamento', 0);
-        $direccion->id_provincia = $request->input('provincia', 0);
-        $direccion->id_distrito = $request->input('distrito', 0);
+        // $direccion->id_departamento = $request->input('departamento', 0);
+        // $direccion->id_provincia = $request->input('provincia', 0);
+        // $direccion->id_distrito = $request->input('distrito', 0);
+        $direccion->id_departamento = ($request->input('departamento') === 'null' || !$request->input('departamento')) ? null : $request->input('departamento');
+        $direccion->id_provincia = ($request->input('provincia') === 'null' || !$request->input('provincia')) ? null : $request->input('provincia');
+        $direccion->id_distrito = ($request->input('distrito') === 'null' || !$request->input('distrito')) ? null : $request->input('distrito');
+        // -----------------------------------------------
         $direccion->direccion = trim($request->input('direccionPersona', ''));
         $direccion->save();
 
@@ -668,9 +673,9 @@ class InscripcionController extends Controller
 
             $persona = Persona::find($inscripcion->id_persona);
 
-        //  dd('LLEGÓ A GENERAR EL SERVICIO WMC', [
-        //         'INSCRIPCION' => $inscripcion,
-        //     ]);
+            //  dd('LLEGÓ A GENERAR EL SERVICIO WMC', [
+            //         'INSCRIPCION' => $inscripcion,
+            //     ]);
 
             $service_wmc = app(\App\Http\Controllers\WebServiceController::class)
                 ->wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz);
