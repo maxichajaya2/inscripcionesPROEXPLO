@@ -74,7 +74,7 @@ const goStart = () => {
 
                         <div class="flex flex-col md:col-span-2">
                             <span class="text-xs font-bold text-orange-600 uppercase tracking-widest mb-1">Categoría</span>
-                            <span class="text-lg text-slate-800 font-bold italic">{{ categoria.nombre_es }}</span>
+                            <span class="text-lg text-slate-800 font-bold italic">{{ categoria ? categoria.nombre_es : 'Categoría no especificada' }}</span>
                         </div>
                     </div>
 

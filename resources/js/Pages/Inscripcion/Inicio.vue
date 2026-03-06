@@ -218,12 +218,11 @@ const confirmarYProcesar = async (extras = []) => {
             });
         }
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const profileId = urlParams.get('profile');
+        const profileId = props.perfil_id || new URLSearchParams(window.location.search).get('profile');
+
         if (profileId) {
             payload.append('profile', profileId);
         }
-
         // ==========================================================
         // AGREGA ESTA LÍNEA AQUÍ (CRÍTICO):
         // ==========================================================
@@ -357,6 +356,28 @@ const handleFinalizarTodo = async () => {
     loading.value = false;
 };
 
+const isStep2Invalid = computed(() => {
+    if (!childFormInscription.value) return true;
+
+    const v = childFormInscription.value.values; // Accede a los valores actuales del formulario
+    const e = childFormInscription.value.errors; // Accede a los errores de vee-validate
+
+    // 1. Verificar si hay errores activos en vee-validate
+    const hasErrors = Object.keys(e).length > 0;
+
+    // 2. Verificar campos obligatorios manualmente (seguridad extra)
+    const missingRequired = !v.selected_categoria ||
+        !v.documentoEmpresa ||
+        !v.razonSocial ||
+        !v.direccionEmpresa ||
+        !v.correo_facturador;
+
+    // 3. Verificar si falta el documento (si la categoría lo requiere)
+    const missingDoc = childFormInscription.value.show_document && !v.uploadDocument;
+
+    return hasErrors || missingRequired || missingDoc;
+});
+
 
 onMounted(() => {
     // 1. Leer el ID de la URL (ej: ?category=5)
@@ -469,7 +490,7 @@ watch(activeStep, () => {
                                 class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-between gap-3 rounded-b-2xl">
                                 <Button label="Atras" severity="secondary" icon="pi pi-arrow-left"
                                     class="flex-1 md:flex-none" @click="activateCallback('1')" />
-                                <Button label="Registrar y Pagar" iconPos="right" icon="pi pi-arrow-right"
+                                <Button label="Registrar y Pagar" iconPos="right" icon="pi pi-arrow-right"  :disabled="isStep2Invalid"
                                     class="bg-degradient border-rounded-full flex-1 md:flex-none" :loading="loading"
                                     @click="handleInscripcionHaciaCursos" />
                             </div>

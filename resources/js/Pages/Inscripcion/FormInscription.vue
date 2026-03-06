@@ -27,18 +27,18 @@ const props = defineProps({
     categorias: Object,
     saved_values: Object
 });
-const fieldNames = {
-    selected_categoria: 'Registration Category',
-    tipoDocumentoEmpresa: 'Billing Document Type',
-    documentoEmpresa: 'Billing Document Number',
-    razonSocial: 'Business Name / Full Name',
-    direccionEmpresa: 'Billing Address',
-    responsable: 'Billing Contact Name',
-    correo_facturador: 'Billing Email',
-    reglamento: 'Terms and Conditions Acceptance',
-    uploadDocument: 'Category Required Document'
-};
 
+const fieldNames = {
+    selected_categoria: 'Categoría de Inscripción',
+    tipoDocumentoEmpresa: 'Tipo de Documento de Facturación',
+    documentoEmpresa: 'Número de Documento de Facturación',
+    razonSocial: 'Razón Social / Nombre Completo',
+    direccionEmpresa: 'Dirección de Facturación',
+    responsable: 'Nombre del Contacto de Facturación',
+    correo_facturador: 'Correo Electrónico de Facturación',
+    reglamento: 'Aceptación de Términos y Condiciones',
+    uploadDocument: 'Documento Requerido de la Categoría'
+};
 
 const es_socio = ref(false);
 const loading_doc = ref(false);
@@ -88,13 +88,13 @@ const { defineField, errors, setValues, values, validate } = useForm({
         //         // --- FLUJO EXTRANJERO ---
         //         return value?.length > 0;
         //     }),
-        // razonSocial: yup.string().required('La razón social es obligatoria'),
-        // direccionEmpresa: yup.string().required('La dirección de la empresa es obligatoria'),
-        // responsable: yup.string().required('El nombre del responsable es obligatorio'),
-        // correo_facturador: yup.string()
-        //     .email('Formato de correo inválido')
-        //     .required('El correo de facturación es obligatorio'),
-        // reglamento: yup.boolean().oneOf([true], 'Debe aceptar el reglamento'),
+        razonSocial: yup.string().required('La razón social es obligatoria'),
+        direccionEmpresa: yup.string().required('La dirección de la empresa es obligatoria'),
+        responsable: yup.string().required('El nombre del responsable es obligatorio'),
+        correo_facturador: yup.string()
+            .email('Formato de correo inválido')
+            .required('El correo de facturación es obligatorio'),
+        reglamento: yup.boolean().oneOf([true], 'Debe aceptar el reglamento'),
     })
 });
 
@@ -245,6 +245,21 @@ watch(() => props.data_persona, (newVal) => {
     }
 }, { immediate: true, deep: true });
 
+const esRuc20 = computed(() => {
+    return tipoDocumentoEmpresa.value === 2 && documentoEmpresa.value?.startsWith('20');
+});
+
+const camposFacturacionBloqueados = computed(() => {
+    // Si es RUC 20, bloqueamos siempre (a menos que no se haya buscado nada aún)
+    // Si NO es RUC 20 (ej. RUC 10 o DNI), dependemos de isEditingBilling
+    if (esRuc20.value) {
+        return !isEditingBilling.value || !showManualAlert.value;
+    }
+
+    // Para RUC 10 o DNI, seguimos tu lógica normal
+    return !isEditingBilling.value;
+});
+
 // Busca este watcher en tu código y modifícalo así:
 // watch(selected_categoria, (newId) => {
 //     if (!newId) return; // Si es nulo, no hacer nada
@@ -381,8 +396,17 @@ const getEmpresaData = async () => {
             // Mostrar Alerta de Éxito
             showSuccessAlert.value = true;
 
-            block_direction.value = false;
-            isEditingBilling.value = true;
+            if (esRuc20.value) {
+                isEditingBilling.value = false; // Bloquea edición manual para RUC 20
+                block_direction.value = true;   // Refuerza bloqueo de dirección
+            } else {
+                isEditingBilling.value = true;  // Permite editar si es RUC 10 o DNI
+                block_direction.value = false;
+            }
+
+
+            // block_direction.value = false;
+            // isEditingBilling.value = true;
             // Actualizar vee-validate
             setValues({
                 ...values,
@@ -588,7 +612,16 @@ const onlyNumberKey = (event) => {
 // };
 
 
-defineExpose({ getInscripcion });
+// ... dentro de <script setup> del padre ...
+
+// Esta computada decide si el botón "Registrar y Pagar" se deshabilita
+
+defineExpose({
+    getInscripcion ,
+    values,         // Exponemos los valores actuales
+    errors,         // Exponemos los errores actuales
+    show_document
+});
 </script>
 
 <template>
@@ -820,9 +853,9 @@ defineExpose({ getInscripcion });
                             <i class="pi pi-check-circle text-white text-lg"></i>
                         </div>
                         <div class="flex flex-col">
-                            <span class="text-green-900 font-black text-sm uppercase tracking-wide">Success</span>
+                            <span class="text-green-900 font-black text-sm uppercase tracking-wide">Éxito</span>
                             <p class="text-green-800 text-sm font-medium leading-tight">
-                                Data found and loaded successfully.
+                                Datos encontrados y cargados correctamente.
                             </p>
                         </div>
                         <Button icon="pi pi-times" class="p-button-text p-button-rounded text-green-400 ml-auto"
@@ -834,10 +867,11 @@ defineExpose({ getInscripcion });
                             <i class="pi pi-info-circle text-white text-lg"></i>
                         </div>
                         <div class="flex flex-col">
-                            <span class="text-blue-900 font-black text-sm uppercase tracking-wide">Information</span>
+                            <span class="text-blue-900 font-black text-sm uppercase tracking-wide">Información</span>
                             <p class="text-blue-800 text-sm font-medium leading-tight">
-                                Record not found. Please fill in the billing details manually to proceed with your
-                                registration for the World Mining Congress.
+                                Registro no encontrado. Por favor, complete los datos de facturación manualmente para
+                                continuar con su
+                                inscripción A ProExplo2026.
                             </p>
                         </div>
                         <Button icon="pi pi-times" class="p-button-text p-button-rounded text-blue-400 ml-auto"
@@ -893,22 +927,33 @@ defineExpose({ getInscripcion });
                         </div>
 
                         <div class="w-full sm:col-span-1">
-                            <label class="block mb-1">Nombre o Razon Social <span class="text-red-600">*</span></label>
+                            <!-- <label class="block mb-1">Nombre o Razon Social <span class="text-red-600">*</span></label>
                             <InputText v-model="razonSocial" class="w-full border-green-iimp"
                                 :disabled="!isEditingBilling || loading_doc"
                                 :readonly="!isEditingBilling || block_direction" />
+                            <small class="text-red-600" v-if="errors.razonSocial">{{ errors.razonSocial }}</small> -->
+                            <label class="block mb-1">Nombre o Razon Social <span class="text-red-600">*</span></label>
+                            <InputText v-model="razonSocial" class="w-full border-green-iimp"
+                                :disabled="loading_doc || esRuc20 || !isEditingBilling" :readonly="camposFacturacionBloqueados"
+                                :class="{ 'bg-gray-100 font-semibold': esRuc20 && !showManualAlert }" />
                             <small class="text-red-600" v-if="errors.razonSocial">{{ errors.razonSocial }}</small>
                         </div>
                     </div>
 
                     <div class="grid gap-6 m-6 md:grid-cols-2">
                         <div class="w-full sm:col-span-1">
-                            <label class="block mb-1">Dirección Fiscal <span class="text-red-600">*</span></label>
+                            <!-- <label class="block mb-1">Dirección Fiscal <span class="text-red-600">*</span></label>
                             <InputText v-model="direccionEmpresa" class="w-full border-green-iimp"
                                 :readonly="!isEditingBilling || block_direction"
                                 :disabled="!isEditingBilling || loading_doc" />
                             <small class="text-red-600" v-if="errors.direccionEmpresa">{{ errors.direccionEmpresa
-                                }}</small>
+                            }}</small> -->
+                            <label class="block mb-1">Dirección Fiscal <span class="text-red-600">*</span></label>
+                            <InputText v-model="direccionEmpresa" class="w-full border-green-iimp"
+                                :readonly="camposFacturacionBloqueados" :disabled="loading_doc || esRuc20 || !isEditingBilling"
+                                :class="{ 'bg-gray-100': esRuc20 && !showManualAlert }" />
+                            <small class="text-red-600" v-if="errors.direccionEmpresa">{{ errors.direccionEmpresa
+                            }}</small>
                         </div>
 
                         <div class="grid gap-6 md:grid-cols-2">
@@ -916,7 +961,7 @@ defineExpose({ getInscripcion });
                                 <label class="block mb-1">Responsable Facturación <span
                                         class="text-red-600">*</span></label>
                                 <InputText v-model="responsable" :readonly="!isEditingBilling"
-                                    class="w-full border-green-iimp" :disabled="!isEditingBilling || loading_doc" />
+                                    class="w-full border-green-iimp" :disabled="!isEditingBilling || loading_doc " />
                                 <small class="text-red-600" v-if="errors.responsable">{{ errors.responsable }}</small>
                             </div>
 
@@ -925,7 +970,7 @@ defineExpose({ getInscripcion });
                                 <InputText v-model="correo_facturador" :readonly="!isEditingBilling"
                                     class="w-full border-green-iimp" :disabled="!isEditingBilling || loading_doc" />
                                 <small class="text-red-600" v-if="errors.correo_facturador">{{ errors.correo_facturador
-                                    }}</small>
+                                }}</small>
                             </div>
                         </div>
                     </div>

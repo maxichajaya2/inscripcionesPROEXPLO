@@ -95,7 +95,7 @@ class InscripcionController extends Controller
     {
         $section = $request->query('section', 'inscripciones');
         $perfil_id = $request->query('profile');
-        $perfilesPermitidos = [1, 2, 3, 4, 5];
+        $perfilesPermitidos = [1, 2, 3, 5, 6, 7];
 
         // Función anónima para reutilizar la lógica de precios vigentes
         $filtroPrecios = function ($query) {
@@ -103,7 +103,6 @@ class InscripcionController extends Controller
                 ->where('precio.fecha_fin', '>=', $this->now)
                 ->where('precio.isactive', true); // <--- CAMBIO AQUÍ
         };
-
         // 1. Cargamos los Perfiles Principales (Inscripción al Congreso)
         $categorias = CategoriaInscripcion::with(['precio' => $filtroPrecios])
             ->where('nombre_en', 'LIKE', $filtro)
@@ -115,9 +114,7 @@ class InscripcionController extends Controller
                 return $cat;
             });
 
-        // dd($categorias->toArray());
-
-        $perfilesPermitidos = [1, 2, 3, 5];
+        $perfilesPermitidos = [1, 2, 3, 5, 6, 7];
 
 
         // 2. Adicionales (Cursos/Tours) con validación de perfiles
@@ -220,7 +217,6 @@ class InscripcionController extends Controller
             abort(response()->json(['status' => false, 'message' => 'Document info missing'], 400));
         }
     }
-
 
     private function handlePersona(Request $request)
     {
@@ -472,7 +468,11 @@ class InscripcionController extends Controller
 
         $inscripcion = new Inscripcion;
         $inscripcion->id_persona = $persona->id;
-        $inscripcion->id_categoria_inscripcion = $categoria->id;
+        if ($request->input('section') === 'viajes') {
+            $inscripcion->id_categoria_inscripcion = null; // No asignamos categoría de inscripción para tours/cursos
+        } else {
+            $inscripcion->id_categoria_inscripcion = $categoria->id;
+        }
         $inscripcion->id_categoria_cursos_viajes = json_decode($request->input('extras_seleccionados'), true);
         $inscripcion->id_facturacion = $facturacion->id;
         $inscripcion->usuario_creacion = $persona->id;
@@ -487,6 +487,7 @@ class InscripcionController extends Controller
             $file->move(storage_path('app/public/documents'), $name);
             $inscripcion->document_path = asset('storage/documents/' . $name);
         }
+        $inscripcion->id_perfil = $request->input('profile');
         $inscripcion->save();
 
         // dd('INSCRIPCIÓN CREADA CORRECTAMENTE', [
@@ -540,15 +541,7 @@ class InscripcionController extends Controller
             return redirect('/')->with('error', 'Token de transacción no encontrado.');
         }
 
-        // dd('DATOS RECIBIDOS DE NIUBIZ', [
-        //     'transactionToken' => $transactiontoken,
-        //     'cuota_respuesta_api' => $cuota->respuesta_api,
-        //     'facturacion_total' => $facturacion->total,
-        //     'order' => $order
-        // ]);
         $respuesta = app(\App\Http\Controllers\NiubizController::class)->authorization($cuota->respuesta_api, $facturacion->total, $transactiontoken, $order);
-
-        // dd('RESPUESTA DE NIUBIZ', $respuesta);
 
         $respuesta = '{
             "header": {
@@ -675,10 +668,34 @@ class InscripcionController extends Controller
 
             $persona = Persona::find($inscripcion->id_persona);
 
+        //  dd('LLEGÓ A GENERAR EL SERVICIO WMC', [
+        //         'INSCRIPCION' => $inscripcion,
+        //     ]);
 
-            // Ejecutar el servicio
             $service_wmc = app(\App\Http\Controllers\WebServiceController::class)
                 ->wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz);
+
+
+            if (isset($service_wmc->Response) && $service_wmc->Response->Status === true) {
+                $inscripcion->qr = (string)$service_wmc->Response->QR;
+                // $inscripcion->sie_code = (string)$service_wmc->Response->SieCode;
+                $inscripcion->save();
+
+                try {
+                    Mail::to($persona->correo)->send(new \App\Mail\MailInscripcion($inscripcion, $niubiz));
+                } catch (\Exception $e) {
+                    Log::error("Error enviando correo: " . $e->getMessage());
+                }
+            } else {
+                // Si llegamos aquí, service_wmc tiene el error 500 o un Status false
+                Log::error("ERROR SIE WMC:", (array)$service_wmc);
+            }
+
+            // Ejecutar el servicio
+
+
+            // $service_wmc = app(\App\Http\Controllers\WebServiceController::class)
+            //     ->wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz);
             //  dd($service_wmc);
 
             // $service_wmc->Response->Status = false;
