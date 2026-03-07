@@ -135,7 +135,7 @@ const scrollToCategories = () => {
                             ¡Aprovecha los precios preventa de PROEXPLO!
                         </h2>
                         <p class="text-slate-600 text-xs md:text-base leading-snug">
-                            Inscríbete antes del <strong>15 de Abril</strong> y asegura tu participación.
+                            Inscríbete antes del <strong>31 de Marzo</strong> y asegura tu participación.
                         </p>
                     </div>
                 </div>
@@ -339,7 +339,30 @@ const scrollToCategories = () => {
                     </div>
                 </div>
             </div>
+
+            <div class="w-full mt-12 animate-fade-in-up">
+                <div
+                    class="flex flex-col md:flex-row justify-between items-center border-orange-200 bg-orange-50/30 rounded-3xl border p-6 md:p-8 gap-6">
+                    <div class="flex justify-center min-w-[80px]">
+                        <div class="p-4 bg-orange-100 rounded-2xl">
+                            <img src="/images/icon-fence.svg" class="w-10 h-10">
+                        </div>
+                    </div>
+                    <div class="flex-1 text-center md:text-left">
+                        <h6 class="text-xl font-black text-slate-800 uppercase mb-2">Otros participantes</h6>
+                        <p class="text-slate-600 leading-relaxed">
+                            Si eres auspiciador, exhibidor o prensa, comunícate con nosotros al correo
+                            <a href="mailto:inscripciones@iimp.org.pe"
+                                class="text-orange-600 font-bold hover:underline">
+                                inscripciones@iimp.org.pe
+                            </a>
+                            para orientarte sobre el proceso de inscripción.
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
+
     </AppLayout>
 </template>
 
@@ -463,6 +486,22 @@ const scrollToCategories = () => {
     to {
         opacity: 1;
         transform: translateX(0);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.8s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 </style>

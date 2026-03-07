@@ -102,12 +102,14 @@
                                             {{ $inscripcion->persona->celular ?? '' }}
                                         </td>
                                     </tr>
+                                    @if($inscripcion->categoria_inscripcion->nombre_es)
                                     <tr>
                                         <td style="padding: 5px 0; color: #64748b;">Categoría:</td>
                                         <td style="padding: 5px 0; font-weight: 700; color: #001e3d;">
                                             {{ $inscripcion->categoria_inscripcion->nombre_es ?? '' }}
                                         </td>
                                     </tr>
+                                    @endif
                                     @if (count($dias_seleccionados) > 0)
                                         <tr>
                                             <td style="padding: 5px 0; color: #64748b;">Días Seleccionados:</td>

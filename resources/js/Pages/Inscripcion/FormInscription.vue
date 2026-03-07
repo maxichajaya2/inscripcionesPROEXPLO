@@ -441,12 +441,12 @@ const onFileSelect = (event) => {
 
     // --- VALIDACIÓN 1: FORMATO ---
     if (!allowedTypes.includes(file.type)) {
-        fileErrors.value.push("Invalid file format. Only PDF documents or Images (PNG, JPG, JPEG) are accepted.");
+        fileErrors.value.push("Formato de archivo no válido. Solo se aceptan documentos PDF o imágenes (PNG, JPG, JPEG).");
     }
 
     // --- VALIDACIÓN 2: TAMAÑO (6MB) ---
     if (file.size > maxSize) {
-        fileErrors.value.push("File size exceeds the limit. Maximum allowed is 6MB.");
+        fileErrors.value.push("El tamaño del archivo excede el límite. El máximo permitido es de 6MB.");
     }
 
     // 3. Si hay errores, limpiamos la selección para que el usuario deba elegir otro

@@ -127,17 +127,98 @@ const missingFields = computed(() => {
     return Object.keys(errors.value).map(key => fieldNames[key] || key);
 });
 
+// const searchPerson = async () => {
+//     if (!tipo_doc.value || !documento.value) {
+//         toast.add({ severity: 'warn', summary: 'Warning', detail: 'Please enter document type and number', life: 3000 });
+//         return;
+//     }
+
+//     loadingSearch.value = true;
+//     hasSearched.value = false;
+//     noEncontrado.value = false;
+//     searchSuccess.value = false;
+//     searchError.value = true;
+
+//     try {
+//         const response = await axios.post('/api/getperson', {
+//             id_tipo_documento: tipo_doc.value,
+//             numero_documento: documento.value
+//         });
+
+//         const data = response.data;
+//         hasSearched.value = true;
+
+//         if (data.status && data.persona) {
+//             const p = data.persona;
+//             noEncontrado.value = false;
+//             searchSuccess.value = true;
+//             searchError.value = false;
+//             const paisAsignado = props.tipo_origen === 1 ? 75 : (p.pais || p.id_pais);
+//             if (p.pais || p.id_pais) {
+//                 pais.value = p.pais || p.id_pais;
+//                 await loadDepartamentos();
+//             }
+
+//             esSocio.value = p.es_socio;
+
+//             setValues({
+//                 tipo_doc: p.id_tipo_documento,
+//                 documento: p.documento,
+//                 nombres: p.nombres || '',
+//                 apellido_paterno: p.apellido_paterno || '',
+//                 apellido_materno: p.apellido_materno || '',
+//                 correo: p.correo || '',
+//                 celular: p.celular || '',
+//                 direccionPersona: p.direccionPersona || p.direccion?.direccion || '',
+//                 empresa: p.empresa_nombre || p.empresa || '',
+//                 cargo: p.cargo || '',
+//                 pais: p.pais || p.id_pais || paisAsignado,
+//                 sexo: p.sexo || '',
+//                 fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento) : null
+//             });
+
+//             // toast.add({ severity: 'success', summary: 'Found', detail: 'Information loaded successfully', life: 3000 });
+//         } else {
+//             noEncontrado.value = true;
+//             // SI ES EXTRANJERO, permitimos que pase el check de socio aunque no se encuentre
+//             esSocio.value = props.tipo_origen === 2 ? true : false;
+//             searchSuccess.value = false;
+//             searchError.value = true;
+//             setValues({
+//                 tipo_doc: tipo_doc.value,
+//                 documento: documento.value,
+//                 nombres: '',
+//                 apellido_paterno: '',
+//                 apellido_materno: '',
+//                 cargo: '',
+//                 correo: '',
+//                 celular: '',
+//                 direccionPersona: '',
+//                 empresa: '',
+//                 sexo: '',
+//                 fecha_nacimiento: null
+//             });
+
+//             // toast.add({ severity: 'info', summary: 'Not Found', detail: 'No record found. Please fill manually.', life: 3000 });
+//         }
+//     } catch (error) {
+//         console.error("Search error:", error);
+//     } finally {
+//         loadingSearch.value = false;
+//     }
+// };
+
 const searchPerson = async () => {
     if (!tipo_doc.value || !documento.value) {
-        toast.add({ severity: 'warn', summary: 'Warning', detail: 'Please enter document type and number', life: 3000 });
+        toast.add({ severity: 'warn', summary: 'Atención', detail: 'Por favor ingrese el tipo y número de documento', life: 3000 });
         return;
     }
 
     loadingSearch.value = true;
-    hasSearched.value = false;
+    hasSearched.value = true; // Indicar que ya se inició una búsqueda
     noEncontrado.value = false;
     searchSuccess.value = false;
-    searchError.value = true;
+    searchError.value = false;
 
     try {
         const response = await axios.post('/api/getperson', {
@@ -146,24 +227,27 @@ const searchPerson = async () => {
         });
 
         const data = response.data;
-        hasSearched.value = true;
 
-        if (data.status && data.persona) {
+        // CAMBIO CLAVE: Verificamos si existe el objeto persona, independientemente del status
+        if (data.persona) {
             const p = data.persona;
             noEncontrado.value = false;
             searchSuccess.value = true;
-            searchError.value = false;
+
+            // Asignamos si es socio o no
+            esSocio.value = p.es_socio;
+
+            // Manejo de país y departamentos
             const paisAsignado = props.tipo_origen === 1 ? 75 : (p.pais || p.id_pais);
             if (p.pais || p.id_pais) {
                 pais.value = p.pais || p.id_pais;
                 await loadDepartamentos();
             }
 
-            esSocio.value = p.es_socio;
-
+            // RELLENAR DATOS (Autocompletado)
             setValues({
-                tipo_doc: p.id_tipo_documento,
-                documento: p.documento,
+                tipo_doc: p.id_tipo_documento || tipo_doc.value,
+                documento: p.documento || documento.value,
                 nombres: p.nombres || '',
                 apellido_paterno: p.apellido_paterno || '',
                 apellido_materno: p.apellido_materno || '',
@@ -177,36 +261,43 @@ const searchPerson = async () => {
                 fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento) : null
             });
 
-            // toast.add({ severity: 'success', summary: 'Found', detail: 'Information loaded successfully', life: 3000 });
         } else {
+            // SI REALMENTE NO EXISTE LA PERSONA EN LA BD
             noEncontrado.value = true;
-            // SI ES EXTRANJERO, permitimos que pase el check de socio aunque no se encuentre
-            esSocio.value = props.tipo_origen === 2 ? true : false;
             searchSuccess.value = false;
-            searchError.value = true;
+
+            // Si es extranjero (tipo_origen 2), podrías querer que pase como socio
+            if (props.tipo_origen === 2) {
+                esSocio.value = true;
+            }
+
+            // IMPORTANTE: No limpies los campos aquí si quieres que el usuario
+            // conserve lo que ya escribió en tipo_doc y documento.
+            // Solo reseteamos los valores de identidad pero mantenemos el documento.
             setValues({
-                tipo_doc: tipo_doc.value,
-                documento: documento.value,
+                ...values, // Mantenemos lo que ya está en el formulario
                 nombres: '',
                 apellido_paterno: '',
-                apellido_materno: '',
-                cargo: '',
-                correo: '',
-                celular: '',
-                direccionPersona: '',
-                empresa: '',
-                sexo: '',
-                fecha_nacimiento: null
+                apellido_materno: ''
+                // No tocamos tipo_doc ni documento para que no se borren
             });
 
-            // toast.add({ severity: 'info', summary: 'Not Found', detail: 'No record found. Please fill manually.', life: 3000 });
+            toast.add({ severity: 'info', summary: 'No encontrado', detail: 'No se encontraron datos. Por favor, regístrese manualmente.', life: 3000 });
         }
     } catch (error) {
+        searchError.value = true;
         console.error("Search error:", error);
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Hubo un problema al conectar con el servidor', life: 3000 });
     } finally {
         loadingSearch.value = false;
     }
 };
+const defaultViewDate = computed(() => {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() - 18);
+    return date;
+});
+
 
 const onlyNumberKey = (event) => {
     const charCode = event.which ? event.which : event.keyCode;
@@ -489,7 +580,7 @@ onMounted(() => {
             <template #content>
                 <div class="w-full px-4 pb-2">
                     <div class="flex items-start p-3 mb-5 bg-blue-50 border border-blue-200 rounded-lg shadow-sm">
-                        <i class="pi pi-shield text-blue-600 text-2xl mr-3 mt-1"></i>
+                        <i class="pi pi-shield text-blue-600 text-xs mr-3 mt-1"></i>
                         <div>
                             <span class="block text-sm font-bold text-blue-900 mb-1">
                                 Protección de Datos Garantizada
@@ -504,27 +595,29 @@ onMounted(() => {
                             </p>
                         </div>
                     </div>
-                    <div v-if="searchSuccess && !noEncontrado"
-                        class="flex flex-col p-4 mb-4 text-green-800 border-t-4 border-green-300 bg-green-50 rounded-lg"
-                        role="alert">
-                        <div class="flex items-center">
-                            <i class="pi pi-check-circle mr-2 text-xl"></i>
-                            <span class="text-sm font-bold uppercase tracking-wide">Éxito</span>
+                    <div v-if="esSocio">
+                        <div v-if="searchSuccess && !noEncontrado"
+                            class="flex flex-col p-4 mb-4 text-green-800 border-t-4 border-green-300 bg-green-50 rounded-lg text-xs"
+                            role="alert">
+                            <div class="flex items-center">
+                                <i class="pi pi-check-circle mr-2 text-xs"></i>
+                                <span class="text-sm font-bold uppercase tracking-wide">Éxito</span>
+                            </div>
+                            <div class="mt-2 text-sm font-medium leading-tight">
+                                Datos encontrados y cargados correctamente.
+                            </div>
                         </div>
-                        <div class="mt-2 text-sm font-medium leading-tight">
-                            Datos encontrados y cargados correctamente.
-                        </div>
-                    </div>
 
-                    <div v-if="hasSearched && noEncontrado"
-                        class="flex flex-col p-4 mb-4 text-blue-800 border-t-4 border-blue-300 bg-blue-50 rounded-lg"
-                        role="alert">
-                        <div class="flex items-center">
-                            <i class="pi pi-info-circle mr-2 text-xl"></i>
-                            <span class="text-sm font-bold uppercase tracking-wide">Información</span>
-                        </div>
-                        <div class="mt-2 text-sm font-medium leading-tight">
-                            No se encontraron registros. Por favor, complete sus datos manualmente en el formulario.
+                        <div v-if="hasSearched && noEncontrado"
+                            class="flex flex-col p-4 mb-4 text-blue-800 border-t-4 border-blue-300 bg-blue-50 rounded-lg text-xs"
+                            role="alert">
+                            <div class="flex items-center">
+                                <i class="pi pi-info-circle mr-2 text-xs"></i>
+                                <span class="text-sm font-bold uppercase tracking-wide">Información</span>
+                            </div>
+                            <div class="mt-2 text-sm font-medium leading-tight">
+                                No se encontraron registros. Por favor, complete sus datos manualmente en el formulario.
+                            </div>
                         </div>
                     </div>
                     <div v-if="hasSearched && esSocio && !noEncontrado && esCategoriaDeSocio"
@@ -774,8 +867,8 @@ onMounted(() => {
                                 </InputGroupAddon>
                                 <Calendar name="fecha_nacimiento" v-model="fecha_nacimiento"
                                     v-bind="fecha_nacimientoAttrs" :maxDate="maxAdultDate" dateFormat="yy-mm-dd"
-                                    :showTime="false" placeholder="YYYY-MM-DD" class="w-full"
-                                    :disabled="bloqueoFechaNac"
+                                    :viewDate="defaultViewDate" :showTime="false" placeholder="YYYY-MM-DD"
+                                    class="w-full" :disabled="bloqueoFechaNac"
                                     inputClass="w-full border-green-iimp border-l-0 shadow-none outline-none bg-white" />
                             </InputGroup>
                             <small class=" text-red-600">{{ errors.fecha_nacimiento }}</small>
