@@ -31,6 +31,7 @@ const props = defineProps({
     categorias: Object,
     adicionales: Array,
     section: String,
+    perfil_id: Number
 })
 
 const formDataPayment = ref(null);
@@ -227,9 +228,10 @@ watch(activeStep, () => {
                     <StepPanels>
                         <StepPanel v-slot="{ activateCallback }" value="1"
                             class="rounded-2xl border-2 border-green-iimp bg-white-price shadow-wmc">
-                            <FormValidacionDoc ref="childFormValidacionDoc" :tipo_origen="tipo_origen" />
+                            <FormValidacionDoc ref="childFormValidacionDoc" :tipo_origen="tipo_origen" :perfil_id="props.perfil_id" />
 
-                            <div class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 z-[50] flex justify-end gap-3 rounded-b-2xl">
+                            <div
+                                class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 z-[50] flex justify-end gap-3 rounded-b-2xl">
                                 <Button label="Validar" icon="pi pi-arrow-right" iconPos="right"
                                     class="bg-degradient border-rounded-full" :loading="loading"
                                     :disabled="childFormValidacionDoc?.esCategoriaDeSocio && childFormValidacionDoc?.hasSearched && !childFormValidacionDoc?.esSocio"
@@ -245,7 +247,8 @@ watch(activeStep, () => {
                             <FormTourCourse ref="childFormTourCourse" :data_persona="data_persona"
                                 :adicionales="props.adicionales" :section="sectionUrl" />
 
-                            <div class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 z-[50] flex justify-between gap-3 rounded-b-2xl">
+                            <div
+                                class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 z-[50] flex justify-between gap-3 rounded-b-2xl">
                                 <Button label="Atrás" severity="secondary" icon="pi pi-arrow-left"
                                     class="flex-1 md:flex-none p-3 font-bold" @click="activateCallback('1')" />
                                 <Button label="Continuar a Facturación" iconPos="right" icon="pi pi-arrow-right"
@@ -259,7 +262,8 @@ watch(activeStep, () => {
                             <FormInscription ref="childFormInscription" :data_persona="data_persona"
                                 :categorias="props.categorias" />
 
-                            <div class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 z-[50] flex justify-between gap-3 rounded-b-2xl">
+                            <div
+                                class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 z-[50] flex justify-between gap-3 rounded-b-2xl">
                                 <Button label="Atrás" severity="secondary" icon="pi pi-arrow-left"
                                     class="flex-1 md:flex-none" @click="activateCallback('2')" />
                                 <Button label="Registrar y Pagar" iconPos="right" icon="pi pi-arrow-right"
@@ -274,7 +278,8 @@ watch(activeStep, () => {
                                 :formulario="formDataPayment" :categoria_seleccionada="categoria_seleccionada"
                                 :extras_seleccionados="extras_para_mostrar" />
 
-                            <div class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 z-[50] flex justify-between gap-3 rounded-b-2xl">
+                            <div
+                                class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 z-[50] flex justify-between gap-3 rounded-b-2xl">
                                 <Button label="Atrás" severity="secondary" icon="pi pi-arrow-left"
                                     @click="activateCallback('3')" />
                             </div>
@@ -300,14 +305,16 @@ watch(activeStep, () => {
             :style="{ width: '500px' }" class="rounded-3xl overflow-hidden border-none shadow-2xl animate-modal-entry">
             <div class="p-0 relative overflow-hidden">
                 <div class="bg-gradient-to-r from-blue-900 via-blue-700 to-blue-900 p-8 text-center">
-                    <div class="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/20">
+                    <div
+                        class="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/20">
                         <i class="pi pi-shopping-cart text-yellow-400 text-4xl"></i>
                     </div>
                     <h3 class="text-2xl font-black text-white uppercase italic">Enhance your Experience</h3>
                 </div>
                 <div class="p-10 bg-white text-center">
                     <p class="text-slate-700 text-lg font-medium">
-                        Are you sure you want to proceed without adding <span class="text-blue-700 font-extrabold">Short Courses</span> or <span class="text-blue-700 font-extrabold">Technical Visits</span>?
+                        Are you sure you want to proceed without adding <span class="text-blue-700 font-extrabold">Short
+                            Courses</span> or <span class="text-blue-700 font-extrabold">Technical Visits</span>?
                     </p>
                     <div class="mt-8 flex flex-col gap-4">
                         <button @click="showConfirmNoExtrasModal = false"
