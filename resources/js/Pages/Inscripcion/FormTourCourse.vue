@@ -353,7 +353,7 @@ defineExpose({
                         </AccordionTab>
                         <!-- ========= VIAJES =========
                         ================================ -->
-                        <!-- | <AccordionTab>
+                        | <AccordionTab>
                             <template #header>
                                 <span class="font-bold text-blue-900 uppercase text-sm italic">Technical Visits</span>
                             </template>
@@ -443,7 +443,7 @@ defineExpose({
                                     </Accordion>
                                 </div>
                             </div>
-                        </AccordionTab> -->
+                        </AccordionTab>
                     </Accordion>
 
                     <div v-if="extras_seleccionados.length > 0"

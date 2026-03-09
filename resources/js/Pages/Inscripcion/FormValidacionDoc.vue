@@ -85,7 +85,7 @@ const schema = yup.object({
         })
 });
 
-const { defineField, errors, values, setValues, validate } = useForm({
+const { defineField, errors, values, setValues, validate, setErrors } = useForm({
     validationSchema: schema,
     initialValues: props.saved_values || {}
 });
@@ -244,36 +244,77 @@ const searchPerson = async () => {
                 await loadDepartamentos();
             }
 
-            // RELLENAR DATOS (Autocompletado)
-            setValues({
-                tipo_doc: p.id_tipo_documento || tipo_doc.value,
-                documento: p.documento || documento.value,
-                nombres: p.nombres || '',
-                apellido_paterno: p.apellido_paterno || '',
-                apellido_materno: p.apellido_materno || '',
-                correo: p.correo || '',
-                celular: p.celular || '',
-                direccionPersona: p.direccionPersona || p.direccion?.direccion || '',
-                empresa: p.empresa_nombre || p.empresa || '',
-                cargo: p.cargo || '',
-                pais: p.pais || p.id_pais || paisAsignado,
-                sexo: p.sexo || '',
-                fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento) : null
-            });
+            console.log('--- DEPURACIÓN SEARCH ---');
+            console.log('Perfil ID actual:', props.perfil_id);
+            console.log('¿Es Socio?:', esSocio.value);
+
+            if ([1, 4].includes(props.perfil_id)) {
+
+                if (esSocio.value) {
+                    setValues({
+                        tipo_doc: p.id_tipo_documento || tipo_doc.value,
+                        documento: p.documento || documento.value,
+                        nombres: p.nombres || '',
+                        apellido_paterno: p.apellido_paterno || '',
+                        apellido_materno: p.apellido_materno || '',
+                        correo: p.correo || '',
+                        celular: p.celular || '',
+                        direccionPersona: p.direccionPersona || p.direccion?.direccion || '',
+                        empresa: p.empresa_nombre || p.empresa || '',
+                        cargo: p.cargo || '',
+                        pais: p.pais || p.id_pais || paisAsignado,
+                        sexo: p.sexo || '',
+                        fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento) : null
+                    });
+
+                } else {
+                    setValues({
+                        tipo_doc: p.id_tipo_documento || tipo_doc.value,
+                        documento: p.documento || documento.value,
+                        nombres: '',
+                        apellido_paterno: '',
+                        apellido_materno: '',
+                        correo: '',
+                        celular: '',
+                        direccionPersona: '',
+                        empresa: '',
+                        cargo: '',
+                        pais: '',
+                        sexo: '',
+                        fecha_nacimiento: ''
+                    });
+
+                    setErrors({});
+
+                }
+            } else {
+
+                // RELLENAR DATOS (Autocompletado)
+                setValues({
+                    tipo_doc: p.id_tipo_documento || tipo_doc.value,
+                    documento: p.documento || documento.value,
+                    nombres: p.nombres || '',
+                    apellido_paterno: p.apellido_paterno || '',
+                    apellido_materno: p.apellido_materno || '',
+                    correo: p.correo || '',
+                    celular: p.celular || '',
+                    direccionPersona: p.direccionPersona || p.direccion?.direccion || '',
+                    empresa: p.empresa_nombre || p.empresa || '',
+                    cargo: p.cargo || '',
+                    pais: p.pais || p.id_pais || paisAsignado,
+                    sexo: p.sexo || '',
+                    fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento) : null
+                });
+            }
+
+
 
         } else {
             // SI REALMENTE NO EXISTE LA PERSONA EN LA BD
             noEncontrado.value = true;
             searchSuccess.value = false;
 
-            // Si es extranjero (tipo_origen 2), podrías querer que pase como socio
-            if (props.tipo_origen === 2) {
-                esSocio.value = true;
-            }
-
             // IMPORTANTE: No limpies los campos aquí si quieres que el usuario
-            // conserve lo que ya escribió en tipo_doc y documento.
-            // Solo reseteamos los valores de identidad pero mantenemos el documento.
             setValues({
                 ...values, // Mantenemos lo que ya está en el formulario
                 nombres: '',
@@ -292,6 +333,8 @@ const searchPerson = async () => {
         loadingSearch.value = false;
     }
 };
+
+
 const defaultViewDate = computed(() => {
     const date = new Date();
     date.setFullYear(date.getFullYear() - 18);
@@ -355,6 +398,18 @@ const mostrarBannerBloqueo = computed(() => {
     return camposBloqueados.value;
 });
 
+const esMenorDeEdad = (fecha) => {
+    if (!fecha) return false;
+    const birthDate = new Date(fecha);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    return age < 18;
+};
+
 const camposBloqueados = computed(() => {
     // 1. Condición de búsqueda (Solo para peruanos que no han buscado aún)
     const faltaBuscarPeruano = esDNI.value && !hasSearched.value;
@@ -366,19 +421,60 @@ const camposBloqueados = computed(() => {
     return faltaBuscarPeruano || esPerfilBloqueado;
 });
 
+// const esCampoBloqueado = (valorCampo) => {
+//     // 1. Si es peruano y no ha buscado, todo bloqueado
+//     if (esDNI.value && !hasSearched.value) return true;
+
+//     // 2. Si es perfil crítico (1 o 5)
+
+//     if ([1, 4].includes(props.perfil_id) && hasSearched.value && !esSocio.value) {
+//         return true;
+//     }
+
+
+//     if ([1, 4].includes(props.perfil_id)) {
+//         // BLOQUEA solo si el campo NO está vacío (tiene contenido previo)
+//         // Usamos trim() para evitar espacios en blanco
+//         // Si el campo está vacío, está desbloqueado para escribir
+//         if (!fecha_nacimiento.value) return false;
+
+//         // Si tiene una fecha pero es menor de edad, DESBLOQUEAMOS (return false)
+//         // para que el usuario pueda corregirla.
+//         if (esMenorDeEdad(fecha_nacimiento.value)) {
+//             return false;
+//         }
+
+
+//         return valorCampo !== null && valorCampo !== undefined && String(valorCampo).trim() !== '';
+//     }
+
+
+
+//     return false;
+// };
+
 const esCampoBloqueado = (valorCampo) => {
-    // 1. Si es peruano y no ha buscado, todo bloqueado
+    // Si ya buscó y en este perfil se requiere ser socio pero NO lo es -> BLOQUEO TOTAL
+    if ([1, 4].includes(props.perfil_id) && hasSearched.value && !esSocio.value) {
+        return true;
+    }
+
+    // Si es peruano y no ha buscado, bloqueado
     if (esDNI.value && !hasSearched.value) return true;
 
-    // 2. Si es perfil crítico (1 o 5)
-    if ([1, 4].includes(props.perfil_id)) {
-        // BLOQUEA solo si el campo NO está vacío (tiene contenido previo)
-        // Usamos trim() para evitar espacios en blanco
+    // Si es socio activo en perfil crítico, bloqueamos solo lo que ya viene con datos
+    if ([1, 4].includes(props.perfil_id) && esSocio.value) {
+        if (!fecha_nacimiento.value) return false;
+        if (esMenorDeEdad(fecha_nacimiento.value)) return false;
         return valorCampo !== null && valorCampo !== undefined && String(valorCampo).trim() !== '';
     }
 
     return false;
 };
+
+const ocultarErroresPorNoSocio = computed(() => {
+    return [1, 4].includes(props.perfil_id) && hasSearched.value && !esSocio.value;
+});
 
 const tiposDocumentoFiltrados = computed(() => {
     const todos = page.props.general.tipDocPer || [];
@@ -579,22 +675,6 @@ onMounted(() => {
             </template>
             <template #content>
                 <div class="w-full px-4 pb-2">
-                    <div class="flex items-start p-3 mb-5 bg-blue-50 border border-blue-200 rounded-lg shadow-sm">
-                        <i class="pi pi-shield text-blue-600 text-xs mr-3 mt-1"></i>
-                        <div>
-                            <span class="block text-sm font-bold text-blue-900 mb-1">
-                                Protección de Datos Garantizada
-                            </span>
-                            <p class="text-[11px] text-blue-800 leading-relaxed pr-2">
-                                Toda la información proporcionada está <b>encriptada y se transmite de forma segura</b>.
-                                Sus datos personales están estrictamente protegidos bajo las Leyes Internacionales de
-                                Privacidad de Datos
-                                (incluyendo el RGPD) y serán utilizados <b>exclusivamente</b> para su registro y
-                                participación en
-                                <strong>PROEXPLO 2026</strong>.
-                            </p>
-                        </div>
-                    </div>
                     <div v-if="esSocio">
                         <div v-if="searchSuccess && !noEncontrado"
                             class="flex flex-col p-4 mb-4 text-green-800 border-t-4 border-green-300 bg-green-50 rounded-lg text-xs"
@@ -675,7 +755,7 @@ onMounted(() => {
                     <i class="pi pi-lock mr-2"></i> PLEASE SEARCH BY DOCUMENT NUMBER TO UNLOCK THESE FIELDS
                 </div> -->
 
-                <div v-if="mostrarBannerBloqueo"
+                <!-- <div v-if="mostrarBannerBloqueo"
                     class="mx-6 mb-2 p-2 bg-orange-50 text-orange-700 border-l-4 border-orange-400 text-xs font-semibold">
                     <i class="pi pi-lock mr-2 text-[10px]"></i>
 
@@ -686,7 +766,7 @@ onMounted(() => {
                     <span v-else>
                         Por favor, busque por número de documento para desbloquear estos campos.
                     </span>
-                </div>
+                </div> -->
                 <div class="flex gap-6 p-2 w-full justify-around">
                     <div
                         class="text-green-iimp font-bold max-w-[650px] w-full p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -741,7 +821,7 @@ onMounted(() => {
             <template #content>
                 <div class="p-2">
                     <div class="w-full px-4 pb-4">
-                        <div v-if="missingFields.length > 0"
+                        <div v-if="missingFields.length > 0  && !ocultarErroresPorNoSocio"
                             class="flex flex-col p-4 mb-4 text-orange-800 border-t-4 border-orange-300 bg-orange-50 rounded-lg"
                             role="alert">
                             <div class="flex items-center">
@@ -763,7 +843,9 @@ onMounted(() => {
                             <label for="nombres">Nombres <span class="text-red-600">*</span></label>
                             <InputText name="nombres" v-model="nombres" v-bind="nombresAttrs" :disabled="bloqueoNombres"
                                 class="w-full border-green-iimp" />
-                            <small class="text-red-600">{{ errors.nombres }}</small>
+                            <small v-if="errors.nombres && !ocultarErroresPorNoSocio" class="text-red-600">
+                                {{ errors.nombres }}
+                            </small>
                         </div>
                         <div class="grid gap-6 md:grid-cols-2">
                             <div class="w-full">
@@ -772,7 +854,10 @@ onMounted(() => {
                                 <InputText name="apellido_paterno" v-model="apellido_paterno"
                                     v-bind="apellido_paternoAttrs" :disabled="bloqueoApellidos"
                                     class="w-full border-green-iimp" />
-                                <small class="text-red-600">{{ errors.apellido_paterno }}</small>
+                                <small v-if="errors.nombres && !ocultarErroresPorNoSocio" class="text-red-600">
+                                    {{ errors.apellido_paterno }}
+                                </small>
+
                             </div>
 
                             <div class="col-span-3 sm:col-span-1">
@@ -781,7 +866,7 @@ onMounted(() => {
                                 <InputText name="apellido_materno" v-model="apellido_materno"
                                     :disabled="bloqueoApellidoMaterno" v-bind="apellido_maternoAttrs"
                                     class="w-full border-green-iimp" />
-                                <small class="text-red-600">{{ errors.apellido_materno }}</small>
+                                <small  v-if="errors.apellido_materno && !ocultarErroresPorNoSocio" class="text-red-600">{{ errors.apellido_materno }}</small>
                             </div>
                         </div>
                     </div>
@@ -793,7 +878,7 @@ onMounted(() => {
                                         class="font-normal text-red-600">*</span></label>
                                 <InputText name="correo" v-model="correo" v-bind="correoAttrs" :disabled="bloqueoCorreo"
                                     class="w-full border-green-iimp" />
-                                <small class=" text-red-600">{{ errors.correo }}</small>
+                                <small  v-if="errors.correo && !ocultarErroresPorNoSocio" class=" text-red-600">{{ errors.correo }}</small>
                             </div>
                             <div class="col-span-3 sm:col-span-1">
                                 <label for="celular" class="">Celular <span
@@ -801,14 +886,14 @@ onMounted(() => {
                                 <InputText name="celular" v-model="celular" v-bind="celularAttrs"
                                     @keypress="onlyPhoneKeys" :disabled="bloqueoCelular"
                                     class="w-full border-green-iimp" placeholder="+51999888777 or 999888777" />
-                                <small class="text-red-600">{{ errors.celular }}</small>
+                                <small v-if="errors.celular && !ocultarErroresPorNoSocio" class="text-red-600">{{ errors.celular }}</small>
                             </div>
                         </div>
                         <div class="w-full sm:col-span-1">
                             <label for="direccionPersona">Dirección <span class="text-red-600">*</span></label>
                             <InputText name="direccionPersona" v-model="direccionPersona" v-bind="direccionPersonaAttrs"
                                 :disabled="bloqueoDireccion" class="w-full border-green-iimp" />
-                            <small class="text-red-600">{{ errors.direccionPersona }}</small>
+                            <small v-if="errors.direccion && !ocultarErroresPorNoSocio" class="text-red-600">{{ errors.direccionPersona }}</small>
                         </div>
                     </div>
 
@@ -820,7 +905,7 @@ onMounted(() => {
                             <Select name="pais" v-model="pais" v-bind="paisAttrs" :options="paises" optionLabel="name"
                                 optionValue="id" placeholder="Select" showClear filter @change="loadDepartamentos"
                                 :disabled="bloqueoPais" translate="no" class="w-full border-green-iimp" />
-                            <small class="text-red-600">{{ errors.pais }}</small>
+                            <small v-if="errors.pais && !ocultarErroresPorNoSocio" class="text-red-600">{{ errors.pais }}</small>
                         </div>
 
                         <div class="col-span-3 sm:col-span-1">
@@ -856,7 +941,7 @@ onMounted(() => {
                             <Select name="sexo" v-model="sexo" v-bind="sexoAttrs" optionLabel="label"
                                 optionValue="value" placeholder="Selecccionar" showClear checkmark :options="generos"
                                 :disabled="bloqueoSexo" class="w-full border-green-iimp" />
-                            <small class=" text-red-600">{{ errors.sexo }}</small>
+                            <small v-if="errors.sexo && !ocultarErroresPorNoSocio" class=" text-red-600">{{ errors.sexo }}</small>
                         </div>
                         <div class="w-full">
                             <label for="fecha_nacimiento">Fecha de Nacimiento <span
@@ -871,21 +956,21 @@ onMounted(() => {
                                     class="w-full" :disabled="bloqueoFechaNac"
                                     inputClass="w-full border-green-iimp border-l-0 shadow-none outline-none bg-white" />
                             </InputGroup>
-                            <small class=" text-red-600">{{ errors.fecha_nacimiento }}</small>
+                            <small v-if="errors.fecha_nacimiento && !ocultarErroresPorNoSocio" class=" text-red-600">{{ errors.fecha_nacimiento }}</small>
                         </div>
 
                         <div class="w-full">
                             <label for="empresa" class="">Empresa <span class="text-red-600">*</span></label>
                             <InputText name="empresa" v-model="empresa" v-bind="empresaAttrs" :disabled="bloqueoEmpresa"
                                 class="w-full border-green-iimp" />
-                            <small class=" text-red-600">{{ errors.empresa }}</small>
+                            <small v-if="errors.empresa && !ocultarErroresPorNoSocio" class=" text-red-600">{{ errors.empresa }}</small>
                         </div>
 
                         <div class="w-full sm:col-span-1">
                             <label for="cargo" class="">Cargo <span class="text-red-600">*</span></label>
                             <InputText name="cargo" v-model="cargo" v-bind="cargoAttrs" :disabled="bloqueoCargo"
                                 class="w-full border-green-iimp" />
-                            <small class="text-red-600">{{ errors.cargo }}</small>
+                            <small v-if="errors.cargo && !ocultarErroresPorNoSocio" class="text-red-600">{{ errors.cargo }}</small>
                         </div>
                     </div>
                 </div>
