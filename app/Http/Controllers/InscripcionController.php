@@ -668,6 +668,9 @@ class InscripcionController extends Controller
 
             // Actualización de Inscripción
             $inscripcion = Inscripcion::where('id_facturacion', $facturacion->id)->first();
+
+            // dd('inscripcion: ', $inscripcion);
+
             $inscripcion->observacion = "Pagada Niubiz ID: " . $niubiz->id;
             $inscripcion->update();
 
@@ -686,6 +689,13 @@ class InscripcionController extends Controller
                 // $inscripcion->sie_code = (string)$service_wmc->Response->SieCode;
                 $inscripcion->save();
 
+                // VIAJES
+                if ($inscripcion->id_categoria_inscripcion==null) {
+                    $inscripcion->id_categoria_inscripcion  =   $inscripcion->id_perfil;
+
+                }
+                // $inscripcion->save();
+                // dd($inscripcion);
                 try {
                     Mail::to($persona->correo)->send(new \App\Mail\MailInscripcion($inscripcion, $niubiz));
                 } catch (\Exception $e) {
