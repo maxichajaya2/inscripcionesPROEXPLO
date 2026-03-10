@@ -952,10 +952,10 @@ onMounted(() => {
                                 <InputGroupAddon class="border-green-iimp border-r-0 bg-white text-green-iimp">
                                     <i class="pi pi-calendar"></i>
                                 </InputGroupAddon>
-                                <Calendar name="fecha_nacimiento" v-model="fecha_nacimiento"
+                               <Calendar name="fecha_nacimiento" v-model="fecha_nacimiento"
                                     v-bind="fecha_nacimientoAttrs" :maxDate="maxAdultDate" dateFormat="yy-mm-dd"
-                                    :viewDate="defaultViewDate" :showTime="false" placeholder="YYYY-MM-DD"
-                                    class="w-full" :disabled="bloqueoFechaNac"
+                                    :showTime="false" placeholder="YYYY-MM-DD" class="w-full"
+                                    :disabled="bloqueoFechaNac"
                                     inputClass="w-full border-green-iimp border-l-0 shadow-none outline-none bg-white" />
                             </InputGroup>
                             <small v-if="errors.fecha_nacimiento && !ocultarErroresPorNoSocio" class=" text-red-600">{{ errors.fecha_nacimiento }}</small>
