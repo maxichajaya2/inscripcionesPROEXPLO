@@ -281,7 +281,7 @@ const searchPerson = async () => {
                         cargo: '',
                         pais: '',
                         sexo: '',
-                        fecha_nacimiento: ''
+                        fecha_nacimiento: null
                     });
 
                     setErrors({});
@@ -319,9 +319,11 @@ const searchPerson = async () => {
                 ...values, // Mantenemos lo que ya está en el formulario
                 nombres: '',
                 apellido_paterno: '',
-                apellido_materno: ''
+                apellido_materno: '',
+                fecha_nacimiento:null
                 // No tocamos tipo_doc ni documento para que no se borren
             });
+            setErrors({ fecha_nacimiento: undefined });
 
             toast.add({ severity: 'info', summary: 'No encontrado', detail: 'No se encontraron datos. Por favor, regístrese manualmente.', life: 3000 });
         }
