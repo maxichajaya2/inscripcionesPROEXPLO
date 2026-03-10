@@ -13,7 +13,7 @@ import { Link } from '@inertiajs/vue3';
                         <!-- Logo -->
                         <div class="flex items-center shrink-0">
                             <!-- <ApplicationMark class="block w-auto h-9" /> -->
-                            <a href="https://proexplo.com.pe/es" target="_blank" rel="noopener noreferrer">
+                            <a href="https://proexplo.com.pe/es" rel="noopener noreferrer">
                                 <img src="/images/logo-proexplo.png" alt="World Mining"
                                     class="h-12 w-auto cursor-pointer" />
                             </a>
