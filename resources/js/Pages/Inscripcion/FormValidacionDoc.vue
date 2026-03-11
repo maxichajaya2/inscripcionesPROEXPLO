@@ -248,7 +248,7 @@ const searchPerson = async () => {
             console.log('Perfil ID actual:', props.perfil_id);
             console.log('¿Es Socio?:', esSocio.value);
 
-            if ([1, 4].includes(props.perfil_id)) {
+            if ([1, 3].includes(props.perfil_id)) {
 
                 if (esSocio.value) {
                     setValues({
@@ -393,7 +393,7 @@ const maxAdultDate = computed(() => {
 
 const mostrarBannerBloqueo = computed(() => {
     // Si ya buscó y NO es perfil 1 o 5, el banner debe desaparecer
-    if (hasSearched.value && ![1, 5].includes(props.perfil_id)) {
+    if (hasSearched.value && ![1, 4].includes(props.perfil_id)) {
         return false;
     }
     // De lo contrario, sigue las reglas normales de bloqueo
@@ -417,7 +417,7 @@ const camposBloqueados = computed(() => {
     const faltaBuscarPeruano = esDNI.value && !hasSearched.value;
 
     // 2. Condición de Perfil Crítico (Bloqueo TOTAL e incondicional para perfil 1 o 5)
-    const esPerfilBloqueado = [1, 4].includes(props.perfil_id);
+    const esPerfilBloqueado = [1, 3].includes(props.perfil_id);
 
     // Si cualquiera de las dos es verdadera, el campo se bloquea
     return faltaBuscarPeruano || esPerfilBloqueado;
@@ -457,7 +457,7 @@ const camposBloqueados = computed(() => {
 
 const esCampoBloqueado = (valorCampo) => {
     // Si ya buscó y en este perfil se requiere ser socio pero NO lo es -> BLOQUEO TOTAL
-    if ([1, 4].includes(props.perfil_id) && hasSearched.value && !esSocio.value) {
+    if ([1, 3].includes(props.perfil_id) && hasSearched.value && !esSocio.value) {
         return true;
     }
 
@@ -465,7 +465,7 @@ const esCampoBloqueado = (valorCampo) => {
     if (esDNI.value && !hasSearched.value) return true;
 
     // Si es socio activo en perfil crítico, bloqueamos solo lo que ya viene con datos
-    if ([1, 4].includes(props.perfil_id) && esSocio.value) {
+    if ([1, 3].includes(props.perfil_id) && esSocio.value) {
         if (!fecha_nacimiento.value) return false;
         if (esMenorDeEdad(fecha_nacimiento.value)) return false;
         return valorCampo !== null && valorCampo !== undefined && String(valorCampo).trim() !== '';
@@ -475,7 +475,7 @@ const esCampoBloqueado = (valorCampo) => {
 };
 
 const ocultarErroresPorNoSocio = computed(() => {
-    return [1, 4].includes(props.perfil_id) && hasSearched.value && !esSocio.value;
+    return [1, 3].includes(props.perfil_id) && hasSearched.value && !esSocio.value;
 });
 
 const tiposDocumentoFiltrados = computed(() => {
@@ -713,7 +713,7 @@ onMounted(() => {
                             </div>
                         </div>
 
-                        <div v-if="[1, 5].includes(props.perfil_id)" class="mt-3 ml-7 pt-3 border-t border-green-200">
+                        <div v-if="[1, 3].includes(props.perfil_id)" class="mt-3 ml-7 pt-3 border-t border-green-200">
                             <p class="text-xs leading-relaxed">
                                 Si desea <strong>editar sus datos personales</strong>, por favor contacte a nuestra
                                 Coordinadora de Asociados:
