@@ -516,7 +516,7 @@ const esCategoriaDeSocio = computed(() => {
 
     const urlParams = new URLSearchParams(window.location.search);
     const categoryId = urlParams.get('category');
-    const categoriasSocio = ['1', '3'];
+    const categoriasSocio = ['1', '4'];
     return categoriasSocio.includes(categoryId);
 });
 
