@@ -21,6 +21,7 @@ class WebServiceController extends Controller
 
         $this->urlPersonValidation = 'https://secure2.iimp.org:8443/KB_WEBASOCJavaEnvironment/rest/validarAsociado';
         $this->url_new_connection = "https://services.iimp.org.pe";
+        $this->url_persona = "https://secure2.iimp.org:8443/KBServiciosPruebaIIMPJavaEnvironment/rest/WSViewPersona";
     }
 
     public function validatePersonMember($id_sie_documento, $numero_documento)
@@ -45,6 +46,25 @@ class WebServiceController extends Controller
         }
 
         return false;
+    }
+
+    public function ws_persona($tipoDoc, $numDoc)
+    {
+
+        $payload = json_encode([
+            "id_tipo_documento" => (string)$tipoDoc,
+            "documento" => (string)$numDoc
+        ]);
+
+        // Usamos el método sendWS que ya tienes en tu controlador
+        $response = $this->sendWS($this->url_persona, $payload);
+
+        // Validamos si la respuesta tiene la estructura esperada y éxito
+        if (isset($response->info_persona) && $response->info_persona->code == "00") {
+            return $response->info_persona;
+        }
+
+        return null;
     }
 
     public function wsPersona_create_update($persona)
@@ -358,7 +378,7 @@ class WebServiceController extends Controller
             // $url = "https://secure2.iimp.org:8443/KBServiciosPruebaIIMPJavaEnvironment/rest/servicioinscripcionwmc";
 
             /** ******* PRODUCCION *********/
-            $url ="https://secure2.iimp.org:8443/KBServiciosIIMPJavaEnvironment/rest/servicioinscripcionwmc";
+            $url = "https://secure2.iimp.org:8443/KBServiciosIIMPJavaEnvironment/rest/servicioinscripcionwmc";
 
             $clean = function ($str) {
                 $unwanted = array('Š' => 'S', 'š' => 's', 'Ž' => 'Z', 'ž' => 'z', 'À' => 'A', 'Á' => 'A', 'Â' => 'A', 'Ã' => 'A', 'Ä' => 'A', 'Å' => 'A', 'Æ' => 'A', 'Ç' => 'C', 'È' => 'E', 'É' => 'E', 'Ê' => 'E', 'Ë' => 'E', 'Ì' => 'I', 'Í' => 'I', 'Î' => 'I', 'Ï' => 'I', 'Ñ' => 'N', 'Ò' => 'O', 'Ó' => 'O', 'Ô' => 'O', 'Õ' => 'O', 'Ö' => 'O', 'Ø' => 'O', 'Ù' => 'U', 'Ú' => 'U', 'Û' => 'U', 'Ü' => 'U', 'Ý' => 'Y', 'Þ' => 'B', 'ß' => 'Ss', 'à' => 'a', 'á' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'a', 'å' => 'a', 'æ' => 'a', 'ç' => 'c', 'è' => 'e', 'é' => 'e', 'ê' => 'e', 'ë' => 'e', 'ì' => 'i', 'í' => 'i', 'î' => 'i', 'ï' => 'i', 'ð' => 'o', 'ñ' => 'n', 'ò' => 'o', 'ó' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o', 'ø' => 'o', 'ù' => 'u', 'ú' => 'u', 'û' => 'u', 'ü' => 'u', 'ý' => 'y', 'þ' => 'b', 'ÿ' => 'y');

@@ -244,6 +244,29 @@ const searchPerson = async () => {
                 await loadDepartamentos();
             }
 
+            if (p.pais || p.id_pais) {
+                pais.value = p.pais || p.id_pais;
+
+                // Cargar departamentos y ESPERAR
+                departamentos.value = await Functions.loadDepartamentos(pais.value);
+
+                if (p.departamento) {
+                    departamento.value = p.departamento;
+                    // Cargar provincias y ESPERAR
+                    provincias.value = await Functions.loadProvincias(pais.value, departamento.value);
+
+                    if (p.provincia) {
+                        provincia.value = p.provincia;
+                        // Cargar distritos y ESPERAR
+                        distritos.value = await Functions.loadDistritos(pais.value, departamento.value, provincia.value);
+
+                        if (p.distrito) {
+                            distrito.value = p.distrito;
+                        }
+                    }
+                }
+            }
+
             console.log('--- DEPURACIÓN SEARCH ---');
             console.log('Perfil ID actual:', props.perfil_id);
             console.log('¿Es Socio?:', esSocio.value);
@@ -264,7 +287,11 @@ const searchPerson = async () => {
                         cargo: p.cargo || '',
                         pais: p.pais || p.id_pais || paisAsignado,
                         sexo: p.sexo || '',
-                        fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento) : null
+                        fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento) : null,
+                        departamento: departamento.value,
+                        provincia: provincia.value,
+                        distrito: distrito.value
+
                     });
 
                 } else {
@@ -303,7 +330,10 @@ const searchPerson = async () => {
                     cargo: p.cargo || '',
                     pais: p.pais || p.id_pais || paisAsignado,
                     sexo: p.sexo || '',
-                    fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento) : null
+                    fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento) : null,
+                    departamento: departamento.value,
+                    provincia: provincia.value,
+                    distrito: distrito.value
                 });
             }
 
@@ -320,7 +350,7 @@ const searchPerson = async () => {
                 nombres: '',
                 apellido_paterno: '',
                 apellido_materno: '',
-                fecha_nacimiento:null
+                fecha_nacimiento: null
                 // No tocamos tipo_doc ni documento para que no se borren
             });
             setErrors({ fecha_nacimiento: undefined });
@@ -706,13 +736,22 @@ onMounted(() => {
                         class="flex flex-col p-4 mb-4 text-green-800 border-t-4 border-green-300 bg-green-50 rounded-lg"
                         role="alert">
 
-                        <div class="flex items-center">
+                        <!-- <div class="flex items-center">
                             <i class="pi pi-check-circle mr-2 text-xl"></i>
                             <div class="text-sm font-medium">
                                 Verificación exitosa. Usted es un <strong>Socio Activo</strong>.
                             </div>
-                        </div>
+                        </div> -->
 
+                        <div class="flex items-center">
+                            <i class="pi pi-check-circle mr-2 text-xl"></i>
+                            <div class="text-sm font-medium">
+                                Verificación exitosa. Usted es un
+                                <strong>
+                                    {{ props.perfil_id === 3 ? 'Estudiante Socio' : 'Socio Activo' }}
+                                </strong>.
+                            </div>
+                        </div>
                         <div v-if="[1, 3].includes(props.perfil_id)" class="mt-3 ml-7 pt-3 border-t border-green-200">
                             <p class="text-xs leading-relaxed">
                                 Si desea <strong>editar sus datos personales</strong>, por favor contacte a nuestra
@@ -823,7 +862,7 @@ onMounted(() => {
             <template #content>
                 <div class="p-2">
                     <div class="w-full px-4 pb-4">
-                        <div v-if="missingFields.length > 0  && !ocultarErroresPorNoSocio"
+                        <div v-if="missingFields.length > 0 && !ocultarErroresPorNoSocio"
                             class="flex flex-col p-4 mb-4 text-orange-800 border-t-4 border-orange-300 bg-orange-50 rounded-lg"
                             role="alert">
                             <div class="flex items-center">
@@ -868,7 +907,8 @@ onMounted(() => {
                                 <InputText name="apellido_materno" v-model="apellido_materno"
                                     :disabled="bloqueoApellidoMaterno" v-bind="apellido_maternoAttrs"
                                     class="w-full border-green-iimp" />
-                                <small  v-if="errors.apellido_materno && !ocultarErroresPorNoSocio" class="text-red-600">{{ errors.apellido_materno }}</small>
+                                <small v-if="errors.apellido_materno && !ocultarErroresPorNoSocio"
+                                    class="text-red-600">{{ errors.apellido_materno }}</small>
                             </div>
                         </div>
                     </div>
@@ -880,7 +920,8 @@ onMounted(() => {
                                         class="font-normal text-red-600">*</span></label>
                                 <InputText name="correo" v-model="correo" v-bind="correoAttrs" :disabled="bloqueoCorreo"
                                     class="w-full border-green-iimp" />
-                                <small  v-if="errors.correo && !ocultarErroresPorNoSocio" class=" text-red-600">{{ errors.correo }}</small>
+                                <small v-if="errors.correo && !ocultarErroresPorNoSocio" class=" text-red-600">{{
+                                    errors.correo }}</small>
                             </div>
                             <div class="col-span-3 sm:col-span-1">
                                 <label for="celular" class="">Celular <span
@@ -888,14 +929,16 @@ onMounted(() => {
                                 <InputText name="celular" v-model="celular" v-bind="celularAttrs"
                                     @keypress="onlyPhoneKeys" :disabled="bloqueoCelular"
                                     class="w-full border-green-iimp" placeholder="+51999888777 or 999888777" />
-                                <small v-if="errors.celular && !ocultarErroresPorNoSocio" class="text-red-600">{{ errors.celular }}</small>
+                                <small v-if="errors.celular && !ocultarErroresPorNoSocio" class="text-red-600">{{
+                                    errors.celular }}</small>
                             </div>
                         </div>
                         <div class="w-full sm:col-span-1">
                             <label for="direccionPersona">Dirección <span class="text-red-600">*</span></label>
                             <InputText name="direccionPersona" v-model="direccionPersona" v-bind="direccionPersonaAttrs"
                                 :disabled="bloqueoDireccion" class="w-full border-green-iimp" />
-                            <small v-if="errors.direccion && !ocultarErroresPorNoSocio" class="text-red-600">{{ errors.direccionPersona }}</small>
+                            <small v-if="errors.direccion && !ocultarErroresPorNoSocio" class="text-red-600">{{
+                                errors.direccionPersona }}</small>
                         </div>
                     </div>
 
@@ -907,7 +950,8 @@ onMounted(() => {
                             <Select name="pais" v-model="pais" v-bind="paisAttrs" :options="paises" optionLabel="name"
                                 optionValue="id" placeholder="Select" showClear filter @change="loadDepartamentos"
                                 :disabled="bloqueoPais" translate="no" class="w-full border-green-iimp" />
-                            <small v-if="errors.pais && !ocultarErroresPorNoSocio" class="text-red-600">{{ errors.pais }}</small>
+                            <small v-if="errors.pais && !ocultarErroresPorNoSocio" class="text-red-600">{{ errors.pais
+                                }}</small>
                         </div>
 
                         <div class="col-span-3 sm:col-span-1">
@@ -943,7 +987,8 @@ onMounted(() => {
                             <Select name="sexo" v-model="sexo" v-bind="sexoAttrs" optionLabel="label"
                                 optionValue="value" placeholder="Selecccionar" showClear checkmark :options="generos"
                                 :disabled="bloqueoSexo" class="w-full border-green-iimp" />
-                            <small v-if="errors.sexo && !ocultarErroresPorNoSocio" class=" text-red-600">{{ errors.sexo }}</small>
+                            <small v-if="errors.sexo && !ocultarErroresPorNoSocio" class=" text-red-600">{{ errors.sexo
+                                }}</small>
                         </div>
                         <div class="w-full">
                             <label for="fecha_nacimiento">Fecha de Nacimiento <span
@@ -958,21 +1003,24 @@ onMounted(() => {
                                     class="w-full" :disabled="bloqueoFechaNac"
                                     inputClass="w-full border-green-iimp border-l-0 shadow-none outline-none bg-white" />
                             </InputGroup>
-                            <small v-if="errors.fecha_nacimiento && !ocultarErroresPorNoSocio" class=" text-red-600">{{ errors.fecha_nacimiento }}</small>
+                            <small v-if="errors.fecha_nacimiento && !ocultarErroresPorNoSocio" class=" text-red-600">{{
+                                errors.fecha_nacimiento }}</small>
                         </div>
 
                         <div class="w-full">
                             <label for="empresa" class="">Empresa <span class="text-red-600">*</span></label>
                             <InputText name="empresa" v-model="empresa" v-bind="empresaAttrs" :disabled="bloqueoEmpresa"
                                 class="w-full border-green-iimp" />
-                            <small v-if="errors.empresa && !ocultarErroresPorNoSocio" class=" text-red-600">{{ errors.empresa }}</small>
+                            <small v-if="errors.empresa && !ocultarErroresPorNoSocio" class=" text-red-600">{{
+                                errors.empresa }}</small>
                         </div>
 
                         <div class="w-full sm:col-span-1">
                             <label for="cargo" class="">Cargo <span class="text-red-600">*</span></label>
                             <InputText name="cargo" v-model="cargo" v-bind="cargoAttrs" :disabled="bloqueoCargo"
                                 class="w-full border-green-iimp" />
-                            <small v-if="errors.cargo && !ocultarErroresPorNoSocio" class="text-red-600">{{ errors.cargo }}</small>
+                            <small v-if="errors.cargo && !ocultarErroresPorNoSocio" class="text-red-600">{{ errors.cargo
+                                }}</small>
                         </div>
                     </div>
                 </div>

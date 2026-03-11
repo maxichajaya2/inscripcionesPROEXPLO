@@ -78,4 +78,6 @@ class Persona extends Model
     {
         return $this->belongsTo(Empresa::class, "id_empresa", "id");
     }
+
+
 }

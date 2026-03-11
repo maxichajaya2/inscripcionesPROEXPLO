@@ -221,6 +221,7 @@ class InscripcionController extends Controller
 
     private function handlePersona(Request $request)
     {
+
         // ---------------------------------------------------------
         // A. Resolver Ocupación
         // ---------------------------------------------------------
@@ -238,7 +239,7 @@ class InscripcionController extends Controller
 
         // 2. Generamos el Hash manualmente para poder buscar
         // Como en la BD el documento es ilegible (encriptado), buscamos por su huella digital (hash)
-        $documentoHash = hash_hmac('sha256', $documentoInput, config('app.key'));
+        // $documentoHash = hash_hmac('sha256', $documentoInput, config('app.key'));
 
         // 3. Realizamos la búsqueda usando el Hash
         // $persona = Persona::where('id_tipo_documento', $tipoDocumentoId)
@@ -300,7 +301,9 @@ class InscripcionController extends Controller
             }
         }
 
+
         $persona->save();
+
 
         return $persona;
     }
@@ -690,9 +693,8 @@ class InscripcionController extends Controller
                 $inscripcion->save();
 
                 // VIAJES
-                if ($inscripcion->id_categoria_inscripcion==null) {
+                if ($inscripcion->id_categoria_inscripcion == null) {
                     $inscripcion->id_categoria_inscripcion  =   $inscripcion->id_perfil;
-
                 }
                 // $inscripcion->save();
                 // dd($inscripcion);

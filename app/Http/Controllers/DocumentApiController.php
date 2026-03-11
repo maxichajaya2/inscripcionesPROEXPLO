@@ -13,6 +13,7 @@ use App\Models\Distrito;
 use App\Http\Controllers\WebServiceController;
 use Carbon\Carbon;
 use stdClass;
+use App\Models\Direccion;
 
 class DocumentApiController extends Controller
 {
@@ -21,6 +22,7 @@ class DocumentApiController extends Controller
     public function __construct()
     {
         $this->urlApi = 'https://api.apis.net.pe/v2';
+        $this->urlApiPersona = 'https://secure2.iimp.org:8443/KBServiciosPruebaIIMPJavaEnvironment/rest/WSViewPersona';
         $this->now = Carbon::now()->format('Y-m-d');
     }
 
@@ -63,76 +65,171 @@ class DocumentApiController extends Controller
         return $response;
     }
 
+    // public function getPersonData(Request $request)
+    // {
+
+    //     if (!str_contains($request->headers->get('referer'), 'registro') || (csrf_token() === null)) {
+    //         abort(403, 'Unauthorized POST request.');
+    //         exit;
+    //     }
+
+    //     /***  1. Validamos que se encuentre registrado ***/
+    //     $tipo_documento = TipoDocumento::find($request->id_tipo_documento);
+    //     $persona = Persona::where('id_tipo_documento', $request->id_tipo_documento)
+    //         ->where('documento', $request->numero_documento)
+    //         ->first();
+    //     $status = true;
+
+    //     // dd($persona);
+
+    //     if ($persona) {
+    //         $persona->pais = $persona->direccion->id_pais;
+    //         $persona->departamento  = $persona->direccion->id_departamento;
+    //         $persona->provincia  = $persona->direccion->id_provincia;
+    //         $persona->distrito  = $persona->direccion->id_distrito;
+    //         $persona->nacionalidad  = $persona->id_nacionalidad;
+    //         $persona->direccionPersona  = $persona->direccion->direccion;
+    //         $persona->cargo = $persona->ocupacion->name;
+    //         $persona->ocupacion = $persona->ocupacion->name;
+    //     } else {
+    //         $persona = new \stdClass();
+    //         $persona->id_tipo_documento = $request->id_tipo_documento;
+    //         $persona->documento = $request->numero_documento;
+    //         $persona->pais = 0;
+    //         $persona->departamento  = 0;
+    //         $persona->provincia  = 0;
+    //         $persona->distrito  = 0;
+    //         $persona->nacionalidad  = 0;
+    //         $persona->direccionPersona  = "";
+    //         $persona->cargo = "";
+    //         $persona->ocupacion = "";
+    //         $persona->celular = "";
+    //         $persona->correo = "";
+    //         $persona->sexo = 0;
+    //         $persona->nombres = "";
+    //         $persona->apellido_paterno = "";
+    //         $persona->apellido_materno = "";
+    //         $persona->fecha_nacimiento = $this->now;
+    //     }
+
+    //     if ($request->id_tipo_documento == 1) {
+
+    //         // $api_persona = $this->getData('dni', $request->numero_documento);
+    //         $fakeRequest = new \Illuminate\Http\Request();
+    //         $fakeRequest->merge(['tipo_doc' => 1, 'documento' => $request->numero_documento]);
+    //         $api_persona = $this->getData($fakeRequest);
+
+    //         if ($api_persona['status']) {
+    //             $persona->nombres = $api_persona['persona']->nombres;
+    //             $persona->apellido_paterno = $api_persona['persona']->apellidoPaterno;
+    //             $persona->apellido_materno = $api_persona['persona']->apellidoMaterno;
+    //         } else {
+    //             $status = false;
+    //         }
+    //     }
+
+
+    //     $persona->es_socio = app(\App\Http\Controllers\WebServiceController::class)
+    //         ->validatePersonMember($request->id_tipo_documento, $request->numero_documento);
+
+    //     // $persona->es_socio =true;
+
+    //     return json_encode(['persona' => $persona, 'status' => $status]);
+    // }
+
     public function getPersonData(Request $request)
     {
-
         if (!str_contains($request->headers->get('referer'), 'registro') || (csrf_token() === null)) {
             abort(403, 'Unauthorized POST request.');
-            exit;
         }
+        $persona = null;
 
-        /***  1. Validamos que se encuentre registrado ***/
-        $tipo_documento = TipoDocumento::find($request->id_tipo_documento);
-        $persona = Persona::where('id_tipo_documento', $request->id_tipo_documento)
-            ->where('documento', $request->numero_documento)
-            ->first();
+        $id_tipo_doc = $request->id_tipo_documento;
+        $num_doc = $request->numero_documento;
         $status = true;
 
-        // dd($persona);
+        $wsController = app(\App\Http\Controllers\WebServiceController::class);
+        $urlIIMP = "https://secure2.iimp.org:8443/KBServiciosPruebaIIMPJavaEnvironment/rest/WSViewPersona";
 
-        if ($persona) {
-            $persona->pais = $persona->direccion->id_pais;
-            $persona->departamento  = $persona->direccion->id_departamento;
-            $persona->provincia  = $persona->direccion->id_provincia;
-            $persona->distrito  = $persona->direccion->id_distrito;
-            $persona->nacionalidad  = $persona->id_nacionalidad;
-            $persona->direccionPersona  = $persona->direccion->direccion;
-            $persona->cargo = $persona->ocupacion->name;
-            $persona->ocupacion = $persona->ocupacion->name;
-        } else {
-            $persona = new \stdClass();
-            $persona->id_tipo_documento = $request->id_tipo_documento;
-            $persona->documento = $request->numero_documento;
-            $persona->pais = 0;
-            $persona->departamento  = 0;
-            $persona->provincia  = 0;
-            $persona->distrito  = 0;
-            $persona->nacionalidad  = 0;
-            $persona->direccionPersona  = "";
-            $persona->cargo = "";
-            $persona->ocupacion = "";
-            $persona->celular = "";
-            $persona->correo = "";
-            $persona->sexo = 0;
-            $persona->nombres = "";
-            $persona->apellido_paterno = "";
-            $persona->apellido_materno = "";
-            $persona->fecha_nacimiento = $this->now;
-        }
+        $resIIMP = $wsController->sendWS($urlIIMP, json_encode([
+            "id_tipo_documento" => (string)$id_tipo_doc,
+            "documento" => (string)$num_doc
+        ]));
 
-        if ($request->id_tipo_documento == 1) {
+        $dataIIMP = (isset($resIIMP->info_persona) && $resIIMP->info_persona->code == "00") ? $resIIMP->info_persona : null;
 
-            // $api_persona = $this->getData('dni', $request->numero_documento);
+        if ($dataIIMP) {
+            // Buscamos o instanciamos. Si existe, lo que hagamos abajo REEMPLAZARÁ lo viejo.
+            $persona = Persona::where('id_tipo_documento', $id_tipo_doc)
+                ->where('documento', $num_doc)
+                ->firstOrNew();
+
+            // MANEJO DE DIRECCIÓN: Creamos o buscamos la actual
+            $direccion = ($persona->id_direccion > 0)
+                ? Direccion::find($persona->id_direccion)
+                : new Direccion;
+
+            // REEMPLAZO TOTAL DE DIRECCIÓN con datos de la API
+            $direccion->id_pais = (int)($dataIIMP->pais ?? 75);
+            $direccion->id_departamento = ($dataIIMP->departamento > 0) ? (int)$dataIIMP->departamento : null;
+            $direccion->id_provincia = ($dataIIMP->provincia > 0) ? (int)$dataIIMP->provincia : null;
+            $direccion->id_distrito = ($dataIIMP->distrito > 0) ? (int)$dataIIMP->distrito : null;
+            $direccion->direccion = $dataIIMP->direccion ?? 'LURIN';
+            $direccion->save();
+
+            if (!$persona->exists) {
+                $persona->id_tipo_documento = $id_tipo_doc;
+                $persona->documento = $num_doc;
+            }
+
+            // REEMPLAZO DE DATOS PERSONALES (Prioridad API IIMP)
+            $persona->id_direccion = $direccion->id;
+            $persona->nombres = $dataIIMP->nombres;
+            $persona->apellido_paterno = $dataIIMP->apellido_paterno;
+            $persona->apellido_materno = $dataIIMP->apellido_materno;
+            $persona->correo = $dataIIMP->correo ?? $persona->correo;
+            $persona->celular = $dataIIMP->celular ?? $persona->celular;
+            $persona->sexo = $dataIIMP->sexo ?? $persona->sexo;
+            $persona->company = $dataIIMP->empresa ?? $persona->company;
+            $persona->fecha_nacimiento = $dataIIMP->fecha_nacimiento ?? $persona->fecha_nacimiento;
+
+            // El servicio de IIMP suele devolver si es asociado en el campo "asociado" (boolean)
+            $persona->es_socio = $dataIIMP->asociado ?? false;
+
+            $persona->save(); // Aquí se actualiza la BD local con la data fresca
+
+            // Preparar para el FRONT (aplanado)
+            $persona->direccionPersona = $direccion->direccion;
+            $persona->cargo = $dataIIMP->ocupacion ?? "";
+            $persona->pais = $direccion->id_pais;
+            $persona->departamento = $direccion->id_departamento ?? 0;
+            $persona->provincia = $direccion->id_provincia ?? 0;
+            $persona->distrito = $direccion->id_distrito ?? 0;
+        } elseif ($id_tipo_doc == 1) {
+            // FALLBACK RENIEC
             $fakeRequest = new \Illuminate\Http\Request();
-            $fakeRequest->merge(['tipo_doc' => 1, 'documento' => $request->numero_documento]);
-            $api_persona = $this->getData($fakeRequest);
+            $fakeRequest->merge(['tipo_doc' => 1, 'documento' => $num_doc]);
+            $api_reniec = $this->getData($fakeRequest);
 
-            if ($api_persona['status']) {
-                $persona->nombres = $api_persona['persona']->nombres;
-                $persona->apellido_paterno = $api_persona['persona']->apellidoPaterno;
-                $persona->apellido_materno = $api_persona['persona']->apellidoMaterno;
+            if ($api_reniec['status']) {
+                $persona = new \stdClass();
+                $persona->nombres = $api_reniec['persona']->nombres;
+                $persona->apellido_paterno = $api_reniec['persona']->apellidoPaterno;
+                $persona->apellido_materno = $api_reniec['persona']->apellidoMaterno;
+                $persona->documento = $num_doc;
+                $persona->id_tipo_documento = 1;
+                $persona->es_socio = false;
             } else {
                 $status = false;
             }
         }
 
+        // Si por alguna razón no se encontró en ningún lado y es null, evitamos error
+        if (!$persona) {
+            return response()->json(['status' => false, 'message' => 'No encontrado']);
+        }
 
-        $persona->es_socio = app(\App\Http\Controllers\WebServiceController::class)
-            ->validatePersonMember($request->id_tipo_documento, $request->numero_documento);
-
-        // $persona->es_socio =true;
-
-        return json_encode(['persona' => $persona, 'status' => $status]);
+        return response()->json(['persona' => $persona, 'status' => $status]);
     }
 
     // public function getPersonData(Request $request)

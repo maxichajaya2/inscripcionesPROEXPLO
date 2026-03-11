@@ -337,16 +337,48 @@ watch(documentoEmpresa, (newValue) => {
     }
 });
 
+// watch(tipoDocumentoEmpresa, (newVal, oldVal) => {
+//     // Definimos qué IDs son de extranjeros (generalmente todo lo que no es 1 o 2)
+//     const documentosExtranjeros = [3, 4, 5]; // Ajusta estos IDs según tu base de datos (Pasaporte, CE, etc.)
+
+//     // LÓGICA:
+//     // Si el valor anterior era extranjero Y el nuevo también es extranjero, NO limpiamos.
+//     const ambosSonExtranjeros = documentosExtranjeros.includes(oldVal) && documentosExtranjeros.includes(newVal);
+
+//     if (isEditingBilling.value && oldVal !== undefined && !ambosSonExtranjeros) {
+
+//         setValues({
+//             ...values,
+//             documentoEmpresa: '',
+//             razonSocial: '',
+//             direccionEmpresa: '',
+//             responsable: '',
+//             correo_facturador: ''
+//         });
+
+//         setTipoDocPago();
+//     } else {
+//         // console.log("Cambio entre documentos extranjeros: Se mantiene la información.");
+//     }
+// });
+
+
 watch(tipoDocumentoEmpresa, (newVal, oldVal) => {
-    // Definimos qué IDs son de extranjeros (generalmente todo lo que no es 1 o 2)
-    const documentosExtranjeros = [3, 4, 5]; // Ajusta estos IDs según tu base de datos (Pasaporte, CE, etc.)
+    // Si el cambio es real (no es la carga inicial)
+    if (oldVal !== undefined) {
+        // 1. Limpiamos los campos visuales
+        documentoEmpresa.value = '';
+        razonSocial.value = '';
+        direccionEmpresa.value = '';
+        responsable.value = '';
+        correo_facturador.value = '';
 
-    // LÓGICA:
-    // Si el valor anterior era extranjero Y el nuevo también es extranjero, NO limpiamos.
-    const ambosSonExtranjeros = documentosExtranjeros.includes(oldVal) && documentosExtranjeros.includes(newVal);
+        // 2. Limpiamos los estados de alerta
+        showManualAlert.value = false;
+        showSuccessAlert.value = false;
+        isEditingBilling.value = false;
 
-    if (isEditingBilling.value && oldVal !== undefined && !ambosSonExtranjeros) {
-
+        // 3. Sincronizamos con el objeto de Vee-Validate
         setValues({
             ...values,
             documentoEmpresa: '',
@@ -356,9 +388,15 @@ watch(tipoDocumentoEmpresa, (newVal, oldVal) => {
             correo_facturador: ''
         });
 
+        // 4. Ajustamos el tipo de documento de pago (Factura/Boleta)
         setTipoDocPago();
-    } else {
-        // console.log("Cambio entre documentos extranjeros: Se mantiene la información.");
+
+        // toast.add({
+        //     severity: 'info',
+        //     summary: 'Formulario Reiniciado',
+        //     detail: 'Por favor, ingrese el nuevo número de documento.',
+        //     life: 2000
+        // });
     }
 });
 
@@ -486,16 +524,16 @@ function setTipoDocPago() {
     }
 }
 
-const enableManualEdit = () => {
-    isEditingBilling.value = true;
-    block_direction.value = false; // Desbloqueamos dirección para edición manual
-    toast.add({
-        severity: 'info',
-        summary: 'Manual Edit Enabled',
-        detail: 'You can now modify the billing information fields.',
-        life: 3000
-    });
-};
+// const enableManualEdit = () => {
+//     isEditingBilling.value = true;
+//     block_direction.value = false; // Desbloqueamos dirección para edición manual
+//     toast.add({
+//         severity: 'info',
+//         summary: 'Manual Edit Enabled',
+//         detail: 'You can now modify the billing information fields.',
+//         life: 3000
+//     });
+// };
 
 const fillBillingData = (p) => {
     if (!p) return;
@@ -879,22 +917,22 @@ defineExpose({
                     </div>
 
                     <div class="flex justify-center md:justify-end px-6 mb-6">
-                        <Button v-if="!isEditingBilling" icon="pi pi-exclamation-circle"
+                        <!-- <Button v-if="!isEditingBilling" icon="pi pi-exclamation-circle"
                             label="¿La información es incorrecta? Haz clic aquí para modificar"
                             class="p-button-raised p-button-warning font-bold p-4 shadow-md w-full md:w-auto"
                             style="background-color: #f59e0b; border-color: #d97706; color: #ffffff;"
-                            @click="enableManualEdit" />
-                        <Button v-else icon="pi pi-check-circle" label="He terminado de editar, guardar cambios"
+                            @click="enableManualEdit" /> -->
+                        <!-- <Button v-else icon="pi pi-check-circle" label="He terminado de editar, guardar cambios"
                             class="p-button-raised p-button-success font-bold p-4 shadow-md w-full md:w-auto"
                             style="background-color: #10b981; border-color: #059669; color: #ffffff;"
-                            @click="isEditingBilling = false" />
+                            @click="isEditingBilling = false" /> -->
                     </div>
                     <div class="grid gap-6 m-6 md:grid-cols-2">
                         <div class="grid gap-6 md:grid-cols-2">
                             <div class="col-span-3 sm:col-span-1">
                                 <label class="block mb-1">Tipo de Documento <span class="text-red-600">*</span></label>
                                 <Select v-model="tipoDocumentoEmpresa" :options="filteredDocTypes" optionLabel="name_en"
-                                    optionValue="id" :disabled="!isEditingBilling" class="w-full border-green-iimp"
+                                    optionValue="id" class="w-full border-green-iimp"
                                     @change="setTipoDocPago" />
                                 <small class="text-red-600" v-if="errors.tipoDocumentoEmpresa">{{
                                     errors.tipoDocumentoEmpresa }}</small>
@@ -904,13 +942,13 @@ defineExpose({
                                 <label class="block mb-1">Numero de Documento <span
                                         class="text-red-600">*</span></label>
                                 <InputGroup>
-                                    <InputText v-model="documentoEmpresa" :readonly="!isEditingBilling"
+                                    <InputText v-model="documentoEmpresa"
                                         class="border-green-iimp" @keypress="onlyAlphanumericKey" @paste="onlyNumberKey"
-                                        :maxlength="12" :disabled="!isEditingBilling" />
+                                        :maxlength="12"  />
                                     <Button icon="pi pi-search"
                                         class="!bg-orange-600 !border-orange-600 hover:!bg-orange-500 hover:!border-orange-500 !text-white !shadow-none"
                                         @click="getEmpresaData" :loading="loading_doc"
-                                        :disabled="!isEditingBilling || !documentoEmpresa" />
+                                        :disabled="!documentoEmpresa" />
                                 </InputGroup>
                                 <small v-if="dniMessageEmpresa" class="text-orange-600 font-bold block mt-1">
                                     <i class="pi pi-info-circle mr-1"></i> {{ dniMessageEmpresa }}
@@ -934,7 +972,7 @@ defineExpose({
                             <small class="text-red-600" v-if="errors.razonSocial">{{ errors.razonSocial }}</small> -->
                             <label class="block mb-1">Nombre o Razon Social <span class="text-red-600">*</span></label>
                             <InputText v-model="razonSocial" class="w-full border-green-iimp"
-                                :disabled="loading_doc || esRuc20 || !isEditingBilling" :readonly="camposFacturacionBloqueados"
+                                :disabled="loading_doc || esRuc20 " :readonly="camposFacturacionBloqueados"
                                 :class="{ 'bg-gray-100 font-semibold': esRuc20 && !showManualAlert }" />
                             <small class="text-red-600" v-if="errors.razonSocial">{{ errors.razonSocial }}</small>
                         </div>
@@ -950,7 +988,7 @@ defineExpose({
                             }}</small> -->
                             <label class="block mb-1">Dirección Fiscal <span class="text-red-600">*</span></label>
                             <InputText v-model="direccionEmpresa" class="w-full border-green-iimp"
-                                :readonly="camposFacturacionBloqueados" :disabled="loading_doc || esRuc20 || !isEditingBilling"
+                                :readonly="camposFacturacionBloqueados" :disabled="loading_doc || esRuc20"
                                 :class="{ 'bg-gray-100': esRuc20 && !showManualAlert }" />
                             <small class="text-red-600" v-if="errors.direccionEmpresa">{{ errors.direccionEmpresa
                             }}</small>
@@ -960,15 +998,15 @@ defineExpose({
                             <div class="w-full sm:col-span-1">
                                 <label class="block mb-1">Responsable Facturación <span
                                         class="text-red-600">*</span></label>
-                                <InputText v-model="responsable" :readonly="!isEditingBilling"
-                                    class="w-full border-green-iimp" :disabled="!isEditingBilling || loading_doc " />
+                                <InputText v-model="responsable"
+                                    class="w-full border-green-iimp" :disabled="loading_doc " />
                                 <small class="text-red-600" v-if="errors.responsable">{{ errors.responsable }}</small>
                             </div>
 
                             <div class="w-full sm:col-span-1">
                                 <label class="block mb-1">Email Facturación <span class="text-red-600">*</span></label>
-                                <InputText v-model="correo_facturador" :readonly="!isEditingBilling"
-                                    class="w-full border-green-iimp" :disabled="!isEditingBilling || loading_doc" />
+                                <InputText v-model="correo_facturador"
+                                    class="w-full border-green-iimp" :disabled="loading_doc" />
                                 <small class="text-red-600" v-if="errors.correo_facturador">{{ errors.correo_facturador
                                 }}</small>
                             </div>
