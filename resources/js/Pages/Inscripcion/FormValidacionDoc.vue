@@ -393,7 +393,7 @@ const maxAdultDate = computed(() => {
 
 const mostrarBannerBloqueo = computed(() => {
     // Si ya buscó y NO es perfil 1 o 5, el banner debe desaparecer
-    if (hasSearched.value && ![1, 4].includes(props.perfil_id)) {
+    if (hasSearched.value && ![1, 3].includes(props.perfil_id)) {
         return false;
     }
     // De lo contrario, sigue las reglas normales de bloqueo
@@ -516,7 +516,7 @@ const esCategoriaDeSocio = computed(() => {
 
     const urlParams = new URLSearchParams(window.location.search);
     const categoryId = urlParams.get('category');
-    const categoriasSocio = ['1', '4'];
+    const categoriasSocio = ['1', '3'];
     return categoriasSocio.includes(categoryId);
 });
 
