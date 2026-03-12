@@ -56,7 +56,7 @@ const allowedTypes = ['application/pdf', 'image/png', 'image/jpg', 'image/jpeg']
 const fileupload = ref(null);
 const alphanumericMessage = ref('');
 // Agregamos un estado para controlar si el usuario puede editar manualmente
-const isEditingBilling = ref(false);
+const isEditingBilling = ref(true);
 const dniMessage = ref('');
 let current_price = 0;
 const tipoDocumento = computed(() => page.props.general.tipDocEmp)
@@ -205,11 +205,11 @@ onMounted(() => {
     selectTipoPago.value = 3;
 
     // 1. Si los datos ya están presentes al montar, llenar facturación
-    if (props.data_persona?.persona) {
-        fillBillingData(props.data_persona.persona);
-        es_socio.value = props.data_persona.persona.es_socio;
-        loadDepartamentos();
-    }
+    // if (props.data_persona?.persona) {
+    //     fillBillingData(props.data_persona.persona);
+    //     es_socio.value = props.data_persona.persona.es_socio;
+    //     loadDepartamentos();
+    // }
 
     // 2. Lógica de URL y categorías
     const urlParams = new URLSearchParams(window.location.search);
@@ -233,17 +233,17 @@ onMounted(() => {
     }
 
 
-    console.log("Mounted FormInscription with props.data_persona:", props.data_persona);
+    // console.log("Mounted FormInscription with props.data_persona:", props.data_persona);
 
 });
 
 
 
-watch(() => props.data_persona, (newVal) => {
-    if (newVal && newVal.persona) {
-        fillBillingData(newVal.persona);
-    }
-}, { immediate: true, deep: true });
+// watch(() => props.data_persona, (newVal) => {
+//     if (newVal && newVal.persona) {
+//         fillBillingData(newVal.persona);
+//     }
+// }, { immediate: true, deep: true });
 
 const esRuc20 = computed(() => {
     return tipoDocumentoEmpresa.value === 2 && documentoEmpresa.value?.startsWith('20');
@@ -542,6 +542,13 @@ const fillBillingData = (p) => {
     const docTipo = p.id_tipo_documento || p.tipo_doc || 1;
     const docNum = p.documento || '';
 
+    // tipoDocumentoEmpresa.value = docTipo;
+    // documentoEmpresa.value = docNum;
+    // razonSocial.value = nombreCompleto;
+    // direccionEmpresa.value = p.direccionPersona || p.direccion || '';
+    // responsable.value = nombreCompleto;
+    // correo_facturador.value = p.correo || '';
+
     tipoDocumentoEmpresa.value = docTipo;
     documentoEmpresa.value = docNum;
     razonSocial.value = nombreCompleto;
@@ -563,13 +570,13 @@ const fillBillingData = (p) => {
     block_direction.value = (docTipo == 2);
 };
 
-watch(() => props.data_persona, (newVal) => {
-    if (newVal) {
-        // Intentamos con newVal.persona o con newVal directamente
-        const data = newVal.persona ? newVal.persona : newVal;
-        fillBillingData(data);
-    }
-}, { immediate: true, deep: true });
+// watch(() => props.data_persona, (newVal) => {
+//     if (newVal) {
+//         // Intentamos con newVal.persona o con newVal directamente
+//         const data = newVal.persona ? newVal.persona : newVal;
+//         fillBillingData(data);
+//     }
+// }, { immediate: true, deep: true });
 
 
 const filteredDocTypes = computed(() => {
