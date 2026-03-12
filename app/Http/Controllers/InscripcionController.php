@@ -716,25 +716,25 @@ class InscripcionController extends Controller
             //  dd($service_wmc);
 
             // $service_wmc->Response->Status = false;
-            if (isset($service_wmc->Response) && $service_wmc->Response->Status === true) {
-                $inscripcion->qr = (string)$service_wmc->Response->QR;
-                $inscripcion->ws_status = true; // Campo nuevo
-            } else {
-                // Si falla el servicio, registramos el error pero no matamos el proceso
-                $inscripcion->ws_status = false;
-                Log::error("ERROR SIE WMC para Inscripcion ID: " . $inscripcion->id, (array)$service_wmc);
-            }
+            // if (isset($service_wmc->Response) && $service_wmc->Response->Status === true) {
+            //     $inscripcion->qr = (string)$service_wmc->Response->QR;
+            //     $inscripcion->ws_status = true; // Campo nuevo
+            // } else {
+            //     // Si falla el servicio, registramos el error pero no matamos el proceso
+            //     $inscripcion->ws_status = false;
+            //     Log::error("ERROR SIE WMC para Inscripcion ID: " . $inscripcion->id, (array)$service_wmc);
+            // }
 
             // Guardamos los cambios (ya sea que tenga QR o que solo guardemos el status false)
-            $inscripcion->save();
+            // $inscripcion->save();
 
             // ENVIAR CORREO SIEMPRE
-            try {
-                // El Mailable debe estar preparado para recibir un $inscripcion->qr nulo
-                Mail::to($persona->correo)->send(new \App\Mail\MailInscripcion($inscripcion, $niubiz));
-            } catch (\Exception $e) {
-                Log::error("Error enviando correo: " . $e->getMessage());
-            }
+            // try {
+            //     // El Mailable debe estar preparado para recibir un $inscripcion->qr nulo
+            //     Mail::to($persona->correo)->send(new \App\Mail\MailInscripcion($inscripcion, $niubiz));
+            // } catch (\Exception $e) {
+            //     Log::error("Error enviando correo: " . $e->getMessage());
+            // }
 
             return redirect('/pago/confirmar/' . $inscripcion->id);
         }
