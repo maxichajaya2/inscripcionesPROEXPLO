@@ -172,7 +172,7 @@ const scriptData = computed(() => {
                                 <span class="text-blue-600 font-bold text-right">
                                     {{ (categoria_seleccionada && categoria_seleccionada.nombre_en) ?
                                         categoria_seleccionada.nombre_en : (categoria_seleccionada &&
-                                            categoria_seleccionada.nombre ? categoria_seleccionada.nombre : 'WMC 2026 Delegate')
+                                            categoria_seleccionada.nombre ? categoria_seleccionada.nombre : 'PROEXPLO 2026 Delegate')
                                     }}
                                 </span>
                             </div>
@@ -193,7 +193,7 @@ const scriptData = computed(() => {
                                 class="flex justify-between items-start mb-1 text-sm pl-2 border-l-2 border-gray-100 p-1 ">
                                 <div class="flex flex-col w-2/3">
                                     <span class="text-blue-600 font-medium leading-tight">
-                                        {{ extra.titulo || extra.nombre_en }}
+                                        {{ extra.titulo || extra.nombre_es }}
                                     </span>
                                     <span class="text-[10px] text-gray-400 uppercase">
                                         {{ extra.tipo === 'viaje' ? 'Visita Técnica' : 'Curso Corto' }}

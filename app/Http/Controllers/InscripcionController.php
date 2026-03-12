@@ -398,7 +398,7 @@ class InscripcionController extends Controller
         $total_final = $total_inscripcion + $total_extras;
 
         // AUDITORÍA: Si sale 1800, verás por qué en storage/logs/laravel.log
-        Log::warning("AUDITORÍA DE PAGO WMC", [
+        Log::warning("AUDITORÍA DE PAGO PROEXPLO", [
             'section_recibida' => $request->input('section'),
             'monto_inscripcion' => $total_inscripcion,
             'monto_extras' => $total_extras,
@@ -705,7 +705,7 @@ class InscripcionController extends Controller
                 }
             } else {
                 // Si llegamos aquí, service_wmc tiene el error 500 o un Status false
-                Log::error("ERROR SIE WMC:", (array)$service_wmc);
+                Log::error("ERROR SIE PROEXPLO:", (array)$service_wmc);
             }
 
             // Ejecutar el servicio
