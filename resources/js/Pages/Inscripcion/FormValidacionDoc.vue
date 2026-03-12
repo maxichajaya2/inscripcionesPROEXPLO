@@ -32,6 +32,7 @@ const provincias = ref();
 const distritos = ref();
 const searchSuccess = ref(false);
 const searchError = ref(false);
+const datosOriginalesServidor = ref({});
 
 const props = defineProps({
     saved_values: Object,
@@ -267,6 +268,7 @@ const searchPerson = async () => {
                 }
             }
 
+            datosOriginalesServidor.value = { ...p };
             console.log('--- DEPURACIÓN SEARCH ---');
             console.log('Perfil ID actual:', props.perfil_id);
             console.log('¿Es Socio?:', esSocio.value);
@@ -485,22 +487,48 @@ const camposBloqueados = computed(() => {
 //     return false;
 // };
 
-const esCampoBloqueado = (valorCampo) => {
-    // Si ya buscó y en este perfil se requiere ser socio pero NO lo es -> BLOQUEO TOTAL
-    if ([1, 3].includes(props.perfil_id) && hasSearched.value && !esSocio.value) {
-        return true;
-    }
+// const esCampoBloqueado = (valorCampo) => {
+//     // Si ya buscó y en este perfil se requiere ser socio pero NO lo es -> BLOQUEO TOTAL
+//     if ([1, 3].includes(props.perfil_id) && hasSearched.value && !esSocio.value) {
+//         return true;
+//     }
 
-    // Si es peruano y no ha buscado, bloqueado
+//     // Si es peruano y no ha buscado, bloqueado
+//     if (esDNI.value && !hasSearched.value) return true;
+
+//     // Si es socio activo en perfil crítico, bloqueamos solo lo que ya viene con datos
+//     if ([1, 3].includes(props.perfil_id) && esSocio.value) {
+//         if (!fecha_nacimiento.value) return false;
+//         if (esMenorDeEdad(fecha_nacimiento.value)) return false;
+//         return valorCampo !== null && valorCampo !== undefined && String(valorCampo).trim() !== '';
+//     }
+
+//     return false;
+// };
+
+const esCampoBloqueado = (nombreCampo, valorActual) => {
+    // 1. Si no ha buscado (y es peruano), todo bloqueado
     if (esDNI.value && !hasSearched.value) return true;
 
-    // Si es socio activo en perfil crítico, bloqueamos solo lo que ya viene con datos
-    if ([1, 3].includes(props.perfil_id) && esSocio.value) {
-        if (!fecha_nacimiento.value) return false;
-        if (esMenorDeEdad(fecha_nacimiento.value)) return false;
-        return valorCampo !== null && valorCampo !== undefined && String(valorCampo).trim() !== '';
-    }
+    if ([1, 3].includes(props.perfil_id)) {
+        // 2. Si NO es socio tras buscar, bloqueamos todo
+        if (hasSearched.value && !esSocio.value) return true;
 
+        // 3. REGLA DE ORO: Solo bloqueamos si el servidor YA traía datos
+        // Accedemos al valor original que guardamos en datosOriginalesServidor
+        const valorOriginal = datosOriginalesServidor.value[nombreCampo];
+        const teniaDatosOriginalmente = valorOriginal !== null && valorOriginal !== undefined && String(valorOriginal).trim() !== '';
+
+        // Si el servidor NO tenía datos para este campo, NUNCA lo bloqueamos (le dejamos escribir)
+        if (!teniaDatosOriginalmente) return false;
+
+        // Si tenía datos originalmente y la búsqueda fue exitosa, bloqueamos (protección de datos)
+        if (searchSuccess.value) {
+            // Excepción: si es menor de edad en la fecha de nacimiento, dejamos corregir
+            if (nombreCampo === 'fecha_nacimiento' && esMenorDeEdad(valorActual)) return false;
+            return true;
+        }
+    }
     return false;
 };
 
@@ -616,7 +644,7 @@ const clearDocument = async () => {
         apellido_materno: '',
         empresa: '',
         cargo: '',
-        pais: 75, // O null si prefieres que se borre
+        pais: null, // O null si prefieres que se borre
         departamento: null,
         provincia: null,
         distrito: null,
@@ -652,21 +680,35 @@ const onlyAlphanumericKey = (event) => {
 
 const esDNI = computed(() => tipo_doc.value === 1);
 // Creamos estados individuales para los campos principales
-const bloqueoNombres = computed(() => esCampoBloqueado(nombres.value));
-const bloqueoApellidos = computed(() => esCampoBloqueado(apellido_paterno.value));
-const bloqueoApellidoMaterno = computed(() => esCampoBloqueado(apellido_materno.value));
-const bloqueoCorreo = computed(() => esCampoBloqueado(correo.value));
-const bloqueoCelular = computed(() => esCampoBloqueado(celular.value));
-const bloqueoFechaNac = computed(() => esCampoBloqueado(fecha_nacimiento.value));
-const bloqueoPais = computed(() => esCampoBloqueado(pais.value));
-const bloqueoDepartamento = computed(() => esCampoBloqueado(departamento.value));
-const bloqueoProvincia = computed(() => esCampoBloqueado(provincia.value));
-const bloqueoDistrito = computed(() => esCampoBloqueado(distrito.value));
-const bloqueoSexo = computed(() => esCampoBloqueado(sexo.value));
-const bloqueoCargo = computed(() => esCampoBloqueado(cargo.value));
-const bloqueoEmpresa = computed(() => esCampoBloqueado(empresa.value));
-const bloqueoDireccion = computed(() => esCampoBloqueado(direccionPersona.value));
+// const bloqueoNombres = computed(() => esCampoBloqueado(nombres.value));
+// const bloqueoApellidos = computed(() => esCampoBloqueado(apellido_paterno.value));
+// const bloqueoApellidoMaterno = computed(() => esCampoBloqueado(apellido_materno.value));
+// const bloqueoCorreo = computed(() => esCampoBloqueado(correo.value));
+// const bloqueoCelular = computed(() => esCampoBloqueado(celular.value));
+// const bloqueoFechaNac = computed(() => esCampoBloqueado(fecha_nacimiento.value));
+// const bloqueoPais = computed(() => esCampoBloqueado(pais.value));
+// const bloqueoDepartamento = computed(() => esCampoBloqueado(departamento.value));
+// const bloqueoProvincia = computed(() => esCampoBloqueado(provincia.value));
+// const bloqueoDistrito = computed(() => esCampoBloqueado(distrito.value));
+// const bloqueoSexo = computed(() => esCampoBloqueado(sexo.value));
+// const bloqueoCargo = computed(() => esCampoBloqueado(cargo.value));
+// const bloqueoEmpresa = computed(() => esCampoBloqueado(empresa.value));
+// const bloqueoDireccion = computed(() => esCampoBloqueado(direccionPersona.value));
 
+const bloqueoNombres = computed(() => esCampoBloqueado('nombres', nombres.value));
+const bloqueoApellidos = computed(() => esCampoBloqueado('apellido_paterno', apellido_paterno.value));
+const bloqueoApellidoMaterno = computed(() => esCampoBloqueado('apellido_materno', apellido_materno.value));
+const bloqueoCorreo = computed(() => esCampoBloqueado('correo', correo.value));
+const bloqueoCelular = computed(() => esCampoBloqueado('celular', celular.value));
+const bloqueoFechaNac = computed(() => esCampoBloqueado('fecha_nacimiento', fecha_nacimiento.value));
+const bloqueoPais = computed(() => esCampoBloqueado('id_pais', pais.value));
+const bloqueoDepartamento = computed(() => esCampoBloqueado('departamento', departamento.value));
+const bloqueoProvincia = computed(() => esCampoBloqueado('provincia', provincia.value));
+const bloqueoDistrito = computed(() => esCampoBloqueado('distrito', distrito.value));
+const bloqueoSexo = computed(() => esCampoBloqueado('sexo', sexo.value));
+const bloqueoCargo = computed(() => esCampoBloqueado('cargo', cargo.value));
+const bloqueoEmpresa = computed(() => esCampoBloqueado('empresa_nombre', empresa.value));
+const bloqueoDireccion = computed(() => esCampoBloqueado('direccionPersona', direccionPersona.value));
 
 // EXTREMA SEGURIDAD: Watcher para limpiar si pegan texto con símbolos
 watch(documento, (newValue) => {
