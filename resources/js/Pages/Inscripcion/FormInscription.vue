@@ -704,7 +704,7 @@ defineExpose({
                             </div>
                         </div>
 
-                        <div v-else>
+                        <!-- <div v-else>
                             <div v-for="(categoria) in categorias" :key="categoria.id"
                                 class="w-full border-b border-gray-100 last:border-0 py-3 px-3 rounded-lg transition-colors duration-200"
                                 :class="{
@@ -730,7 +730,7 @@ defineExpose({
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> -->
                     </div>
                     <!-- =========== POR DIAS  ========== -->
                     <!-- ================================ -->
