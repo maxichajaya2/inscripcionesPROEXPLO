@@ -31,7 +31,8 @@ const props = defineProps({
     categorias: Object,
     adicionales: Array,
     section: String,
-    perfil_id: Number
+    perfil_id: Number,
+    course:Array
 })
 
 const formDataPayment = ref(null);
@@ -219,10 +220,10 @@ watch(activeStep, () => {
             <div class="mt-6 mb-6">
                 <Stepper v-model:value="activeStep" class="w-full">
                     <StepList class="text-black-price bg-degradient">
-                        <Step value="1">Detalles Personales</Step>
-                        <Step value="2">Cursos o Tours</Step>
-                        <Step value="3">Información de Facturación</Step>
-                        <Step value="4">Proceso de Pago</Step>
+                        <Step value="1" class="pointer-events-none">Detalles Personales</Step>
+                        <Step value="2" class="pointer-events-none">Cursos o Tours</Step>
+                        <Step value="3" class="pointer-events-none">Información de Facturación</Step>
+                        <Step value="4" class="pointer-events-none">Proceso de Pago</Step>
                     </StepList>
 
                     <StepPanels>
@@ -245,7 +246,7 @@ watch(activeStep, () => {
                         <StepPanel v-slot="{ activateCallback }" value="2"
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
                             <FormTourCourse ref="childFormTourCourse" :data_persona="data_persona"
-                                :adicionales="props.adicionales" :section="sectionUrl" />
+                                :adicionales="props.adicionales" :section="sectionUrl" :course="props.course" />
 
                             <div
                                 class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 z-[50] flex justify-between gap-3 rounded-b-2xl">

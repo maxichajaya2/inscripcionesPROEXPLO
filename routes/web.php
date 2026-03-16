@@ -22,6 +22,7 @@ use App\Http\Controllers\NiubizController;
 */
 
 Route::get('/', [InscripcionController::class, 'index'])->name('inscripcion.index');
+Route::get('/cursos/{id}', [InscripcionController::class, 'indexCursos'])->name('inscripcion.indexCursos');
     /*return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),

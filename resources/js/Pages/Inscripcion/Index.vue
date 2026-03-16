@@ -99,7 +99,8 @@ const irAlFormulario = (id) => {
     const params = {
         category: id,
         section: macroSeccion.value,
-        profile: perfilId
+        profile: perfilId,
+        course:0
     };
 
     // 5. Navegar

@@ -128,87 +128,6 @@ const missingFields = computed(() => {
     return Object.keys(errors.value).map(key => fieldNames[key] || key);
 });
 
-// const searchPerson = async () => {
-//     if (!tipo_doc.value || !documento.value) {
-//         toast.add({ severity: 'warn', summary: 'Warning', detail: 'Please enter document type and number', life: 3000 });
-//         return;
-//     }
-
-//     loadingSearch.value = true;
-//     hasSearched.value = false;
-//     noEncontrado.value = false;
-//     searchSuccess.value = false;
-//     searchError.value = true;
-
-//     try {
-//         const response = await axios.post('/api/getperson', {
-//             id_tipo_documento: tipo_doc.value,
-//             numero_documento: documento.value
-//         });
-
-//         const data = response.data;
-//         hasSearched.value = true;
-
-//         if (data.status && data.persona) {
-//             const p = data.persona;
-//             noEncontrado.value = false;
-//             searchSuccess.value = true;
-//             searchError.value = false;
-//             const paisAsignado = props.tipo_origen === 1 ? 75 : (p.pais || p.id_pais);
-//             if (p.pais || p.id_pais) {
-//                 pais.value = p.pais || p.id_pais;
-//                 await loadDepartamentos();
-//             }
-
-//             esSocio.value = p.es_socio;
-
-//             setValues({
-//                 tipo_doc: p.id_tipo_documento,
-//                 documento: p.documento,
-//                 nombres: p.nombres || '',
-//                 apellido_paterno: p.apellido_paterno || '',
-//                 apellido_materno: p.apellido_materno || '',
-//                 correo: p.correo || '',
-//                 celular: p.celular || '',
-//                 direccionPersona: p.direccionPersona || p.direccion?.direccion || '',
-//                 empresa: p.empresa_nombre || p.empresa || '',
-//                 cargo: p.cargo || '',
-//                 pais: p.pais || p.id_pais || paisAsignado,
-//                 sexo: p.sexo || '',
-//                 fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento) : null
-//             });
-
-//             // toast.add({ severity: 'success', summary: 'Found', detail: 'Information loaded successfully', life: 3000 });
-//         } else {
-//             noEncontrado.value = true;
-//             // SI ES EXTRANJERO, permitimos que pase el check de socio aunque no se encuentre
-//             esSocio.value = props.tipo_origen === 2 ? true : false;
-//             searchSuccess.value = false;
-//             searchError.value = true;
-//             setValues({
-//                 tipo_doc: tipo_doc.value,
-//                 documento: documento.value,
-//                 nombres: '',
-//                 apellido_paterno: '',
-//                 apellido_materno: '',
-//                 cargo: '',
-//                 correo: '',
-//                 celular: '',
-//                 direccionPersona: '',
-//                 empresa: '',
-//                 sexo: '',
-//                 fecha_nacimiento: null
-//             });
-
-//             // toast.add({ severity: 'info', summary: 'Not Found', detail: 'No record found. Please fill manually.', life: 3000 });
-//         }
-//     } catch (error) {
-//         console.error("Search error:", error);
-//     } finally {
-//         loadingSearch.value = false;
-//     }
-// };
-
 const searchPerson = async () => {
     if (!tipo_doc.value || !documento.value) {
         toast.add({ severity: 'warn', summary: 'Atención', detail: 'Por favor ingrese el tipo y número de documento', life: 3000 });
@@ -220,6 +139,7 @@ const searchPerson = async () => {
     noEncontrado.value = false;
     searchSuccess.value = false;
     searchError.value = false;
+    esSocio.value = false;
 
     try {
         const response = await axios.post('/api/getperson', {
@@ -232,12 +152,12 @@ const searchPerson = async () => {
         // CAMBIO CLAVE: Verificamos si existe el objeto persona, independientemente del status
         if (data.persona) {
             const p = data.persona;
-            noEncontrado.value = false;
+
             searchSuccess.value = true;
 
             // Asignamos si es socio o no
             esSocio.value = p.es_socio;
-
+            noEncontrado.value = false;
             // Manejo de país y departamentos
             const paisAsignado = props.tipo_origen === 1 ? 75 : (p.pais || p.id_pais);
             if (p.pais || p.id_pais) {
@@ -356,7 +276,7 @@ const searchPerson = async () => {
                 // No tocamos tipo_doc ni documento para que no se borren
             });
             setErrors({ fecha_nacimiento: undefined });
-
+            hasSearched.value = true;
             toast.add({ severity: 'info', summary: 'No encontrado', detail: 'No se encontraron datos. Por favor, regístrese manualmente.', life: 3000 });
         }
     } catch (error) {
@@ -455,57 +375,6 @@ const camposBloqueados = computed(() => {
     return faltaBuscarPeruano || esPerfilBloqueado;
 });
 
-// const esCampoBloqueado = (valorCampo) => {
-//     // 1. Si es peruano y no ha buscado, todo bloqueado
-//     if (esDNI.value && !hasSearched.value) return true;
-
-//     // 2. Si es perfil crítico (1 o 5)
-
-//     if ([1, 4].includes(props.perfil_id) && hasSearched.value && !esSocio.value) {
-//         return true;
-//     }
-
-
-//     if ([1, 4].includes(props.perfil_id)) {
-//         // BLOQUEA solo si el campo NO está vacío (tiene contenido previo)
-//         // Usamos trim() para evitar espacios en blanco
-//         // Si el campo está vacío, está desbloqueado para escribir
-//         if (!fecha_nacimiento.value) return false;
-
-//         // Si tiene una fecha pero es menor de edad, DESBLOQUEAMOS (return false)
-//         // para que el usuario pueda corregirla.
-//         if (esMenorDeEdad(fecha_nacimiento.value)) {
-//             return false;
-//         }
-
-
-//         return valorCampo !== null && valorCampo !== undefined && String(valorCampo).trim() !== '';
-//     }
-
-
-
-//     return false;
-// };
-
-// const esCampoBloqueado = (valorCampo) => {
-//     // Si ya buscó y en este perfil se requiere ser socio pero NO lo es -> BLOQUEO TOTAL
-//     if ([1, 3].includes(props.perfil_id) && hasSearched.value && !esSocio.value) {
-//         return true;
-//     }
-
-//     // Si es peruano y no ha buscado, bloqueado
-//     if (esDNI.value && !hasSearched.value) return true;
-
-//     // Si es socio activo en perfil crítico, bloqueamos solo lo que ya viene con datos
-//     if ([1, 3].includes(props.perfil_id) && esSocio.value) {
-//         if (!fecha_nacimiento.value) return false;
-//         if (esMenorDeEdad(fecha_nacimiento.value)) return false;
-//         return valorCampo !== null && valorCampo !== undefined && String(valorCampo).trim() !== '';
-//     }
-
-//     return false;
-// };
-
 const esCampoBloqueado = (nombreCampo, valorActual) => {
     // 1. Si no ha buscado (y es peruano), todo bloqueado
     if (esDNI.value && !hasSearched.value) return true;
@@ -541,16 +410,6 @@ const tiposDocumentoFiltrados = computed(() => {
     return todos;
 });
 
-// const loadDepartamentos = async () => {
-//     if (pais.value) {
-//         try {
-//             const res = await axios.post(route('padre.departamentos'), { id: pais.value });
-//             departamentos.value = res.data.departamentos;
-//         } catch (e) {
-//             console.error("Error cargando departamentos", e);
-//         }
-//     }
-// };
 
 const loadDepartamentos = async () => {
     departamento.value = null; // Cambia undefined por null

@@ -687,8 +687,8 @@ defineExpose({
                 <template #content>
                     <div class="px-2">
 
-                        <!-- <div v-if="is_category_fixed || esSeccionViajes" -->
-                        <div
+                        <div v-if="is_category_fixed"
+
                             class="w-full p-4 bg-blue-50 border border-blue-200 rounded-xl shadow-sm flex justify-between items-center">
                             <div class="flex flex-col">
                                 <span class="text-[10px] uppercase text-blue-400 font-black tracking-widest">Selected
@@ -703,6 +703,7 @@ defineExpose({
                                         || '0.00'}}
                                 </p>
                             </div>
+
                         </div>
 
                         <!-- <div v-else>

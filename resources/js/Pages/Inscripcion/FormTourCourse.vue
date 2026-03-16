@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, defineExpose, watch } from 'vue';
+import { ref, computed, defineExpose, watch, onMounted } from 'vue';
 import Checkbox from 'primevue/checkbox';
 import Accordion from 'primevue/accordion';
 import AccordionTab from 'primevue/accordiontab';
@@ -10,7 +10,8 @@ import Dialog from 'primevue/dialog';
 const props = defineProps({
     adicionales: Array, // Aquí llegarán los 13 cursos del controlador
     data_persona: Object,
-    section: String
+    section: String,
+    course:Array
 });
 
 const extras_seleccionados = ref([]);
@@ -122,6 +123,29 @@ const idsBloqueados = computed(() => {
 const selectedObjects = computed(() => {
     return (props.adicionales || []).filter(item => extras_seleccionados.value.includes(item.id));
 });
+// Filtramos los adicionales según el ID que viene por prop 'course'
+const adicionalesFiltrados = computed(() => {
+    const lista = props.adicionales || [];
+
+    // Si el array course tiene elementos, filtramos la lista
+    if (props.course && props.course.length > 0) {
+        // Convertimos todo a número por seguridad en la comparación
+        const idsPermitidos = props.course.map(id => Number(id));
+
+        return lista.filter(item => idsPermitidos.includes(Number(item.id)));
+    }
+
+    return lista;
+});
+
+// Separamos por tipo usando la lista ya filtrada arriba
+const cursosFiltrados = computed(() => {
+    return adicionalesFiltrados.value.filter(i => i.tipo === 'curso');
+});
+
+const viajesFiltrados = computed(() => {
+    return adicionalesFiltrados.value.filter(i => i.tipo === 'viaje');
+});
 
 watch(() => props.section, (newVal) => {
     console.log("¡Sección recibida en el hijo!", newVal);
@@ -132,6 +156,23 @@ defineExpose({
     total_extras,
     selectedObjects,
     validarSeleccion
+});
+
+onMounted(() => {
+    console.log("=== INSPECCIÓN DE FILTRADO POR PERFIL ===");
+
+    // Lógica de autoselección para múltiples cursos
+    if (props.course && props.course.length > 0) {
+        // Convertimos a números para asegurar compatibilidad con PrimeVue
+        const idsASeleccionar = props.course
+            .map(id => Number(id))
+            .filter(id => props.adicionales.some(item => item.id === id));
+
+        if (idsASeleccionar.length > 0) {
+            extras_seleccionados.value = idsASeleccionar;
+            console.log("✅ Cursos pre-seleccionados:", idsASeleccionar);
+        }
+    }
 });
 
 </script>
@@ -233,7 +274,7 @@ defineExpose({
                             </template>
 
                             <div class="space-y-4 py-2">
-                                <div v-for="item in adicionales.filter(i => i.tipo === 'curso')" :key="item.id" :class="[
+                                <div v-for="item in adicionalesFiltrados.filter(i => i.tipo === 'curso')" :key="item.id" :class="[
                                     extras_seleccionados.includes(item.id) ? 'bg-blue-50 border-blue-300' : 'border-gray-100 bg-white',
                                     idsBloqueados.includes(item.id) ? 'opacity-50 grayscale pointer-events-none' : ''
                                 ]">
@@ -353,12 +394,12 @@ defineExpose({
                         </AccordionTab>
                         <!-- ========= VIAJES =========
                         ================================ -->
-                        | <AccordionTab>
+                        | <AccordionTab  v-if="props.course==0">
                             <template #header>
                                 <span class="font-bold text-blue-900 uppercase text-sm italic">Technical Visits</span>
                             </template>
                             <div class="space-y-4 py-2">
-                                <div v-for="item in adicionales.filter(i => i.tipo === 'viaje')" :key="item.id"
+                                <div v-for="item in viajesFiltrados.filter(i => i.tipo === 'viaje')" :key="item.id"
                                     class="w-full border rounded-lg transition-all shadow-sm"
                                     :class="extras_seleccionados.includes(item.id) ? 'bg-blue-50 border-blue-300' : 'border-gray-100 bg-white'">
                                     <div
@@ -446,7 +487,7 @@ defineExpose({
                         </AccordionTab>
                     </Accordion>
 
-                    <div v-if="extras_seleccionados.length > 0"
+                    <div v-if="extras_seleccionados.length > 0 && props.course ==0"
                         class="mt-8 p-5 bg-lightblue-wmc border border-blue-wmc rounded-xl flex justify-between items-center shadow-md animate-fade-in">
                         <div class="flex flex-col">
                             <span class="text-[10px] uppercase text-blue-500 font-black tracking-widest">
