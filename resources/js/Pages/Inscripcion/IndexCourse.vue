@@ -195,11 +195,11 @@ const scrollToCategories = () => {
 
                             <div
                                 class="relative z-10 text-right flex flex-col items-end border-l border-slate-100 pl-6 group-hover:border-orange-200 transition-colors">
-                                <span
+                                <!-- <span
                                     class="text-2xl font-black text-slate-900 group-hover:text-orange-600 transition-colors">
                                     {{ cat.precio_disponible?.moneda?.simbolo || 'USD ' }}{{
                                         cat.precio_disponible?.valor || '0' }}
-                                </span>
+                                </span> -->
                                 <div
                                     class="mt-3 px-6 py-2 rounded-full bg-orange-600 text-white text-[10px] font-bold uppercase group-hover:bg-orange-700 transition-all shadow-sm">
                                     Inscribirse
