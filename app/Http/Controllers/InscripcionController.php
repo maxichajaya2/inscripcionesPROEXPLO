@@ -720,58 +720,36 @@ class InscripcionController extends Controller
             //         'INSCRIPCION' => $inscripcion,
             //     ]);
 
+            // 1. Ejecutar el servicio
             $service_wmc = app(\App\Http\Controllers\WebServiceController::class)
                 ->wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz);
 
-
+            // 2. Intentar procesar la respuesta del servicio (QR, etc.)
             if (isset($service_wmc->Response) && $service_wmc->Response->Status === true) {
                 $inscripcion->qr = (string)$service_wmc->Response->QR;
-                // $inscripcion->sie_code = (string)$service_wmc->Response->SieCode;
-                $inscripcion->save();
-
-                // VIAJES
-                if ($inscripcion->id_categoria_inscripcion == null) {
-                    $inscripcion->id_categoria_inscripcion  =   $inscripcion->id_perfil;
-                }
-                // $inscripcion->save();
-                // dd($inscripcion);
-                try {
-                    Mail::to($persona->correo)->send(new \App\Mail\MailInscripcion($inscripcion, $niubiz));
-                } catch (\Exception $e) {
-                    Log::error("Error enviando correo: " . $e->getMessage());
-                }
+                // Si necesitas marcar que el WS fue exitoso
+                $inscripcion->ws_status = true;
             } else {
-                // Si llegamos aquí, service_wmc tiene el error 500 o un Status false
-                Log::error("ERROR SIE PROEXPLO:", (array)$service_wmc);
+                // Si falla, solo lo logueamos y marcamos el fallo, pero el flujo sigue
+                $inscripcion->ws_status = false;
+                Log::error("ERROR SIE PROEXPLO para Inscripción ID: " . $inscripcion->id, (array)$service_wmc);
             }
 
-            // Ejecutar el servicio
+            // 3. Lógica extra de viajes (fuera del IF del servicio)
+            if ($inscripcion->id_categoria_inscripcion == null) {
+                $inscripcion->id_categoria_inscripcion = $inscripcion->id_perfil;
+            }
 
+            // 4. Guardamos los cambios de la inscripción (tenga QR o no)
+            $inscripcion->save();
 
-            // $service_wmc = app(\App\Http\Controllers\WebServiceController::class)
-            //     ->wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz);
-            //  dd($service_wmc);
-
-            // $service_wmc->Response->Status = false;
-            // if (isset($service_wmc->Response) && $service_wmc->Response->Status === true) {
-            //     $inscripcion->qr = (string)$service_wmc->Response->QR;
-            //     $inscripcion->ws_status = true; // Campo nuevo
-            // } else {
-            //     // Si falla el servicio, registramos el error pero no matamos el proceso
-            //     $inscripcion->ws_status = false;
-            //     Log::error("ERROR SIE WMC para Inscripcion ID: " . $inscripcion->id, (array)$service_wmc);
-            // }
-
-            // Guardamos los cambios (ya sea que tenga QR o que solo guardemos el status false)
-            // $inscripcion->save();
-
-            // ENVIAR CORREO SIEMPRE
-            // try {
-            //     // El Mailable debe estar preparado para recibir un $inscripcion->qr nulo
-            //     Mail::to($persona->correo)->send(new \App\Mail\MailInscripcion($inscripcion, $niubiz));
-            // } catch (\Exception $e) {
-            //     Log::error("Error enviando correo: " . $e->getMessage());
-            // }
+            // 5. ENVIAR CORREO SIEMPRE
+            // Se coloca al final, fuera de los condicionales de éxito del WS
+            try {
+                Mail::to($persona->correo)->send(new \App\Mail\MailInscripcion($inscripcion, $niubiz));
+            } catch (\Exception $e) {
+                Log::error("Error enviando correo a {$persona->correo}: " . $e->getMessage());
+            }
 
             return redirect('/pago/confirmar/' . $inscripcion->id);
         }
