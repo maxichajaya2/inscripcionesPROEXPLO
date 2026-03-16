@@ -88,10 +88,10 @@ const { defineField, errors, setValues, values, validate } = useForm({
         //         // --- FLUJO EXTRANJERO ---
         //         return value?.length > 0;
         //     }),
-        razonSocial: yup.string().required('La razón social es obligatoria'),
-        direccionEmpresa: yup.string().required('La dirección de la empresa es obligatoria'),
-        responsable: yup.string().required('El nombre del responsable es obligatorio'),
-        correo_facturador: yup.string()
+        razonSocial: yup.string().trim().required('La razón social es obligatoria'),
+        direccionEmpresa: yup.string().trim().required('La dirección de la empresa es obligatoria'),
+        responsable: yup.string().trim().required('El nombre del responsable es obligatorio'),
+        correo_facturador: yup.string().trim()
             .email('Formato de correo inválido')
             .required('El correo de facturación es obligatorio'),
         reglamento: yup.boolean().oneOf([true], 'Debe aceptar el reglamento'),

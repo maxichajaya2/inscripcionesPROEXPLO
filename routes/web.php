@@ -23,6 +23,7 @@ use App\Http\Controllers\NiubizController;
 
 Route::get('/', [InscripcionController::class, 'index'])->name('inscripcion.index');
 Route::get('/cursos/{id}', [InscripcionController::class, 'indexCursos'])->name('inscripcion.indexCursos');
+Route::post('/contactanos', [InscripcionController::class, 'contactanos'])->name('contactanos.store');
     /*return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),

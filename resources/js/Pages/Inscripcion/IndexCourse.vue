@@ -119,7 +119,7 @@ const scrollToCategories = () => {
             </div>
 
             <div id="titulo_inicial" class="mb-12 text-left animate-fade-in-down">
-                <h1 class="text-4xl md:text-5xl font-black text-orange-500 tracking-tight mb-2">
+                <h1 class="text-4xl md:text-5xl font-black pro-orange tracking-tight mb-2">
                     XV Congreso Internacional <span class="text-green-500">PROEXPLO 2026</span>
                 </h1>
                 <h3 class="text-xl md:text-2xl text-white font-medium opacity-90 mb-4">

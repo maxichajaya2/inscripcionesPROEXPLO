@@ -7,6 +7,7 @@ import { ref, computed, onMounted, nextTick } from 'vue';
 
 // Estilos globales de Proexplo
 import "../../../css/inscripciones.css";
+import FormEncuesta from './FormEncuesta.vue';
 
 const props = defineProps({
     categorias: {
@@ -100,7 +101,7 @@ const irAlFormulario = (id) => {
         category: id,
         section: macroSeccion.value,
         profile: perfilId,
-        course:0
+        course: 0
     };
 
     // 5. Navegar
@@ -143,8 +144,8 @@ const scrollToCategories = () => {
             </div>
 
             <div id="titulo_inicial" class="mb-12 text-left animate-fade-in-down">
-                <h1 class="text-4xl md:text-5xl font-black text-orange-500 tracking-tight mb-2">
-                    XV Congreso Internacional de Prospectores y Exploradores <span class="text-green-500">PROEXPLO
+                <h1 class="text-4xl md:text-5xl font-black text-pro-orange tracking-tight mb-2">
+                    XV Congreso Internacional de Prospectores y Exploradores <span class="text-pro-green">PROEXPLO
                         2026</span>
                 </h1>
                 <h3 class="text-xl md:text-2xl text-white font-medium opacity-90 mb-4">
@@ -190,7 +191,7 @@ const scrollToCategories = () => {
                             class="w-full group relative flex items-center justify-between p-8 bg-green-50 border border-green-200 rounded-3xl transition-all duration-300 hover:border-green-500 hover:bg-green-100 text-left shadow-sm">
 
                             <div class="flex flex-col z-10">
-                                <span class="text-green-600 text-xs uppercase tracking-widest font-bold mb-1">
+                                <span class="text-pro-green text-xs uppercase tracking-widest font-bold mb-1">
                                     Actividades Extras
                                 </span>
                                 <h5
@@ -200,7 +201,7 @@ const scrollToCategories = () => {
                             </div>
 
                             <div
-                                class="p-4 rounded-2xl bg-green-500 text-white shadow-lg group-hover:bg-green-600 transition-all duration-300">
+                                class="p-4 rounded-2xl bg-pro-green text-white shadow-lg group-hover:bg-green-600 transition-all duration-300">
                                 <GreenArrowRight class="w-6 h-6" />
                             </div>
                         </button>
@@ -289,9 +290,9 @@ const scrollToCategories = () => {
 
                     <div v-else class="w-full mt-8 md:mt-0">
                         <div
-                            class="p-8 bg-[#FFF7ED] border-l-4 border-orange-500 rounded-r-2xl shadow-sm animate-fade-in">
+                            class="p-8 bg-[#FFF7ED] border-l-4 border-pro-orange rounded-r-2xl shadow-sm animate-fade-in">
                             <h6
-                                class="text-orange-600 font-black uppercase tracking-widest mb-4 flex items-center gap-2 text-xs md:text-sm">
+                                class="text-pro-orange font-black uppercase tracking-widest mb-4 flex items-center gap-2 text-xs md:text-sm">
                                 ℹ️ Los inscritos en PROEXPLO 2026 tendrán los siguientes beneficios:
                             </h6>
 
@@ -331,8 +332,8 @@ const scrollToCategories = () => {
                             </ul>
 
                             <div class="mt-4 pt-4 border-t border-orange-200 flex items-center gap-3">
-                                <div class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
-                                <p class="text-orange-600 text-[10px] md:text-xs font-bold tracking-wider uppercase">
+                                <div class="w-2 h-2 rounded-full bg-pro-orange animate-pulse"></div>
+                                <p class="text-pro-orange text-[10px] md:text-xs font-bold tracking-wider uppercase">
                                     Selecciona tu perfil a la izquierda para continuar
                                 </p>
                             </div>
@@ -341,7 +342,7 @@ const scrollToCategories = () => {
                 </div>
             </div>
 
-            <div class="w-full mt-12 animate-fade-in-up">
+            <!-- <div class="w-full mt-12 animate-fade-in-up">
                 <div
                     class="flex flex-col md:flex-row justify-between items-center border-orange-200 bg-orange-50/30 rounded-3xl border p-6 md:p-8 gap-6">
                     <div class="flex justify-center min-w-[80px]">
@@ -361,8 +362,10 @@ const scrollToCategories = () => {
                         </p>
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
+
+        <!-- <FormEncuesta /> -->
 
     </AppLayout>
 </template>
@@ -434,7 +437,9 @@ const scrollToCategories = () => {
     position: absolute;
     inset: 3px;
     /* Espacio para que se vea el borde animado */
-    background: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%);
+    /*background: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%);*/
+    /* Naranja domina hasta el 60%, luego cae al rojizo */
+    background: linear-gradient(#ea7317 0%, #a04307 100%);
     border-radius: 22px;
     z-index: 0;
 }

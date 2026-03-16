@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use App\Models\CategoriaCursoViaje;
 use App\Models\Precio;
+use App\Models\Contactanos;
+use App\Mail\MailContacto;
 
 
 class InscripcionController extends Controller
@@ -97,6 +99,34 @@ class InscripcionController extends Controller
             'title' => $title,
             'cursos' => array_values($cursos) // Aseguramos que sea un array indexado
         ]);
+    }
+
+    public function contactanos(Request $request)
+    {
+        // Mapeo directo del request a variables
+        $nombres = $request->nombres;
+        $apellidos = $request->apellidos;
+        $email = $request->email;
+        $telefono_completo = $request->telefono_completo;
+        $mensaje = $request->mensaje;
+
+        try {
+            // 1. Guardar en la base de datos
+            Contactanos::create([
+                'nombres'           => $nombres,
+                'apellidos'         => $apellidos,
+                'email'             => $email,
+                'telefono_completo' => $telefono_completo,
+                'mensaje'           => $mensaje,
+            ]);
+
+            // 2. Enviar el correo (usando los datos del request)
+            Mail::to('soporte@proexplo.com.pe')->send(new MailContacto($request->all()));
+
+            return back()->with('message', 'Message sent successfully!');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Error: ' . $e->getMessage()]);
+        }
     }
 
     public function autor(Request $request)
