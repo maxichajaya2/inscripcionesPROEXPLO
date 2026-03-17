@@ -87,6 +87,16 @@ const irAlFormulario = (id) => {
     });
 };
 
+const etiquetaActividad = computed(() => {
+    const curso = props.cursosDetalle?.[0];
+    if (!curso) return 'Actividad';
+
+    // IDs de Visitas Técnicas
+    const idsVisitas = [81, 82];
+
+    return idsVisitas.includes(curso.id) ? 'Visita Técnica' : 'Curso Corto';
+});
+
 const scrollToCategories = () => {
     nextTick(() => {
         const element = document.getElementById('section-categories');
@@ -149,7 +159,9 @@ const scrollToCategories = () => {
                                 </svg>
                             </div>
                             <div>
-                                <h4 class="text-slate-900 text-2xl font-black uppercase tracking-tight">Curso Corto</h4>
+                                <h4 class="text-slate-900 text-2xl font-black uppercase tracking-tight">
+                                    {{ etiquetaActividad }}
+                                </h4>
                                 <p v-if="cursosDetalle[0].categoria_description"
                                     class="text-orange-600 text-[10px] font-bold uppercase tracking-[0.2em]">
                                     {{ cursosDetalle[0].categoria_description }}

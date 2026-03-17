@@ -175,6 +175,16 @@ onMounted(() => {
     }
 });
 
+const esVisitaTecnicaForzada = computed(() => {
+    // Convertimos a números y nos aseguramos de que sea un array
+    const idsCursos = Array.isArray(props.course)
+        ? props.course.map(Number)
+        : [Number(props.course)];
+
+    // Retorna true si alguno de los IDs es 81 o 82
+    return idsCursos.includes(81) || idsCursos.includes(82);
+});
+
 </script>
 
 <template>
@@ -268,7 +278,7 @@ onMounted(() => {
 
                         <!-- ========= CURSO CORTOS =========
                         ================================ -->
-                        <AccordionTab>
+                        <AccordionTab v-if="!esVisitaTecnicaForzada" >
                             <template #header>
                                 <span class="font-bold text-blue-900 uppercase text-sm italic">Cursos Cortos</span>
                             </template>
@@ -394,9 +404,9 @@ onMounted(() => {
                         </AccordionTab>
                         <!-- ========= VIAJES =========
                         ================================ -->
-                        | <AccordionTab  v-if="props.course==0 ||  props.course==81 || props.course==82">
+                        | <AccordionTab  v-if="props.course==0 ||  esVisitaTecnicaForzada">
                             <template #header>
-                                <span class="font-bold text-blue-900 uppercase text-sm italic">Technical Visits</span>
+                                <span class="font-bold text-blue-900 uppercase text-sm italic">Visita Tecnica</span>
                             </template>
                             <div class="space-y-4 py-2">
                                 <div v-for="item in viajesFiltrados.filter(i => i.tipo === 'viaje')" :key="item.id"
