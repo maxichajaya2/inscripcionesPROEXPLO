@@ -19,3 +19,7 @@ yarn-error.log
 /.idea
 /.vscode
 /storage
+
+# Core Resources
+BIBLE.md
+/.agent/

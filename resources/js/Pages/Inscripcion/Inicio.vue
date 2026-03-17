@@ -359,24 +359,7 @@ const handleFinalizarTodo = async () => {
 
 const isStep2Invalid = computed(() => {
     if (!childFormInscription.value) return true;
-
-    const v = childFormInscription.value.values; // Accede a los valores actuales del formulario
-    const e = childFormInscription.value.errors; // Accede a los errores de vee-validate
-
-    // 1. Verificar si hay errores activos en vee-validate
-    const hasErrors = Object.keys(e).length > 0;
-
-    // 2. Verificar campos obligatorios manualmente (seguridad extra)
-    const missingRequired = !v.selected_categoria ||
-        !v.documentoEmpresa ||
-        !v.razonSocial ||
-        !v.direccionEmpresa ||
-        !v.correo_facturador;
-
-    // 3. Verificar si falta el documento (si la categoría lo requiere)
-    const missingDoc = childFormInscription.value.show_document && !v.uploadDocument;
-
-    return hasErrors || missingRequired || missingDoc;
+    return childFormInscription.value.isInvalid;
 });
 
 
