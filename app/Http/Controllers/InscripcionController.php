@@ -168,7 +168,7 @@ class InscripcionController extends Controller
     {
         $section = $request->query('section', 'inscripciones');
         $perfil_id = $request->query('profile');
-        $perfilesPermitidos = [1, 2, 3, 5, 6, 7];
+        $perfilesPermitidos = [1, 2, 3, 4, 5, 6, 7];
 
         $courseRaw = $request->query('course', '0');
         // Convertimos a array para que Vue lo reciba como tal
@@ -191,7 +191,7 @@ class InscripcionController extends Controller
                 return $cat;
             });
 
-        $perfilesPermitidos = [1, 2, 3, 5, 6, 7];
+        $perfilesPermitidos = [1, 2, 3, 4, 5, 6, 7];
 
 
         // 2. Adicionales (Cursos/Tours) con validación de perfiles
