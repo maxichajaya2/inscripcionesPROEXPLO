@@ -61,6 +61,14 @@ const actualizarResumen = (datos) => {
     resumen_dinamico.value = { ...resumen_dinamico.value, ...datos };
 };
 
+const isStep3Invalid = computed(() => {
+    // Si el formulario hijo no está montado, bloqueamos por seguridad
+    if (!childFormInscription.value) return true;
+    
+    // Usamos la propiedad isInvalid expuesta por el hijo
+    return childFormInscription.value.isInvalid;
+});
+
 const validate = async (value) => {
     loading.value = true;
     switch (value) {
@@ -269,6 +277,7 @@ watch(activeStep, () => {
                                     class="flex-1 md:flex-none" @click="activateCallback('2')" />
                                 <Button label="Registrar y Pagar" iconPos="right" icon="pi pi-arrow-right"
                                     class="bg-degradient border-rounded-full flex-1 md:flex-none" :loading="loading"
+                                    :disabled="isStep3Invalid"
                                     @click="handleInscripcionFinal" />
                             </div>
                         </StepPanel>

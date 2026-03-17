@@ -94,18 +94,17 @@ const { defineField, errors, setValues, values, validate } = useForm({
         correo_facturador: yup.string().trim()
             .email('Formato de correo inválido')
             .required('El correo de facturación es obligatorio'),
-        reglamento: yup.boolean().oneOf([true], 'Debe aceptar el reglamento'),
     })
 });
 
 const dniMessageEmpresa = ref('');
 
-const [documentoEmpresa] = defineField('documentoEmpresa');
-const [razonSocial] = defineField('razonSocial');
-const [responsable] = defineField('responsable');
-const [correo_facturador] = defineField('correo_facturador');
-const [tipoDocumentoEmpresa] = defineField('tipoDocumentoEmpresa');
-const [direccionEmpresa] = defineField('direccionEmpresa');
+const [documentoEmpresa, documentoEmpresaAttrs] = defineField('documentoEmpresa');
+const [razonSocial, razonSocialAttrs] = defineField('razonSocial');
+const [responsable, responsableAttrs] = defineField('responsable');
+const [correo_facturador, correo_facturadorAttrs] = defineField('correo_facturador');
+const [tipoDocumentoEmpresa, tipoDocumentoEmpresaAttrs] = defineField('tipoDocumentoEmpresa');
+const [direccionEmpresa, direccionEmpresaAttrs] = defineField('direccionEmpresa');
 const [selectTipoPago] = defineField('selectTipoPago');
 const [selectTipoDocPago] = defineField('selectTipoDocPago');
 const [selected_categoria, selected_categoriaAttrs] = defineField('selected_categoria');
@@ -176,20 +175,17 @@ const getInscripcion = async () => {
         }
     }
 
-    // Si es viajes, permitimos pasar con 0
     const totalValido = esSeccionViajes.value ? true : (total.value > 0);
 
-    console.log("Validación de formulario:", {
-        valid: result.valid,
-        total: total.value,
-        show_document: show_document.value,
-        uploadDocument: uploadDocument.value,
-        totalValido
-    });
-
-    // if (!result.valid || !totalValido || (show_document.value && !uploadDocument.value)) {
-    //     return { validate: false };
-    // }
+    if (!result.valid || isInvalid.value) {
+        console.log("Validación fallida:", {
+            resultValid: result.valid,
+            isInvalid: isInvalid.value,
+            errors: errors.value,
+            values
+        });
+        return { validate: false };
+    }
 
     return {
         validate: true,
@@ -197,6 +193,21 @@ const getInscripcion = async () => {
         total_final: total.value // Aquí enviará 0 si es viajes
     };
 };
+
+const isInvalid = computed(() => {
+    const v = values;
+    
+    // Validar campos básicos
+    const basicFields = !v.razonSocial || !v.direccionEmpresa || !v.responsable || !v.correo_facturador;
+    
+    // Validar documento según categoría
+    const missingDoc = show_document.value && !v.uploadDocument;
+
+    // Si hay errores en el objeto errors de vee-validate
+    const hasErrors = Object.keys(errors.value).length > 0;
+
+    return basicFields || missingDoc || hasErrors;
+});
 
 onMounted(() => {
     // Configuraciones iniciales
@@ -662,10 +673,11 @@ const onlyNumberKey = (event) => {
 // Esta computada decide si el botón "Registrar y Pagar" se deshabilita
 
 defineExpose({
-    getInscripcion ,
+    getInscripcion,
     values,         // Exponemos los valores actuales
     errors,         // Exponemos los errores actuales
-    show_document
+    show_document,
+    isInvalid       // EXPONEMOS LA VALIDEZ AL PADRE
 });
 </script>
 
@@ -980,7 +992,7 @@ defineExpose({
                                 :readonly="!isEditingBilling || block_direction" />
                             <small class="text-red-600" v-if="errors.razonSocial">{{ errors.razonSocial }}</small> -->
                             <label class="block mb-1">Nombre o Razon Social <span class="text-red-600">*</span></label>
-                            <InputText v-model="razonSocial" class="w-full border-green-iimp"
+                            <InputText v-model="razonSocial" v-bind="razonSocialAttrs" class="w-full border-green-iimp"
                                 :disabled="loading_doc || esRuc20 " :readonly="camposFacturacionBloqueados"
                                 :class="{ 'bg-gray-100 font-semibold': esRuc20 && !showManualAlert }" />
                             <small class="text-red-600" v-if="errors.razonSocial">{{ errors.razonSocial }}</small>
@@ -996,7 +1008,7 @@ defineExpose({
                             <small class="text-red-600" v-if="errors.direccionEmpresa">{{ errors.direccionEmpresa
                             }}</small> -->
                             <label class="block mb-1">Dirección Fiscal <span class="text-red-600">*</span></label>
-                            <InputText v-model="direccionEmpresa" class="w-full border-green-iimp"
+                            <InputText v-model="direccionEmpresa" v-bind="direccionEmpresaAttrs" class="w-full border-green-iimp"
                                 :readonly="camposFacturacionBloqueados" :disabled="loading_doc || esRuc20"
                                 :class="{ 'bg-gray-100': esRuc20 && !showManualAlert }" />
                             <small class="text-red-600" v-if="errors.direccionEmpresa">{{ errors.direccionEmpresa
@@ -1007,22 +1019,23 @@ defineExpose({
                             <div class="w-full sm:col-span-1">
                                 <label class="block mb-1">Responsable Facturación <span
                                         class="text-red-600">*</span></label>
-                                <InputText v-model="responsable"
+                                <InputText v-model="responsable" v-bind="responsableAttrs"
                                     class="w-full border-green-iimp" :disabled="loading_doc " />
                                 <small class="text-red-600" v-if="errors.responsable">{{ errors.responsable }}</small>
                             </div>
 
                             <div class="w-full sm:col-span-1">
                                 <label class="block mb-1">Email Facturación <span class="text-red-600">*</span></label>
-                                <InputText v-model="correo_facturador"
+                                <InputText v-model="correo_facturador" v-bind="correo_facturadorAttrs"
                                     class="w-full border-green-iimp" :disabled="loading_doc" />
                                 <small class="text-red-600" v-if="errors.correo_facturador">{{ errors.correo_facturador
                                 }}</small>
                             </div>
                         </div>
                     </div>
+
                 </template>
-                <pre class="bg-red-100 text-red-700 p-4">
+                <pre v-if="false" class="bg-red-100 text-red-700 p-4">
             Errores actuales: {{ errors }}
         </pre>
             </Card>
