@@ -26,6 +26,8 @@ use App\Mail\MailContacto;
 
 class InscripcionController extends Controller
 {
+    private $now;
+
     public function __construct()
     {
         $this->now = Carbon::now()->format('Y-m-d');
@@ -91,13 +93,16 @@ class InscripcionController extends Controller
             $categoria->grupo = str_contains(strtoupper($categoria->nombre_en), 'AUTHOR') ? 'autor' : 'participante';
         }
 
+        $cursosDetalle = \App\Models\CategoriaCursoViaje::whereIn('id', $cursos)->get();
+
         //  dd($categorias->toArray());
         $title = "Registration WMC 2026";
 
         return Inertia::render('Inscripcion/IndexCourse', [
             'categorias' => $categorias,
             'title' => $title,
-            'cursos' => array_values($cursos) // Aseguramos que sea un array indexado
+            'cursos' => array_values($cursos), // Aseguramos que sea un array indexado
+            'cursosDetalle' => $cursosDetalle
         ]);
     }
 
