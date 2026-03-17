@@ -123,39 +123,54 @@ const scrollToCategories = () => {
             </div>
 
             <div id="titulo_inicial" class="mb-1 text-left animate-fade-in-down">
-                <h1 class="text-4xl md:text-5xl font-black pro-orange tracking-tight mb-2">
-                    XV Congreso Internacional <span class="text-green-500">PROEXPLO 2026</span>
+                <h1 class="text-4xl md:text-5xl font-black text-pro-orange tracking-tight mb-2">
+                    XV Congreso Internacional de Prospectores y Exploradores <span class="text-pro-green">PROEXPLO
+                        2026</span>
                 </h1>
                 <h3 class="text-xl md:text-2xl text-white font-medium opacity-90 mb-4">
                     Cursos Cortos y Visitas Técnicas
                 </h3>
-                <div class="block w-48 h-1.5 rounded-full bg-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.5)] mb-10"></div>
+                <div class="block w-48 h-1.5 rounded-full bg-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.5)] mb-10">
+                </div>
 
                 <!-- Resumen de cursos seleccionados (Diseño Premium) -->
                 <div v-if="cursosDetalle && cursosDetalle.length > 0" class="animate-fade-in-up mb-12">
-                    <div class="p-6 bg-slate-50/80 backdrop-blur-sm rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden relative">
-                        <!-- Decoración sutil de fondo -->
-                        <div class="absolute -top-12 -right-12 w-32 h-32 bg-orange-100 rounded-full blur-3xl opacity-50"></div>
-                        
+                    <div
+                        class="p-6 bg-slate-50/80 backdrop-blur-sm rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden relative">
+                        <div
+                            class="absolute -top-12 -right-12 w-32 h-32 bg-orange-100 rounded-full blur-3xl opacity-50">
+                        </div>
+
                         <div class="relative z-10 flex items-center gap-4 mb-6">
                             <div class="p-3 bg-orange-500 rounded-2xl shadow-lg shadow-orange-500/20">
                                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
                             <div>
-                                <h4 class="text-slate-900 text-lg font-black uppercase tracking-tight">Actividades Seleccionadas</h4>
-                                <p class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em]">Resumen de tu selección</p>
+                                <h4 class="text-slate-900 text-2xl font-black uppercase tracking-tight">Curso Corto</h4>
+                                <p v-if="cursosDetalle[0].categoria_description"
+                                    class="text-orange-600 text-[10px] font-bold uppercase tracking-[0.2em]">
+                                    {{ cursosDetalle[0].categoria_description }}
+                                </p>
+                                <p v-else class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em]">
+                                    Resumen de tu selección
+                                </p>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div v-for="c in cursosDetalle" :key="c.id" 
-                                class="flex items-center gap-4 p-4 bg-white rounded-2xl border border-slate-100 group hover:border-orange-500/50 hover:shadow-md transition-all">
-                                <div class="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)] flex-shrink-0"></div>
+                        <div class="grid grid-cols-1 gap-3">
+                            <div v-if="cursosDetalle[0]"
+                                class="flex items-center gap-4 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                                <div
+                                    class="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)] flex-shrink-0">
+                                </div>
                                 <div class="flex-1">
-                                    <p class="text-slate-900 font-extrabold text-sm leading-tight tracking-tight uppercase">{{ c.nombre_es }}</p>
-                                    <p v-if="c.categoria_description" class="text-slate-500 text-[10px] mt-1 line-clamp-1 italic">{{ c.categoria_description }}</p>
+                                    <p
+                                        class="text-slate-900 font-extrabold text-lg leading-tight tracking-tight uppercase">
+                                        {{ cursosDetalle[0].nombre_es }}
+                                    </p>
                                 </div>
                             </div>
                         </div>

@@ -124,7 +124,7 @@ const scrollToCategories = () => {
     <AppLayout class="bg-proexplo-dark">
         <div class="px-6 py-12 mx-auto max-w-6xl min-h-[80vh] flex flex-col justify-center font-sans">
 
-            <div class="banner-proexplo-early animate-fade-in-down mb-8" style="display: none;">
+            <div class="banner-proexplo-early animate-fade-in-down mb-8">
                 <div class="p-3 md:p-6 flex items-center gap-3">
                     <div class="banner-icon-orange shrink-0">
                         <span class="text-xl md:text-2xl text-white">🔥</span>
