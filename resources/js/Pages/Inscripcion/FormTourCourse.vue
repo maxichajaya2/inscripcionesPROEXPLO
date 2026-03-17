@@ -394,7 +394,7 @@ onMounted(() => {
                         </AccordionTab>
                         <!-- ========= VIAJES =========
                         ================================ -->
-                        | <AccordionTab  v-if="props.course==0">
+                        | <AccordionTab  v-if="props.course==0 ||  props.course==81 || props.course==82">
                             <template #header>
                                 <span class="font-bold text-blue-900 uppercase text-sm italic">Technical Visits</span>
                             </template>

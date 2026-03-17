@@ -89,7 +89,19 @@ const { defineField, errors, setValues, values, validate } = useForm({
         //         return value?.length > 0;
         //     }),
         razonSocial: yup.string().trim().required('La razón social es obligatoria'),
-        direccionEmpresa: yup.string().trim().required('La dirección de la empresa es obligatoria'),
+        // direccionEmpresa: yup.string().trim().required('La dirección de la empresa es obligatoria'),
+        direccionEmpresa: yup.string()
+            .trim()
+            .required('La dirección de la empresa es obligatoria')
+            .min(5, 'La dirección es demasiado corta')
+            .test('no-garbage', 'Por favor, ingrese una dirección válida', (value) => {
+                if (!value) return false;
+                // Verifica que contenga al menos 3 letras o números
+                // y que no sean solo símbolos repetidos como --- o ***
+                const hasContent = /[a-zA-Z0-9]{3,}/.test(value);
+                const isNotJustSymbols = !/^[ \-*.;,_]+$/.test(value);
+                return hasContent && isNotJustSymbols;
+            }),
         responsable: yup.string().trim().required('El nombre del responsable es obligatorio'),
         correo_facturador: yup.string().trim()
             .email('Formato de correo inválido')
@@ -196,10 +208,10 @@ const getInscripcion = async () => {
 
 const isInvalid = computed(() => {
     const v = values;
-    
+
     // Validar campos básicos
     const basicFields = !v.razonSocial || !v.direccionEmpresa || !v.responsable || !v.correo_facturador;
-    
+
     // Validar documento según categoría
     const missingDoc = show_document.value && !v.uploadDocument;
 
@@ -311,6 +323,19 @@ watch(documentoEmpresa, (newVal) => {
         if (newVal !== cleanedValue || newVal.length > maxLength) {
             documentoEmpresa.value = cleanedValue.slice(0, maxLength);
         }
+    }
+});
+
+watch(direccionEmpresa, (newVal) => {
+    if (!newVal) return;
+
+    // Si el usuario empieza a escribir cadenas de símbolos repetidos
+    // Podemos limpiar o simplemente dejar que Yup lo maneje,
+    // pero aquí un ejemplo de limpieza de caracteres prohibidos al inicio:
+    if (/^[ \-*.;,_]+$/.test(newVal) && newVal.length > 2) {
+        // Opcional: Podrías mostrar un mensaje específico
+        alphanumericMessage.value = "La dirección no puede ser solo símbolos";
+        setTimeout(() => { alphanumericMessage.value = ''; }, 3000);
     }
 });
 
@@ -700,7 +725,6 @@ defineExpose({
                     <div class="px-2">
 
                         <div v-if="is_category_fixed"
-
                             class="w-full p-4 bg-blue-50 border border-blue-200 rounded-xl shadow-sm flex justify-between items-center">
                             <div class="flex flex-col">
                                 <span class="text-[10px] uppercase text-blue-400 font-black tracking-widest">Selected
@@ -953,8 +977,7 @@ defineExpose({
                             <div class="col-span-3 sm:col-span-1">
                                 <label class="block mb-1">Tipo de Documento <span class="text-red-600">*</span></label>
                                 <Select v-model="tipoDocumentoEmpresa" :options="filteredDocTypes" optionLabel="name_en"
-                                    optionValue="id" class="w-full border-green-iimp"
-                                    @change="setTipoDocPago" />
+                                    optionValue="id" class="w-full border-green-iimp" @change="setTipoDocPago" />
                                 <small class="text-red-600" v-if="errors.tipoDocumentoEmpresa">{{
                                     errors.tipoDocumentoEmpresa }}</small>
                             </div>
@@ -963,13 +986,11 @@ defineExpose({
                                 <label class="block mb-1">Numero de Documento <span
                                         class="text-red-600">*</span></label>
                                 <InputGroup>
-                                    <InputText v-model="documentoEmpresa"
-                                        class="border-green-iimp" @keypress="onlyAlphanumericKey" @paste="onlyNumberKey"
-                                        :maxlength="12"  />
+                                    <InputText v-model="documentoEmpresa" class="border-green-iimp"
+                                        @keypress="onlyAlphanumericKey" @paste="onlyNumberKey" :maxlength="12" />
                                     <Button icon="pi pi-search"
                                         class="!bg-orange-600 !border-orange-600 hover:!bg-orange-500 hover:!border-orange-500 !text-white !shadow-none"
-                                        @click="getEmpresaData" :loading="loading_doc"
-                                        :disabled="!documentoEmpresa" />
+                                        @click="getEmpresaData" :loading="loading_doc" :disabled="!documentoEmpresa" />
                                 </InputGroup>
                                 <small v-if="dniMessageEmpresa" class="text-orange-600 font-bold block mt-1">
                                     <i class="pi pi-info-circle mr-1"></i> {{ dniMessageEmpresa }}
@@ -993,7 +1014,7 @@ defineExpose({
                             <small class="text-red-600" v-if="errors.razonSocial">{{ errors.razonSocial }}</small> -->
                             <label class="block mb-1">Nombre o Razon Social <span class="text-red-600">*</span></label>
                             <InputText v-model="razonSocial" v-bind="razonSocialAttrs" class="w-full border-green-iimp"
-                                :disabled="loading_doc || esRuc20 " :readonly="camposFacturacionBloqueados"
+                                :disabled="loading_doc || esRuc20" :readonly="camposFacturacionBloqueados"
                                 :class="{ 'bg-gray-100 font-semibold': esRuc20 && !showManualAlert }" />
                             <small class="text-red-600" v-if="errors.razonSocial">{{ errors.razonSocial }}</small>
                         </div>
@@ -1008,11 +1029,12 @@ defineExpose({
                             <small class="text-red-600" v-if="errors.direccionEmpresa">{{ errors.direccionEmpresa
                             }}</small> -->
                             <label class="block mb-1">Dirección Fiscal <span class="text-red-600">*</span></label>
-                            <InputText v-model="direccionEmpresa" v-bind="direccionEmpresaAttrs" class="w-full border-green-iimp"
-                                :readonly="camposFacturacionBloqueados" :disabled="loading_doc || esRuc20"
+                            <InputText v-model="direccionEmpresa" v-bind="direccionEmpresaAttrs"
+                                class="w-full border-green-iimp" :readonly="camposFacturacionBloqueados"
+                                :disabled="loading_doc || esRuc20"
                                 :class="{ 'bg-gray-100': esRuc20 && !showManualAlert }" />
                             <small class="text-red-600" v-if="errors.direccionEmpresa">{{ errors.direccionEmpresa
-                            }}</small>
+                                }}</small>
                         </div>
 
                         <div class="grid gap-6 md:grid-cols-2">
@@ -1020,7 +1042,7 @@ defineExpose({
                                 <label class="block mb-1">Responsable Facturación <span
                                         class="text-red-600">*</span></label>
                                 <InputText v-model="responsable" v-bind="responsableAttrs"
-                                    class="w-full border-green-iimp" :disabled="loading_doc " />
+                                    class="w-full border-green-iimp" :disabled="loading_doc" />
                                 <small class="text-red-600" v-if="errors.responsable">{{ errors.responsable }}</small>
                             </div>
 
@@ -1029,7 +1051,7 @@ defineExpose({
                                 <InputText v-model="correo_facturador" v-bind="correo_facturadorAttrs"
                                     class="w-full border-green-iimp" :disabled="loading_doc" />
                                 <small class="text-red-600" v-if="errors.correo_facturador">{{ errors.correo_facturador
-                                }}</small>
+                                    }}</small>
                             </div>
                         </div>
                     </div>
