@@ -14,36 +14,29 @@ class MailContacto extends Mailable
     use Queueable, SerializesModels;
 
     // Esta variable contendrá todos los datos del formulario (nombres, email, etc.)
-    public $data;
+    public $contacto;
 
-    public function __construct($data)
+    public function __construct($contacto)
     {
-        $this->data = $data;
+        $this->contacto = $contacto;
     }
 
     public function envelope(): Envelope
     {
         return new Envelope(
             from: new Address('inscripciones@iimp.org.pe', config('app.event_name')),
-            subject: config('app.event_name') . " - Nuevo mensaje de contacto",
-            // Si quieres que el soporte vea a quién responder directamente:
-            replyTo: [
-                new Address($this->data['email'], $this->data['nombres'] . ' ' . $this->data['apellidos']),
-            ],
+            subject: config('app.event_name') . " - ProExplo 2026 -  ",
+            cc: ['inscripciones@iimp.org.pe', 'helen.loaiza@iimp.org.pe', $this->contacto->email],
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            // Asegúrate de crear esta vista en resources/views/emails/contacto.blade.php
-            view: 'emails.contacto',
+            view: 'emails.es.confirmacion_inscripcion',
             with: [
-                'nombres'   => $this->data['nombres'],
-                'apellidos' => $this->data['apellidos'],
-                'email'     => $this->data['email'],
-                'telefono'  => $this->data['telefono_completo'],
-                'mensaje'   => $this->data['mensaje'],
+                'inscripcion' => $this->inscripcion,
+                'pago' => $this->pago,
             ],
         );
     }

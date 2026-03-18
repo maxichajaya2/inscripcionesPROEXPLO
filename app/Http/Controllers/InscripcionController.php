@@ -117,7 +117,7 @@ class InscripcionController extends Controller
 
         try {
             // 1. Guardar en la base de datos
-            Contactanos::create([
+            $contacto = Contactanos::create([
                 'nombres'           => $nombres,
                 'apellidos'         => $apellidos,
                 'email'             => $email,
@@ -126,7 +126,7 @@ class InscripcionController extends Controller
             ]);
 
             // 2. Enviar el correo (usando los datos del request)
-            Mail::to('soporte@proexplo.com.pe')->send(new MailContacto($request->all()));
+            Mail::to($contacto->email)->send(new MailContacto($contacto));
 
             return back()->with('message', 'Message sent successfully!');
         } catch (\Exception $e) {
