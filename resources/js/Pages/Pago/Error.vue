@@ -22,7 +22,7 @@ const goStart = () => router.get(route('inscripcion.index'));
 
 onMounted(() => {
     if (window.fbq) {
-        window.fbq('track', 'Error de pago'); // O 'Purchase' si ya hubo pago
+        window.fbq('track', 'Error de pago PROEXPLO 2026'); // O 'Purchase' si ya hubo pago
     }
 });
 

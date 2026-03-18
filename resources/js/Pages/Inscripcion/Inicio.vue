@@ -417,16 +417,16 @@ watch(activeStep, (newStep) => {
 
     switch (newStep) {
         case "1":
-            window.fbq('track', 'Detalles Personales PROEXPLO 2026', { step: 'Detalles Personales PROEXPLO 2026' });
+            window.fbq('track', 'Detalles Personales PROEXPLO 2026', { step: 'Detalles Personales' });
             break;
         case "2":
-            window.fbq('track', 'Billing Information WMC', { step: 'Billing Information' });
+            window.fbq('track', 'Informacion de Facturacion PROEXPLO 2026', { step: 'Informacion de Facturacion' });
             break;
         case "3":
-            window.fbq('track', 'Courses or Visit WMC', { step: 'Courses or Tours' });
+            window.fbq('track', 'Cursos Cortos y Visitas Tecnicas PROEXPLO 2026', { step: 'Cursos Cortos y Visitas Tecnicas' });
             break;
         case "4":
-            window.fbq('track', 'Payment Process WMC', { step: 'Payment Process' });
+            window.fbq('track', 'Proceso de Pago PROEXPLO 2026', { step: 'Proceso de Pago' });
             break;
     }
 });

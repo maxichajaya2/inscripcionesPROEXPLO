@@ -24,7 +24,7 @@ const goStart = () => {
 
 onMounted(() => {
     if (window.fbq) {
-        window.fbq('track', 'Registro Exitoso'); // O 'Purchase' si ya hubo pago
+        window.fbq('track', 'Registro Exitoso PROEXPLO'); // O 'Purchase' si ya hubo pago
     }
 });
 

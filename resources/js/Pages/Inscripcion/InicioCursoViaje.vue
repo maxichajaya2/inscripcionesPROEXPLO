@@ -32,7 +32,7 @@ const props = defineProps({
     adicionales: Array,
     section: String,
     perfil_id: Number,
-    course:Array
+    course: Array
 })
 
 const formDataPayment = ref(null);
@@ -64,7 +64,7 @@ const actualizarResumen = (datos) => {
 const isStep3Invalid = computed(() => {
     // Si el formulario hijo no está montado, bloqueamos por seguridad
     if (!childFormInscription.value) return true;
-    
+
     // Usamos la propiedad isInvalid expuesta por el hijo
     return childFormInscription.value.isInvalid;
 });
@@ -215,6 +215,28 @@ onUnmounted(() => {
 watch(activeStep, () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 });
+
+watch(activeStep, (newStep) => {
+    if (!window.fbq) return;
+
+    switch (newStep) {
+        case "1":
+            window.fbq('track', 'Detalles Personales PROEXPLO 2026 CURSO - VIAJE', { step: 'Detalles Personales' });
+            break;
+        case "2":
+            window.fbq('track', 'Cursos Cortos y Visitas Tecnicas PROEXPLO 2026  CURSO - VIAJE', { step: 'Cursos Cortos y Visitas Tecnicas' });
+            break;
+        case "3":
+            window.fbq('track', 'Informacion de Facturacion PROEXPLO 2026  CURSO - VIAJE', { step: 'Informacion de Facturacion' });
+            break;
+
+        case "4":
+            window.fbq('track', 'Proceso de Pago PROEXPLO 2026  CURSO - VIAJE', { step: 'Proceso de Pago' });
+            break;
+    }
+});
+
+
 </script>
 
 <template>
@@ -237,7 +259,8 @@ watch(activeStep, () => {
                     <StepPanels>
                         <StepPanel v-slot="{ activateCallback }" value="1"
                             class="rounded-2xl border-2 border-green-iimp bg-white-price shadow-wmc">
-                            <FormValidacionDoc ref="childFormValidacionDoc" :tipo_origen="tipo_origen" :perfil_id="props.perfil_id" />
+                            <FormValidacionDoc ref="childFormValidacionDoc" :tipo_origen="tipo_origen"
+                                :perfil_id="props.perfil_id" v-if="activeStep === '1'" />
 
                             <div
                                 class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 z-[50] flex justify-end gap-3 rounded-b-2xl">
@@ -254,7 +277,8 @@ watch(activeStep, () => {
                         <StepPanel v-slot="{ activateCallback }" value="2"
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
                             <FormTourCourse ref="childFormTourCourse" :data_persona="data_persona"
-                                :adicionales="props.adicionales" :section="sectionUrl" :course="props.course" />
+                                :adicionales="props.adicionales" :section="sectionUrl" :course="props.course"
+                                v-if="activeStep === '2'" />
 
                             <div
                                 class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 z-[50] flex justify-between gap-3 rounded-b-2xl">
@@ -268,7 +292,7 @@ watch(activeStep, () => {
 
                         <StepPanel v-slot="{ activateCallback }" value="3"
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
-                            <FormInscription ref="childFormInscription" :data_persona="data_persona"
+                            <FormInscription ref="childFormInscription" :data_persona="data_persona"  v-if="activeStep === '3'"
                                 :categorias="props.categorias" />
 
                             <div
@@ -277,14 +301,13 @@ watch(activeStep, () => {
                                     class="flex-1 md:flex-none" @click="activateCallback('2')" />
                                 <Button label="Registrar y Pagar" iconPos="right" icon="pi pi-arrow-right"
                                     class="bg-degradient border-rounded-full flex-1 md:flex-none" :loading="loading"
-                                    :disabled="isStep3Invalid"
-                                    @click="handleInscripcionFinal" />
+                                    :disabled="isStep3Invalid" @click="handleInscripcionFinal" />
                             </div>
                         </StepPanel>
 
                         <StepPanel v-slot="{ activateCallback }" value="4"
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
-                            <FormPayment ref="childFormPayment" :data_persona="data_persona"
+                            <FormPayment ref="childFormPayment" :data_persona="data_persona"  v-if="activeStep === '4'"
                                 :formulario="formDataPayment" :categoria_seleccionada="categoria_seleccionada"
                                 :extras_seleccionados="extras_para_mostrar" />
 

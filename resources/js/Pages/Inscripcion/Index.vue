@@ -118,6 +118,7 @@ const scrollToCategories = () => {
         }
     });
 };
+
 </script>
 
 <template>
