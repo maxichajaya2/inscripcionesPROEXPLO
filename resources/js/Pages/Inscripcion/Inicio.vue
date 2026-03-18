@@ -459,7 +459,7 @@ watch(activeStep, (newStep) => {
                          ==========================================  -->
                         <StepPanel v-slot="{ activateCallback }" value="1"
                             class="rounded-2xl border-2 border-green-iimp bg-white-price shadow-wmc">
-                            <FormValidacionDoc ref="childFormValidacionDoc" :perfil_id="props.perfil_id" v-if="activeStep === '1'" />
+                            <FormValidacionDoc ref="childFormValidacionDoc" :perfil_id="props.perfil_id" />
                             <div
                                 class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-end gap-3 rounded-b-2xl">
 
@@ -486,7 +486,7 @@ watch(activeStep, (newStep) => {
                         <StepPanel v-slot="{ activateCallback }" value="2"
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
 
-                            <FormInscription ref="childFormInscription" :data_persona="data_persona" v-if="activeStep === '2'"
+                            <FormInscription ref="childFormInscription" :data_persona="data_persona" 
                                 :categorias="props.categorias" />
 
                             <div
@@ -501,10 +501,10 @@ watch(activeStep, (newStep) => {
 
                         <!-- ========== Courses or Tours ==========
                          ==========================================  -->
-                        <StepPanel v-if="!saltoCursos" v-slot="{ activateCallback }" value="3"
+                        <StepPanel  v-slot="{ activateCallback }" value="3"
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
 
-                            <FormTourCourse ref="childFormTourCourse" :data_persona="data_persona" v-if="activeStep === '3'"
+                            <FormTourCourse ref="childFormTourCourse" :data_persona="data_persona" 
                                 :adicionales="props.adicionales" :section="sectionUrl" :course="props.course"/>
 
                             <div
@@ -524,7 +524,7 @@ watch(activeStep, (newStep) => {
                         <StepPanel v-slot="{ activateCallback }" value="4"
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
 
-                            <FormPayment ref="childFormPayment" :data_persona="data_persona" v-if="activeStep === '4'"
+                            <FormPayment ref="childFormPayment" :data_persona="data_persona" 
                                 :formulario="formDataPayment" :categoria_seleccionada="categoria_seleccionada"
                                 :extras_seleccionados="extras_para_mostrar" />
 
@@ -699,7 +699,7 @@ watch(activeStep, (newStep) => {
 
         <!-- REQUERIMIENTOS MODAL =======
          ============================== -->
-        <Dialog v-if="false" v-model:visible="showRequisitosModal" modal header="Requirements and Conditions"
+        <Dialog  v-model:visible="showRequisitosModal" modal header="Requirements and Conditions"
             :style="{ width: '50vw' }" :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
             <div class="flex flex-col gap-4">
                 <p class="text-gray-600">Please review the requirements before proceeding to payment.</p>
