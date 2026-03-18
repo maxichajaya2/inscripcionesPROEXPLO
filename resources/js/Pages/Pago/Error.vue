@@ -3,6 +3,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import Button from 'primevue/button';
 import { router } from '@inertiajs/vue3';
 import '../../../css/inscripciones.css';
+import { onMounted } from 'vue';
 
 const props = defineProps({
     pago: Object // Recibe el registro de la tabla 'niubiz'
