@@ -17,4 +17,11 @@ class Contactanos extends Model
     protected $connection = "pgsql_second";
     protected $table = "contactanos";
 
+    protected $fillable = [
+        'nombres',
+        'apellidos',
+        'email',
+        'telefono',
+        'mensaje',
+    ];
 }

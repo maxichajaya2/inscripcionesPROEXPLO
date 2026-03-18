@@ -121,7 +121,7 @@ class InscripcionController extends Controller
                 'nombres'           => $nombres,
                 'apellidos'         => $apellidos,
                 'email'             => $email,
-                'telefono_completo' => $telefono_completo,
+                'telefono' => $telefono_completo,
                 'mensaje'           => $mensaje,
             ]);
 
