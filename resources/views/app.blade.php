@@ -10,8 +10,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-    <link rel="icon" type="image/png"
-        href="https://www.proexplo.com.pe/favicon.ico?favicon.d96ec44c.ico">
+    <link rel="icon" type="image/png" href="https://www.proexplo.com.pe/favicon.ico?favicon.d96ec44c.ico">
 
     <!-- Scripts -->
     @routes
@@ -38,13 +37,12 @@
             s.parentNode.insertBefore(t, s)
         }(window, document, 'script',
             'https://connect.facebook.net/en_US/fbevents.js');
-        fbq('init', '1486059766399233');
+        fbq('init', '749172711216943');
         fbq('track', 'PageView');
     </script>
     <noscript><img height="1" width="1" style="display:none"
-            src="https://www.facebook.com/tr?id=1486059766399233&ev=PageView&noscript=1" /></noscript>
+            src="https://www.facebook.com/tr?id=749172711216943&ev=PageView&noscript=1" /></noscript>
     <!-- End Meta Pixel Code -->
-
 
 </head>
 

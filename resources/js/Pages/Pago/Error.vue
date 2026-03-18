@@ -18,6 +18,14 @@ const retry = () => {
 };
 
 const goStart = () => router.get(route('inscripcion.index'));
+
+onMounted(() => {
+    if (window.fbq) {
+        window.fbq('track', 'Error de pago'); // O 'Purchase' si ya hubo pago
+    }
+});
+
+
 </script>
 
 <template>
