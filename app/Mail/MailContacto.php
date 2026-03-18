@@ -26,7 +26,7 @@ class MailContacto extends Mailable
         return new Envelope(
             from: new Address('inscripciones@iimp.org.pe', config('app.event_name')),
             subject: config('app.event_name') . " - ProExplo 2026 -  ",
-            cc: ['inscripciones@iimp.org.pe', $this->contacto->email],
+            cc: ['inscripciones@iimp.org.pe', 'helen.loaiza@iimp.org.pe', $this->contacto->email],
         );
     }
 
