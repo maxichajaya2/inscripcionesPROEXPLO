@@ -366,7 +366,7 @@ const scrollToCategories = () => {
             </div> -->
         </div>
 
-        <FormEncuesta />
+        <!-- <FormEncuesta /> -->
 
     </AppLayout>
 </template>
