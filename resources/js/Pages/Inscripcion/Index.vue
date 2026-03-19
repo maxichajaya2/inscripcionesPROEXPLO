@@ -294,7 +294,7 @@ const scrollToCategories = () => {
                             class="p-8 bg-[#FFF7ED] border-l-4 border-pro-orange rounded-r-2xl shadow-sm animate-fade-in">
                             <h6
                                 class="text-pro-orange font-black uppercase tracking-widest mb-4 flex items-center gap-2 text-xs md:text-sm">
-                                ℹ️ Los inscritos en PROEXPLO 2026 tendrán los siguientes beneficios:
+                                ℹ️ Los inscritos al Congreso tendrán los siguientes beneficios:
                             </h6>
 
                             <ul class="space-y-2 text-slate-700 text-sm">
@@ -309,8 +309,7 @@ const scrollToCategories = () => {
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <span class="shrink-0">✅</span>
-                                    <span class="leading-relaxed">Participación en las ceremonias de inauguración y
-                                        clausura</span>
+                                    <span class="leading-relaxed">Participación en las ceremonias de inauguración y clausura(Solo para las categorías Asociado y No Asociado )</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <span class="shrink-0">✅</span>
@@ -324,7 +323,7 @@ const scrollToCategories = () => {
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <span class="shrink-0">✅</span>
-                                    <span class="leading-relaxed">Almuerzo incluido</span>
+                                    <span class="leading-relaxed">Almuerzo incluido(Solo para las categorías Asociado y No Asociado )</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <span class="shrink-0">✅</span>
