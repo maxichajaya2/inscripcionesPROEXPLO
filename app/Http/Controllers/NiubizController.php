@@ -106,7 +106,7 @@ class NiubizController extends Controller
         return app(\App\Http\Controllers\WebServiceController::class)->sendWS($url, json_encode($niubiz_data));
     }
 
-    public function getForm($persona, $inscripcion, $facturacion, $url_timeout, $url_base)
+    public function getForm($persona, $inscripcion, $facturacion, $descuento, $url_timeout, $url_base)
     {
 
         $url = $this->url_api . "niubiz.php";
@@ -138,6 +138,7 @@ class NiubizController extends Controller
         $data->idpersona = $persona->id;
         $data->amount = $facturacion->total; //
         $data->telefono = $persona->celular;
+        $data->descuento = $descuento;
         $data->items_number = 1;
         $data->numero_orden = $numero_orden->numero_orden;
         $data->raw_data = true;

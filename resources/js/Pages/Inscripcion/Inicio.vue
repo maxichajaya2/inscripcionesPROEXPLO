@@ -30,7 +30,8 @@ const props = defineProps({
     adicionales: Array,
     section: String,
     perfil_id: Number,
-    course:Array
+    course:Array,
+    cupones:Object
 })
 
 
@@ -175,15 +176,6 @@ const validate = async (value) => {
     return false;
 }
 
-// const seleccionarOrigen = (origen, id_numerico) => {
-//     nacionalidadSeleccionada.value = origen; // Guarda el texto 'peruano'/'extranjero'
-//     tipo_origen.value = id_numerico;         // Guarda el número 1 o 2
-//     visible.value = false;
-
-//     // console.log("Nacionalidad:", origen);
-//     // console.log("ID Numérico:", tipo_origen.value); // Para que veas en consola que se guardó
-// };
-
 const goStart = () => {
     router.get(route('inscripcion.index'));
 };
@@ -238,8 +230,8 @@ const confirmarYProcesar = async (extras = []) => {
         });
 
         if (response.data.status && response.data.formulario) {
-            formDataPayment.value = response.data.formulario;
-
+            // formDataPayment.value = response.data.formulario;
+            formDataPayment.value = response.data;
             // Avanzamos al paso 4
             activeStep.value = "4";
 
@@ -251,6 +243,7 @@ const confirmarYProcesar = async (extras = []) => {
             if (encontrada) {
                 categoria_seleccionada.value = encontrada;
             }
+
 
             const totalFinal = response.data.total_real || tempResIns.value.total_final;
             actualizarResumen({ total: totalFinal });
@@ -270,56 +263,6 @@ const confirmarYProcesar = async (extras = []) => {
         loading.value = false;
     }
 };
-
-// const handleCursosHaciaFacturacion = async () => {
-//     loading.value = true;
-
-//     if (childFormTourCourse.value) {
-//         // Validamos primero (por si en sección viajes es obligatorio)
-//         const esValido = childFormTourCourse.value.validarSeleccion();
-//         if (!esValido) {
-//             loading.value = false;
-//             return;
-//         }
-
-//         // Chequeamos si la lista de seleccionados está vacía
-//         const tieneSeleccion = childFormTourCourse.value.extras_seleccionados.length > 0;
-
-//         if (!tieneSeleccion) {
-//             // SI NO TIENE NADA: Mostramos el modal "bonito" de advertencia
-//             showConfirmNoExtrasModal.value = true;
-//             loading.value = false;
-//             return;
-//         }
-
-//         // Si tiene selección, guardamos los objetos para el resumen
-//         extras_para_mostrar.value = childFormTourCourse.value.selectedObjects || [];
-//     }
-
-//     // Si todo está ok y tiene selección, avanzamos directo
-//     proceedToBilling();
-//     loading.value = false;
-// };
-
-
-// const handleInscripcionFinal = async () => {
-//     loading.value = true;
-
-//     // Validamos el formulario de Inscripción/Facturación
-//     const resIns = await childFormInscription.value.getInscripcion();
-
-//     if (resIns.validate) {
-//         // Guardamos la data de facturación
-//         tempResIns.value = resIns;
-
-//         // Como ya tenemos los cursos guardados del paso anterior,
-//         // disparamos la función que envía TODO al backend
-//         const idsExtras = childFormTourCourse.value?.extras_seleccionados || [];
-//         await confirmarYProcesar(idsExtras);
-//     }
-
-//     loading.value = false;
-// };
 
 const handleInscripcionHaciaCursos = async () => {
     loading.value = true;
@@ -486,7 +429,7 @@ watch(activeStep, (newStep) => {
                         <StepPanel v-slot="{ activateCallback }" value="2"
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
 
-                            <FormInscription ref="childFormInscription" :data_persona="data_persona" v-if="activeStep === '2'"
+                            <FormInscription ref="childFormInscription" :data_persona="data_persona" v-if="activeStep === '2'" :cupones="props.cupones"
                                 :categorias="props.categorias" />
 
                             <div
@@ -509,8 +452,7 @@ watch(activeStep, (newStep) => {
 
                             <div
                                 class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-between gap-3 rounded-b-2xl">
-                                <!-- <Button label="Back" severity="secondary" icon="pi pi-arrow-left"
-                                    class="flex-1 md:flex-none p-3 font-bold" @click="activateCallback('2')" /> -->
+
                                 <Button label="Atras" severity="secondary" icon="pi pi-arrow-left"
                                     class="flex-1 md:flex-none p-3 font-bold" @click="activeStep = '2'" />
                                 <Button label="Continuar" iconPos="right" icon="pi pi-arrow-right"
@@ -525,8 +467,8 @@ watch(activeStep, (newStep) => {
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
 
                             <FormPayment ref="childFormPayment" :data_persona="data_persona" v-if="activeStep === '4'"
-                                :formulario="formDataPayment" :categoria_seleccionada="categoria_seleccionada"
-                                :extras_seleccionados="extras_para_mostrar" />
+                                :formulario="formDataPayment" :categoria_seleccionada="categoria_seleccionada" :vouchers="vouchers"
+                                :extras_seleccionados="extras_para_mostrar" :descuento="formDataPayment.descuento" />
 
                             <div
                                 class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-between gap-3 rounded-b-2xl">
@@ -548,155 +490,6 @@ watch(activeStep, (newStep) => {
 
         </div>
 
-        <!-- NACIONALIDAD MODAL =======
-         ============================== -->
-        <!-- <Dialog v-model:visible="visible" modal :showHeader="false" :closable="false" :style="{ width: '900px' }"
-            class="bg-transparent shadow-none border-none px-0 overflow-hidden" :pt="{
-                mask: { class: 'bg-slate-900/90 backdrop-blur-md' },
-                content: { class: 'bg-transparent px-0 py-0 border-none shadow-none overflow-hidden' }
-            }">
-
-            <div
-                class="bg-gradient-to-r from-[#2d1300] via-[#451a03] to-[#7c2d12] px-8 py-8 border-b-4 border-orange-500 flex items-left justify-left text-left relative overflow-hidden">
-
-                <div class="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 blur-[100px] rounded-full -mr-32 -mt-32">
-                </div>
-
-                <div class="relative z-10">
-                    <div class="mb-3 animate-fade-in-up" style="animation-delay: 0.1s;">
-                        <span
-                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/30 backdrop-blur-md">
-                            <span class="relative flex h-2 w-2">
-                                <span
-                                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
-                            </span>
-                            <span class="text-[10px] font-bold text-orange-400 uppercase tracking-widest">Inscripciones
-                                Abiertas</span>
-                        </span>
-                    </div>
-
-                    <h2
-                        class="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-200 via-orange-400 to-orange-600 uppercase">
-                        PROEXPLO 2026
-                    </h2>
-                    <p class="text-orange-100/60 text-xs font-bold uppercase tracking-wider mt-1">Lugar de encuentro de
-                        la exploración minera</p>
-                </div>
-            </div>
-
-            <div class="p-8 md:p-12 bg-white px-4 overflow-y-auto flex-1">
-
-                <div v-if="bloqueoExtranjero"
-                    class="p-4 mb-8 rounded-xl bg-orange-50 border border-orange-200 flex items-start gap-3 animate-fade-in-up">
-                    <i class="pi pi-info-circle text-orange-600 text-xl mt-0.5"></i>
-                    <p class="text-sm text-orange-800 leading-relaxed">
-                        La opción <b>Internacional</b> para Autores o Participantes Asociados no está disponible
-                        a través de este portal. Si es un asistente internacional y socio activo, por favor contacte a
-                        <a href="mailto:soporte@proexplo.com.pe"
-                            class="font-bold underline hover:text-orange-900">soporte@proexplo.com.pe</a> para
-                        asistencia personalizada.
-                    </p>
-                </div>
-
-                <h3 class="text-center text-slate-400 text-xs font-black uppercase tracking-[0.2em] mb-8">Seleccione su
-                    procedencia</h3>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-
-                    <button @click="seleccionarOrigen('peruano', 1)"
-                        class="group relative h-auto rounded-2xl bg-white border border-slate-200 shadow-lg hover:shadow-2xl hover:shadow-orange-900/20 transition-all duration-300 flex flex-col overflow-hidden hover:-translate-y-2">
-
-                        <div class="h-1.5 w-full bg-red-600"></div>
-
-                        <div class="p-5 md:p-8 flex flex-col items-center text-center h-full">
-                            <div
-                                class="w-16 h-12 md:w-24 md:h-24 mb-4 md:mb-6 relative drop-shadow-xl group-hover:scale-110 transition-transform duration-300">
-                                <svg viewBox="0 0 300 200"
-                                    class="w-full h-full rounded-lg shadow-sm border border-slate-100">
-                                    <rect width="100" height="200" fill="#D91023" />
-                                    <rect x="100" width="100" height="200" fill="#ffffff" />
-                                    <rect x="200" width="100" height="200" fill="#D91023" />
-                                </svg>
-                                <div class="absolute inset-0 bg-orange-500/20 blur-2xl -z-10 rounded-full"></div>
-                            </div>
-
-                            <h3
-                                class="text-xl md:text-2xl font-black text-slate-800 group-hover:text-red-700 transition-colors uppercase">
-                                Nacional
-                            </h3>
-                            <p class="text-xs md:text-sm text-slate-500 mt-2 mb-4 md:mb-8 leading-relaxed font-medium">
-                                Ciudadano peruano o residente con DNI vigente.
-                            </p>
-
-                            <div class="mt-auto w-full">
-                                <span
-                                    class="block w-full py-2.5 md:py-3 px-4 rounded-xl bg-gradient-to-r from-red-700 to-red-600 text-white font-bold text-xs md:text-sm tracking-wider uppercase shadow-md group-hover:shadow-lg group-hover:from-red-600 group-hover:to-red-500 transition-all flex items-center justify-center gap-2">
-                                    Continuar Compra <i class="pi pi-arrow-right text-[10px] md:text-xs"></i>
-                                </span>
-                            </div>
-                        </div>
-                    </button>
-
-                    <button @click="!bloqueoExtranjero && seleccionarOrigen('extranjero', 2)"
-                        :disabled="bloqueoExtranjero" :class="[
-                            'group relative h-auto rounded-2xl bg-white border border-slate-200 shadow-lg transition-all duration-300 flex flex-col overflow-hidden',
-                            bloqueoExtranjero
-                                ? 'opacity-60 cursor-not-allowed grayscale'
-                                : 'hover:shadow-2xl hover:shadow-orange-900/20 hover:-translate-y-2'
-                        ]">
-
-                        <div class="h-1.5 w-full bg-blue-800"></div>
-
-                        <div class="p-8 flex flex-col items-center text-center h-full">
-                            <div
-                                class="w-24 h-24 mb-6 relative drop-shadow-xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 text-blue-600">
-                                <svg viewBox="0 0 24 24" fill="none" class="w-full h-full">
-                                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1"
-                                        fill="#fff7ed" />
-                                    <path
-                                        d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
-                                        stroke="currentColor" stroke-width="1" />
-                                </svg>
-                                <div class="absolute inset-0 bg-orange-500/20 blur-2xl -z-10 rounded-full"></div>
-                            </div>
-
-                            <h3
-                                class="text-2xl font-black text-blue-800 group-hover:text-blue-600 transition-colors uppercase">
-                                Internacional
-                            </h3>
-                            <p class="text-sm text-slate-500 mt-2 mb-8 leading-relaxed font-medium">
-                                Asistente extranjero (Pasaporte o Carnet de Extranjería).
-                            </p>
-
-
-                            <div class="mt-auto w-full">
-                                <span :class="[
-                                    'block w-full py-3 px-4 rounded-xl text-white font-bold text-sm tracking-wider uppercase shadow-md transition-all flex items-center justify-center gap-2',
-                                    bloqueoExtranjero
-                                        ? 'bg-gray-400'
-                                        : 'bg-gradient-to-r from-[#002855] to-blue-700 group-hover:from-blue-800 group-hover:to-blue-600'
-                                ]">
-                                    {{ bloqueoExtranjero ? 'No Disponible' : 'Continuar Compra' }}
-                                    <i v-if="!bloqueoExtranjero" class="pi pi-arrow-right text-xs"></i>
-                                </span>
-                            </div>
-                        </div>
-                    </button>
-
-                </div>
-            </div>
-
-            <div class="bg-gray-50 p-6 border-t border-slate-200 text-center">
-                <button @click="goStart"
-                    class="group flex items-center justify-center gap-2 text-xs text-slate-400 font-bold uppercase tracking-widest hover:text-orange-600 transition-colors mx-auto">
-                    <i class="pi pi-times-circle text-lg group-hover:scale-110 transition-transform"></i>
-                    Cancelar Proceso
-                </button>
-            </div>
-
-        </Dialog> -->
-
         <!-- REQUERIMIENTOS MODAL =======
          ============================== -->
         <Dialog v-if="false" v-model:visible="showRequisitosModal" modal header="Requirements and Conditions"
@@ -717,64 +510,6 @@ watch(activeStep, (newStep) => {
                 </div>
             </div>
         </Dialog>
-
-        <!-- <Dialog v-model:visible="showConfirmNoExtrasModal" modal :showHeader="false" :closable="false"
-            :style="{ width: '550px' }" class="rounded-3xl overflow-hidden border-none shadow-2xl animate-modal-entry">
-
-            <div class="p-0 relative overflow-hidden">
-                <div
-                    class="bg-gradient-to-r from-blue-900 via-blue-700 to-blue-900 p-8 text-center relative overflow-hidden">
-                    <div class="absolute inset-0 shine-effect"></div>
-
-                    <div class="relative z-10">
-                        <div
-                            class="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-md border border-white/20 animate-bounce-slow">
-                            <i
-                                class="pi pi-sparkles text-yellow-400 text-4xl drop-shadow-[0_0_15px_rgba(250,204,21,0.6)]"></i>
-                        </div>
-                        <h3 class="text-2xl font-black text-white uppercase tracking-tighter italic">
-                            Upgrade Your Registration
-                        </h3>
-                        <div class="h-1 w-20 bg-yellow-400 mx-auto mt-2 rounded-full"></div>
-                    </div>
-                </div>
-
-                <div class="p-10 bg-white text-center">
-                    <p class="text-slate-700 text-xl leading-tight font-bold mb-4">
-                        Would you like to add <span class="text-blue-700">Short Courses</span> or <span
-                            class="text-blue-700">Technical Visits</span> to enhance your experience?
-                    </p>
-
-                    <p class="text-slate-600 text-sm leading-relaxed mb-6">
-                        Don't miss this unique opportunity to specialize with global experts and get an exclusive
-                        on-site look at the most significant mining operations in Peru.
-                    </p>
-
-                    <p
-                        class="text-blue-500 text-xs font-black uppercase tracking-[0.1em] bg-blue-50 p-4 rounded-2xl border border-blue-100">
-                        "Excellence is achieved through continuous training and hands-on field experience."
-                    </p>
-
-                    <div class="mt-8 flex flex-col gap-4">
-                        <button @click="handleIrACursosDesdeModal"
-                            class="group relative w-full py-4 px-6 rounded-2xl bg-blue-900 text-white font-black uppercase tracking-widest overflow-hidden transition-all hover:scale-[1.02] active:scale-95 shadow-[0_10px_20px_rgba(30,58,138,0.3)]">
-                            <div
-                                class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine-fast">
-                            </div>
-                            <span class="relative flex items-center justify-center gap-3">
-                                <i class="pi pi-plus-circle"></i>
-                                Yes, I want to add them now!
-                            </span>
-                        </button>
-
-                        <button @click="handleSaltarCursosEIrAPago"
-                            class="w-full py-2 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] hover:text-red-500 transition-colors duration-300">
-                            Not for now, proceed to standard checkout
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </Dialog> -->
 
         <Dialog v-model:visible="showConfirmNoExtrasModal" modal :showHeader="false" :closable="false"
             :style="{ width: '550px' }" class="rounded-3xl overflow-hidden border-none shadow-2xl animate-modal-entry">

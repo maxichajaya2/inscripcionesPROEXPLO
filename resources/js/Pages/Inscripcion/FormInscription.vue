@@ -25,7 +25,35 @@ const toast = useToast();
 const props = defineProps({
     data_persona: Object,
     categorias: Object,
-    saved_values: Object
+    saved_values: Object,
+    cupones: Object
+});
+
+const empresaCupon = ref(null);
+const codigoVoucher = ref('');
+const loadingCupon = ref(false);
+const cuponAplicado = ref(false);
+const mensajeVoucher = ref({ texto: '', tipo: '' });
+
+const empresasAliadas = computed(() => {
+    if (!props.cupones) return [];
+
+    const lista = Object.values(props.cupones).map(c => {
+        // Validamos si aún tiene stock disponible
+        const tieneStock = parseInt(c.usos_actuales) < parseInt(c.limite_usos);
+
+        return {
+            id: c.id,
+            nombre: tieneStock ? c.razon_social : `${c.razon_social} (CUPONES AGOTADOS)`,
+            ruc: c.num_documento,
+            codigo: c.codigo_cupon,
+            valor: c.valor,
+            tipo_doc: c.tipo_documento,
+            disabled: !tieneStock // Nueva propiedad para deshabilitar en el Select
+        };
+    });
+
+    return lista.sort((a, b) => a.nombre.localeCompare(b.nombre));
 });
 
 const fieldNames = {
@@ -55,14 +83,12 @@ const maxSize = 6291456;
 const allowedTypes = ['application/pdf', 'image/png', 'image/jpg', 'image/jpeg'];
 const fileupload = ref(null);
 const alphanumericMessage = ref('');
+const descuentoAplicadoMonto = ref(0);
 // Agregamos un estado para controlar si el usuario puede editar manualmente
 const isEditingBilling = ref(true);
-const dniMessage = ref('');
+const cuponIdSeleccionado = ref(null);
 let current_price = 0;
 const tipoDocumento = computed(() => page.props.general.tipDocEmp)
-
-
-const departamentos = ref();
 const days = { 'mie': 'Wednesday', 'jue': 'Thursday', 'vie': 'Friday' };
 const current_days = { 'lun': false, 'mar': false, 'mie': false, 'jue': false, 'vie': false };
 
@@ -70,24 +96,6 @@ const formManualErrors = ref({ reglamento: null, total: null, uploadDocument: nu
 
 const { defineField, errors, setValues, values, validate } = useForm({
     validationSchema: yup.object({
-        // selected_categoria: yup.mixed().required('La categoría es obligatoria'),
-        // tipoDocumentoEmpresa: yup.mixed().required('El tipo de documento es obligatorio'),
-        // documentoEmpresa: yup.string()
-        //     .required('El número de documento es obligatorio')
-        //     .test('len', 'Formato inválido', function (value) {
-        //         const { tipoDocumentoEmpresa } = this.parent;
-
-        //         // --- VALIDACIÓN PARA PERUANOS ---
-        //         if (tipoDocumentoEmpresa === 1) { // DNI
-        //             return value?.length === 8 || this.createError({ message: 'El DNI debe tener exactamente 8 dígitos' });
-        //         }
-        //         if (tipoDocumentoEmpresa === 2) { // RUC
-        //             return value?.length === 11 || this.createError({ message: 'El RUC debe tener exactamente 11 dígitos' });
-        //         }
-
-        //         // --- FLUJO EXTRANJERO ---
-        //         return value?.length > 0;
-        //     }),
         razonSocial: yup.string().trim().required('La razón social es obligatoria'),
         // direccionEmpresa: yup.string().trim().required('La dirección de la empresa es obligatoria'),
         direccionEmpresa: yup.string()
@@ -173,6 +181,49 @@ function changeCategory(id, precioRecibido) {
     });
 }
 
+const validarCuponLocal = async () => {
+    // Si no hay empresa seleccionada o código escrito, no hacemos nada
+    if (!codigoVoucher.value || !empresaCupon.value) return;
+
+    loadingCupon.value = true;
+    mensajeVoucher.value = { texto: '', tipo: '' };
+
+    try {
+        // Buscamos el cupón en los datos originales que coincida con el ID seleccionado y el código escrito
+        const cuponData = Object.values(props.cupones).find(c =>
+            c.id === empresaCupon.value.id &&
+            c.codigo_cupon.trim().toUpperCase() === codigoVoucher.value.trim().toUpperCase()
+        );
+
+        if (cuponData) {
+            cuponAplicado.value = true;
+            descuentoAplicadoMonto.value = cuponData.valor; // Guardamos el % o monto
+            cuponIdSeleccionado.value = cuponData.id;
+
+            mensajeVoucher.value = {
+                texto: `¡Cupón de ${cuponData.valor}% válido para ${cuponData.razon_social}!`,
+                tipo: 'success'
+            };
+
+            toast.add({
+                severity: 'success',
+                summary: 'Cupón Validado',
+                detail: 'Se han cargado los datos de facturación de la empresa.',
+                life: 4000
+            });
+
+        } else {
+            mensajeVoucher.value = {
+                texto: 'El código no coincide con la empresa seleccionada.',
+                tipo: 'error'
+            };
+        }
+    } catch (e) {
+        mensajeVoucher.value = { texto: 'Error al validar cupón.', tipo: 'error' };
+    } finally {
+        loadingCupon.value = false;
+    }
+};
 
 
 const getInscripcion = async () => {
@@ -201,7 +252,12 @@ const getInscripcion = async () => {
 
     return {
         validate: true,
-        formInscription: values,
+        formInscription: {
+            ...values,
+            codigo_cupon: codigoVoucher.value, // Enviamos el código escrito
+            empresa_id: empresaCupon.value?.id, // Enviamos el ID de la empresa aliada
+            id_cupon: cuponIdSeleccionado.value,
+        },
         total_final: total.value // Aquí enviará 0 si es viajes
     };
 };
@@ -227,13 +283,6 @@ onMounted(() => {
     selectTipoDocPago.value = 2;
     selectTipoPago.value = 3;
 
-    // 1. Si los datos ya están presentes al montar, llenar facturación
-    // if (props.data_persona?.persona) {
-    //     fillBillingData(props.data_persona.persona);
-    //     es_socio.value = props.data_persona.persona.es_socio;
-    //     loadDepartamentos();
-    // }
-
     // 2. Lógica de URL y categorías
     const urlParams = new URLSearchParams(window.location.search);
     const categoryIdFromUrl = urlParams.get('category');
@@ -255,18 +304,16 @@ onMounted(() => {
         }, 150);
     }
 
-
+    if (esSeccionViajes.value) {
+        cuponAplicado.value = false;
+        descuentoAplicadoMonto.value = 0;
+        empresaCupon.value = null;
+        codigoVoucher.value = '';
+    }
     // console.log("Mounted FormInscription with props.data_persona:", props.data_persona);
 
 });
 
-
-
-// watch(() => props.data_persona, (newVal) => {
-//     if (newVal && newVal.persona) {
-//         fillBillingData(newVal.persona);
-//     }
-// }, { immediate: true, deep: true });
 
 const esRuc20 = computed(() => {
     return tipoDocumentoEmpresa.value === 2 && documentoEmpresa.value?.startsWith('20');
@@ -282,16 +329,6 @@ const camposFacturacionBloqueados = computed(() => {
     // Para RUC 10 o DNI, seguimos tu lógica normal
     return !isEditingBilling.value;
 });
-
-// Busca este watcher en tu código y modifícalo así:
-// watch(selected_categoria, (newId) => {
-//     if (!newId) return; // Si es nulo, no hacer nada
-
-//     const cat = props.categorias.find(c => c.id === newId);
-//     if (cat) {
-//         changeCategory(newId, cat.precio_disponible?.valor || 0);
-//     }
-// });
 
 // Busca esto y cámbialo para asegurar que encuentre el precio
 watch(selected_categoria, (newId) => {
@@ -360,7 +397,6 @@ const onlyAlphanumericKey = (event) => {
     return true;
 };
 
-
 watch(documentoEmpresa, (newValue) => {
     // CAMBIO AQUÍ: tipoDocumentoEmpresa en lugar de tipo_doc
     if (tipoDocumentoEmpresa.value !== 1 && newValue) {
@@ -372,32 +408,6 @@ watch(documentoEmpresa, (newValue) => {
         }
     }
 });
-
-// watch(tipoDocumentoEmpresa, (newVal, oldVal) => {
-//     // Definimos qué IDs son de extranjeros (generalmente todo lo que no es 1 o 2)
-//     const documentosExtranjeros = [3, 4, 5]; // Ajusta estos IDs según tu base de datos (Pasaporte, CE, etc.)
-
-//     // LÓGICA:
-//     // Si el valor anterior era extranjero Y el nuevo también es extranjero, NO limpiamos.
-//     const ambosSonExtranjeros = documentosExtranjeros.includes(oldVal) && documentosExtranjeros.includes(newVal);
-
-//     if (isEditingBilling.value && oldVal !== undefined && !ambosSonExtranjeros) {
-
-//         setValues({
-//             ...values,
-//             documentoEmpresa: '',
-//             razonSocial: '',
-//             direccionEmpresa: '',
-//             responsable: '',
-//             correo_facturador: ''
-//         });
-
-//         setTipoDocPago();
-//     } else {
-//         // console.log("Cambio entre documentos extranjeros: Se mantiene la información.");
-//     }
-// });
-
 
 watch(tipoDocumentoEmpresa, (newVal, oldVal) => {
     // Si el cambio es real (no es la carga inicial)
@@ -436,10 +446,12 @@ watch(tipoDocumentoEmpresa, (newVal, oldVal) => {
     }
 });
 
-const loadDepartamentos = async () => {
-    departamentos.value = await Functions.loadDepartamentos(pais.value);
-}
-
+watch(empresaCupon, () => {
+    codigoVoucher.value = '';
+    mensajeVoucher.value = { texto: '', tipo: '' };
+    cuponAplicado.value = false;
+    descuentoAplicadoMonto.value = 0;
+});
 
 const getEmpresaData = async () => {
     // 1. Limpieza preventiva: Blanqueamos campos y ocultamos alertas previas
@@ -560,61 +572,6 @@ function setTipoDocPago() {
     }
 }
 
-// const enableManualEdit = () => {
-//     isEditingBilling.value = true;
-//     block_direction.value = false; // Desbloqueamos dirección para edición manual
-//     toast.add({
-//         severity: 'info',
-//         summary: 'Manual Edit Enabled',
-//         detail: 'You can now modify the billing information fields.',
-//         life: 3000
-//     });
-// };
-
-const fillBillingData = (p) => {
-    if (!p) return;
-
-    const nombreCompleto = `${p.nombres || ''} ${p.apellido_paterno || ''}`.trim();
-    const docTipo = p.id_tipo_documento || p.tipo_doc || 1;
-    const docNum = p.documento || '';
-
-    // tipoDocumentoEmpresa.value = docTipo;
-    // documentoEmpresa.value = docNum;
-    // razonSocial.value = nombreCompleto;
-    // direccionEmpresa.value = p.direccionPersona || p.direccion || '';
-    // responsable.value = nombreCompleto;
-    // correo_facturador.value = p.correo || '';
-
-    tipoDocumentoEmpresa.value = docTipo;
-    documentoEmpresa.value = docNum;
-    razonSocial.value = nombreCompleto;
-    direccionEmpresa.value = p.direccionPersona || p.direccion || '';
-    responsable.value = nombreCompleto;
-    correo_facturador.value = p.correo || '';
-
-    setValues({
-        tipoDocumentoEmpresa: docTipo,
-        documentoEmpresa: docNum,
-        razonSocial: nombreCompleto,
-        direccionEmpresa: direccionEmpresa.value,
-        responsable: nombreCompleto,
-        correo_facturador: p.correo || '',
-        selectTipoDocPago: docTipo == 2 ? 1 : 2,
-        selectTipoPago: 3
-    });
-
-    block_direction.value = (docTipo == 2);
-};
-
-// watch(() => props.data_persona, (newVal) => {
-//     if (newVal) {
-//         // Intentamos con newVal.persona o con newVal directamente
-//         const data = newVal.persona ? newVal.persona : newVal;
-//         fillBillingData(data);
-//     }
-// }, { immediate: true, deep: true });
-
-
 const filteredDocTypes = computed(() => {
     const p = props.data_persona?.persona || props.data_persona;
 
@@ -679,23 +636,14 @@ const onlyNumberKey = (event) => {
     }
     return true;
 }
+const montoDescuentoEfectivo = computed(() => {
+    // Calculamos cuánto dinero representa el % de descuento sobre el total
+    return (total.value * descuentoAplicadoMonto.value) / 100;
+});
 
-// const onlyAlphanumericKey = (event) => {
-//     const charCode = event.which ? event.which : event.keyCode;
-//     const charStr = String.fromCharCode(charCode);
-
-//     // Regex: Permite solo letras (a-z, A-Z) y números (0-9)
-//     if (!/^[a-zA-Z0-9]+$/.test(charStr)) {
-//         event.preventDefault();
-//         return false;
-//     }
-//     return true;
-// };
-
-
-// ... dentro de <script setup> del padre ...
-
-// Esta computada decide si el botón "Registrar y Pagar" se deshabilita
+const totalFinalConDescuento = computed(() => {
+    return total.value - montoDescuentoEfectivo.value;
+});
 
 defineExpose({
     getInscripcion,
@@ -742,33 +690,6 @@ defineExpose({
 
                         </div>
 
-                        <!-- <div v-else>
-                            <div v-for="(categoria) in categorias" :key="categoria.id"
-                                class="w-full border-b border-gray-100 last:border-0 py-3 px-3 rounded-lg transition-colors duration-200"
-                                :class="{
-                                    'bg-blue-50 border border-blue-200 shadow-sm': selected_categoria === categoria.id,
-                                    'hover:bg-gray-50': selected_categoria !== categoria.id
-                                }">
-                                <div class="flex items-start w-full">
-                                    <div class="flex-none pt-1">
-                                        <RadioButton v-model="selected_categoria" :value="categoria.id" />
-                                    </div>
-                                    <div class="flex flex-col sm:flex-row sm:justify-between w-full pl-3 cursor-pointer"
-                                        @click="changeCategory(categoria.id, categoria.precio_disponible.valor)">
-                                        <label
-                                            class="text-sm sm:text-base text-gray-700 leading-tight mb-1 sm:mb-0 cursor-pointer"
-                                            :class="{ 'font-bold text-blue-900': selected_categoria === categoria.id }">
-                                            {{ es_socio ? categoria.nombre_es :
-                                                categoria.nombre_en }}
-                                        </label>
-                                        <p
-                                            class="text-yellow-price font-bold text-sm sm:text-base whitespace-nowrap sm:pl-4">
-                                            USD {{ categoria.precio_disponible?.valor ?? '0.00' }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div> -->
                     </div>
                     <!-- =========== POR DIAS  ========== -->
                     <!-- ================================ -->
@@ -866,6 +787,118 @@ defineExpose({
                             </div>
                         </template>
                     </Card>
+
+                    <!-- =========== CUPON DE DESCUENTO  ========== -->
+                    <!-- ================================= -->
+                    <Card v-if="!esSeccionViajes"
+                        class="mt-6 border border-dashed border-blue-400 bg-blue-50/50 shadow-sm">
+                        <template #content>
+                            <!-- Mensaje Informativo Superior -->
+                            <div class="flex items-start gap-3 mb-4 p-3 bg-white/60 rounded-lg border border-blue-100">
+                                <i class="pi pi-info-circle text-blue-500 mt-1"></i>
+                                <p class="text-xs text-blue-800 leading-tight">
+                                    El cupón de descuento aplica exclusivamente para <strong>empresas e instituciones
+                                        aliadas</strong> previamente registradas. Si tu organización cuenta con un
+                                    convenio vigente, selecciona el nombre y valida el código.
+                                </p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                                <!-- Selector de Empresa -->
+                                <div class="flex flex-col gap-2">
+                                    <label class="text-xs font-black text-blue-900 uppercase tracking-wider">
+                                        Empresa / Institución
+                                    </label>
+                                    <Select v-model="empresaCupon" :options="empresasAliadas" optionLabel="nombre"
+                                        optionDisabled="disabled" placeholder="Escribe para buscar tu empresa..."
+                                        class="w-full border-blue-300" :filter="true"
+                                        filterPlaceholder="Ej: ALS PERU, MDH..." resetFilterOnHide>
+                                        <template #option="slotProps">
+                                            <div class="flex flex-col"
+                                                :class="{ 'opacity-50 cursor-not-allowed': slotProps.option.disabled }">
+                                                <div class="flex items-center gap-2">
+                                                    <span
+                                                        :class="{ 'font-bold text-sm': true, 'text-gray-900': slotProps.option.disabled }">
+                                                        {{ slotProps.option.nombre }}
+                                                    </span>
+                                                    <!-- Badge de Agotado opcional -->
+                                                    <span v-if="slotProps.option.disabled"
+                                                        class="bg-red-100 text-red-600 text-[9px] px-2 py-0.5 rounded-full font-black uppercase">
+                                                        Agotado
+                                                    </span>
+                                                </div>
+                                                <small v-if="slotProps.option.disabled"
+                                                    class="text-red-600 italic text-[10px]">
+                                                    El cupón corporativo ha llegado a su límite de usos.
+                                                </small>
+                                            </div>
+                                        </template>
+                                    </Select>
+                                </div>
+
+                                <!-- Input de Código y Botón -->
+                                <div class="flex flex-col gap-2">
+                                    <label class="text-xs font-black text-blue-900 uppercase tracking-wider">Código de
+                                        Descuento</label>
+                                    <InputGroup>
+                                        <InputText v-model="codigoVoucher" placeholder="Ingresa el código"
+                                            class="border-blue-300 uppercase" :disabled="!empresaCupon" />
+                                        <Button label="Validar" icon="pi pi-ticket"
+                                            class="!bg-blue-700 !border-blue-700 hover:!bg-blue-800"
+                                            :loading="loadingCupon" :disabled="!codigoVoucher"
+                                            @click="validarCuponLocal" />
+                                    </InputGroup>
+                                </div>
+                            </div>
+
+                            <!-- Mensaje de Éxito / Error -->
+                            <div v-if="mensajeVoucher.texto" class="mt-3 text-center animate-fade-in">
+                                <span :class="mensajeVoucher.tipo === 'success' ? 'text-green-600' : 'text-red-600'"
+                                    class="text-xs font-bold flex items-center justify-center gap-2">
+                                    <i
+                                        :class="mensajeVoucher.tipo === 'success' ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>
+                                    {{ mensajeVoucher.texto }}
+                                </span>
+                            </div>
+                        </template>
+                    </Card>
+
+                    <!-- RESUMEN VISUAL DE DESCUENTO -->
+                    <div v-if="cuponAplicado"
+                        class="mt-6 p-4 bg-green-50 border border-green-200 rounded-xl animate-fade-in">
+                        <div class="flex flex-col gap-2">
+                            <div class="flex justify-between items-center text-gray-600">
+                                <span class="text-sm font-medium">Precio Base:</span>
+                                <!-- Usamos Number() para prevenir el error de toFixed -->
+                                <span class="text-sm line-through">USD {{ Number(total || 0).toFixed(2) }}</span>
+                            </div>
+
+                            <div class="flex justify-between items-center text-red-600 font-bold">
+                                <div class="flex items-center gap-2">
+                                    <i class="pi pi-tag text-xs"></i>
+                                    <span class="text-sm uppercase tracking-tight">
+                                        Descuento Corporativo ({{ descuentoAplicadoMonto }}%):
+                                    </span>
+                                </div>
+                                <span class="text-sm">- USD {{ Number(montoDescuentoEfectivo || 0).toFixed(2) }}</span>
+                            </div>
+
+                            <Divider class="!my-1" />
+
+                            <div class="flex justify-between items-center">
+                                <span class="text-blue-900 font-black uppercase text-xs tracking-widest">Total a
+                                    Pagar:</span>
+                                <div class="flex flex-col items-end">
+                                    <span class="text-2xl font-black text-green-700 leading-none">
+                                        USD {{ Number(totalFinalConDescuento || 0).toFixed(2) }}
+                                    </span>
+                                    <small class="text-[10px] text-green-600 font-bold uppercase tracking-tighter">
+                                        ¡Beneficio aplicado correctamente!
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                 </template>
             </Card>
@@ -1034,7 +1067,7 @@ defineExpose({
                                 :disabled="loading_doc || esRuc20"
                                 :class="{ 'bg-gray-100': esRuc20 && !showManualAlert }" />
                             <small class="text-red-600" v-if="errors.direccionEmpresa">{{ errors.direccionEmpresa
-                                }}</small>
+                            }}</small>
                         </div>
 
                         <div class="grid gap-6 md:grid-cols-2">
@@ -1051,7 +1084,7 @@ defineExpose({
                                 <InputText v-model="correo_facturador" v-bind="correo_facturadorAttrs"
                                     class="w-full border-green-iimp" :disabled="loading_doc" />
                                 <small class="text-red-600" v-if="errors.correo_facturador">{{ errors.correo_facturador
-                                    }}</small>
+                                }}</small>
                             </div>
                         </div>
                     </div>
