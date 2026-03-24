@@ -33,7 +33,9 @@ const esFactura = computed(() => {
     return (props.formulario?.selectTipoDocPago == 1);
 });
 
-
+const formularioValido = computed(() => {
+    return termsAccepted.value && confirmacionComprobante.value;
+});
 
 const precioInscripcion = computed(() => {
     return props.categoria_seleccionada?.precio_disponible?.valor || '0.00';
@@ -275,7 +277,7 @@ const scriptData = computed(() => {
                                 <p v-if="esFactura">
                                     Usted está solicitando una <strong>FACTURA COMERCIAL</strong> a nombre de
                                     <span class="text-purple-700 font-bold">{{ data_persona?.razonSocial || 'la empresa'
-                                    }}</span> con RUC
+                                        }}</span> con RUC
                                     <span class="text-purple-700 font-bold">{{ data_persona?.documentoEmpresa }}</span>.
                                 </p>
                                 <p v-else>
@@ -304,20 +306,20 @@ const scriptData = computed(() => {
                         </div>
 
                         <!-- TERMINOS Y CONDICIONES -->
-                        <div class="relative">
-                            <div v-if="!termsAccepted" class="absolute inset-0 z-10 cursor-not-allowed"
-                                title="Accept terms to enable payment"></div>
+                        <div class="relative w-full">
+                            <div v-if="!formularioValido" class="absolute inset-0 z-20 cursor-not-allowed bg-white/10"
+                                title="Debe aceptar los términos y confirmar los datos de facturación">
+                            </div>
 
                             <div id="form_holder"
-                                class="flex justify-center p-4 min-h-[100px] border-2 border-blue-100 bg-blue-50/30 rounded-lg overflow-hidden transition-all duration-300"
+                                class="flex justify-center p-4 min-h-[100px] border-2 rounded-lg overflow-hidden transition-all duration-500"
+                                :class="formularioValido ? 'border-blue-500 bg-white shadow-md' : 'border-gray-200 bg-gray-50'"
                                 :style="{
-                                    opacity: (termsAccepted && confirmacionComprobante) ? '1' : '0.4',
-                                    filter: (termsAccepted && confirmacionComprobante) ? 'grayscale(0)' : 'grayscale(1)'
+                                    opacity: formularioValido ? '1' : '0.3',
+                                    filter: formularioValido ? 'grayscale(0)' : 'grayscale(1)',
+                                    pointerEvents: formularioValido ? 'auto' : 'none'
                                 }">
-                                <div class="flex flex-col items-center text-gray-400">
-                                    <i class="pi pi-spin pi-spinner mb-2"></i>
-                                    <span class="text-xs">Loading secure payment button...</span>
-                                </div>
+
                             </div>
                         </div>
 

@@ -69,6 +69,7 @@ const fieldNames = {
 };
 
 const es_socio = ref(false);
+const showWelcomeBillingModal = ref(false);
 const loading_doc = ref(false);
 const show_days = ref(false);
 const show_document = ref(false);
@@ -331,6 +332,10 @@ onMounted(() => {
         empresaCupon.value = null;
         codigoVoucher.value = '';
     }
+
+    setTimeout(() => {
+        showWelcomeBillingModal.value = true;
+    }, 800); // Un pequeño delay para que no sea tan brusco tras cargar la página
     // console.log("Mounted FormInscription with props.data_persona:", props.data_persona);
 
 });
@@ -945,7 +950,7 @@ defineExpose({
                         </div>
                     </div>
 
-                    <div v-if="tipoDocumentoEmpresa === 1 || tipoDocumentoEmpresa === 2"
+                    <!-- <div v-if="tipoDocumentoEmpresa === 1 || tipoDocumentoEmpresa === 2"
                         class="col-span-2 mb-4 p-3 rounded-lg border flex items-center gap-3 animate-fade-in"
                         :class="tipoDocumentoEmpresa === 1 ? 'bg-blue-50 border-blue-200' : 'bg-purple-50 border-purple-200'">
 
@@ -976,7 +981,7 @@ defineExpose({
                                 </span>
                             </p>
                         </div>
-                    </div>
+                    </div> -->
 
                 </template>
 
@@ -1065,7 +1070,7 @@ defineExpose({
                                 :disabled="loading_doc || esRuc20"
                                 :class="{ 'bg-gray-100': esRuc20 && !showManualAlert }" />
                             <small class="text-red-600" v-if="errors.direccionEmpresa">{{ errors.direccionEmpresa
-                            }}</small>
+                                }}</small>
                         </div>
 
                         <div class="grid gap-6 md:grid-cols-2">
@@ -1082,7 +1087,7 @@ defineExpose({
                                 <InputText v-model="correo_facturador" v-bind="correo_facturadorAttrs"
                                     class="w-full border-green-iimp" :disabled="loading_doc" />
                                 <small class="text-red-600" v-if="errors.correo_facturador">{{ errors.correo_facturador
-                                }}</small>
+                                    }}</small>
                             </div>
                         </div>
                     </div>
@@ -1096,6 +1101,8 @@ defineExpose({
 
     </div>
 
+    <!--         MODAL TIPO DOCUMENTO          -->
+    <!-- ======================================== -->
     <Dialog v-model:visible="showInfoModal" modal header=" " :style="{ width: '25rem' }"
         :breakpoints="{ '1199px': '75vw', '575px': '90vw' }" class="custom-billing-modal" appendTo="body">
         <div class="flex flex-col items-center p-2 text-center">
@@ -1118,6 +1125,52 @@ defineExpose({
         </div>
     </Dialog>
 
+
+    <Dialog v-model:visible="showWelcomeBillingModal" modal header=" " :style="{ width: '30rem' }"
+        :breakpoints="{ '1199px': '75vw', '575px': '95vw' }" class="welcome-billing-modal" appendTo="body">
+
+        <div class="flex flex-col items-center p-4 text-center">
+            <div
+                class="rounded-full w-20 h-20 bg-blue-50 text-blue-900 flex items-center justify-center mb-6 shadow-sm border border-blue-100">
+                <i class="pi pi-exclamation-circle" style="font-size: 3rem"></i>
+            </div>
+
+            <h2 class="text-2xl font-black mb-4 text-blue-950 leading-tight uppercase tracking-tight">
+                Aviso Importante de Facturación
+            </h2>
+
+            <p class="text-slate-600 leading-relaxed mb-6 font-medium">
+                Estimado participante, para asegurar la correcta emisión de sus comprobantes de pago electrónicos para
+                <span class="text-blue-800 font-bold text-lg block mt-1">PROEXPLO 2025</span>
+                por favor seleccione cuidadosamente su tipo de documento:
+            </p>
+
+            <div class="grid grid-cols-2 gap-4 w-full mb-8">
+                <div class="p-4 bg-slate-50 rounded-xl border-2 border-blue-800 flex flex-col items-center shadow-sm">
+                    <i class="pi pi-user text-blue-800 mb-2 font-bold"></i>
+                    <span class="text-xs font-black text-blue-900 uppercase">Persona Natural</span>
+                    <span class="text-[10px] text-blue-700 font-bold italic">Emisión de Boleta</span>
+                </div>
+                <div class="p-4 bg-amber-50 rounded-xl border-2 border-amber-400 flex flex-col items-center shadow-sm">
+                    <i class="pi pi-building text-amber-600 mb-2 font-bold"></i>
+                    <span class="text-xs font-black text-amber-900 uppercase">Persona Jurídica</span>
+                    <span class="text-[10px] text-amber-700 font-bold italic">Emisión de Factura</span>
+                </div>
+            </div>
+
+            <div class="bg-blue-50/50 p-4 rounded-lg mb-8 border-l-4 border-blue-800">
+                <p class="text-[11px] text-slate-600 text-left leading-tight italic">
+                    * Una vez emitido el documento, cualquier anulación o cambio está sujeto a validación
+                    administrativa.
+                    Evite contratiempos seleccionando la opción correcta según sus requerimientos contables.
+                </p>
+            </div>
+
+            <Button label="Entiendo, continuar con el registro"
+                class="w-full !bg-blue-900 !border-blue-900 font-black py-4 shadow-lg hover:bg-blue-800 hover:scale-[1.02] transition-all"
+                @click="showWelcomeBillingModal = false" />
+        </div>
+    </Dialog>
 </template>
 <style scoped>
 /* Quitar bordes innecesarios del Dialog */
