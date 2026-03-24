@@ -91,6 +91,8 @@ let current_price = 0;
 const tipoDocumento = computed(() => page.props.general.tipDocEmp)
 const days = { 'mie': 'Wednesday', 'jue': 'Thursday', 'vie': 'Friday' };
 const current_days = { 'lun': false, 'mar': false, 'mie': false, 'jue': false, 'vie': false };
+const showInfoModal = ref(false);
+const modalConfig = ref({ title: '', message: '', icon: '', colorClass: '' });
 
 const formManualErrors = ref({ reglamento: null, total: null, uploadDocument: null });
 
@@ -135,6 +137,23 @@ const [uploadDocument] = defineField('uploadDocument');
 const is_category_fixed = ref(false);
 const urlParams = new URLSearchParams(window.location.search);
 const esSeccionViajes = computed(() => urlParams.get('section') === 'viajes');
+const noAsociadoCupon = computed(() => urlParams.get('profile') === '2');
+
+
+const MODAL_DATA = {
+    DNI: {
+        title: 'Información de Boleta',
+        message: 'Al seleccionar DNI, se emitirá una Boleta de Venta electrónica a nombre de la persona natural.',
+        icon: 'pi pi-user',
+        colorClass: 'text-blue-600'
+    },
+    RUC: {
+        title: 'Información de Factura',
+        message: 'Al seleccionar RUC, se emitirá una Factura Comercial electrónica a nombre de la empresa o entidad legal.',
+        icon: 'pi pi-building',
+        colorClass: 'text-purple-600'
+    }
+};
 
 function changeCategory(id, precioRecibido) {
     if (!id) return;
@@ -286,6 +305,8 @@ onMounted(() => {
     // 2. Lógica de URL y categorías
     const urlParams = new URLSearchParams(window.location.search);
     const categoryIdFromUrl = urlParams.get('category');
+
+
     let targetCategoryId = null;
 
     if (props.saved_values && props.saved_values.selected_categoria) {
@@ -346,20 +367,43 @@ watch(selected_categoria, (newId) => {
 });
 
 watch(documentoEmpresa, (newVal) => {
-    if (!newVal) return;
+    if (!newVal) {
+        dniMessageEmpresa.value = '';
+        return;
+    }
 
-    // Solo aplicamos restricción numérica y de longitud para DNI (1) y RUC (2)
+    // 1. Definir el máximo permitido según el tipo de documento
+    let maxLength = 12; // Valor por defecto para Pasaporte/Otros
+    if (tipoDocumentoEmpresa.value === 1) maxLength = 8;  // DNI
+    if (tipoDocumentoEmpresa.value === 2) maxLength = 11; // RUC
+
+    // 2. Limpieza de caracteres según el tipo
+    let cleanedValue = newVal;
     if (tipoDocumentoEmpresa.value === 1 || tipoDocumentoEmpresa.value === 2) {
-        // 1. Eliminar todo lo que no sea número (por si pegan texto)
-        const cleanedValue = newVal.replace(/\D/g, '');
+        // Solo números para DNI y RUC
+        cleanedValue = newVal.replace(/\D/g, '');
+    } else {
+        // Alfanumérico para extranjeros (sin símbolos)
+        cleanedValue = newVal.replace(/[^a-zA-Z0-9]/g, '');
+    }
 
-        // 2. Definir el máximo permitido
-        const maxLength = tipoDocumentoEmpresa.value === 1 ? 8 : 11;
+    // 3. Control de longitud y mensajes
+    if (newVal.length > maxLength) {
+        dniMessageEmpresa.value = `Solo se permiten ${maxLength} dígitos`;
 
-        // 3. Aplicar recortes si excede el largo
-        if (newVal !== cleanedValue || newVal.length > maxLength) {
+        // Forzamos el recorte y notificamos a Vue
+        nextTick(() => {
             documentoEmpresa.value = cleanedValue.slice(0, maxLength);
-        }
+        });
+
+        setTimeout(() => {
+            dniMessageEmpresa.value = '';
+        }, 3000);
+    } else if (newVal !== cleanedValue) {
+        // Si se intentó pegar un símbolo o letra donde no debía
+        documentoEmpresa.value = cleanedValue;
+        alphanumericMessage.value = "Caracteres no permitidos eliminados";
+        setTimeout(() => { alphanumericMessage.value = ''; }, 3000);
     }
 });
 
@@ -371,60 +415,27 @@ watch(direccionEmpresa, (newVal) => {
     // pero aquí un ejemplo de limpieza de caracteres prohibidos al inicio:
     if (/^[ \-*.;,_]+$/.test(newVal) && newVal.length > 2) {
         // Opcional: Podrías mostrar un mensaje específico
-        alphanumericMessage.value = "La dirección no puede ser solo símbolos";
+        // alphanumericMessage.value = "La dirección no puede ser solo símbolos";
         setTimeout(() => { alphanumericMessage.value = ''; }, 3000);
     }
 });
 
-const onlyAlphanumericKey = (event) => {
-    const charCode = event.which ? event.which : event.keyCode;
-    const charStr = String.fromCharCode(charCode);
-
-    // 1. Permitir teclas de control
-    if ([8, 9, 13, 27, 37, 38, 39, 40].includes(charCode)) return true;
-
-    // 2. Validar Alfanumérico
-    if (!/^[a-zA-Z0-9]+$/.test(charStr)) {
-        event.preventDefault();
-        alphanumericMessage.value = "Solo se permiten letras y números (sin espacios ni símbolos)";
-
-        setTimeout(() => {
-            alphanumericMessage.value = '';
-        }, 3000);
-
-        return false;
-    }
-    return true;
-};
-
-watch(documentoEmpresa, (newValue) => {
-    // CAMBIO AQUÍ: tipoDocumentoEmpresa en lugar de tipo_doc
-    if (tipoDocumentoEmpresa.value !== 1 && newValue) {
-        const cleaned = newValue.replace(/[^a-zA-Z0-9]/g, '');
-        if (cleaned !== newValue) {
-            documentoEmpresa.value = cleaned;
-            alphanumericMessage.value = "Special characters were removed";
-            setTimeout(() => { alphanumericMessage.value = ''; }, 3000);
-        }
-    }
-});
-
 watch(tipoDocumentoEmpresa, (newVal, oldVal) => {
-    // Si el cambio es real (no es la carga inicial)
+    // Solo actuamos si es un cambio provocado por el usuario (no carga inicial)
     if (oldVal !== undefined) {
-        // 1. Limpiamos los campos visuales
+
+        // A. LIMPIEZA DE CAMPOS (Tu lógica original)
         documentoEmpresa.value = '';
         razonSocial.value = '';
         direccionEmpresa.value = '';
         responsable.value = '';
         correo_facturador.value = '';
 
-        // 2. Limpiamos los estados de alerta
         showManualAlert.value = false;
         showSuccessAlert.value = false;
         isEditingBilling.value = false;
 
-        // 3. Sincronizamos con el objeto de Vee-Validate
+        // B. SINCRONIZAR CON VEE-VALIDATE
         setValues({
             ...values,
             documentoEmpresa: '',
@@ -434,15 +445,17 @@ watch(tipoDocumentoEmpresa, (newVal, oldVal) => {
             correo_facturador: ''
         });
 
-        // 4. Ajustamos el tipo de documento de pago (Factura/Boleta)
-        setTipoDocPago();
+        // C. DISPARAR POPUP SEGÚN SELECCIÓN
+        if (newVal === 1) { // DNI
+            modalConfig.value = MODAL_DATA.DNI;
+            showInfoModal.value = true;
+        } else if (newVal === 2) { // RUC
+            modalConfig.value = MODAL_DATA.RUC;
+            showInfoModal.value = true;
+        }
 
-        // toast.add({
-        //     severity: 'info',
-        //     summary: 'Formulario Reiniciado',
-        //     detail: 'Por favor, ingrese el nuevo número de documento.',
-        //     life: 2000
-        // });
+        // D. AJUSTAR TIPO DE PAGO
+        setTipoDocPago();
     }
 });
 
@@ -607,35 +620,31 @@ const missingFields = computed(() => {
 const onlyNumberKey = (event) => {
     const charCode = event.which ? event.which : event.keyCode;
 
-    // Si es DNI o RUC, solo permitir números
+    // Solo validamos DNI (1) y RUC (2)
     if (tipoDocumentoEmpresa.value === 1 || tipoDocumentoEmpresa.value === 2) {
+
+        // 1. Si no es un número, bloquear
         if (charCode > 31 && (charCode < 48 || charCode > 57)) {
             event.preventDefault();
             return false;
         }
 
-        // Bloquear si ya llegó al máximo permitido
+        // 2. Si ya llegó al máximo, mostrar mensaje y bloquear
         const max = tipoDocumentoEmpresa.value === 1 ? 8 : 11;
 
         if (documentoEmpresa.value?.length >= max) {
-            // --- NUEVO: Activación del mensaje ---
-            dniMessageEmpresa.value = `Solo se permiten ${max} dígitos`;
+            dniMessageEmpresa.value = `Límite alcanzado: ${max} dígitos`;
 
-            // Limpiamos el mensaje después de 3 segundos
-            setTimeout(() => {
-                dniMessageEmpresa.value = '';
-            }, 3000);
-            // -------------------------------------
+            // Limpiar mensaje después de un rato
+            setTimeout(() => { dniMessageEmpresa.value = ''; }, 3000);
 
             event.preventDefault();
             return false;
-        } else {
-            // Si el usuario está escribiendo y aún no llega al máximo, limpiamos el mensaje
-            dniMessageEmpresa.value = '';
         }
     }
     return true;
-}
+};
+
 const montoDescuentoEfectivo = computed(() => {
     // Calculamos cuánto dinero representa el % de descuento sobre el total
     return (total.value * descuentoAplicadoMonto.value) / 100;
@@ -644,6 +653,16 @@ const montoDescuentoEfectivo = computed(() => {
 const totalFinalConDescuento = computed(() => {
     return total.value - montoDescuentoEfectivo.value;
 });
+
+watch(tipoDocumentoEmpresa, (newVal) => {
+    // Sincronizamos la configuración del modal basado en el ID
+    if (newVal === 1) {
+        modalConfig.value = MODAL_DATA.DNI;
+    } else if (newVal === 2) {
+        modalConfig.value = MODAL_DATA.RUC;
+    }
+    setTipoDocPago();
+}, { immediate: true });
 
 defineExpose({
     getInscripcion,
@@ -790,7 +809,7 @@ defineExpose({
 
                     <!-- =========== CUPON DE DESCUENTO  ========== -->
                     <!-- ================================= -->
-                    <Card v-if="!esSeccionViajes"
+                    <Card v-if="!esSeccionViajes && noAsociadoCupon"
                         class="mt-6 border border-dashed border-blue-400 bg-blue-50/50 shadow-sm">
                         <template #content>
                             <!-- Mensaje Informativo Superior -->
@@ -994,17 +1013,6 @@ defineExpose({
                             @click="showManualAlert = false" />
                     </div>
 
-                    <div class="flex justify-center md:justify-end px-6 mb-6">
-                        <!-- <Button v-if="!isEditingBilling" icon="pi pi-exclamation-circle"
-                            label="¿La información es incorrecta? Haz clic aquí para modificar"
-                            class="p-button-raised p-button-warning font-bold p-4 shadow-md w-full md:w-auto"
-                            style="background-color: #f59e0b; border-color: #d97706; color: #ffffff;"
-                            @click="enableManualEdit" /> -->
-                        <!-- <Button v-else icon="pi pi-check-circle" label="He terminado de editar, guardar cambios"
-                            class="p-button-raised p-button-success font-bold p-4 shadow-md w-full md:w-auto"
-                            style="background-color: #10b981; border-color: #059669; color: #ffffff;"
-                            @click="isEditingBilling = false" /> -->
-                    </div>
                     <div class="grid gap-6 m-6 md:grid-cols-2">
                         <div class="grid gap-6 md:grid-cols-2">
                             <div class="col-span-3 sm:col-span-1">
@@ -1020,7 +1028,8 @@ defineExpose({
                                         class="text-red-600">*</span></label>
                                 <InputGroup>
                                     <InputText v-model="documentoEmpresa" class="border-green-iimp"
-                                        @keypress="onlyAlphanumericKey" @paste="onlyNumberKey" :maxlength="12" />
+                                        @keypress="onlyNumberKey" @paste="onlyNumberKey"
+                                        :maxlength="tipoDocumentoEmpresa === 1 ? 8 : (tipoDocumentoEmpresa === 2 ? 11 : 12)" />
                                     <Button icon="pi pi-search"
                                         class="!bg-orange-600 !border-orange-600 hover:!bg-orange-500 hover:!border-orange-500 !text-white !shadow-none"
                                         @click="getEmpresaData" :loading="loading_doc" :disabled="!documentoEmpresa" />
@@ -1040,11 +1049,6 @@ defineExpose({
                         </div>
 
                         <div class="w-full sm:col-span-1">
-                            <!-- <label class="block mb-1">Nombre o Razon Social <span class="text-red-600">*</span></label>
-                            <InputText v-model="razonSocial" class="w-full border-green-iimp"
-                                :disabled="!isEditingBilling || loading_doc"
-                                :readonly="!isEditingBilling || block_direction" />
-                            <small class="text-red-600" v-if="errors.razonSocial">{{ errors.razonSocial }}</small> -->
                             <label class="block mb-1">Nombre o Razon Social <span class="text-red-600">*</span></label>
                             <InputText v-model="razonSocial" v-bind="razonSocialAttrs" class="w-full border-green-iimp"
                                 :disabled="loading_doc || esRuc20" :readonly="camposFacturacionBloqueados"
@@ -1055,12 +1059,6 @@ defineExpose({
 
                     <div class="grid gap-6 m-6 md:grid-cols-2">
                         <div class="w-full sm:col-span-1">
-                            <!-- <label class="block mb-1">Dirección Fiscal <span class="text-red-600">*</span></label>
-                            <InputText v-model="direccionEmpresa" class="w-full border-green-iimp"
-                                :readonly="!isEditingBilling || block_direction"
-                                :disabled="!isEditingBilling || loading_doc" />
-                            <small class="text-red-600" v-if="errors.direccionEmpresa">{{ errors.direccionEmpresa
-                            }}</small> -->
                             <label class="block mb-1">Dirección Fiscal <span class="text-red-600">*</span></label>
                             <InputText v-model="direccionEmpresa" v-bind="direccionEmpresaAttrs"
                                 class="w-full border-green-iimp" :readonly="camposFacturacionBloqueados"
@@ -1098,4 +1096,48 @@ defineExpose({
 
     </div>
 
+    <Dialog v-model:visible="showInfoModal" modal header=" " :style="{ width: '25rem' }"
+        :breakpoints="{ '1199px': '75vw', '575px': '90vw' }" class="custom-billing-modal" appendTo="body">
+        <div class="flex flex-col items-center p-2 text-center">
+            <div class="rounded-full w-20 h-20 flex items-center justify-center mb-6 animate-bounce-short"
+                :class="tipoDocumentoEmpresa === 1 ? 'bg-blue-50 text-blue-500' : 'bg-purple-50 text-purple-500'">
+                <i :class="modalConfig.icon" style="font-size: 2.5rem"></i>
+            </div>
+
+            <h3 class="text-xl font-black mb-2 uppercase tracking-tight" :class="modalConfig.colorClass">
+                {{ modalConfig.title }}
+            </h3>
+
+            <p class="text-slate-600 leading-relaxed mb-6 font-medium">
+                {{ modalConfig.message }}
+            </p>
+
+            <Button label="Entendido"
+                :class="tipoDocumentoEmpresa === 1 ? '!bg-blue-600 !border-blue-600' : '!bg-purple-600 !border-purple-600'"
+                class="w-full font-bold py-3 shadow-lg" @click="showInfoModal = false" />
+        </div>
+    </Dialog>
+
 </template>
+<style scoped>
+/* Quitar bordes innecesarios del Dialog */
+.billing-info-dialog .p-dialog-header {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.billing-info-dialog .p-dialog-content {
+    border-radius: 0 0 1.5rem 1.5rem;
+}
+
+/* Sombra suave al modal */
+.billing-info-dialog {
+    border: none;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Efecto de entrada suave */
+.p-dialog-mask {
+    backdrop-filter: blur(4px);
+}
+</style>

@@ -17,6 +17,22 @@ const urlParams = new URLSearchParams(window.location.search);
 const esSeccionViajes = computed(() => urlParams.get('section') === 'viajes');
 const termsAccepted = ref(false);
 const procesandoPago = ref(false);
+const confirmacionComprobante = ref(false);
+
+const tipoComprobanteTexto = computed(() => {
+    // 1 es Factura, 2 es Boleta (según tu lógica de setTipoDocPago)
+    const idTipoDoc = props.formulario?.selectTipoDocPago || props.data_persona?.selectTipoDocPago;
+
+    if (idTipoDoc == 1) return 'Factura';
+    if (idTipoDoc == 2) return 'Boleta de Venta';
+
+    return 'Comprobante';
+});
+
+const esFactura = computed(() => {
+    return (props.formulario?.selectTipoDocPago == 1);
+});
+
 
 
 const precioInscripcion = computed(() => {
@@ -149,9 +165,6 @@ const scriptData = computed(() => {
 </script>
 
 <template>
-    <!-- <pre class="bg-black text-white p-4 text-xs">
-    {{ extras_seleccionados }}
-</pre> -->
     <div id="FormPaymentFinish" class="w-full">
         <div class="flex flex-col items-center p-6 w-full">
             <div class="text-blue-900 font-bold text-center text-2xl mb-6 tracking-wide uppercase">
@@ -245,14 +258,62 @@ const scriptData = computed(() => {
                                 </label>
                             </div>
                         </div>
+                        <!-- COMPROBANTE DE PAGO -->
+                        <div class="mb-6 p-4 rounded-xl border-2 transition-all duration-300"
+                            :class="confirmacionComprobante ? 'border-green-500 bg-green-50' : 'border-orange-200 bg-orange-50'">
 
+                            <div class="flex items-center gap-3 mb-3">
+                                <i class="pi text-xl"
+                                    :class="[esFactura ? 'pi-building text-purple-600' : 'pi-user text-blue-600']"></i>
+                                <span class="font-black uppercase text-sm tracking-tight text-slate-800">
+                                    Confirmación de {{ tipoComprobanteTexto }}
+                                </span>
+                            </div>
+
+                            <div
+                                class="text-[11px] leading-relaxed text-slate-600 mb-4 text-justify bg-white/50 p-3 rounded-lg border border-orange-100">
+                                <p v-if="esFactura">
+                                    Usted está solicitando una <strong>FACTURA COMERCIAL</strong> a nombre de
+                                    <span class="text-purple-700 font-bold">{{ data_persona?.razonSocial || 'la empresa'
+                                    }}</span> con RUC
+                                    <span class="text-purple-700 font-bold">{{ data_persona?.documentoEmpresa }}</span>.
+                                </p>
+                                <p v-else>
+                                    Usted está solicitando una <strong>BOLETA DE VENTA</strong> a nombre de
+                                    <span class="text-blue-700 font-bold">{{ data_persona?.nombres }} {{
+                                        data_persona?.apellido_paterno }}</span>.
+                                </p>
+
+                                <p class="mt-2 text-red-600 font-semibold italic">
+                                    * Nota: Una vez emitido el comprobante, cualquier solicitud de anulación o cambio
+                                    (de Boleta a Factura o viceversa) queda sujeta a revisión y puede demorar hasta 15
+                                    días hábiles. La exactitud de los datos es responsabilidad exclusiva del
+                                    participante.
+                                </p>
+                            </div>
+
+                            <div class="flex items-start gap-3">
+                                <input type="checkbox" id="check_comprobante" v-model="confirmacionComprobante"
+                                    class="mt-1 w-5 h-5 cursor-pointer accent-green-600" />
+                                <label for="check_comprobante"
+                                    class="text-[11px] text-slate-700 font-bold cursor-pointer select-none">
+                                    Confirmo que los datos de facturación son correctos y asumo la responsabilidad sobre
+                                    la emisión de este documento.
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- TERMINOS Y CONDICIONES -->
                         <div class="relative">
                             <div v-if="!termsAccepted" class="absolute inset-0 z-10 cursor-not-allowed"
                                 title="Accept terms to enable payment"></div>
 
                             <div id="form_holder"
                                 class="flex justify-center p-4 min-h-[100px] border-2 border-blue-100 bg-blue-50/30 rounded-lg overflow-hidden transition-all duration-300"
-                                :style="{ opacity: termsAccepted ? '1' : '0.4', filter: termsAccepted ? 'grayscale(0)' : 'grayscale(1)' }">
+                                :style="{
+                                    opacity: (termsAccepted && confirmacionComprobante) ? '1' : '0.4',
+                                    filter: (termsAccepted && confirmacionComprobante) ? 'grayscale(0)' : 'grayscale(1)'
+                                }">
                                 <div class="flex flex-col items-center text-gray-400">
                                     <i class="pi pi-spin pi-spinner mb-2"></i>
                                     <span class="text-xs">Loading secure payment button...</span>

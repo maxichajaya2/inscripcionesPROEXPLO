@@ -271,6 +271,11 @@ const handleInscripcionHaciaCursos = async () => {
     if (resIns.validate) {
         tempResIns.value = resIns;
 
+        data_persona.value = {
+            ...data_persona.value,
+            ...resIns.formInscription
+        };
+
         // ESTO ES LO QUE DISPARA EL MODAL
         showConfirmNoExtrasModal.value = true;
         // await confirmarYProcesar([]);
@@ -568,6 +573,7 @@ watch(activeStep, (newStep) => {
                 </div>
             </div>
         </Dialog>
+
     </AppLayout>
 </template>
 
