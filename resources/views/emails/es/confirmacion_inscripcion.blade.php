@@ -300,7 +300,7 @@
                     </tr>
 
                     {{-- CUPON DE ESTADÍA HOTELERA --}}
-                   @if ($inscripcion->cupon_viaje && $inscripcion->id_perfil == 2 && !empty($inscripcion->id_categoria_inscripcion))
+                   @if ($inscripcion->cupon_viaje && !empty($inscripcion->id_categoria_inscripcion))
                         <tr>
                             <td align="center" style="padding: 30px 20px;">
                                 <div style="margin-bottom: -12px; position: relative; z-index: 2;">
