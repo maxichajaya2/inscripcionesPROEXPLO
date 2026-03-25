@@ -23,7 +23,6 @@ const loading = ref(false);
 const toast = useToast();
 const bloqueoExtranjero = ref(false);
 const categoriaIdActual = ref(null);
-
 const props = defineProps({
     title: String,
     categorias: Object,
@@ -36,6 +35,7 @@ const props = defineProps({
 
 
 const formDataPayment = ref(null);
+const mostrarModalFacturacion = ref(false);
 const data_persona = ref({});
 const showRequisitosModal = ref(false); // Controla el modal
 const tempResIns = ref(null);
@@ -115,6 +115,7 @@ const validate = async (value) => {
             if (resDoc.validate) {
                 // Guardamos DNI y TipoDoc aquí para usarlos en el siguiente paso
                 data_persona.value = resDoc.formValidacionDoc;
+                mostrarModalFacturacion.value = true;
                 loading.value = false;
                 return true;
             }
@@ -271,10 +272,10 @@ const handleInscripcionHaciaCursos = async () => {
     if (resIns.validate) {
         tempResIns.value = resIns;
 
-        data_persona.value = {
+       /* data_persona.value = {
             ...data_persona.value,
             ...resIns.formInscription
-        };
+        };*/
 
         // ESTO ES LO QUE DISPARA EL MODAL
         showConfirmNoExtrasModal.value = true;
@@ -407,7 +408,7 @@ watch(activeStep, (newStep) => {
                          ==========================================  -->
                         <StepPanel v-slot="{ activateCallback }" value="1"
                             class="rounded-2xl border-2 border-green-iimp bg-white-price shadow-wmc">
-                            <FormValidacionDoc ref="childFormValidacionDoc" :perfil_id="props.perfil_id" v-if="activeStep === '1'" />
+                            <FormValidacionDoc ref="childFormValidacionDoc" :perfil_id="props.perfil_id"  />
                             <div
                                 class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-end gap-3 rounded-b-2xl">
 
@@ -434,7 +435,7 @@ watch(activeStep, (newStep) => {
                         <StepPanel v-slot="{ activateCallback }" value="2"
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
 
-                            <FormInscription ref="childFormInscription" :data_persona="data_persona" v-if="activeStep === '2'" :cupones="props.cupones"
+                            <FormInscription ref="childFormInscription" :data_persona="data_persona"  :cupones="props.cupones"  :activarModal="mostrarModalFacturacion"
                                 :categorias="props.categorias" />
 
                             <div
@@ -452,7 +453,7 @@ watch(activeStep, (newStep) => {
                         <StepPanel v-if="!saltoCursos" v-slot="{ activateCallback }" value="3"
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
 
-                            <FormTourCourse ref="childFormTourCourse" :data_persona="data_persona" v-if="activeStep === '3'"
+                            <FormTourCourse ref="childFormTourCourse" :data_persona="data_persona"
                                 :adicionales="props.adicionales" :section="sectionUrl" :course="props.course"/>
 
                             <div
@@ -471,9 +472,9 @@ watch(activeStep, (newStep) => {
                         <StepPanel v-slot="{ activateCallback }" value="4"
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
 
-                            <FormPayment ref="childFormPayment" :data_persona="data_persona" v-if="activeStep === '4'"
+                            <FormPayment ref="childFormPayment" :data_persona="data_persona"
                                 :formulario="formDataPayment" :categoria_seleccionada="categoria_seleccionada" :vouchers="vouchers"
-                                :extras_seleccionados="extras_para_mostrar" :descuento="formDataPayment.descuento" />
+                                :extras_seleccionados="extras_para_mostrar" :descuento="formDataPayment?.descuento" :datos_facturacion="tempResIns?.formInscription" />
 
                             <div
                                 class="sticky bottom-0 left-0 w-full p-4 md:p-6 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.1)] z-[50] flex justify-between gap-3 rounded-b-2xl">

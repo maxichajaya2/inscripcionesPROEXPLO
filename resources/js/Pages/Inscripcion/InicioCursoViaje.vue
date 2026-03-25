@@ -34,13 +34,12 @@ const props = defineProps({
     perfil_id: Number,
     course: Array
 })
-
+const mostrarModalFacturacion = ref(false);
 const formDataPayment = ref(null);
 const data_persona = ref({});
 const showRequisitosModal = ref(false);
 const tempResIns = ref(null);
 const isPaying = ref(false);
-const nacionalidadSeleccionada = ref('peruano'); // Valor por defecto
 const childFormValidacionDoc = ref();
 const childFormInscription = ref(null);
 const childFormTourCourse = ref(null);
@@ -91,6 +90,7 @@ const goStart = () => {
 
 const proceedToBilling = () => {
     showConfirmNoExtrasModal.value = false;
+    mostrarModalFacturacion.value = true;
     activeStep.value = "3";
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
@@ -292,7 +292,7 @@ watch(activeStep, (newStep) => {
 
                         <StepPanel v-slot="{ activateCallback }" value="3"
                             class="rounded-2xl border-2 border-green-iimp bg-white shadow-wmc">
-                            <FormInscription ref="childFormInscription" :data_persona="data_persona"
+                            <FormInscription ref="childFormInscription" :data_persona="data_persona" :activarModal="mostrarModalFacturacion"
                                 :categorias="props.categorias" />
 
                             <div
@@ -322,46 +322,6 @@ watch(activeStep, (newStep) => {
             </div>
         </div>
 
-        <Dialog v-model:visible="uploading" modal :closable="false" :showHeader="false" :style="{ width: '350px' }">
-            <div class="flex flex-col items-center p-6 text-center">
-                <i class="pi pi-cloud-upload text-5xl animate-bounce text-green-iimp mb-4"></i>
-                <h3 class="text-xl font-black text-blue-900 mb-2">Uploading Document</h3>
-                <div class="w-full bg-gray-100 rounded-full h-4 mb-2 overflow-hidden border border-gray-200">
-                    <div class="bg-gradient-to-r from-green-500 to-green-300 h-full transition-all duration-300"
-                        :style="{ width: uploadProgress + '%' }"></div>
-                </div>
-                <span class="text-xs font-bold text-green-600">{{ uploadProgress }}% Completed</span>
-            </div>
-        </Dialog>
-
-        <Dialog v-model:visible="showConfirmNoExtrasModal" modal :showHeader="false" :closable="false"
-            :style="{ width: '500px' }" class="rounded-3xl overflow-hidden border-none shadow-2xl animate-modal-entry">
-            <div class="p-0 relative overflow-hidden">
-                <div class="bg-gradient-to-r from-blue-900 via-blue-700 to-blue-900 p-8 text-center">
-                    <div
-                        class="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/20">
-                        <i class="pi pi-shopping-cart text-yellow-400 text-4xl"></i>
-                    </div>
-                    <h3 class="text-2xl font-black text-white uppercase italic">Enhance your Experience</h3>
-                </div>
-                <div class="p-10 bg-white text-center">
-                    <p class="text-slate-700 text-lg font-medium">
-                        Are you sure you want to proceed without adding <span class="text-blue-700 font-extrabold">Short
-                            Courses</span> or <span class="text-blue-700 font-extrabold">Technical Visits</span>?
-                    </p>
-                    <div class="mt-8 flex flex-col gap-4">
-                        <button @click="showConfirmNoExtrasModal = false"
-                            class="w-full py-4 px-6 rounded-2xl bg-blue-900 text-white font-black uppercase tracking-widest shadow-lg">
-                            Review Courses & Visits
-                        </button>
-                        <button @click="proceedToBilling"
-                            class="w-full py-2 text-slate-400 text-[10px] font-black uppercase hover:text-red-500">
-                            No thanks, proceed to billing anyway
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </Dialog>
     </AppLayout>
 </template>
 <style scoped>

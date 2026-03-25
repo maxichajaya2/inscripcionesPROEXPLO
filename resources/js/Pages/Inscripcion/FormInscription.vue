@@ -26,7 +26,8 @@ const props = defineProps({
     data_persona: Object,
     categorias: Object,
     saved_values: Object,
-    cupones: Object
+    cupones: Object,
+    activarModal: Boolean,
 });
 
 const empresaCupon = ref(null);
@@ -34,6 +35,7 @@ const codigoVoucher = ref('');
 const loadingCupon = ref(false);
 const cuponAplicado = ref(false);
 const mensajeVoucher = ref({ texto: '', tipo: '' });
+
 
 const empresasAliadas = computed(() => {
     if (!props.cupones) return [];
@@ -70,6 +72,7 @@ const fieldNames = {
 
 const es_socio = ref(false);
 const showWelcomeBillingModal = ref(false);
+const yaMostrado = ref(false);
 const loading_doc = ref(false);
 const show_days = ref(false);
 const show_document = ref(false);
@@ -333,10 +336,6 @@ onMounted(() => {
         codigoVoucher.value = '';
     }
 
-    setTimeout(() => {
-        showWelcomeBillingModal.value = true;
-    }, 800); // Un pequeño delay para que no sea tan brusco tras cargar la página
-    // console.log("Mounted FormInscription with props.data_persona:", props.data_persona);
 
 });
 
@@ -469,6 +468,14 @@ watch(empresaCupon, () => {
     mensajeVoucher.value = { texto: '', tipo: '' };
     cuponAplicado.value = false;
     descuentoAplicadoMonto.value = 0;
+});
+
+watch(() => props.activarModal, (valor) => {
+    // Si el padre puso la variable en true y no lo hemos mostrado antes
+    if (valor === true && !yaMostrado.value) {
+        showWelcomeBillingModal.value = true;
+        yaMostrado.value = true;
+    }
 });
 
 const getEmpresaData = async () => {

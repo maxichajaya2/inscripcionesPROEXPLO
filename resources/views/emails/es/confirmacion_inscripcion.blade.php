@@ -300,7 +300,7 @@
                     </tr>
 
                     {{-- CUPON DE ESTADÍA HOTELERA --}}
-                    @if ($inscripcion->cupon_viaje)
+                   @if ($inscripcion->cupon_viaje && $inscripcion->id_perfil == 2 && !empty($inscripcion->id_categoria_inscripcion))
                         <tr>
                             <td align="center" style="padding: 30px 20px;">
                                 <div style="margin-bottom: -12px; position: relative; z-index: 2;">
@@ -421,7 +421,7 @@
                                         <p style="margin: 5px 0 0 0;">
                                             <a href="mailto:inscripciones.wmc@iimp.org.pe"
                                                 style="color: #f97316; text-decoration: none; font-weight: bold; font-size: 14px; margin-right: 15px;">
-                                                <span style="font-size: 16px;">✉</span> inscripciones.wmc@iimp.org.pe
+                                                <span style="font-size: 16px;">✉</span> inscripciones@iimp.org.pe
                                             </a>
                                             <a href="https://wa.me/51951294314" target="_blank"
                                                 style="color: #22c55e; text-decoration: none; font-weight: bold; font-size: 14px;">

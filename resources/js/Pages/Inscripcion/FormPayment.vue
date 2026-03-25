@@ -7,6 +7,7 @@ const props = defineProps({
     data_persona: Object,
     formulario: Object,
     vouchers: Object,
+    datos_facturacion: Object,
     extras_seleccionados: {
         type: Array,
         default: () => []
@@ -19,19 +20,26 @@ const termsAccepted = ref(false);
 const procesandoPago = ref(false);
 const confirmacionComprobante = ref(false);
 
-const tipoComprobanteTexto = computed(() => {
-    // 1 es Factura, 2 es Boleta (según tu lógica de setTipoDocPago)
-    const idTipoDoc = props.formulario?.selectTipoDocPago || props.data_persona?.selectTipoDocPago;
 
-    if (idTipoDoc == 1) return 'Factura';
-    if (idTipoDoc == 2) return 'Boleta de Venta';
-
-    return 'Comprobante';
-});
 
 const esFactura = computed(() => {
-    return (props.formulario?.selectTipoDocPago == 1);
+    // 1. Prioridad absoluta al selector del formulario anterior
+    // Si es 2 es Factura, si es 1 (o cualquier otro) es Boleta.
+    const tipoDoc = props.datos_facturacion?.tipoDocumentoEmpresa;
+
+    if (tipoDoc === 2) return true;
+    if (tipoDoc === 1) return false;
+
+    // 2. Backup por longitud (solo si el selector falla o es nulo)
+    // El RUC en Perú siempre tiene 11 dígitos.
+    const documento = props.datos_facturacion?.tipoDocumentoEmpresa?.toString().trim() || "";
+    return documento.length === 11;
 });
+
+const tipoComprobanteTexto = computed(() => {
+    return esFactura.value ? 'Factura' : 'Boleta de Venta';
+});
+
 
 const formularioValido = computed(() => {
     return termsAccepted.value && confirmacionComprobante.value;
@@ -276,14 +284,13 @@ const scriptData = computed(() => {
                                 class="text-[11px] leading-relaxed text-slate-600 mb-4 text-justify bg-white/50 p-3 rounded-lg border border-orange-100">
                                 <p v-if="esFactura">
                                     Usted está solicitando una <strong>FACTURA COMERCIAL</strong> a nombre de
-                                    <span class="text-purple-700 font-bold">{{ data_persona?.razonSocial || 'la empresa'
+                                    <span class="text-purple-700 font-bold">{{  datos_facturacion?.razonSocial || 'la empresa'
                                         }}</span> con RUC
-                                    <span class="text-purple-700 font-bold">{{ data_persona?.documentoEmpresa }}</span>.
+                                    <span class="text-purple-700 font-bold">{{  datos_facturacion?.documentoEmpresa || '' }}</span>.
                                 </p>
                                 <p v-else>
                                     Usted está solicitando una <strong>BOLETA DE VENTA</strong> a nombre de
-                                    <span class="text-blue-700 font-bold">{{ data_persona?.nombres }} {{
-                                        data_persona?.apellido_paterno }}</span>.
+                                    <span class="text-blue-700 font-bold">{{  datos_facturacion?.razonSocial || '' }}</span>.
                                 </p>
 
                                 <p class="mt-2 text-red-600 font-semibold italic">

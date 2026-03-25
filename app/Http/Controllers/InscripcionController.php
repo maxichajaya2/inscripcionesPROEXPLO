@@ -573,6 +573,7 @@ class InscripcionController extends Controller
         $inscripcion = new Inscripcion;
         $inscripcion->id_persona = $persona->id;
         if ($request->input('section') === 'viajes') {
+            $inscripcion->id_cupon = null;
             $inscripcion->id_categoria_inscripcion = null; // No asignamos categoría de inscripción para tours/cursos
         } else {
             $inscripcion->id_categoria_inscripcion = $categoria->id;
@@ -815,9 +816,15 @@ class InscripcionController extends Controller
             // 2. Intentar procesar la respuesta del servicio (QR, etc.)
             if (isset($service_wmc->Response) && $service_wmc->Response->Status === true) {
                 $inscripcion->qr = (string)$service_wmc->Response->QR;
-                $inscripcion->cupon_viaje  = (string)$service_wmc->Response->Codigo;
-                // Si necesitas marcar que el WS fue exitoso
                 $inscripcion->ws_status = true;
+
+                // REGLA DE ORO: Solo guardamos el cupón de hospedaje si NO es sección viajes
+                // Y si el usuario realmente usó un cupón corporativo ($cupon no es null)
+                if ($inscripcion->id_categoria_inscripcion !== null) {
+                    $inscripcion->cupon_viaje = (string)$service_wmc->Response->Codigo;
+                } else {
+                    $inscripcion->cupon_viaje = null; // Forzamos null en BD para viajes
+                }
             } else {
                 // Si falla, solo lo logueamos y marcamos el fallo, pero el flujo sigue
                 $inscripcion->ws_status = false;
