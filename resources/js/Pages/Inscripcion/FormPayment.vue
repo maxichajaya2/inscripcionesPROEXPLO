@@ -284,20 +284,26 @@ const scriptData = computed(() => {
                                 class="text-[11px] leading-relaxed text-slate-600 mb-4 text-justify bg-white/50 p-3 rounded-lg border border-orange-100">
                                 <p v-if="esFactura">
                                     Usted está solicitando una <strong>FACTURA COMERCIAL</strong> a nombre de
-                                    <span class="text-purple-700 font-bold">{{  datos_facturacion?.razonSocial || 'la empresa'
+                                    <span class="text-purple-700 font-bold">{{ datos_facturacion?.razonSocial || 'la empresa'
                                         }}</span> con RUC
-                                    <span class="text-purple-700 font-bold">{{  datos_facturacion?.documentoEmpresa || '' }}</span>.
+                                    <span class="text-purple-700 font-bold">{{ datos_facturacion?.documentoEmpresa || ''
+                                        }}</span>.
                                 </p>
                                 <p v-else>
                                     Usted está solicitando una <strong>BOLETA DE VENTA</strong> a nombre de
-                                    <span class="text-blue-700 font-bold">{{  datos_facturacion?.razonSocial || '' }}</span>.
+                                    <span class="text-blue-700 font-bold">{{ datos_facturacion?.razonSocial || ''
+                                        }}</span>.
                                 </p>
 
-                                <p class="mt-2 text-red-600 font-semibold italic">
+                                <!-- <p class="mt-2 text-red-600 font-semibold italic">
                                     * Nota: Una vez emitido el comprobante, cualquier solicitud de anulación o cambio
                                     (de Boleta a Factura o viceversa) queda sujeta a revisión y puede demorar hasta 15
                                     días hábiles. La exactitud de los datos es responsabilidad exclusiva del
                                     participante.
+                                </p> -->
+                                <p class="mt-2 text-red-600 font-semibold italic">
+                                    Antes de continuar, asegúrate de que tus datos estén correctos. Una vez emitido el
+                                    comprobante, no podremos realizar cambios ni devoluciones.
                                 </p>
                             </div>
 

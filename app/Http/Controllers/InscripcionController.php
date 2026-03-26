@@ -598,6 +598,7 @@ class InscripcionController extends Controller
         $inscripcion->id_perfil = $request->input('profile');
         $inscripcion->save();
 
+
         // dd('INSCRIPCIÓN CREADA CORRECTAMENTE', [
         //     'INSCRIPCION_ID' => $inscripcion->id,
         //     'CATEGORIA_ID' => $categoria->id,

@@ -1148,7 +1148,7 @@ defineExpose({
 
             <p class="text-slate-600 leading-relaxed mb-6 font-medium">
                 Estimado participante, para asegurar la correcta emisión de sus comprobantes de pago electrónicos para
-                <span class="text-blue-800 font-bold text-lg block mt-1">PROEXPLO 2025</span>
+                <span class="text-blue-800 font-bold text-lg block mt-1">PROEXPLO 2026</span>
                 por favor seleccione cuidadosamente su tipo de documento:
             </p>
 
