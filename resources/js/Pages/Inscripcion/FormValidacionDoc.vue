@@ -209,7 +209,8 @@ const searchPerson = async () => {
                         cargo: p.cargo || '',
                         pais: p.pais || p.id_pais || paisAsignado,
                         sexo: p.sexo || '',
-                        fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento) : null,
+                        /*fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento) : null,*/
+                        fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento.replace(/-/g, '\/')) : null,
                         departamento: departamento.value,
                         provincia: provincia.value,
                         distrito: distrito.value
@@ -252,7 +253,8 @@ const searchPerson = async () => {
                     cargo: p.cargo || '',
                     pais: p.pais || p.id_pais || paisAsignado,
                     sexo: p.sexo || '',
-                    fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento) : null,
+                    // fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento) : null,
+                    fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento.replace(/-/g, '\/')) : null,
                     departamento: departamento.value,
                     provincia: provincia.value,
                     distrito: distrito.value
