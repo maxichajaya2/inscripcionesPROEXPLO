@@ -11,7 +11,7 @@ const props = defineProps({
     adicionales: Array, // Aquí llegarán los 13 cursos del controlador
     data_persona: Object,
     section: String,
-    course:Array
+    course: Array
 });
 
 const extras_seleccionados = ref([]);
@@ -44,7 +44,7 @@ const verItinerario = (item) => {
 const validarSeleccion = () => {
     // Si es sección viajes y no hay nada seleccionado
     if (props.section === 'viajes' && extras_seleccionados.value.length === 0) {
-       formManualErrors.value.total = "Por favor, seleccione al menos un curso o visita técnica para continuar con su registro.";
+        formManualErrors.value.total = "Por favor, seleccione al menos un curso o visita técnica para continuar con su registro.";
 
         // Scroll automático al error para que no haya pierde
         const el = document.getElementById('error-container-extras');
@@ -278,16 +278,17 @@ const esVisitaTecnicaForzada = computed(() => {
 
                         <!-- ========= CURSO CORTOS =========
                         ================================ -->
-                        <AccordionTab v-if="!esVisitaTecnicaForzada" >
+                        <AccordionTab v-if="!esVisitaTecnicaForzada">
                             <template #header>
                                 <span class="font-bold text-blue-900 uppercase text-sm italic">Cursos Cortos</span>
                             </template>
 
                             <div class="space-y-4 py-2">
-                                <div v-for="item in adicionalesFiltrados.filter(i => i.tipo === 'curso')" :key="item.id" :class="[
-                                    extras_seleccionados.includes(item.id) ? 'bg-blue-50 border-blue-300' : 'border-gray-100 bg-white',
-                                    idsBloqueados.includes(item.id) ? 'opacity-50 grayscale pointer-events-none' : ''
-                                ]">
+                                <div v-for="item in adicionalesFiltrados.filter(i => i.tipo === 'curso')" :key="item.id"
+                                    :class="[
+                                        extras_seleccionados.includes(item.id) ? 'bg-blue-50 border-blue-300' : 'border-gray-100 bg-white',
+                                        idsBloqueados.includes(item.id) ? 'opacity-50 grayscale pointer-events-none' : ''
+                                    ]">
 
                                     <div
                                         class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 gap-3">
@@ -404,7 +405,7 @@ const esVisitaTecnicaForzada = computed(() => {
                         </AccordionTab>
                         <!-- ========= VIAJES =========
                         ================================ -->
-                        | <AccordionTab  v-if="props.course==0 ||  esVisitaTecnicaForzada">
+                        | <AccordionTab v-if="props.course == 0 || esVisitaTecnicaForzada">
                             <template #header>
                                 <span class="font-bold text-blue-900 uppercase text-sm italic">Visita Tecnica</span>
                             </template>
@@ -432,6 +433,12 @@ const esVisitaTecnicaForzada = computed(() => {
 
                                         <div
                                             class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto border-t sm:border-t-0 sm:border-l pt-2 sm:pt-0 sm:pl-4 border-gray-100">
+
+                                            <Button icon="pi pi-eye" label="brochure" as="a"
+                                                href="{{ item.brochure_url }}" @click.stop
+                                                target="_blank"
+                                                class="p-button-text p-button-sm text-blue-500 font-bold uppercase text-[10px]" />
+
                                             <Button v-if="item.itinerario" icon="pi pi-map" label="View Itinerary"
                                                 class="p-button-text p-button-sm text-green-600 font-bold uppercase text-[10px] p-0"
                                                 @click.stop="verItinerario(item)" />
@@ -465,14 +472,23 @@ const esVisitaTecnicaForzada = computed(() => {
                                                     </p>
                                                     <p>
                                                         <strong><i class="pi pi-check-circle mr-1 text-blue-400"></i>
-                                                            Includes:</strong>
-                                                        Registration, ground transfers, entrance to Machu
-                                                        Picchu, meals, and
-                                                        accommodation.
+                                                            Lideres de viaje:</strong>
+                                                        <ul v-if="Array.isArray(item.expositores)"
+                                                            class="list-none p-0 m-0 ml-7 space-y-2">
+                                                            <li v-for="(expo, index) in item.expositores" :key="index"
+                                                                class="text-xs leading-normal text-gray-700 flex items-start">
+                                                                <span class="mr-2 text-blue-300">•</span>
+                                                                <span>{{ expo }}</span>
+                                                            </li>
+                                                        </ul>
+
+                                                        <p v-else class="text-xs ml-7 text-gray-600">
+                                                            {{ item.expositores || 'Experts in the field' }}
+                                                        </p>
                                                     </p>
                                                 </div>
 
-                                                <div class="space-y-1.5">
+                                                <!-- <div class="space-y-1.5">
                                                     <p>
                                                         <strong><i
                                                                 class="pi pi-exclamation-triangle mr-1 text-blue-400"></i>
@@ -488,7 +504,7 @@ const esVisitaTecnicaForzada = computed(() => {
                                                         Lima at the end is assumed
                                                         by the participant.
                                                     </p>
-                                                </div>
+                                                </div> -->
                                             </div>
                                         </AccordionTab>
                                     </Accordion>
@@ -497,7 +513,7 @@ const esVisitaTecnicaForzada = computed(() => {
                         </AccordionTab>
                     </Accordion>
 
-                    <div v-if="extras_seleccionados.length > 0 && props.course ==0"
+                    <div v-if="extras_seleccionados.length > 0 && props.course == 0"
                         class="mt-8 p-5 bg-lightblue-wmc border border-blue-wmc rounded-xl flex justify-between items-center shadow-md animate-fade-in">
                         <div class="flex flex-col">
                             <span class="text-[10px] uppercase text-blue-500 font-black tracking-widest">
