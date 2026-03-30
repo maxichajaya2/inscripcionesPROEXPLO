@@ -435,7 +435,7 @@ const esVisitaTecnicaForzada = computed(() => {
                                             class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto border-t sm:border-t-0 sm:border-l pt-2 sm:pt-0 sm:pl-4 border-gray-100">
 
                                             <Button icon="pi pi-eye" label="brochure" as="a"
-                                                href="{{ item.brochure_url }}" @click.stop
+                                               :href="item.brochure_url" @click.stop
                                                 target="_blank"
                                                 class="p-button-text p-button-sm text-blue-500 font-bold uppercase text-[10px]" />
 
