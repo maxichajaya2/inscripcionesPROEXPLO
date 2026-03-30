@@ -152,7 +152,7 @@ class DocumentApiController extends Controller
         $wsController = app(\App\Http\Controllers\WebServiceController::class);
         /** ******* LOCAL *********/
         // $urlIIMP = "https://secure2.iimp.org:8443/KBServiciosPruebaIIMPJavaEnvironment/rest/WSViewPersona";
-         /** ******* PRODUCCION *********/
+        /** ******* PRODUCCION *********/
         $urlIIMP = "https://secure2.iimp.org:8443/KBServiciosIIMPJavaEnvironment/rest/WSViewPersona";
 
         $resIIMP = $wsController->sendWS($urlIIMP, json_encode([
@@ -236,7 +236,16 @@ class DocumentApiController extends Controller
             $persona->correo            = $dataIIMP->correo ?? $persona->correo;
             $persona->celular           = $dataIIMP->celular ?? $persona->celular;
             $persona->sexo              = $dataIIMP->sexo ?? $persona->sexo;
-            $persona->fecha_nacimiento  = $dataIIMP->fecha_nacimiento ?? $persona->fecha_nacimiento;
+
+            $fechaApi = $dataIIMP->fecha_nacimiento ?? null;
+            if ($fechaApi === '0000-00-00' || empty($fechaApi)) {
+                // Usamos el formato Año-Mes-Día que requiere PostgreSQL
+                $persona->fecha_nacimiento = now()->format('Y-m-d');
+            } else {
+                // Si la fecha es válida (ej: 1995-03-25), la dejamos tal cual
+                $persona->fecha_nacimiento = $fechaApi;
+            }
+            // $persona->fecha_nacimiento  = $dataIIMP->fecha_nacimiento ?? $persona->fecha_nacimiento;
             $persona->es_socio          = $dataIIMP->asociado ?? false;
             $persona->sie_code          = $dataIIMP->sie_code ?? $persona->sie_code;
 
