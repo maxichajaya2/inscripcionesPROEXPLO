@@ -612,17 +612,12 @@ const filteredDocTypes = computed(() => {
 
     if (!tipoDocumento.value) return [];
 
-    if (esPeruano) {
+
         // Retorna SOLO DNI (1) y RUC (2)
-        const filtrados = tipoDocumento.value.filter(d => d.id == 1 || d.id == 2);
+        const filtrados = tipoDocumento.value.filter(d => d.id == 1 || d.id == 2 || d.id == 3 || d.id == 4 || d.id == 5);
         // console.log("Documentos para Peruano:", filtrados);
         return filtrados;
-    } else {
-        // Retorna PASAPORTE, CE, etc. (quita DNI y RUC)
-        const filtrados = tipoDocumento.value.filter(d => d.id != 1 && d.id != 2);
-        // console.log("Documentos para Extranjero:", filtrados);
-        return filtrados;
-    }
+
 });
 
 const missingFields = computed(() => {
@@ -1029,7 +1024,7 @@ defineExpose({
                         <div class="grid gap-6 md:grid-cols-2">
                             <div class="col-span-3 sm:col-span-1">
                                 <label class="block mb-1">Tipo de Documento <span class="text-red-600">*</span></label>
-                                <Select v-model="tipoDocumentoEmpresa" :options="filteredDocTypes" optionLabel="name_en"
+                                <Select v-model="tipoDocumentoEmpresa" :options="filteredDocTypes" optionLabel="name_es"
                                     optionValue="id" class="w-full border-green-iimp" @change="setTipoDocPago" />
                                 <small class="text-red-600" v-if="errors.tipoDocumentoEmpresa">{{
                                     errors.tipoDocumentoEmpresa }}</small>

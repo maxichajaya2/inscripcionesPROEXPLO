@@ -540,21 +540,6 @@ const onlyAlphanumericKey = (event) => {
 };
 
 const esDNI = computed(() => tipo_doc.value === 1);
-// Creamos estados individuales para los campos principales
-// const bloqueoNombres = computed(() => esCampoBloqueado(nombres.value));
-// const bloqueoApellidos = computed(() => esCampoBloqueado(apellido_paterno.value));
-// const bloqueoApellidoMaterno = computed(() => esCampoBloqueado(apellido_materno.value));
-// const bloqueoCorreo = computed(() => esCampoBloqueado(correo.value));
-// const bloqueoCelular = computed(() => esCampoBloqueado(celular.value));
-// const bloqueoFechaNac = computed(() => esCampoBloqueado(fecha_nacimiento.value));
-// const bloqueoPais = computed(() => esCampoBloqueado(pais.value));
-// const bloqueoDepartamento = computed(() => esCampoBloqueado(departamento.value));
-// const bloqueoProvincia = computed(() => esCampoBloqueado(provincia.value));
-// const bloqueoDistrito = computed(() => esCampoBloqueado(distrito.value));
-// const bloqueoSexo = computed(() => esCampoBloqueado(sexo.value));
-// const bloqueoCargo = computed(() => esCampoBloqueado(cargo.value));
-// const bloqueoEmpresa = computed(() => esCampoBloqueado(empresa.value));
-// const bloqueoDireccion = computed(() => esCampoBloqueado(direccionPersona.value));
 
 const bloqueoNombres = computed(() => esCampoBloqueado('nombres', nombres.value));
 const bloqueoApellidos = computed(() => esCampoBloqueado('apellido_paterno', apellido_paterno.value));
@@ -694,31 +679,14 @@ onMounted(() => {
 
                 </div>
 
-                <!-- <div v-if="camposBloqueados"
-                    class="mx-6 mb-2 p-2 bg-yellow-50 text-yellow-700 border-l-4 border-yellow-400 text-xs font-semibold">
-                    <i class="pi pi-lock mr-2"></i> PLEASE SEARCH BY DOCUMENT NUMBER TO UNLOCK THESE FIELDS
-                </div> -->
-
-                <!-- <div v-if="mostrarBannerBloqueo"
-                    class="mx-6 mb-2 p-2 bg-orange-50 text-orange-700 border-l-4 border-orange-400 text-xs font-semibold">
-                    <i class="pi pi-lock mr-2 text-[10px]"></i>
-
-                    <span v-if="[1, 5].includes(props.perfil_id)">
-                        Sus datos están precargados por su perfil y no pueden ser modificados.
-                    </span>
-
-                    <span v-else>
-                        Por favor, busque por número de documento para desbloquear estos campos.
-                    </span>
-                </div> -->
                 <div class="flex gap-6 p-2 w-full justify-around">
                     <div
                         class="text-green-iimp font-bold max-w-[650px] w-full p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="col-span-1">
                             <label for="tipo_doc">Tipo de Documento <span class="text-red-600">*</span></label>
                             <Select name="tipo_doc" v-model="tipo_doc" v-bind="tipo_docAttrs" translate="no"
-                                :options="tiposDocumentoFiltrados" @change="clearDocument" optionLabel="name_en"
-                                optionValue="id" placeholder="Seleccionar documento" showClear checkmark
+                                :options="tiposDocumentoFiltrados" @change="clearDocument" optionLabel="name_es"
+                                optionValue="sie_code" placeholder="Seleccionar documento" showClear checkmark
                                 class="w-full border-green-iimp" :class="{ 'bg-gray-100 opacity-70': esDNI }" />
                             <small class="text-red-600">{{ errors.tipo_doc }}</small>
                         </div>

@@ -68,74 +68,150 @@ class DocumentApiController extends Controller
 
     // public function getPersonData(Request $request)
     // {
-
     //     if (!str_contains($request->headers->get('referer'), 'registro') || (csrf_token() === null)) {
     //         abort(403, 'Unauthorized POST request.');
-    //         exit;
     //     }
 
-    //     /***  1. Validamos que se encuentre registrado ***/
-    //     $tipo_documento = TipoDocumento::find($request->id_tipo_documento);
-    //     $persona = Persona::where('id_tipo_documento', $request->id_tipo_documento)
-    //         ->where('documento', $request->numero_documento)
-    //         ->first();
+    //     $persona = null;
+    //     $id_tipo_doc = $request->id_tipo_documento;
+    //     $num_doc = $request->numero_documento;
     //     $status = true;
 
-    //     // dd($persona);
+    //     $wsController = app(\App\Http\Controllers\WebServiceController::class);
+    //     /** ******* LOCAL *********/
+    //     // $urlIIMP = "https://secure2.iimp.org:8443/KBServiciosPruebaIIMPJavaEnvironment/rest/WSViewPersona";
+    //     /** ******* PRODUCCION *********/
+    //     $urlIIMP = "https://secure2.iimp.org:8443/KBServiciosIIMPJavaEnvironment/rest/WSViewPersona";
 
-    //     if ($persona) {
-    //         $persona->pais = $persona->direccion->id_pais;
-    //         $persona->departamento  = $persona->direccion->id_departamento;
-    //         $persona->provincia  = $persona->direccion->id_provincia;
-    //         $persona->distrito  = $persona->direccion->id_distrito;
-    //         $persona->nacionalidad  = $persona->id_nacionalidad;
-    //         $persona->direccionPersona  = $persona->direccion->direccion;
-    //         $persona->cargo = $persona->ocupacion->name;
-    //         $persona->ocupacion = $persona->ocupacion->name;
-    //     } else {
-    //         $persona = new \stdClass();
-    //         $persona->id_tipo_documento = $request->id_tipo_documento;
-    //         $persona->documento = $request->numero_documento;
-    //         $persona->pais = 0;
-    //         $persona->departamento  = 0;
-    //         $persona->provincia  = 0;
-    //         $persona->distrito  = 0;
-    //         $persona->nacionalidad  = 0;
-    //         $persona->direccionPersona  = "";
-    //         $persona->cargo = "";
-    //         $persona->ocupacion = "";
-    //         $persona->celular = "";
-    //         $persona->correo = "";
-    //         $persona->sexo = 0;
-    //         $persona->nombres = "";
-    //         $persona->apellido_paterno = "";
-    //         $persona->apellido_materno = "";
-    //         $persona->fecha_nacimiento = $this->now;
-    //     }
+    //     $resIIMP = $wsController->sendWS($urlIIMP, json_encode([
+    //         "id_tipo_documento" => (string)$id_tipo_doc,
+    //         "documento" => (string)$num_doc
+    //     ]));
 
-    //     if ($request->id_tipo_documento == 1) {
+    //     $dataIIMP = (isset($resIIMP->info_persona) && $resIIMP->info_persona->code == "00") ? $resIIMP->info_persona : null;
 
-    //         // $api_persona = $this->getData('dni', $request->numero_documento);
+    //     dd($dataIIMP);
+    //     if ($dataIIMP) {
+    //         // 1. Buscar o instanciar Persona local
+    //         $persona = Persona::where('id_tipo_documento', $id_tipo_doc)
+    //             ->where('documento', $num_doc)
+    //             ->firstOrNew();
+
+    //         // 2. Manejo de Dirección
+    //         $direccion = ($persona->id_direccion > 0)
+    //             ? Direccion::find($persona->id_direccion)
+    //             : new Direccion;
+
+    //         $direccion->id_pais = (int)($dataIIMP->pais ?? 75);
+    //         $direccion->id_departamento = ($dataIIMP->departamento > 0) ? (int)$dataIIMP->departamento : null;
+    //         $direccion->id_provincia = ($dataIIMP->provincia > 0) ? (int)$dataIIMP->provincia : null;
+    //         $direccion->id_distrito = ($dataIIMP->distrito > 0) ? (int)$dataIIMP->distrito : null;
+    //         $direccion->direccion = $dataIIMP->direccion ?? 'LURIN';
+    //         $direccion->save();
+
+    //         // --- MANEJO DE OCUPACIÓN SEGURO ---
+    //         $ocupacion = null;
+
+    //         if (!empty($dataIIMP->id_ocupacion)) {
+    //             // 1. Intentamos buscar la ocupación por ID
+    //             $ocupacion = Ocupacion::find((int)$dataIIMP->id_ocupacion);
+
+    //             if ($ocupacion) {
+    //                 // 2. Si existe, SOLO actualizamos el nombre si la API NO viene vacía
+    //                 if (!empty(trim($dataIIMP->ocupacion))) {
+    //                     $ocupacion->name = trim(strtoupper($dataIIMP->ocupacion));
+    //                     $ocupacion->save();
+    //                 }
+    //             } else {
+    //                 // 3. Si NO existe, la creamos (aquí sí usamos el nombre que venga o un default)
+    //                 $ocupacion = Ocupacion::create([
+    //                     'id'          => (int)$dataIIMP->id_ocupacion,
+    //                     'name'        => !empty(trim($dataIIMP->ocupacion)) ? trim(strtoupper($dataIIMP->ocupacion)) : 'OCUPACIÓN DESCONOCIDA',
+    //                     'descripcion' => 'Creado automáticamente desde API IIMP',
+    //                     'isactive'    => true,
+    //                 ]);
+    //             }
+    //         }
+
+    //         // 4. Manejo de Empresa (Solo consulta por sie_code)
+    //         $empresaLocal = null;
+    //         if (!empty($dataIIMP->id_empresa)) {
+    //             $empresaLocal = Empresa::where('sie_code', (string)$dataIIMP->id_empresa)->first();
+    //         }
+
+
+    //         // dd($empresaLocal);
+
+    //         // 5. Asignación de datos a la Persona
+    //         if (!$persona->exists) {
+    //             $persona->id_tipo_documento = $id_tipo_doc;
+    //             $persona->documento = $num_doc;
+    //         }
+
+    //         $persona->id_direccion = $direccion->id;
+    //         $persona->id_ocupacion = $ocupacion ? $ocupacion->id : null;
+
+    //         if ($empresaLocal) {
+    //             $persona->id_empresa = $empresaLocal->id;
+    //             $persona->empresa   = $empresaLocal->nombre; // Usamos nombre de BD local
+    //         } else {
+    //             $persona->id_empresa = null;
+    //             $persona->empresa    = $dataIIMP->empresa ?? null; // Usamos texto de la API
+    //         }
+
+    //         $persona->nombres           = $dataIIMP->nombres;
+    //         $persona->apellido_paterno  = $dataIIMP->apellido_paterno;
+    //         $persona->apellido_materno  = $dataIIMP->apellido_materno;
+    //         $persona->correo            = $dataIIMP->correo ?? $persona->correo;
+    //         $persona->celular           = $dataIIMP->celular ?? $persona->celular;
+    //         $persona->sexo              = $dataIIMP->sexo ?? $persona->sexo;
+
+    //         $fechaApi = $dataIIMP->fecha_nacimiento ?? null;
+    //         if ($fechaApi === '0000-00-00' || empty($fechaApi)) {
+    //             // Usamos el formato Año-Mes-Día que requiere PostgreSQL
+    //             $persona->fecha_nacimiento = now()->format('Y-m-d');
+    //         } else {
+    //             // Si la fecha es válida (ej: 1995-03-25), la dejamos tal cual
+    //             $persona->fecha_nacimiento = $fechaApi;
+    //         }
+    //         // $persona->fecha_nacimiento  = $dataIIMP->fecha_nacimiento ?? $persona->fecha_nacimiento;
+    //         $persona->es_socio          = $dataIIMP->asociado ?? false;
+    //         $persona->sie_code          = $dataIIMP->sie_code ?? $persona->sie_code;
+
+    //         $persona->save();
+
+    //         // 6. Preparar para el FRONT (Aplanado)
+    //         $persona->direccionPersona = $direccion->direccion;
+    //         $persona->cargo            = $ocupacion ? $ocupacion->name : ($dataIIMP->ocupacion ?? "");
+    //         $persona->nombre_empresa   = $empresaLocal ? $empresaLocal->razon_social : ($dataIIMP->empresa ?? "");
+    //         $persona->pais             = $direccion->id_pais;
+    //         $persona->departamento     = $direccion->id_departamento ?? 0;
+    //         $persona->provincia        = $direccion->id_provincia ?? 0;
+    //         $persona->distrito         = $direccion->id_distrito ?? 0;
+    //     } elseif ($id_tipo_doc == 1) {
+    //         // FALLBACK RENIEC
     //         $fakeRequest = new \Illuminate\Http\Request();
-    //         $fakeRequest->merge(['tipo_doc' => 1, 'documento' => $request->numero_documento]);
-    //         $api_persona = $this->getData($fakeRequest);
+    //         $fakeRequest->merge(['tipo_doc' => 1, 'documento' => $num_doc]);
+    //         $api_reniec = $this->getData($fakeRequest);
 
-    //         if ($api_persona['status']) {
-    //             $persona->nombres = $api_persona['persona']->nombres;
-    //             $persona->apellido_paterno = $api_persona['persona']->apellidoPaterno;
-    //             $persona->apellido_materno = $api_persona['persona']->apellidoMaterno;
+    //         if ($api_reniec['status']) {
+    //             $persona = new \stdClass();
+    //             $persona->nombres          = $api_reniec['persona']->nombres;
+    //             $persona->apellido_paterno = $api_reniec['persona']->apellidoPaterno;
+    //             $persona->apellido_materno = $api_reniec['persona']->apellidoMaterno;
+    //             $persona->documento        = $num_doc;
+    //             $persona->id_tipo_documento = 1;
+    //             $persona->es_socio         = false;
     //         } else {
     //             $status = false;
     //         }
     //     }
 
+    //     if (!$persona) {
+    //         return response()->json(['status' => false, 'message' => 'No encontrado']);
+    //     }
 
-    //     $persona->es_socio = app(\App\Http\Controllers\WebServiceController::class)
-    //         ->validatePersonMember($request->id_tipo_documento, $request->numero_documento);
-
-    //     // $persona->es_socio =true;
-
-    //     return json_encode(['persona' => $persona, 'status' => $status]);
+    //     return response()->json(['persona' => $persona, 'status' => $status]);
     // }
 
     public function getPersonData(Request $request)
@@ -145,9 +221,22 @@ class DocumentApiController extends Controller
         }
 
         $persona = null;
-        $id_tipo_doc = $request->id_tipo_documento;
+
+        // ---> CAMBIO AQUI 1: Renombramos variables para no confundirnos
+        $sie_code_recibido = $request->id_tipo_documento; // El frontend ahora manda el sie_code (ej. 7)
         $num_doc = $request->numero_documento;
         $status = true;
+
+        // ---> CAMBIO AQUI 2: Traducimos el sie_code al ID local
+        $tipoDocumentoModel = \App\Models\TipoDocumento::where('sie_code', $sie_code_recibido)->first();
+
+        // Si por alguna razón mandan un código que no existe, evitamos que explote
+        if (!$tipoDocumentoModel) {
+            return response()->json(['status' => false, 'message' => 'Tipo de documento no válido en el sistema.']);
+        }
+
+        $id_tipo_doc_local = $tipoDocumentoModel->id; // Este es el ID real (ej. 5 para Pasaporte)
+
 
         $wsController = app(\App\Http\Controllers\WebServiceController::class);
         /** ******* LOCAL *********/
@@ -156,15 +245,17 @@ class DocumentApiController extends Controller
         $urlIIMP = "https://secure2.iimp.org:8443/KBServiciosIIMPJavaEnvironment/rest/WSViewPersona";
 
         $resIIMP = $wsController->sendWS($urlIIMP, json_encode([
-            "id_tipo_documento" => (string)$id_tipo_doc,
+            "id_tipo_documento" => (string)$sie_code_recibido, // Mandamos el sie_code a la API de Java
             "documento" => (string)$num_doc
         ]));
 
         $dataIIMP = (isset($resIIMP->info_persona) && $resIIMP->info_persona->code == "00") ? $resIIMP->info_persona : null;
 
+        // dd($dataIIMP); // Acuérdate de quitar este dd() para que Vue no falle
+
         if ($dataIIMP) {
-            // 1. Buscar o instanciar Persona local
-            $persona = Persona::where('id_tipo_documento', $id_tipo_doc)
+            // ---> CAMBIO AQUI 3: Usamos el ID LOCAL para buscar en BD
+            $persona = Persona::where('id_tipo_documento', $id_tipo_doc_local)
                 ->where('documento', $num_doc)
                 ->firstOrNew();
 
@@ -184,17 +275,14 @@ class DocumentApiController extends Controller
             $ocupacion = null;
 
             if (!empty($dataIIMP->id_ocupacion)) {
-                // 1. Intentamos buscar la ocupación por ID
                 $ocupacion = Ocupacion::find((int)$dataIIMP->id_ocupacion);
 
                 if ($ocupacion) {
-                    // 2. Si existe, SOLO actualizamos el nombre si la API NO viene vacía
                     if (!empty(trim($dataIIMP->ocupacion))) {
                         $ocupacion->name = trim(strtoupper($dataIIMP->ocupacion));
                         $ocupacion->save();
                     }
                 } else {
-                    // 3. Si NO existe, la creamos (aquí sí usamos el nombre que venga o un default)
                     $ocupacion = Ocupacion::create([
                         'id'          => (int)$dataIIMP->id_ocupacion,
                         'name'        => !empty(trim($dataIIMP->ocupacion)) ? trim(strtoupper($dataIIMP->ocupacion)) : 'OCUPACIÓN DESCONOCIDA',
@@ -204,18 +292,16 @@ class DocumentApiController extends Controller
                 }
             }
 
-            // 4. Manejo de Empresa (Solo consulta por sie_code)
+            // 4. Manejo de Empresa
             $empresaLocal = null;
             if (!empty($dataIIMP->id_empresa)) {
                 $empresaLocal = Empresa::where('sie_code', (string)$dataIIMP->id_empresa)->first();
             }
 
-
-            // dd($empresaLocal);
-
             // 5. Asignación de datos a la Persona
             if (!$persona->exists) {
-                $persona->id_tipo_documento = $id_tipo_doc;
+                // ---> CAMBIO AQUI 4: Asignamos el ID LOCAL a la nueva persona
+                $persona->id_tipo_documento = $id_tipo_doc_local;
                 $persona->documento = $num_doc;
             }
 
@@ -224,10 +310,10 @@ class DocumentApiController extends Controller
 
             if ($empresaLocal) {
                 $persona->id_empresa = $empresaLocal->id;
-                $persona->empresa   = $empresaLocal->nombre; // Usamos nombre de BD local
+                $persona->empresa   = $empresaLocal->nombre;
             } else {
                 $persona->id_empresa = null;
-                $persona->empresa    = $dataIIMP->empresa ?? null; // Usamos texto de la API
+                $persona->empresa    = $dataIIMP->empresa ?? null;
             }
 
             $persona->nombres           = $dataIIMP->nombres;
@@ -239,13 +325,11 @@ class DocumentApiController extends Controller
 
             $fechaApi = $dataIIMP->fecha_nacimiento ?? null;
             if ($fechaApi === '0000-00-00' || empty($fechaApi)) {
-                // Usamos el formato Año-Mes-Día que requiere PostgreSQL
                 $persona->fecha_nacimiento = now()->format('Y-m-d');
             } else {
-                // Si la fecha es válida (ej: 1995-03-25), la dejamos tal cual
                 $persona->fecha_nacimiento = $fechaApi;
             }
-            // $persona->fecha_nacimiento  = $dataIIMP->fecha_nacimiento ?? $persona->fecha_nacimiento;
+
             $persona->es_socio          = $dataIIMP->asociado ?? false;
             $persona->sie_code          = $dataIIMP->sie_code ?? $persona->sie_code;
 
@@ -259,7 +343,11 @@ class DocumentApiController extends Controller
             $persona->departamento     = $direccion->id_departamento ?? 0;
             $persona->provincia        = $direccion->id_provincia ?? 0;
             $persona->distrito         = $direccion->id_distrito ?? 0;
-        } elseif ($id_tipo_doc == 1) {
+
+            // ---> CAMBIO AQUI 5: Actualizamos el id_tipo_documento que viaja al frontend para que Vue no se vuelva loco
+            $persona->id_tipo_documento = $sie_code_recibido;
+
+        } elseif ($sie_code_recibido == 1) { // ---> CAMBIO AQUI 6: Comparamos con sie_code_recibido
             // FALLBACK RENIEC
             $fakeRequest = new \Illuminate\Http\Request();
             $fakeRequest->merge(['tipo_doc' => 1, 'documento' => $num_doc]);
@@ -271,6 +359,7 @@ class DocumentApiController extends Controller
                 $persona->apellido_paterno = $api_reniec['persona']->apellidoPaterno;
                 $persona->apellido_materno = $api_reniec['persona']->apellidoMaterno;
                 $persona->documento        = $num_doc;
+                // ---> CAMBIO AQUI 7: Devolvemos el sie_code al front
                 $persona->id_tipo_documento = 1;
                 $persona->es_socio         = false;
             } else {
@@ -284,7 +373,6 @@ class DocumentApiController extends Controller
 
         return response()->json(['persona' => $persona, 'status' => $status]);
     }
-
 
     public function getEmpresaData(Request $request)
     {
@@ -368,6 +456,8 @@ class DocumentApiController extends Controller
             'status' => $status
         ]);
     }
+
+
     public function validatePersonSoc(Request $request)
     {
 

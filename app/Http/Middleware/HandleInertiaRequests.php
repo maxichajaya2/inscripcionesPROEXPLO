@@ -46,7 +46,7 @@ class HandleInertiaRequests extends Middleware
         $sharedData['general.paises'] = Pais::where('isactive', true)->get();
         /** PASO 1 */
         $sharedData['general.tipDocPer'] = TipoDocumento::where('isactive', true)
-                ->whereIn('sie_code', [0,1,4,7])
+                ->whereIn('sie_code', [1,4,7])
                 ->whereJsonContains('tipo', 'persona')
                 ->get();
         $sharedData['general.tipoDocumentoPago'] = TipoDocumentoPago::where('isactive', true)->get();
