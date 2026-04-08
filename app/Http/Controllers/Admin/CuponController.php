@@ -21,7 +21,7 @@ class CuponController extends Controller
 
     public function store(Request $request)
     {
-        dd($request->all());
+        // dd($request->all());
         $validated = $request->validate([
             'codigo_cupon' => 'required|string|max:100|unique:pgsql_second.cupones,codigo_cupon',
             'tipo_descuento' => 'required|string|max:50',
