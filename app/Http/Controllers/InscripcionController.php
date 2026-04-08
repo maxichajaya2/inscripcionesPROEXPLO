@@ -249,15 +249,15 @@ class InscripcionController extends Controller
     public function getForm(Request $request)
     {
 
-        // dd($request->all());
-        // dd([
-        //     'MENSAJE' => 'DEPURANDO DATOS RECIBIDOS DEL FRONTEND',
-        //     'TODO_EL_REQUEST' => $request->all(),
-        //     'CATEGORIA_PRINCIPAL_ID' => $request->selected_categoria,
-        //     'EXTRAS_JSON' => $request->extras_seleccionados,
-        //     'EXTRAS_DECODIFICADOS' => json_decode($request->extras_seleccionados, true),
-        //     'SECCION' => $request->section
-        // ]);
+        dd($request->all());
+        dd([
+            'MENSAJE' => 'DEPURANDO DATOS RECIBIDOS DEL FRONTEND',
+            'TODO_EL_REQUEST' => $request->all(),
+            'CATEGORIA_PRINCIPAL_ID' => $request->selected_categoria,
+            'EXTRAS_JSON' => $request->extras_seleccionados,
+            'EXTRAS_DECODIFICADOS' => json_decode($request->extras_seleccionados, true),
+            'SECCION' => $request->section
+        ]);
 
         // 1. Validaciones iniciales
         $this->validateRequest($request);

@@ -9,6 +9,11 @@ use App\Http\Controllers\DocumentosController;
 use App\Http\Controllers\DocumentApiController;
 use App\Http\Controllers\PadreController;
 use App\Http\Controllers\NiubizController;
+use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Asociados\AsociadosController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\CuponController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,6 +25,26 @@ use App\Http\Controllers\NiubizController;
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+// --- RUTAS DE ADMINISTRACIÓN ---
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin/index', [AdminController::class, 'index'])->name('admin.index');
+    // Rutas para el CRUD de Roles
+    Route::get('/admin/roles', [RoleController::class, 'index'])->name('roles.index');
+    Route::post('/admin/roles', [RoleController::class, 'store'])->name('roles.store');
+    Route::put('/admin/roles/{role}', [RoleController::class, 'update'])->name('roles.update');
+    Route::delete('/admin/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
+
+    Route::resource('usuarios', UserController::class)->except(['create', 'show', 'edit']);
+    Route::resource('cupones', CuponController::class)->except(['create', 'show', 'edit']);
+
+});
+
+// --- RUTAS DE ASOCIADOS ---
+Route::middleware(['auth', 'role:asociado|admin'])->group(function () {
+    Route::get('/asociados/index', [AsociadosController::class, 'index'])->name('asociados.index');
+});
+
 
 Route::get('/', [InscripcionController::class, 'index'])->name('inscripcion.index');
 Route::get('/cursos/{id}', [InscripcionController::class, 'indexCursos'])->name('inscripcion.indexCursos');
@@ -62,3 +87,12 @@ Route::get('/niubiz/test', [NiubizController::class, 'index'])->name('niubiz.pay
 Route::post('/niubiz-respuesta', function () {
     return response()->noContent();
 })->name('niubiz.dummy');
+
+// --- RUTAS DE PERFIL (ESTAS SON LAS QUE FALTABAN) ---
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+require __DIR__.'/auth.php';

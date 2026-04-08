@@ -43,6 +43,22 @@ class HandleInertiaRequests extends Middleware
     {
         $sharedData = parent::share($request);
 
+         // --- DATOS DEL USUARIO (Lo que faltaba) ---
+        $sharedData['auth'] = [
+            'user' => $request->user() ? [
+                'id' => $request->user()->id,
+                'name' => $request->user()->name,
+                'email' => $request->user()->email,
+                // Obtenemos los nombres de los roles de Spatie
+                'roles' => $request->user()->getRoleNames(),
+                // Rol principal formateado para mostrar en la UI
+                'role_name' => ucfirst($request->user()->roles->first()?->name ?? 'Participante'),
+                // Avatar profesional basado en iniciales (Gratis y elegante)
+                'avatar' => 'https://ui-avatars.com/api/?name=' . urlencode($request->user()->name) . '&color=7F9CF5&background=EBF4FF&bold=true',
+            ] : null,
+        ];
+
+
         $sharedData['general.paises'] = Pais::where('isactive', true)->get();
         /** PASO 1 */
         $sharedData['general.tipDocPer'] = TipoDocumento::where('isactive', true)
