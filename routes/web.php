@@ -43,6 +43,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 // --- RUTAS DE ASOCIADOS ---
 Route::middleware(['auth', 'role:asociado|admin'])->group(function () {
     Route::get('/asociados/index', [AsociadosController::class, 'index'])->name('asociados.index');
+     Route::resource('cupones', CuponController::class)->except(['create', 'show', 'edit']);
 });
 
 
