@@ -4,18 +4,20 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Role; // Tu modelo personalizado con $connection = 'pgsql_second'
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
-use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
     public function index()
     {
-        // Traemos a los usuarios con sus roles asignados
-        $usuarios = User::with('roles')->latest()->get();
-        // Traemos los roles disponibles para mostrarlos en el formulario
+        // Cargamos usuarios de DB1 y Roles de DB2 (via modelo Role)
+       $usuarios = User::with('roles')
+        ->where('id', '!=', auth()->id())
+        ->latest()
+        ->get();
         $roles = Role::all();
 
         return inertia('Admin/Usuarios/Index', [
@@ -25,59 +27,74 @@ class UserController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'roles' => 'array',
-        ]);
+{
 
+    $request->validate([
+        'name'     => 'required|string|max:255',
+        'email'    => 'required|string|email|max:255|unique:users,email',
+        'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        'role'     => 'required|string|exists:pgsql_second.roles,name', // Validamos en la DB correcta
+    ]);
+
+    try {
+        // 1. Creamos el usuario en DB principal
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
+            'name'     => $request->name,
+            'email'    => $request->email,
             'password' => Hash::make($request->password),
         ]);
 
-        if ($request->has('roles')) {
-            $user->assignRole($request->roles);
+        // 2. IMPORTANTE: Buscamos el rol explícitamente en la DB secundaria
+        // Usamos tu modelo personalizado Role que ya tiene la conexión pgsql_second
+        $role = Role::where('name', $request->role)->first();
+
+        // 3. Asignamos el objeto Rol (no solo el nombre)
+        if ($role) {
+            $user->assignRole($role);
         }
 
         return redirect()->back();
+
+    } catch (\Exception $e) {
+        return redirect()->back()->withErrors(['email' => 'Error al crear: ' . $e->getMessage()]);
     }
+}
 
     public function update(Request $request, User $usuario)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $usuario->id,
-            'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
-            'roles' => 'array',
-        ]);
+{
+    $request->validate([
+        'name'     => 'required|string|max:255',
+        'email'    => 'required|string|email|max:255|unique:users,email,' . $usuario->id,
+        'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
+        'role'     => 'required|string|exists:pgsql_second.roles,name',
+    ]);
 
+    $usuario->update([
+        'name'  => $request->name,
+        'email' => $request->email,
+    ]);
+
+    if ($request->filled('password')) {
         $usuario->update([
-            'name' => $request->name,
-            'email' => $request->email,
+            'password' => Hash::make($request->password),
         ]);
-
-        // Solo actualiza la contraseña si el admin escribió una nueva
-        if ($request->filled('password')) {
-            $usuario->update([
-                'password' => Hash::make($request->password),
-            ]);
-        }
-
-        // Sincroniza los roles (elimina los viejos y pone los nuevos)
-        if ($request->has('roles')) {
-            $usuario->syncRoles($request->roles);
-        }
-
-        return redirect()->back();
     }
+
+    // --- EL FIX PARA EL UPDATE ---
+    // 1. Buscamos el objeto Rol explícitamente en pgsql_second
+    $role = Role::where('name', $request->role)->first();
+
+    // 2. Sincronizamos usando el OBJETO, no el string
+    if ($role) {
+        $usuario->syncRoles([$role]);
+    }
+    // -----------------------------
+
+    return redirect()->back();
+}
 
     public function destroy(User $usuario)
     {
-        // Medida de seguridad: evitar que un usuario se elimine a sí mismo
         if (auth()->id() === $usuario->id) {
             return redirect()->back()->withErrors(['error' => 'No puedes eliminarte a ti mismo.']);
         }
