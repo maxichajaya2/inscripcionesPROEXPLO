@@ -17,7 +17,10 @@ const authUser = computed(() => {
 });
 
 const isAdmin = computed(() => authUser.value.roles.includes('admin'));
-const isAsociado = computed(() => authUser.value.roles.includes('asociado'));
+const isAsociado = computed(() => authUser.value.roles.includes('asociado')||
+    authUser.value.roles.includes('Asociado'));
+
+console.log('Usuario autenticado:', authUser.value);
 </script>
 
 <template>
@@ -46,9 +49,19 @@ const isAsociado = computed(() => authUser.value.roles.includes('asociado'));
             <nav class="flex-1 px-4 py-8 space-y-1 overflow-y-auto custom-scrollbar">
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-4 mb-3">General</p>
 
-                <Link :href="route('admin.index')"
+                <Link :href="route('admin.index')" v-if="isAdmin"
                     class="flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all"
                     :class="route().current('admin.index') ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/50' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    Inicio
+                </Link>
+
+                <Link :href="route('asociados.index')" v-if="isAsociado"
+                    class="flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all"
+                    :class="route().current('asociados.index') ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/50' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -71,15 +84,6 @@ const isAsociado = computed(() => authUser.value.roles.includes('asociado'));
 
                 <div v-if="isAdmin" class="pt-6">
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-4 mb-3">Administración</p>
-                    <Link :href="route('roles.index')"
-                        class="flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all"
-                        :class="route().current('roles.index') ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/50' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                        </svg>
-                        Roles y Permisos
-                    </Link>
                     <Link :href="route('usuarios.index')"
                         class="flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all mt-1"
                         :class="route().current('usuarios.index') ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/50' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
@@ -182,6 +186,6 @@ const isAsociado = computed(() => authUser.value.roles.includes('asociado'));
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #f97316; /* Hover del scrollbar en naranja (orange-500) */
+    background: #f97316;
 }
 </style>
