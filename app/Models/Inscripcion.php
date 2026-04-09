@@ -31,4 +31,9 @@ class Inscripcion extends Model
     {
         return $this->belongsTo(Facturacion::class, 'id_facturacion');
     }
+
+    public function cupon(): BelongsTo
+    {
+        return $this->belongsTo(Cupon::class, 'id_cupon');
+    }
 }

@@ -17,7 +17,7 @@ const authUser = computed(() => {
 });
 
 const isAdmin = computed(() => authUser.value.roles.includes('admin'));
-const isAsociado = computed(() => authUser.value.roles.includes('asociado')||
+const isAsociado = computed(() => authUser.value.roles.includes('asociado') ||
     authUser.value.roles.includes('Asociado'));
 
 console.log('Usuario autenticado:', authUser.value);
@@ -35,10 +35,12 @@ console.log('Usuario autenticado:', authUser.value);
 
             <div class="flex items-center h-20 bg-slate-900 px-6 border-b border-white/10 shrink-0">
                 <Link :href="route('admin.index')" class="flex items-center gap-3">
-                    <img src="/images/logo-proexplo.png" alt="Logo Proexplo" class="h-10 w-auto object-contain transition-transform hover:scale-105" />
+                    <img src="/images/logo-proexplo.png" alt="Logo Proexplo"
+                        class="h-10 w-auto object-contain transition-transform hover:scale-105" />
                 </Link>
 
-                <button @click="isMobileMenuOpen = false" class="ml-auto text-slate-300 md:hidden hover:text-orange-500 transition-colors">
+                <button @click="isMobileMenuOpen = false"
+                    class="ml-auto text-slate-300 md:hidden hover:text-orange-500 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round"
                             stroke-linejoin="round" />
@@ -70,7 +72,8 @@ console.log('Usuario autenticado:', authUser.value);
                 </Link>
 
                 <div v-if="isAdmin || isAsociado" class="pt-6">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-4 mb-3">Gestión Comercial</p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-4 mb-3">Gestión
+                        Comercial</p>
                     <Link :href="route('cupones.index')"
                         class="flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all"
                         :class="route().current('cupones.index') ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/50' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
@@ -80,10 +83,21 @@ console.log('Usuario autenticado:', authUser.value);
                         </svg>
                         Cupones
                     </Link>
+
+                    <Link :href="route('inscritos.index')"
+                        class="flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all"
+                        :class="route().current('inscritos.index') ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/50' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                        </svg>
+                        Inscritos
+                    </Link>
                 </div>
 
                 <div v-if="isAdmin" class="pt-6">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-4 mb-3">Administración</p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-4 mb-3">Administración
+                    </p>
                     <Link :href="route('usuarios.index')"
                         class="flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all mt-1"
                         :class="route().current('usuarios.index') ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/50' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
@@ -123,7 +137,8 @@ console.log('Usuario autenticado:', authUser.value);
         <div class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
             <header class="h-20 bg-white border-b border-gray-200 shrink-0 z-30 flex items-center shadow-sm">
                 <div class="w-full flex items-center justify-between px-6 md:px-10">
-                    <button @click="isMobileMenuOpen = true" class="p-2 -ml-2 text-gray-600 md:hidden hover:text-orange-600 transition-colors">
+                    <button @click="isMobileMenuOpen = true"
+                        class="p-2 -ml-2 text-gray-600 md:hidden hover:text-orange-600 transition-colors">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path d="M4 6h16M4 12h16M4 18h16" stroke-width="2" stroke-linecap="round" />
                         </svg>

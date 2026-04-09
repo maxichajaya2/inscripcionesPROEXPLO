@@ -14,6 +14,7 @@ use App\Http\Controllers\Asociados\AsociadosController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\CuponController;
+use App\Http\Controllers\Admin\InscritosController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,20 +38,21 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::resource('usuarios', UserController::class)->except(['create', 'show', 'edit']);
     Route::resource('cupones', CuponController::class)->except(['create', 'show', 'edit']);
-
+    Route::get('/inscritos', [InscritosController::class, 'index'])->name('inscritos.index');
 });
 
 // --- RUTAS DE ASOCIADOS ---
 Route::middleware(['auth', 'role:asociado|admin'])->group(function () {
     Route::get('/asociados/index', [AsociadosController::class, 'index'])->name('asociados.index');
-     Route::resource('cupones', CuponController::class)->except(['create', 'show', 'edit']);
+    Route::resource('cupones', CuponController::class)->except(['create', 'show', 'edit']);
+    Route::get('/inscritos', [InscritosController::class, 'index'])->name('inscritos.index');
 });
 
 
 Route::get('/', [InscripcionController::class, 'index'])->name('inscripcion.index');
 Route::get('/cursos/{id}', [InscripcionController::class, 'indexCursos'])->name('inscripcion.indexCursos');
 Route::post('/contactanos', [InscripcionController::class, 'contactanos'])->name('contactanos.store');
-    /*return Inertia::render('Welcome', [
+/*return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
@@ -71,9 +73,9 @@ Route::get('/registro/docente', [InscripcionController::class, 'docente'])->name
 Route::get('/registro/cursosviajes', [InscripcionController::class, 'cursosViajes'])->name('inscripcion.cursosviajes');
 
 Route::post('/pago/getform', [InscripcionController::class, 'getForm'])->name('niubiz.getform');
-Route::post('/pago/getform/niubiz/{id}/{order}', [InscripcionController::class, 'niubizPayment'])->where('id','[0-9]+');
+Route::post('/pago/getform/niubiz/{id}/{order}', [InscripcionController::class, 'niubizPayment'])->where('id', '[0-9]+');
 
-Route::get('/pago/confirmar/{id}', [InscripcionController::class, 'confirmPayment'])->name('inscripcion.extemin')->where('id','[0-9]+');
+Route::get('/pago/confirmar/{id}', [InscripcionController::class, 'confirmPayment'])->name('inscripcion.extemin')->where('id', '[0-9]+');
 Route::get('/pago/error/{id}', [PadreController::class, 'geterror'])->name('pago.geterror');
 
 Route::post('/api/validatepersonsoc', [DocumentApiController::class, 'validatePersonSoc'])->name('api.validatepersonsoc');
@@ -96,4 +98,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
