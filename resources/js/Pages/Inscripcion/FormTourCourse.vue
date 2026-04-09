@@ -182,7 +182,7 @@ const esVisitaTecnicaForzada = computed(() => {
         : [Number(props.course)];
 
     // Retorna true si alguno de los IDs es 81 o 82
-    return idsCursos.includes(81) || idsCursos.includes(82);
+    return idsCursos.includes(81) || idsCursos.includes(82) || idsCursos.includes(84);
 });
 
 </script>
