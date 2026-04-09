@@ -36,4 +36,11 @@ class Inscripcion extends Model
     {
         return $this->belongsTo(Cupon::class, 'id_cupon');
     }
+
+    public function categoria_cursos_viajes(): BelongsTo
+    {
+        return $this->belongsTo(CategoriaCursoViaje::class, 'id_categoria_cursos_viajes');
+    }
+
+
 }

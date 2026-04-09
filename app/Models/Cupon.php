@@ -12,7 +12,7 @@ class Cupon extends Model
     protected $connection = "pgsql_second";
     protected $table = 'cupones';
 
-   protected $fillable = [
+    protected $fillable = [
         'codigo_cupon', // <-- ¡Este era el que faltaba!
         'tipo_descuento',
         'valor',
@@ -27,4 +27,10 @@ class Cupon extends Model
         'is_active',
         'is_delete',
     ];
+
+    public function inscritos()
+    {
+        // Un cupón tiene muchas inscripciones
+        return $this->hasMany(Inscripcion::class, 'id_cupon');
+    }
 }

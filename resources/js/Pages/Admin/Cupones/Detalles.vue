@@ -1,27 +1,38 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 
 const props = defineProps({
-    inscritos: Array
+    cupon: Object,
+    inscritos: Object,      // Paginación de Laravel (para la tabla)
+    inscripciones: Array,   // Datos mapeados con info de Niubiz (para el modal)
+    filters: Object
 });
 
 // ==========================================
 // ESTADOS, BÚSQUEDA Y MODAL
 // ==========================================
-const searchQuery = ref('');
-const currentPage = ref(1);
-const itemsPerPage = 10;
-
+const search = ref(props.filters.search || '');
 const showModal = ref(false);
 const selectedInscrito = ref(null);
 
-const openDetails = (inscrito) => {
-    selectedInscrito.value = inscrito;
-    showModal.value = true;
-    // Evitar scroll en el body cuando el modal está abierto
-    document.body.style.overflow = 'hidden';
+// Buscador en tiempo real (Recarga la página vía Inertia)
+watch(search, (value) => {
+    router.get(route('cupones.show', props.cupon.id), { search: value }, {
+        preserveState: true,
+        replace: true
+    });
+});
+
+const openDetails = (inscritoId) => {
+    // Buscamos en el array de inscripciones el objeto que tiene toda la info detallada
+    const detallado = props.inscripciones.find(i => i.id === inscritoId);
+    if (detallado) {
+        selectedInscrito.value = detallado;
+        showModal.value = true;
+        document.body.style.overflow = 'hidden';
+    }
 };
 
 const closeModal = () => {
@@ -29,31 +40,6 @@ const closeModal = () => {
     setTimeout(() => selectedInscrito.value = null, 300);
     document.body.style.overflow = 'auto';
 };
-
-// ==========================================
-// FILTROS Y PAGINACIÓN
-// ==========================================
-const filteredInscritos = computed(() => {
-    const query = searchQuery.value.toLowerCase();
-    return props.inscritos.filter(inscrito =>
-        inscrito.nombres.toLowerCase().includes(query) ||
-        inscrito.email.toLowerCase().includes(query) ||
-        inscrito.id.toString().includes(query) ||
-        inscrito.facturacion.ruc.toLowerCase().includes(query) ||
-        inscrito.facturacion.razon_social.toLowerCase().includes(query)
-    );
-});
-
-watch(searchQuery, () => { currentPage.value = 1; });
-
-const totalPages = computed(() => Math.ceil(filteredInscritos.value.length / itemsPerPage));
-const paginatedInscritos = computed(() => {
-    const start = (currentPage.value - 1) * itemsPerPage;
-    return filteredInscritos.value.slice(start, start + itemsPerPage);
-});
-
-const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++; };
-const prevPage = () => { if (currentPage.value > 1) currentPage.value--; };
 
 // ==========================================
 // UTILIDADES VISUALES
@@ -67,14 +53,13 @@ const getInitials = (name) => {
 
 const statusStyle = (status) => {
     if (status === 'PAGADO') return 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-emerald-600/20';
-    if (status === 'PENDIENTE') return 'bg-amber-50 text-amber-700 border-amber-200 ring-amber-600/20';
     return 'bg-slate-50 text-slate-600 border-slate-200 ring-slate-500/20';
 };
 </script>
 
 <template>
 
-    <Head title="Inscritos | Proexplo" />
+    <Head :title="'Reporte Cupón - ' + cupon.codigo_cupon" />
 
     <AuthenticatedLayout>
         <div class="max-w-7xl mx-auto space-y-6 sm:px-6 lg:px-8 py-8">
@@ -82,21 +67,44 @@ const statusStyle = (status) => {
             <!-- ENCABEZADO Y BUSCADOR -->
             <div
                 class="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <div>
-                    <h2 class="text-2xl font-black text-slate-900 tracking-tight">Registro de Inscritos</h2>
-                    <p class="text-sm text-slate-500 mt-1">Gestiona los participantes y valida sus pagos en Niubiz.</p>
+                <div class="flex items-center gap-4">
+                    <Link :href="route('cupones.index')"
+                        class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 transition-all text-slate-600 shadow-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </Link>
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-900 tracking-tight">Cupón: {{ cupon.codigo_cupon }}
+                        </h2>
+                        <p class="text-sm text-slate-500 mt-1 uppercase font-bold tracking-wider">Empresa: {{
+                            cupon.razon_social }}</p>
+                    </div>
                 </div>
 
-                <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-                    <div class="relative w-full sm:w-80">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                            </svg>
-                        </span>
-                        <input v-model="searchQuery" type="text" placeholder="Buscar participante, RUC..."
-                            class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all text-sm outline-none text-slate-700 placeholder-slate-400" />
+                <div class="relative w-full sm:w-80">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                        </svg>
+                    </span>
+                    <input v-model="search" type="text" placeholder="Buscar inscrito o documento..."
+                        class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm outline-none text-slate-700 placeholder-slate-400" />
+                </div>
+            </div>
+
+            <!-- STATS RÁPIDAS -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div
+                        class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center font-black text-xl border border-indigo-100">
+                        {{ cupon.usos_actuales }}
+                    </div>
+                    <div>
+                        <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Usos Registrados</p>
+                        <p class="text-sm font-bold text-slate-700">Límite: {{ cupon.limite_usos }}</p>
                     </div>
                 </div>
             </div>
@@ -107,111 +115,48 @@ const statusStyle = (status) => {
                     <table class="min-w-full divide-y divide-slate-200">
                         <thead class="bg-slate-50">
                             <tr>
-                                <th scope="col"
-                                    class="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                    Inscripción</th>
-                                <th scope="col"
+                                <th
                                     class="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                                     Participante</th>
-                                <th scope="col"
+                                <th
                                     class="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                    Facturación</th>
-
-                                <th scope="col"
+                                    Documento</th>
+                                <th
                                     class="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                    Monto</th>
-                                <th scope="col"
-                                    class="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                    Descuento
-                                </th>
-                                <th scope="col"
-                                    class="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                    Estado Niubiz</th>
-                                <th scope="col"
+                                    Fecha de Uso</th>
+                                <th
                                     class="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                                     Acciones</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 bg-white">
-                            <tr v-for="inscrito in paginatedInscritos" :key="inscrito.id"
+                            <tr v-for="item in inscritos.data" :key="item.id"
                                 class="hover:bg-slate-50/80 transition-colors group">
-
-                                <!-- ID y Fecha -->
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex flex-col">
-                                        <span class="text-sm font-black text-slate-900">#{{ inscrito.id }}</span>
-                                        <span class="text-[11px] font-medium text-slate-500 mt-0.5">{{
-                                            inscrito.fecha_registro }}</span>
-                                    </div>
-                                </td>
-
-                                <!-- Participante con Avatar -->
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center gap-3">
                                         <div
-                                            class="h-9 w-9 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 font-bold text-xs ring-2 ring-white shadow-sm">
-                                            {{ getInitials(inscrito.nombres) }}
+                                            class="h-9 w-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs shadow-sm">
+                                            {{ getInitials(item.persona?.nombres) }}
                                         </div>
                                         <div class="flex flex-col">
-                                            <span class="text-sm font-bold text-slate-900">{{ inscrito.nombres }}</span>
-                                            <span class="text-[11px] text-slate-500">{{ inscrito.email }}</span>
+                                            <span class="text-sm font-bold text-slate-900">{{ item.persona?.nombres }}
+                                                {{ item.persona?.apellido_paterno }}</span>
+                                            <span class="text-[11px] text-slate-500 italic">ID Inscripción: #{{ item.id
+                                                }}</span>
                                         </div>
                                     </div>
                                 </td>
-
-                                <!-- Facturación -->
-                                <td class="px-6 py-4">
-                                    <div v-if="inscrito.facturacion.ruc !== '-'" class="flex flex-col">
-                                        <span class="text-xs font-bold text-slate-800 line-clamp-1"
-                                            :title="inscrito.facturacion.razon_social">
-                                            {{ inscrito.facturacion.razon_social }}
-                                        </span>
-                                        <span class="text-[11px] text-slate-500 mt-0.5 font-mono">{{
-                                            inscrito.facturacion.tipo_documento }}: {{ inscrito.facturacion.ruc
-                                            }}</span>
-                                    </div>
-                                    <span v-else
-                                        class="inline-flex items-center px-2 py-1 rounded text-[10px] font-medium bg-slate-100 text-slate-500 border border-slate-200">
-                                        Sin Factura
-                                    </span>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase mr-1">{{
+                                        item.persona?.tipo_documento?.name_es }}:</span>
+                                    {{ item.persona?.documento }}
                                 </td>
-
-
-                                <!-- Monto Total -->
-                                <td class="px-6 py-4 text-center whitespace-nowrap">
-                                    <span class="text-sm font-black text-slate-900">
-                                        {{ inscrito.facturacion.monto_total > 0 ? '$' + inscrito.facturacion.monto_total
-                                            : '-' }}
-                                    </span>
+                                <td class="px-6 py-4 text-center text-sm text-slate-500 font-mono">
+                                    {{ item.created_at.slice(0, 16).replace('T', ' ') }}
                                 </td>
-
-                                <!-- NUEVA CELDA: DESCUENTO -->
                                 <td class="px-6 py-4 text-center whitespace-nowrap">
-                                    <!-- Si tiene cupón, mostramos SÍ en color moradito/índigo -->
-                                    <span v-if="inscrito.cupon"
-                                        class="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-200">
-                                        SÍ
-                                    </span>
-                                    <!-- Si no tiene cupón, mostramos NO en gris -->
-                                    <span v-else
-                                        class="inline-flex items-center px-2 py-1 rounded text-[10px] font-medium bg-slate-50 text-slate-400 border border-slate-200">
-                                        NO
-                                    </span>
-                                </td>
-                                <!-- Estado Niubiz -->
-                                <td class="px-6 py-4 text-center whitespace-nowrap">
-                                    <span
-                                        :class="[statusStyle(inscrito.estado_pago), 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold border shadow-sm ring-1 ring-inset']">
-                                        <span
-                                            :class="['w-1.5 h-1.5 rounded-full', inscrito.estado_pago === 'PAGADO' ? 'bg-emerald-500' : 'bg-amber-500']"></span>
-                                        {{ inscrito.estado_pago }}
-                                    </span>
-                                </td>
-
-                                <!-- Acciones (Botón Ojo) -->
-                                <td class="px-6 py-4 text-center whitespace-nowrap">
-                                    <button @click="openDetails(inscrito)"
-                                        class="inline-flex items-center justify-center p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-orange-600 hover:border-orange-200 hover:bg-orange-50 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
+                                    <button @click="openDetails(item.id)"
+                                        class="inline-flex items-center justify-center p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         title="Ver detalle completo">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -222,21 +167,31 @@ const statusStyle = (status) => {
                                     </button>
                                 </td>
                             </tr>
-
-                            <!-- Empty State -->
-                            <tr v-if="filteredInscritos.length === 0">
-                                <td colspan="6" class="px-6 py-16 text-center">
-                                    <div class="flex flex-col items-center">
-                                        <div
-                                            class="h-12 w-12 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 mb-3 text-slate-400">
-                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <tr v-if="inscritos.data.length === 0">
+                                <td colspan="4" class="px-6 py-20">
+                                    <div class="flex flex-col items-center justify-center">
+                                        <!-- SVG de Carpeta Vacía / No Datos -->
+                                        <div class="bg-slate-50 p-4 rounded-full mb-4">
+                                            <svg class="w-12 h-12 text-slate-300" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                                                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
+                                                </path>
                                             </svg>
                                         </div>
-                                        <h3 class="text-sm font-bold text-slate-900">No se encontraron inscritos</h3>
-                                        <p class="text-xs text-slate-500 mt-1">Intenta ajustando los términos de
-                                            búsqueda.</p>
+
+                                        <h3 class="text-sm font-black text-slate-600 uppercase tracking-wider">Sin
+                                            registros</h3>
+                                        <p
+                                            class="text-xs text-slate-400 mt-1 max-w-[200px] text-center leading-relaxed">
+                                            No se encontraron usos registrados para este cupón en la base de datos.
+                                        </p>
+
+                                        <!-- Opcional: Botón para limpiar búsqueda si hay un término escrito -->
+                                        <button v-if="search" @click="search = ''"
+                                            class="mt-4 text-[10px] font-bold text-indigo-600 hover:text-indigo-800 uppercase tracking-widest border-b border-indigo-200">
+                                            Limpiar búsqueda
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -244,28 +199,17 @@ const statusStyle = (status) => {
                     </table>
                 </div>
 
-                <!-- Paginación -->
-                <div v-if="filteredInscritos.length > 0"
-                    class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
-                    <span class="text-xs text-slate-500 font-medium">
-                        Mostrando <span class="font-bold text-slate-900">{{ (currentPage - 1) * itemsPerPage + 1
-                        }}</span> -
-                        <span class="font-bold text-slate-900">{{ Math.min(currentPage * itemsPerPage,
-                            filteredInscritos.length) }}</span>
-                        de <span class="font-bold text-slate-900">{{ filteredInscritos.length }}</span>
-                    </span>
-                    <div class="flex items-center gap-2">
-                        <button @click="prevPage" :disabled="currentPage === 1"
-                            class="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-all shadow-sm">Anterior</button>
-                        <button @click="nextPage" :disabled="currentPage === totalPages"
-                            class="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-all shadow-sm">Siguiente</button>
-                    </div>
+                <!-- Paginación Laravel -->
+                <div v-if="inscritos.data.length > 0"
+                    class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex justify-center gap-2">
+                    <Link v-for="link in inscritos.links" :key="link.label" :href="link.url || '#'" v-html="link.label"
+                        :class="['px-3 py-1 rounded-lg text-xs font-bold transition-all', link.active ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50', !link.url ? 'opacity-50 cursor-not-allowed' : '']" />
                 </div>
             </div>
         </div>
     </AuthenticatedLayout>
 
-    <!-- Usamos Teleport para evitar problemas de overflow con padres -->
+    <!-- MODAL DE DETALLES (TELEPORT) -->
     <Teleport to="body">
         <!-- MODAL DE DETALLES (Estilo Slide / Card Overlay) -->
         <Transition enter-active-class="ease-out duration-300" enter-from-class="opacity-0" enter-to-class="opacity-100"
@@ -653,7 +597,6 @@ const statusStyle = (status) => {
 <style scoped>
 .custom-scrollbar::-webkit-scrollbar {
     width: 4px;
-    height: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
