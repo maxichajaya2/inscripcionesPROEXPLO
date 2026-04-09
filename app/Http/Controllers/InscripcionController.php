@@ -246,10 +246,64 @@ class InscripcionController extends Controller
         ]);
     }
 
-    public function getForm(Request $request)
+    // public function getForm(Request $request)
+    // {
+
+    //     // dd($request->all());
+    //     // dd([
+    //     //     'MENSAJE' => 'DEPURANDO DATOS RECIBIDOS DEL FRONTEND',
+    //     //     'TODO_EL_REQUEST' => $request->all(),
+    //     //     'CATEGORIA_PRINCIPAL_ID' => $request->selected_categoria,
+    //     //     'EXTRAS_JSON' => $request->extras_seleccionados,
+    //     //     'EXTRAS_DECODIFICADOS' => json_decode($request->extras_seleccionados, true),
+    //     //     'SECCION' => $request->section
+    //     // ]);
+
+    //     // 1. Validaciones iniciales
+    //     $this->validateRequest($request);
+
+    //     // 2. Obtener / Guardar Persona y Dirección
+    //     $persona = $this->handlePersona($request);
+
+    //     // 3. Obtener Categoría
+    //     $categoria = CategoriaInscripcion::findOrFail($request->input('selected_categoria'));
+
+    //     // 4. Calcular Total (Precio base + Días + Extras)
+    //     // Devuelve un array con [total, array_nombres_extras, json_dias]
+    //     $calculo = $this->calculateTotal($request, $categoria);
+
+
+    //     $total = $calculo['total'];
+    //     $nombres_extras = $calculo['nombres_extras'];
+    //     $dias_json = $calculo['dias_json'];
+    //     $descuento = $calculo['descuento_total'] ?? 0;
+
+    //     // 5. Crear Facturación y Cuota
+    //     $facturacion = $this->createFacturacion($request, $persona, $categoria, $total, $nombres_extras, $descuento);
+
+    //     // 6. Crear Inscripción (y subir archivo)
+    //     $inscripcion = $this->createInscripcion($request, $persona, $categoria, $facturacion, $dias_json);
+
+    //     // 7. Generar respuesta de Niubiz
+
+    //     return $this->generateNiubizResponse($persona, $inscripcion, $facturacion, $descuento);
+    // }
+
+     public function getForm(Request $request)
     {
 
-        // dd($request->all());
+        $sie_code_recibido = $request->input('tipo_doc');
+
+        $tipoDocumento = \App\Models\TipoDocumento::where('sie_code', $sie_code_recibido)->first();
+
+        if ($tipoDocumento) {
+            $request->merge(['tipo_doc' => $tipoDocumento->id]);
+        } else {
+            // Opcional: Si no existe, podrías lanzar un error o dejarlo pasar para que la validación falle
+            return redirect()->back()->withErrors(['tipo_doc' => 'El tipo de documento seleccionado no es válido para el sistema local.']);
+        }
+
+        //  dd($request->all());
         // dd([
         //     'MENSAJE' => 'DEPURANDO DATOS RECIBIDOS DEL FRONTEND',
         //     'TODO_EL_REQUEST' => $request->all(),
