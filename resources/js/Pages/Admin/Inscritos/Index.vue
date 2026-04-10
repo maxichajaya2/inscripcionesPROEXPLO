@@ -20,7 +20,6 @@ const selectedInscrito = ref(null);
 const openDetails = (inscrito) => {
     selectedInscrito.value = inscrito;
     showModal.value = true;
-    // Evitar scroll en el body cuando el modal está abierto
     document.body.style.overflow = 'hidden';
 };
 
@@ -28,6 +27,24 @@ const closeModal = () => {
     showModal.value = false;
     setTimeout(() => selectedInscrito.value = null, 300);
     document.body.style.overflow = 'auto';
+};
+
+
+const getCardBadgeStyle = (marca) => {
+    switch (marca) {
+        case 'Visa':
+            return 'bg-blue-50 text-blue-700 border-blue-200';
+        case 'Mastercard':
+            return 'bg-orange-50 text-orange-700 border-orange-200';
+        case 'American Express':
+            return 'bg-cyan-50 text-cyan-700 border-cyan-200';
+        case 'Diners Club':
+            return 'bg-slate-100 text-slate-700 border-slate-300';
+        case 'UnionPay':
+            return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+        default:
+            return 'bg-gray-50 text-gray-500 border-gray-200'; // Otra / Desconocida
+    }
 };
 
 // ==========================================
@@ -40,7 +57,9 @@ const filteredInscritos = computed(() => {
         inscrito.email.toLowerCase().includes(query) ||
         inscrito.id.toString().includes(query) ||
         inscrito.facturacion.ruc.toLowerCase().includes(query) ||
-        inscrito.facturacion.razon_social.toLowerCase().includes(query)
+        inscrito.facturacion.razon_social.toLowerCase().includes(query) ||
+        (inscrito.marca_tarjeta && inscrito.marca_tarjeta.toLowerCase().includes(query)) ||
+        (inscrito.numero_tarjeta && inscrito.numero_tarjeta.toLowerCase().includes(query))
     );
 });
 
@@ -51,9 +70,6 @@ const paginatedInscritos = computed(() => {
     const start = (currentPage.value - 1) * itemsPerPage;
     return filteredInscritos.value.slice(start, start + itemsPerPage);
 });
-
-const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++; };
-const prevPage = () => { if (currentPage.value > 1) currentPage.value--; };
 
 // ==========================================
 // UTILIDADES VISUALES
@@ -79,7 +95,6 @@ const statusStyle = (status) => {
     <AuthenticatedLayout>
         <div class="max-w-7xl mx-auto space-y-6 sm:px-6 lg:px-8 py-8">
 
-            <!-- ENCABEZADO Y BUSCADOR -->
             <div
                 class="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div>
@@ -95,13 +110,12 @@ const statusStyle = (status) => {
                                     d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                             </svg>
                         </span>
-                        <input v-model="searchQuery" type="text" placeholder="Buscar participante, RUC..."
+                        <input v-model="searchQuery" type="text" placeholder="Buscar participante, RUC, Visa..."
                             class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all text-sm outline-none text-slate-700 placeholder-slate-400" />
                     </div>
                 </div>
             </div>
 
-            <!-- TABLA PRINCIPAL -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200">
@@ -116,14 +130,15 @@ const statusStyle = (status) => {
                                 <th scope="col"
                                     class="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                                     Facturación</th>
-
                                 <th scope="col"
                                     class="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                                     Monto</th>
                                 <th scope="col"
                                     class="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                    Descuento
-                                </th>
+                                    Descuento</th>
+                                <th scope="col"
+                                    class="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                    Tarjeta</th>
                                 <th scope="col"
                                     class="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                                     Estado Niubiz</th>
@@ -135,8 +150,6 @@ const statusStyle = (status) => {
                         <tbody class="divide-y divide-slate-100 bg-white">
                             <tr v-for="inscrito in paginatedInscritos" :key="inscrito.id"
                                 class="hover:bg-slate-50/80 transition-colors group">
-
-                                <!-- ID y Fecha -->
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex flex-col">
                                         <span class="text-sm font-black text-slate-900">#{{ inscrito.id }}</span>
@@ -145,7 +158,6 @@ const statusStyle = (status) => {
                                     </div>
                                 </td>
 
-                                <!-- Participante con Avatar -->
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center gap-3">
                                         <div
@@ -159,7 +171,6 @@ const statusStyle = (status) => {
                                     </div>
                                 </td>
 
-                                <!-- Facturación -->
                                 <td class="px-6 py-4">
                                     <div v-if="inscrito.facturacion.ruc !== '-'" class="flex flex-col">
                                         <span class="text-xs font-bold text-slate-800 line-clamp-1"
@@ -176,39 +187,45 @@ const statusStyle = (status) => {
                                     </span>
                                 </td>
 
-
-                                <!-- Monto Total -->
                                 <td class="px-6 py-4 text-center whitespace-nowrap">
                                     <span class="text-sm font-black text-slate-900">
                                         {{ inscrito.facturacion.monto_total > 0 ? '$' + inscrito.facturacion.monto_total
-                                            : '-' }}
+                                        : '-' }}
                                     </span>
                                 </td>
 
-                                <!-- NUEVA CELDA: DESCUENTO -->
                                 <td class="px-6 py-4 text-center whitespace-nowrap">
-                                    <!-- Si tiene cupón, mostramos SÍ en color moradito/índigo -->
                                     <span v-if="inscrito.cupon"
-                                        class="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-200">
-                                        SÍ
-                                    </span>
-                                    <!-- Si no tiene cupón, mostramos NO en gris -->
+                                        class="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-200">SÍ</span>
                                     <span v-else
-                                        class="inline-flex items-center px-2 py-1 rounded text-[10px] font-medium bg-slate-50 text-slate-400 border border-slate-200">
-                                        NO
-                                    </span>
+                                        class="inline-flex items-center px-2 py-1 rounded text-[10px] font-medium bg-slate-50 text-slate-400 border border-slate-200">NO</span>
                                 </td>
-                                <!-- Estado Niubiz -->
+
+                                <td class="px-6 py-4 text-center whitespace-nowrap">
+                                    <div v-if="inscrito.numero_tarjeta"
+                                        class="flex flex-col items-center justify-center gap-1.5">
+                                        <span
+                                            :class="[getCardBadgeStyle(inscrito.marca_tarjeta), 'px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider shadow-sm']">
+                                            {{ inscrito.marca_tarjeta === 'Otra/Desconocida' ? 'TARJETA' :
+                                            inscrito.marca_tarjeta }}
+                                        </span>
+
+                                        <span class="text-[11px] font-mono text-slate-600 font-bold tracking-widest">
+                                            {{ inscrito.numero_tarjeta }}
+                                        </span>
+                                    </div>
+                                    <span v-else class="text-xs text-slate-400">-</span>
+                                </td>
+
                                 <td class="px-6 py-4 text-center whitespace-nowrap">
                                     <span
-                                        :class="[statusStyle(inscrito.estado_pago), 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold border shadow-sm ring-1 ring-inset']">
+                                        :class="[statusStyle(inscrito.estado_pago), 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold border shadow-sm ring-1 ring-inset tracking-wide']">
                                         <span
                                             :class="['w-1.5 h-1.5 rounded-full', inscrito.estado_pago === 'PAGADO' ? 'bg-emerald-500' : 'bg-amber-500']"></span>
                                         {{ inscrito.estado_pago }}
                                     </span>
                                 </td>
 
-                                <!-- Acciones (Botón Ojo) -->
                                 <td class="px-6 py-4 text-center whitespace-nowrap">
                                     <button @click="openDetails(inscrito)"
                                         class="inline-flex items-center justify-center p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-orange-600 hover:border-orange-200 hover:bg-orange-50 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
@@ -223,9 +240,8 @@ const statusStyle = (status) => {
                                 </td>
                             </tr>
 
-                            <!-- Empty State -->
                             <tr v-if="filteredInscritos.length === 0">
-                                <td colspan="6" class="px-6 py-16 text-center">
+                                <td colspan="8" class="px-6 py-16 text-center">
                                     <div class="flex flex-col items-center">
                                         <div
                                             class="h-12 w-12 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 mb-3 text-slate-400">
@@ -244,12 +260,11 @@ const statusStyle = (status) => {
                     </table>
                 </div>
 
-                <!-- Paginación -->
                 <div v-if="filteredInscritos.length > 0"
                     class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
                     <span class="text-xs text-slate-500 font-medium">
                         Mostrando <span class="font-bold text-slate-900">{{ (currentPage - 1) * itemsPerPage + 1
-                        }}</span> -
+                            }}</span> -
                         <span class="font-bold text-slate-900">{{ Math.min(currentPage * itemsPerPage,
                             filteredInscritos.length) }}</span>
                         de <span class="font-bold text-slate-900">{{ filteredInscritos.length }}</span>
@@ -265,13 +280,10 @@ const statusStyle = (status) => {
         </div>
     </AuthenticatedLayout>
 
-    <!-- Usamos Teleport para evitar problemas de overflow con padres -->
     <Teleport to="body">
-        <!-- MODAL DE DETALLES (Estilo Slide / Card Overlay) -->
         <Transition enter-active-class="ease-out duration-300" enter-from-class="opacity-0" enter-to-class="opacity-100"
             leave-active-class="ease-in duration-200" leave-from-class="opacity-100" leave-to-class="opacity-0">
             <div v-if="showModal" class="fixed inset-0 z-[150] overflow-y-auto">
-                <!-- Backdrop -->
                 <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" @click="closeModal">
                 </div>
 
@@ -285,11 +297,7 @@ const statusStyle = (status) => {
 
                         <div v-if="selectedInscrito"
                             class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 w-full max-w-4xl border border-slate-200">
-
-                            <!-- ESTRUCTURA FLEX PARA EVITAR QUE SE CORTE -->
                             <div class="flex flex-col max-h-[90vh]">
-
-                                <!-- Modal Header (Fijo) -->
                                 <div
                                     class="shrink-0 bg-white/90 backdrop-blur-md px-6 py-5 border-b border-slate-200 flex items-center justify-between z-10">
                                     <div class="flex items-center gap-3">
@@ -317,68 +325,48 @@ const statusStyle = (status) => {
                                     </button>
                                 </div>
 
-                                <!-- Modal Body (Con Scrollbar) -->
                                 <div
                                     class="flex-1 overflow-y-auto px-6 py-6 sm:p-8 bg-slate-50/50 space-y-8 custom-scrollbar">
 
-                                    <!-- Bloque: Detalles del Programa (Categorías y Cursos) -->
                                     <div>
                                         <h4
                                             class="text-xs font-black tracking-widest text-slate-400 uppercase mb-4 pl-1">
-                                            Detalles del Programa
-                                        </h4>
+                                            Detalles del Programa</h4>
                                         <div
                                             class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                                             <div
                                                 class="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
-
-                                                <!-- Categoría de Inscripción -->
                                                 <div class="p-4">
                                                     <p class="text-[10px] uppercase font-bold text-slate-400">Categoría
                                                         de Inscripción</p>
                                                     <p v-if="selectedInscrito.categoria_inscripcion"
-                                                        class="text-sm font-bold text-slate-900 mt-1">
-                                                        {{ selectedInscrito.categoria_inscripcion.nombre_es }}
-                                                    </p>
-                                                    <p v-else class="text-sm font-medium text-slate-400 mt-1 italic">
-                                                        No especificada
-                                                    </p>
+                                                        class="text-sm font-bold text-slate-900 mt-1">{{
+                                                        selectedInscrito.categoria_inscripcion.nombre_es }}</p>
+                                                    <p v-else class="text-sm font-medium text-slate-400 mt-1 italic">No
+                                                        especificada</p>
                                                 </div>
-
-                                                <!-- Cursos / Viajes -->
                                                 <div class="p-4">
                                                     <p class="text-[10px] uppercase font-bold text-slate-400 mb-2">
                                                         Cursos / Viajes Adicionales</p>
-
-                                                    <!-- Si el arreglo tiene elementos, los iteramos con v-for -->
                                                     <div v-if="selectedInscrito.categoria_cursos_viajes && selectedInscrito.categoria_cursos_viajes.length > 0"
                                                         class="flex flex-col gap-3 mt-1">
-
                                                         <div v-for="(curso, index) in selectedInscrito.categoria_cursos_viajes"
                                                             :key="index"
                                                             class="flex flex-col items-start gap-1 border-l-2 border-cyan-200 pl-2">
-                                                            <p class="text-sm font-bold text-slate-900 leading-tight">
-                                                                {{ curso.nombre_es }}
-                                                            </p>
-                                                            <!-- Etiqueta (Badge) para el Tipo -->
+                                                            <p class="text-sm font-bold text-slate-900 leading-tight">{{
+                                                                curso.nombre_es }}</p>
                                                             <span v-if="curso.tipo"
-                                                                class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200 uppercase tracking-wide">
-                                                                {{ curso.tipo }}
-                                                            </span>
+                                                                class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200 uppercase tracking-wide">{{
+                                                                curso.tipo }}</span>
                                                         </div>
-
                                                     </div>
-
-                                                    <!-- Si el arreglo está vacío o no existe -->
                                                     <p v-else class="text-sm font-medium text-slate-400 mt-1 italic">
-                                                        Ninguno
-                                                    </p>
+                                                        Ninguno</p>
                                                 </div>
-
                                             </div>
                                         </div>
                                     </div>
-                                    <!-- Bloque: Datos del Participante -->
+
                                     <div>
                                         <h4
                                             class="text-xs font-black tracking-widest text-slate-400 uppercase mb-4 pl-1">
@@ -411,13 +399,12 @@ const statusStyle = (status) => {
                                                     <p class="text-sm font-bold text-slate-900 mt-1">{{
                                                         selectedInscrito.cargo }} <span
                                                             class="text-slate-400 font-normal">({{
-                                                                selectedInscrito.origen }})</span></p>
+                                                            selectedInscrito.origen }})</span></p>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Bloque: Facturación -->
                                     <div>
                                         <h4
                                             class="text-xs font-black tracking-widest text-slate-400 uppercase mb-4 pl-1">
@@ -440,15 +427,13 @@ const statusStyle = (status) => {
                                                         <p class="text-sm font-bold text-slate-900">{{
                                                             selectedInscrito.facturacion.razon_social }}</p>
                                                     </div>
-                                                    <!-- AQUÍ MOSTRAMOS EL TIPO DE DOCUMENTO Y EL NÚMERO -->
                                                     <div>
                                                         <p class="text-[10px] uppercase font-bold text-slate-400">Doc.
                                                             Facturación</p>
-                                                        <p class="text-sm font-mono text-slate-700">
-                                                            <span class="font-bold mr-1">{{
-                                                                selectedInscrito.facturacion.tipo_documento }}:</span>
-                                                            {{ selectedInscrito.facturacion.ruc }}
-                                                        </p>
+                                                        <p class="text-sm font-mono text-slate-700"><span
+                                                                class="font-bold mr-1">{{
+                                                                selectedInscrito.facturacion.tipo_documento }}:</span>{{
+                                                            selectedInscrito.facturacion.ruc }}</p>
                                                     </div>
                                                 </div>
                                                 <div class="p-4 space-y-3">
@@ -469,61 +454,79 @@ const statusStyle = (status) => {
                                         </div>
                                     </div>
 
-                                    <!-- Bloque: Niubiz (Log) -->
                                     <div>
-                                        <div class="flex justify-between items-end mb-4 pl-1">
-                                            <h4 class="text-xs font-black tracking-widest text-slate-400 uppercase">
-                                                Registro Niubiz (Pagos)</h4>
-                                            <span
-                                                :class="[statusStyle(selectedInscrito.estado_pago), 'px-2 py-0.5 rounded text-[10px] font-bold border']">{{
-                                                    selectedInscrito.estado_pago }}</span>
-                                        </div>
+                                        <h4
+                                            class="text-xs font-black tracking-widest text-slate-400 uppercase mb-4 pl-1">
+                                            Registro Niubiz (Método de Pago)</h4>
+                                        <div
+                                            class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                                            <div
+                                                class="p-5 bg-slate-50/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                                <div class="flex items-center gap-4">
+                                                    <div
+                                                        class="w-16 h-10 rounded-lg bg-white shadow-sm border border-slate-200 flex items-center justify-center shrink-0">
+                                                        <svg v-if="selectedInscrito.marca_tarjeta === 'Visa'"
+                                                            viewBox="0 0 32 10" class="h-4">
+                                                            <path fill="#1434CB"
+                                                                d="M14.072 0l-1.393 9.742h2.235L16.307 0h-2.235zM22.95 0h-1.745c-.417 0-.773.238-.934.605l-3.328 7.828-1.503-7.234c-.066-.307-.323-.556-.63-.585L10.375.053v.231c.883.21 1.884.532 2.508.892.383.22.464.444.577.876l1.932 6.541-2.73-7.94h2.378l1.455 4.316.326-1.408 1.571-7.147H22.95zM8.94 2.873c0-.306-.06-.576-.176-.8-.116-.225-.295-.407-.534-.543-.24-.136-.532-.23-.88-.282a5.795 5.795 0 00-1.16-.076c-1.026 0-1.892.23-2.597.691-.705.46-1.057 1.115-1.057 1.966 0 .393.09.73.27 1.01.18.28.423.511.73.693.306.182.662.33 1.066.444l.872.247c.548.156.938.324 1.17.505.231.182.347.419.347.712 0 .438-.178.78-.535 1.025-.357.246-.86.368-1.51.368-.696 0-1.282-.124-1.758-.372a3.868 3.868 0 01-1.18-.94L1.246 7.42c.452.553 1.042.986 1.772 1.3.73.313 1.564.47 2.5.47 1.106 0 2.015-.246 2.727-.738.711-.492 1.067-1.185 1.067-2.079 0-.422-.1-.77-.3-1.047-.2-.276-.464-.503-.793-.681-.328-.178-.71-.326-1.144-.445l-.75-.205c-.563-.153-.96-.322-1.19-.505-.23-.183-.346-.411-.346-.684 0-.387.16-.693.481-.92.32-.226.757-.34 1.308-.34.568 0 1.064.088 1.488.265.424.177.787.422 1.088.736l.783-.902z" />
+                                                        </svg>
+                                                        <svg v-else-if="selectedInscrito.marca_tarjeta === 'Mastercard'"
+                                                            viewBox="0 0 24 16" class="h-5">
+                                                            <circle fill="#EB001B" cx="8" cy="8" r="8" />
+                                                            <circle fill="#F79E1B" cx="16" cy="8" r="8" opacity="0.8" />
+                                                        </svg>
+                                                        <div v-else-if="selectedInscrito.marca_tarjeta === 'American Express'"
+                                                            class="bg-[#0070CE] w-[80%] h-5 text-white text-[10px] font-bold rounded flex items-center justify-center tracking-tighter">
+                                                            AMEX</div>
+                                                        <div v-else-if="selectedInscrito.marca_tarjeta === 'Diners Club'"
+                                                            class="text-slate-800 text-[10px] font-black italic tracking-tighter uppercase">
+                                                            Diners</div>
+                                                        <div v-else-if="selectedInscrito.marca_tarjeta === 'UnionPay'"
+                                                            class="flex items-center gap-1">
+                                                            <div class="w-1.5 h-4 bg-red-600 rounded-sm"></div>
+                                                            <div class="w-1.5 h-4 bg-blue-600 rounded-sm"></div>
+                                                            <div class="w-1.5 h-4 bg-emerald-500 rounded-sm"></div>
+                                                        </div>
+                                                        <svg v-else class="w-6 h-6 text-slate-400" fill="none"
+                                                            stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="1.5"
+                                                                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                                        </svg>
+                                                    </div>
 
-                                        <!-- <div v-if="selectedInscrito.pagos && selectedInscrito.pagos.length > 0"
-                                            class="space-y-4">
-                                            <div v-for="pago in selectedInscrito.pagos" :key="pago.cuota_id"
-                                                class="bg-slate-900 rounded-xl overflow-hidden shadow-inner border border-slate-800">
-                                                <div
-                                                    class="px-4 py-2 bg-slate-800 border-b border-slate-700 flex justify-between items-center">
-                                                    <span class="text-[10px] text-slate-300 font-mono">Transacción ID:
-                                                        {{ pago.transaccion_id }}</span>
-                                                    <span class="flex items-center gap-1.5"><span
-                                                            class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                                    <div class="flex flex-col">
                                                         <span
-                                                            class="text-[10px] font-bold text-emerald-400 uppercase">{{
-                                                                pago.estado_niubiz }}</span></span>
+                                                            class="text-sm font-black text-slate-900 uppercase tracking-wide">
+                                                            {{ selectedInscrito.marca_tarjeta &&
+                                                                selectedInscrito.marca_tarjeta !== 'Otra/Desconocida' ?
+                                                            selectedInscrito.marca_tarjeta : 'Tarjeta Bancaria' }}
+                                                        </span>
+                                                        <span
+                                                            class="text-xs font-mono text-slate-500 mt-0.5 font-bold tracking-widest">
+                                                            {{ selectedInscrito.numero_tarjeta || 'No registrado' }}
+                                                        </span>
+                                                    </div>
                                                 </div>
 
-                                                <div class="p-4 overflow-x-auto custom-scrollbar">
-                                                    <pre
-                                                        class="text-[11px] leading-relaxed font-mono text-slate-300"><code>{{ JSON.stringify(pago.info_pago, null, 2) }}</code></pre>
+                                                <div class="flex items-center">
+                                                    <span
+                                                        :class="[statusStyle(selectedInscrito.estado_pago), 'px-3 py-1.5 rounded-md text-xs font-bold border shadow-sm flex items-center gap-2']">
+                                                        <span
+                                                            :class="['w-1.5 h-1.5 rounded-full animate-pulse', selectedInscrito.estado_pago === 'PAGADO' ? 'bg-emerald-500' : 'bg-amber-500']"></span>
+                                                        {{ selectedInscrito.estado_pago }}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
-
-                                        <div v-else
-                                            class="bg-white border border-slate-200 border-dashed rounded-xl p-8 text-center">
-                                            <svg class="mx-auto h-8 w-8 text-slate-300 mb-2" fill="none"
-                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            <p class="text-sm font-bold text-slate-600">No hay pagos aprobados en Niubiz
-                                            </p>
-                                            <p class="text-xs text-slate-400 mt-1">Este inscrito aún no registra
-                                                transacciones exitosas.</p>
-                                        </div> -->
                                     </div>
 
-                                    <!-- Bloque: Cupón de Descuento -->
                                     <div>
                                         <h4
                                             class="text-xs font-black tracking-widest text-slate-400 uppercase mb-4 pl-1">
                                             Descuentos</h4>
                                         <div
                                             class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-
-                                            <!-- Si tiene cupón -->
                                             <div v-if="selectedInscrito.cupon"
                                                 class="p-4 bg-indigo-50/50 flex items-center justify-between">
                                                 <div class="flex items-center gap-3">
@@ -539,22 +542,15 @@ const statusStyle = (status) => {
                                                     <div>
                                                         <p
                                                             class="text-[10px] uppercase font-bold text-indigo-400 tracking-widest">
-                                                            Cupón de: {{ selectedInscrito.cupon.razon_social }}
-                                                        </p>
+                                                            Cupón de: {{ selectedInscrito.cupon.razon_social }}</p>
                                                         <p
                                                             class="text-sm font-black text-indigo-700 uppercase tracking-tight mt-0.5">
-                                                            {{ selectedInscrito.cupon.codigo }}
-                                                        </p>
-
+                                                            {{ selectedInscrito.cupon.codigo }}</p>
                                                     </div>
                                                 </div>
                                                 <span
-                                                    class="px-2.5 py-1 rounded-md text-[10px] font-bold bg-white text-indigo-600 border border-indigo-200 shadow-sm uppercase tracking-wider">
-                                                    Aplicado
-                                                </span>
+                                                    class="px-2.5 py-1 rounded-md text-[10px] font-bold bg-white text-indigo-600 border border-indigo-200 shadow-sm uppercase tracking-wider">Aplicado</span>
                                             </div>
-
-                                            <!-- Si NO tiene cupón -->
                                             <div v-else
                                                 class="p-6 text-center bg-slate-50/50 border-dashed border-slate-200">
                                                 <svg class="mx-auto h-6 w-6 text-slate-300 mb-2" fill="none"
@@ -567,28 +563,22 @@ const statusStyle = (status) => {
                                                 <p class="text-xs text-slate-400 mt-0.5">El participante no aplicó
                                                     ningún código promocional.</p>
                                             </div>
-
                                         </div>
                                     </div>
 
                                     <div>
                                         <h4
                                             class="text-xs font-black tracking-widest text-slate-400 uppercase mb-4 pl-1">
-                                            Accesos y Viaje
-                                        </h4>
+                                            Accesos y Viaje</h4>
                                         <div
                                             class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                                             <div
                                                 class="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
-
-                                                <!-- Código QR -->
                                                 <div class="p-6 flex flex-col items-center justify-center text-center">
                                                     <p
                                                         class="text-[10px] uppercase font-bold text-slate-400 mb-4 w-full text-left">
                                                         Código QR de Acceso</p>
-
                                                     <div v-if="selectedInscrito.qr" class="flex flex-col items-center">
-                                                        <!-- Aquí convertimos mágicamente el número en imagen -->
                                                         <img :src="`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${selectedInscrito.qr}`"
                                                             alt="Código QR"
                                                             class="w-32 h-32 p-2 border border-slate-200 rounded-xl shadow-sm bg-white mb-2 transition-transform hover:scale-105" />
@@ -596,20 +586,16 @@ const statusStyle = (status) => {
                                                             class="text-[11px] font-mono text-slate-500 font-medium tracking-widest">
                                                             ID: {{ selectedInscrito.qr }}</p>
                                                     </div>
-
                                                     <div v-else
                                                         class="flex flex-col items-center py-6 w-full bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
                                                         <p class="text-sm font-medium text-slate-400 italic">QR no
                                                             asignado</p>
                                                     </div>
                                                 </div>
-
-                                                <!-- Cupón de Viaje -->
                                                 <div class="p-6 flex flex-col items-center justify-center text-center">
                                                     <p
                                                         class="text-[10px] uppercase font-bold text-slate-400 mb-4 w-full text-left">
                                                         Cupón de Viaje</p>
-
                                                     <div v-if="selectedInscrito.cupon_viaje" class="w-full">
                                                         <div
                                                             class="px-4 py-6 bg-cyan-50/80 border border-cyan-200 rounded-xl border-dashed flex flex-col items-center justify-center h-full">
@@ -621,20 +607,17 @@ const statusStyle = (status) => {
                                                                 Código de Viaje</p>
                                                         </div>
                                                     </div>
-
                                                     <div v-else
                                                         class="flex flex-col items-center py-6 w-full bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
                                                         <p class="text-sm font-medium text-slate-400 italic">Sin cupón
                                                             de viaje</p>
                                                     </div>
                                                 </div>
-
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Modal Footer (Fijo) -->
                                 <div
                                     class="shrink-0 bg-white/90 backdrop-blur-md px-6 py-4 border-t border-slate-100 flex justify-end gap-3 z-10">
                                     <button type="button" @click="closeModal"
