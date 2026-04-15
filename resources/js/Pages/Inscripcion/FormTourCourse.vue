@@ -145,6 +145,13 @@ defineExpose({
     validarSeleccion
 });
 
+watch(() => props.section, (newVal) => {
+    console.log("¡Sección recibida en el hijo!", newVal);
+    // 👇 ESTO IMPRIMIRÁ TODA LA DATA DE LOS CURSOS EN TU CONSOLA (F12)
+    console.log("Data de Cursos que está llegando:", cursosFiltrados.value);
+    console.log("Data de Viajes que está llegando:", viajesFiltrados.value);
+}, { immediate: true });
+
 onMounted(() => {
     if (props.course && props.course.length > 0) {
         const idsASeleccionar = props.course
@@ -186,7 +193,7 @@ const esVisitaTecnicaForzada = computed(() => {
                         </div>
                         <div class="flex flex-col">
                             <span class="text-red-800 font-black text-sm uppercase">{{ words.lbl_selection_required
-                                }}</span>
+                            }}</span>
                             <p class="text-red-700 text-sm font-medium leading-tight">
                                 {{ formManualErrors.total }}
                             </p>
@@ -237,7 +244,7 @@ const esVisitaTecnicaForzada = computed(() => {
                         <AccordionTab v-if="!esVisitaTecnicaForzada">
                             <template #header>
                                 <span class="font-bold text-blue-900 uppercase text-sm italic">{{ words.btn_courses
-                                    }}</span>
+                                }}</span>
                             </template>
 
                             <div class="space-y-4 py-2">
@@ -257,12 +264,14 @@ const esVisitaTecnicaForzada = computed(() => {
                                             <div class="flex flex-col min-w-0">
                                                 <label
                                                     class="text-sm font-black text-blue-900 leading-tight cursor-pointer break-words">
-                                                    {{ item.nombre_es }}
+                                                    {{ $page.props.language.current === 'en' ? (item.nombre_en ||
+                                                    item.nombre_es) : item.nombre_es
+                                                    }}
                                                 </label>
                                                 <span
                                                     class="text-[10px] text-slate-500 font-medium italic uppercase tracking-tighter leading-none mt-1">
                                                     {{ item.subtitulo_en || (item.tipo === 'curso' ?
-                                                    words.lbl_course_proexplo : words.btn_visits)
+                                                        words.lbl_course_proexplo : words.btn_visits)
                                                     }}
                                                 </span>
                                             </div>
@@ -304,7 +313,7 @@ const esVisitaTecnicaForzada = computed(() => {
                                                         <p class="mb-0">
                                                             <strong><i class="pi pi-users mr-1 text-blue-400"></i>{{
                                                                 words.lbl_instructors
-                                                                }}:</strong>
+                                                            }}:</strong>
                                                         </p>
                                                         <ul v-if="Array.isArray(item.expositores)"
                                                             class="list-none p-0 m-0 ml-7 space-y-2">
@@ -326,13 +335,13 @@ const esVisitaTecnicaForzada = computed(() => {
                                                 </div>
                                                 <div class="space-y-1.5">
                                                     <p><strong><i class="pi pi-calendar mr-1 text-blue-400"></i>{{
-                                                            words.lbl_date }}:</strong> {{
-                                                        item.fecha_texto || words.lbl_to_be_defined }}</p>
+                                                        words.lbl_date }}:</strong> {{
+                                                                item.fecha_texto || words.lbl_to_be_defined }}</p>
                                                     <p><strong><i class="pi pi-clock mr-1 text-blue-400"></i>{{
-                                                            words.lbl_schedule }}:</strong> {{
-                                                        item.horario_texto || words.lbl_full_day }}</p>
+                                                        words.lbl_schedule }}:</strong> {{
+                                                                item.horario_texto || words.lbl_full_day }}</p>
                                                     <p><strong><i class="pi pi-map-marker mr-1 text-blue-400"></i>{{
-                                                            words.lbl_location }}:</strong>
+                                                        words.lbl_location }}:</strong>
                                                         {{ item.lugar_texto || words.lbl_convention_center }}</p>
                                                 </div>
                                             </div>
@@ -345,7 +354,7 @@ const esVisitaTecnicaForzada = computed(() => {
                         <AccordionTab v-if="props.course == 0 || esVisitaTecnicaForzada">
                             <template #header>
                                 <span class="font-bold text-blue-900 uppercase text-sm italic">{{ words.btn_visits
-                                    }}</span>
+                                }}</span>
                             </template>
                             <div class="space-y-4 py-2">
                                 <div v-for="item in viajesFiltrados.filter(i => i.tipo === 'viaje')" :key="item.id"
@@ -365,7 +374,7 @@ const esVisitaTecnicaForzada = computed(() => {
                                                 <label
                                                     class="text-xs sm:text-sm font-black text-blue-900 leading-tight cursor-pointer break-words">
                                                     {{ $page.props.language.current === 'en' ? item.nombre_en :
-                                                    item.nombre_es }}
+                                                        item.nombre_es }}
                                                 </label>
                                                 <span
                                                     class="text-[9px] sm:text-[10px] text-slate-500 font-medium italic uppercase tracking-tighter leading-none mt-1">
@@ -416,7 +425,7 @@ const esVisitaTecnicaForzada = computed(() => {
                                                     <p>
                                                         <strong><i class="pi pi-check-circle mr-1 text-blue-400"></i>{{
                                                             words.lbl_trip_leaders
-                                                            }}:</strong>
+                                                        }}:</strong>
                                                     <ul v-if="Array.isArray(item.expositores)"
                                                         class="list-none p-0 m-0 ml-7 space-y-2">
                                                         <li v-for="(expo, index) in item.expositores" :key="index"
