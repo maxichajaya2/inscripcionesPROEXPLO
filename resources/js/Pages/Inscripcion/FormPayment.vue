@@ -1,6 +1,10 @@
 <script setup>
 import { ref, onMounted, computed, watch, nextTick } from 'vue';
 import Card from 'primevue/card';
+import { usePage } from '@inertiajs/vue3'; // Agregado para traducciones
+
+const page = usePage();
+const words = page.props.language.words; // Extraemos el diccionario
 
 const props = defineProps({
     categoria_seleccionada: Object,
@@ -20,26 +24,21 @@ const termsAccepted = ref(false);
 const procesandoPago = ref(false);
 const confirmacionComprobante = ref(false);
 
-
-
 const esFactura = computed(() => {
     // 1. Prioridad absoluta al selector del formulario anterior
-    // Si es 2 es Factura, si es 1 (o cualquier otro) es Boleta.
     const tipoDoc = props.datos_facturacion?.tipoDocumentoEmpresa;
-
     if (tipoDoc === 2) return true;
     if (tipoDoc === 1) return false;
 
-    // 2. Backup por longitud (solo si el selector falla o es nulo)
-    // El RUC en Perú siempre tiene 11 dígitos.
+    // 2. Backup por longitud
     const documento = props.datos_facturacion?.tipoDocumentoEmpresa?.toString().trim() || "";
     return documento.length === 11;
 });
 
+// Ahora usamos las variables del diccionario
 const tipoComprobanteTexto = computed(() => {
-    return esFactura.value ? 'Factura' : 'Boleta de Venta';
+    return esFactura.value ? words.lbl_invoice : words.lbl_receipt;
 });
-
 
 const formularioValido = computed(() => {
     return termsAccepted.value && confirmacionComprobante.value;
@@ -50,11 +49,9 @@ const precioInscripcion = computed(() => {
 });
 
 const montoDescuento = computed(() => {
-    // Si pasaste la prop :descuento directamente
     if (props.descuento !== undefined && props.descuento !== null) {
         return props.descuento;
     }
-    // Backup: Por si acaso viniera dentro de formulario (aunque con el cambio de arriba ya no es necesario)
     return props.formulario?.descuento || 0;
 });
 
@@ -67,7 +64,6 @@ const mountNiubiz = async (data) => {
 
     const form_holder = document.getElementById('form_holder');
     if (form_holder) {
-        // 1. LIMPIEZA EXTREMA DE OBJETOS GLOBALES
         window.VisanetCheckout = undefined;
         window.v_checkout = undefined;
         delete window.VisanetCheckout;
@@ -79,8 +75,6 @@ const mountNiubiz = async (data) => {
         const residuals = document.querySelectorAll('.v-modal, .niubiz-visible, #visa_checkout, #visa_ads, .main-checkout');
         residuals.forEach(r => r.remove());
 
-        // O simplemente: script.dataset.buttontext = "Pay Now"
-        // 2. INYECCIÓN DE LA PASARELA
         setTimeout(() => {
             const form = document.createElement("form");
             form.action = config.form.action;
@@ -90,26 +84,18 @@ const mountNiubiz = async (data) => {
             const script = document.createElement("script");
             script.src = config.script.src + "?ts=" + new Date().getTime();
 
-            // ============================================================
-            // CONFIGURACIÓN DEL BOTÓN (ESTO ES LO QUE BUSCABAS)
-            // ============================================================
-            // PROBAMOS CON AMBOS ATRIBUTOS PARA ASEGURARNOS
-            const textoBoton = "Pay USD " + config.script.amount;
+            // Usamos la traducción para el botón "Pagar USD" / "Pay USD"
+            const textoBoton = `${words.btn_pay_usd} ` + config.script.amount;
 
             script.setAttribute('data-buttontext', textoBoton);
-            script.setAttribute('data-untokenized-buttontext', textoBoton); // Refuerzo para Niubiz
+            script.setAttribute('data-untokenized-buttontext', textoBoton);
             script.dataset.buttontext = textoBoton;
 
-            // Color del botón (Azul WMC)
             script.dataset.formbuttoncolor = "#1d4ed8";
-            // ============================================================
-
-            // Dataset (Merchant ID 651054910 según contrato)
             script.dataset.sessiontoken = config.script.sessiontoken;
             script.dataset.channel = config.script.channel;
             script.dataset.merchantid = config.script.merchantid;
             script.dataset.merchantlogo = config.script.merchantlogo;
-            script.dataset.formbuttoncolor = config.script.formbuttoncolor;
             script.dataset.amount = config.script.amount;
             script.dataset.purchasenumber = config.script.purchasenumber;
             script.dataset.cardholdername = config.script.cardholdername;
@@ -117,108 +103,92 @@ const mountNiubiz = async (data) => {
             script.dataset.cardholderemail = config.script.cardholderemail;
             script.dataset.expirationminutes = config.script.expirationminutes;
             script.dataset.timeouturl = config.script.timeouturl;
-
             script.dataset.canvas = "form_holder";
 
-            // --- SOLUCIÓN DEFINITIVA: VIGILANTE DEL BOTÓN ---
             const detectorBotones = setInterval(() => {
-                // Niubiz suele renderizar un botón con la clase .v-button o dentro de un div específico
                 const btnNiubiz = document.querySelector('.v-button') ||
                     document.querySelector('#form_holder button') ||
                     document.querySelector('#niubiz_form button');
 
                 if (btnNiubiz) {
-                    console.log("¡Botón de Niubiz detectado! Pegando evento de carga...");
-
                     btnNiubiz.addEventListener('click', () => {
-                        // Le damos un respiro de 300ms para que Niubiz procese el clic
-                        // y luego lanzamos nuestro spinner
                         setTimeout(() => {
                             procesandoPago.value = true;
-                            console.log("Spinner activado por clic en botón Niubiz");
                         }, 300);
                     });
-
-                    // Una vez que le pegamos el evento al botón, dejamos de buscar
                     clearInterval(detectorBotones);
                 }
-            }, 1000); // Revisa cada segundo hasta que el botón aparezca
+            }, 1000);
 
             form.appendChild(script);
             form_holder.appendChild(form);
-
-            console.log("Niubiz instanciado en modo preventivo.");
         }, 200);
     }
 };
-
 
 onMounted(() => {
     if (props.formulario) {
         mountNiubiz(props.formulario);
     }
-
 });
 
-
-// Vigilamos si la data del formulario cambia para recargar la pasarela
 watch(() => props.formulario, (newVal) => {
     if (newVal) mountNiubiz(newVal);
 }, { deep: true, immediate: true });
 
-// Helper para extraer datos del script de Niubiz
 const scriptData = computed(() => {
     if (!props.formulario) return null;
     return props.formulario.formulario ? props.formulario.formulario.script : props.formulario.script;
 });
-
 </script>
 
 <template>
     <div id="FormPaymentFinish" class="w-full">
         <div class="flex flex-col items-center p-6 w-full">
             <div class="text-blue-900 font-bold text-center text-2xl mb-6 tracking-wide uppercase">
-                Finalizar Inscripción
+                {{ words.lbl_finish_registration }}
             </div>
 
             <Card class="w-full max-w-md shadow-2xl border-t-4 border-orange-600 rounded-xl bg-white overflow-hidden">
                 <template #content>
                     <div v-if="formulario">
-
                         <div class="mb-4 border-b pb-6 p-4">
                             <div class="flex justify-between items-center py-3 border-b border-gray-100">
-                                <span
-                                    class="font-bold text-gray-500 uppercase text-xs tracking-wider">Participante</span>
+                                <span class="font-bold text-gray-500 uppercase text-xs tracking-wider">{{
+                                    words.lbl_participant }}</span>
                                 <span class="text-gray-800 font-semibold text-right">
                                     {{ data_persona?.nombres }} {{ data_persona?.apellido_paterno }}
                                 </span>
                             </div>
 
                             <div class="flex justify-between items-center py-3 border-b border-gray-100">
-                                <span class="font-bold text-gray-500 uppercase text-xs tracking-wider">Categoria</span>
+                                <span class="font-bold text-gray-500 uppercase text-xs tracking-wider">{{
+                                    words.lbl_category }}</span>
                                 <span class="text-blue-600 font-bold text-right">
                                     {{ (categoria_seleccionada && categoria_seleccionada.nombre_en) ?
                                         categoria_seleccionada.nombre_en : (categoria_seleccionada &&
-                                            categoria_seleccionada.nombre ? categoria_seleccionada.nombre : 'PROEXPLO 2026 Delegate')
+                                            categoria_seleccionada.nombre ? categoria_seleccionada.nombre :
+                                            words.lbl_proexplo_delegate)
                                     }}
                                 </span>
                             </div>
+
                             <div v-if="!esSeccionViajes"
                                 class="flex justify-between items-start mb-1 text-sm pl-2 border-l-2 border-gray-100 p-1 ">
                                 <div class="flex flex-col w-2/3">
                                     <span class="text-blue-600 font-medium leading-tight">
-                                        Registro
+                                        {{ words.lbl_registration }}
                                     </span>
                                 </div>
                                 <span class="text-gray-600 font-medium text-right w-1/3">
                                     USD {{ precioInscripcion || '0.00' }}
                                 </span>
-
                             </div>
+
                             <div v-if="montoDescuento > 0"
                                 class="flex justify-between items-start mb-1 text-sm pl-2 border-l-2 border-green-500 p-2 bg-green-50">
                                 <div class="flex flex-col w-2/3">
-                                    <span class="text-green-700 font-bold italic">Descuento Cupón</span>
+                                    <span class="text-green-700 font-bold italic">{{ words.lbl_coupon_discount }}</span>
                                 </div>
                                 <span class="text-green-700 font-bold text-right w-1/3">
                                     - USD {{ montoDescuento }}
@@ -232,18 +202,18 @@ const scriptData = computed(() => {
                                         {{ extra.titulo || extra.nombre_es }}
                                     </span>
                                     <span class="text-[10px] text-gray-400 uppercase">
-                                        {{ extra.tipo === 'viaje' ? 'Visita Técnica' : 'Curso Corto' }}
+                                        {{ extra.tipo === 'viaje' ? words.lbl_technical_visit : words.lbl_short_course
+                                        }}
                                     </span>
                                 </div>
                                 <span class="text-gray-600 font-medium text-right w-1/3">
                                     USD {{ extra.precio_disponible?.valor || '0.00' }}
                                 </span>
-
                             </div>
 
                             <div
                                 class="flex justify-between items-center py-4 mt-4 bg-blue-50 px-3 rounded-lg border border-blue-100">
-                                <span class="font-bold text-blue-800">Total a Pagar</span>
+                                <span class="font-bold text-blue-800">{{ words.lbl_total_to_pay }}</span>
                                 <span class="font-bold text-blue-900 text-2xl">
                                     USD {{ scriptData?.amount }}
                                 </span>
@@ -256,54 +226,48 @@ const scriptData = computed(() => {
                                     class="mt-1 w-5 h-5 cursor-pointer accent-blue-600" />
                                 <label for="check_terms"
                                     class="text-xs text-gray-700 leading-tight cursor-pointer select-none">
-                                    Acepto las
-                                    <a href="/documents/reglamento.pdf" target="_blank"
-                                        class="text-blue-700 font-bold underline">Reglas de Participación</a>
-                                    <!-- <a href="/documents/politicas.pdf" target="_blank"
-                                        class="text-blue-700 font-bold underline">Pólitas de Registro</a>
-                                    así como la
-                                    <a href="/documents/privacy_policy.pdf" target="_blank"
-                                        class="text-blue-700 font-bold underline">Política de Privacidad</a> -->
-                                    de PROEXPLO 2026.
+                                    {{ words.lbl_i_accept_the }}
+                                    <a :href="words.doc_privacy_policies" target="_blank"
+                                        class="text-blue-700 font-bold underline">
+                                        {{ words.lbl_privacy_policies }}
+                                    </a>
+                                    {{ words.lbl_and_the }}
+                                    <a :href="words.doc_participation_rules" target="_blank"
+                                        class="text-blue-700 font-bold underline">
+                                        {{ words.lbl_participation_rules }}
+                                    </a>
+                                    {{ words.lbl_of_proexplo }}
                                 </label>
                             </div>
                         </div>
-                        <!-- COMPROBANTE DE PAGO -->
+
                         <div class="mb-6 p-4 rounded-xl border-2 transition-all duration-300"
                             :class="confirmacionComprobante ? 'border-green-500 bg-green-50' : 'border-orange-200 bg-orange-50'">
-
                             <div class="flex items-center gap-3 mb-3">
                                 <i class="pi text-xl"
                                     :class="[esFactura ? 'pi-building text-purple-600' : 'pi-user text-blue-600']"></i>
                                 <span class="font-black uppercase text-sm tracking-tight text-slate-800">
-                                    Confirmación de {{ tipoComprobanteTexto }}
+                                    {{ words.lbl_confirmation_of }} {{ tipoComprobanteTexto }}
                                 </span>
                             </div>
 
                             <div
                                 class="text-[11px] leading-relaxed text-slate-600 mb-4 text-justify bg-white/50 p-3 rounded-lg border border-orange-100">
                                 <p v-if="esFactura">
-                                    Usted está solicitando una <strong>FACTURA COMERCIAL</strong> a nombre de
-                                    <span class="text-purple-700 font-bold">{{ datos_facturacion?.razonSocial || 'la empresa'
-                                        }}</span> con RUC
+                                    {{ words.msg_you_are_requesting }} <strong>{{ words.lbl_commercial_invoice
+                                    }}</strong> {{ words.lbl_in_the_name_of }}
+                                    <span class="text-purple-700 font-bold">{{ datos_facturacion?.razonSocial || 'la empresa' }}</span> {{ words.lbl_with_ruc }}
                                     <span class="text-purple-700 font-bold">{{ datos_facturacion?.documentoEmpresa || ''
-                                        }}</span>.
+                                    }}</span>.
                                 </p>
                                 <p v-else>
-                                    Usted está solicitando una <strong>BOLETA DE VENTA</strong> a nombre de
+                                    {{ words.msg_you_are_requesting }} <strong>{{ words.lbl_sales_receipt }}</strong> {{
+                                        words.lbl_in_the_name_of }}
                                     <span class="text-blue-700 font-bold">{{ datos_facturacion?.razonSocial || ''
-                                        }}</span>.
+                                    }}</span>.
                                 </p>
-
-                                <!-- <p class="mt-2 text-red-600 font-semibold italic">
-                                    * Nota: Una vez emitido el comprobante, cualquier solicitud de anulación o cambio
-                                    (de Boleta a Factura o viceversa) queda sujeta a revisión y puede demorar hasta 15
-                                    días hábiles. La exactitud de los datos es responsabilidad exclusiva del
-                                    participante.
-                                </p> -->
                                 <p class="mt-2 text-red-600 font-semibold italic">
-                                    Antes de continuar, asegúrate de que tus datos estén correctos. Una vez emitido el
-                                    comprobante, no podremos realizar cambios ni devoluciones.
+                                    {{ words.msg_check_data_invoice }}
                                 </p>
                             </div>
 
@@ -312,18 +276,14 @@ const scriptData = computed(() => {
                                     class="mt-1 w-5 h-5 cursor-pointer accent-green-600" />
                                 <label for="check_comprobante"
                                     class="text-[11px] text-slate-700 font-bold cursor-pointer select-none">
-                                    Confirmo que los datos de facturación son correctos y asumo la responsabilidad sobre
-                                    la emisión de este documento.
+                                    {{ words.msg_confirm_billing_data }}
                                 </label>
                             </div>
                         </div>
 
-                        <!-- TERMINOS Y CONDICIONES -->
                         <div class="relative w-full">
                             <div v-if="!formularioValido" class="absolute inset-0 z-20 cursor-not-allowed bg-white/10"
-                                title="Debe aceptar los términos y confirmar los datos de facturación">
-                            </div>
-
+                                :title="words.msg_must_accept_terms"></div>
                             <div id="form_holder"
                                 class="flex justify-center p-4 min-h-[100px] border-2 rounded-lg overflow-hidden transition-all duration-500"
                                 :class="formularioValido ? 'border-blue-500 bg-white shadow-md' : 'border-gray-200 bg-gray-50'"
@@ -332,23 +292,23 @@ const scriptData = computed(() => {
                                     filter: formularioValido ? 'grayscale(0)' : 'grayscale(1)',
                                     pointerEvents: formularioValido ? 'auto' : 'none'
                                 }">
-
                             </div>
                         </div>
 
                         <p class="text-[9px] text-center text-gray-400 mt-6 uppercase tracking-widest">
-                            Pasarela de pago segura de Niubiz
+                            {{ words.lbl_secure_payment_gateway }}
                         </p>
                     </div>
 
                     <div v-else class="p-10 text-center">
                         <i class="pi pi-spin pi-spinner text-3xl text-blue-600"></i>
-                        <p class="mt-2 text-gray-500 font-bold">Obtaining session data...</p>
+                        <p class="mt-2 text-gray-500 font-bold">{{ words.msg_obtaining_session }}</p>
                     </div>
                 </template>
             </Card>
         </div>
     </div>
+
     <Dialog v-model:visible="procesandoPago" modal :showHeader="false" :closable="false" :baseZIndex="99999"
         class="bg-slate-900/80 backdrop-blur-sm border-none shadow-none m-0 p-0"
         :style="{ width: '100vw', height: '100vh' }" :pt="{
@@ -364,10 +324,10 @@ const scriptData = computed(() => {
             </div>
 
             <h3 class="text-2xl font-black text-white uppercase tracking-widest animate-pulse">
-                Processing Secure Payment
+                {{ words.msg_processing_payment }}
             </h3>
             <p class="text-blue-300 text-sm mt-2 font-medium">
-                Please do not close or refresh the window...
+                {{ words.msg_do_not_close }}
             </p>
 
             <div class="w-64 h-1 bg-white/10 rounded-full mt-6 overflow-hidden">
@@ -376,6 +336,7 @@ const scriptData = computed(() => {
         </div>
     </Dialog>
 </template>
+
 <style scoped>
 .pi-lock {
     text-shadow: 0 0 15px rgba(96, 165, 250, 0.8);

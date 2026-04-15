@@ -18,8 +18,13 @@ import "../../../css/inscripciones.css";
 
 const toast = useToast();
 const page = usePage();
+const words = page.props.language.words;
 
-const generos = ref([{ label: 'Masculino', value: 'M' }, { label: 'Femenino', value: 'F' }]);
+// const generos = ref([{ label: 'Masculino', value: 'M' }, { label: 'Femenino', value: 'F' }]);
+const generos = computed(() => [
+    { label: words.opt_male, value: 'M' },
+    { label: words.opt_female, value: 'F' }
+]);
 const paises = ref(page.props.general.paises || []);
 const departamentos = ref([]);
 const loadingSearch = ref(false);
@@ -41,47 +46,87 @@ const props = defineProps({
 });
 
 const dniMessage = ref('');
+// const schema = yup.object({
+//     tipo_doc: yup.mixed().required('El tipo de documento es obligatorio'),
+//     documento: yup.string()
+//         .required('El número de documento es obligatorio')
+//         .test('len', 'El DNI debe tener exactamente 8 dígitos', (val, context) => {
+//             // Solo aplicamos la regla de 8 dígitos si el tipo de doc es DNI (ID 1)
+//             if (context.parent.tipo_doc === 1) {
+//                 return val?.length === 8;
+//             }
+//             return true; // Para otros documentos, no aplicamos esta restricción
+//         }),
+//     nombres: yup.string().required('Los nombres son obligatorios'),
+//     apellido_paterno: yup.string().required('El apellido paterno es obligatorio'),
+//     apellido_materno: yup.string().required('El apellido materno es obligatorio'),
+//     pais: yup.mixed().required('El país es obligatorio'),
+//     direccionPersona: yup.string().required('La dirección es obligatoria'),
+//     empresa: yup.string().required('El nombre de la empresa es obligatoria'),
+//     cargo: yup.string().required('El Cargo dentro de la empresa es obligatorio'),
+//     correo: yup.string()
+//         .email('Ingrese un correo electrónico válido')
+//         .required('El correo electrónico es obligatorio'),
+//     celular: yup.string()
+//         .matches(/^\+?[0-9]*$/, 'Solo se permiten números (el + al inicio es opcional)')
+//         .required('El teléfono es obligatorio'),
+//     sexo: yup.string().required('El sexo es obligatorio'),
+//     fecha_nacimiento: yup.date()
+//         .required('La fecha de nacimiento es obligatoria')
+//         .nullable()
+//         .test('is-18', 'Debes ser mayor de 18 años', (value) => {
+//             if (!value) return false;
+
+//             const today = new Date();
+//             const birthDate = new Date(value);
+//             let age = today.getFullYear() - birthDate.getFullYear();
+//             const m = today.getMonth() - birthDate.getMonth();
+
+//             // Ajuste si el mes actual es menor al de nacimiento
+//             if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+//                 age--;
+//             }
+
+//             return age >= 18;
+//         })
+// });
+
 const schema = yup.object({
-    tipo_doc: yup.mixed().required('El tipo de documento es obligatorio'),
+    tipo_doc: yup.mixed().required(words.val_req_doc_type),
     documento: yup.string()
-        .required('El número de documento es obligatorio')
-        .test('len', 'El DNI debe tener exactamente 8 dígitos', (val, context) => {
-            // Solo aplicamos la regla de 8 dígitos si el tipo de doc es DNI (ID 1)
+        .required(words.val_req_doc_num)
+        .test('len', words.val_dni_8_digits, (val, context) => {
             if (context.parent.tipo_doc === 1) {
                 return val?.length === 8;
             }
-            return true; // Para otros documentos, no aplicamos esta restricción
+            return true;
         }),
-    nombres: yup.string().required('Los nombres son obligatorios'),
-    apellido_paterno: yup.string().required('El apellido paterno es obligatorio'),
-    apellido_materno: yup.string().required('El apellido materno es obligatorio'),
-    pais: yup.mixed().required('El país es obligatorio'),
-    direccionPersona: yup.string().required('La dirección es obligatoria'),
-    empresa: yup.string().required('El nombre de la empresa es obligatoria'),
-    cargo: yup.string().required('El Cargo dentro de la empresa es obligatorio'),
+    nombres: yup.string().required(words.val_req_names),
+    apellido_paterno: yup.string().required(words.val_req_last_name_p),
+    apellido_materno: yup.string().required(words.val_req_last_name_m),
+    pais: yup.mixed().required(words.val_req_country),
+    direccionPersona: yup.string().required(words.val_req_address),
+    empresa: yup.string().required(words.val_req_company),
+    cargo: yup.string().required(words.val_req_job),
     correo: yup.string()
-        .email('Ingrese un correo electrónico válido')
-        .required('El correo electrónico es obligatorio'),
+        .email(words.val_invalid_email)
+        .required(words.val_req_email),
     celular: yup.string()
-        .matches(/^\+?[0-9]*$/, 'Solo se permiten números (el + al inicio es opcional)')
-        .required('El teléfono es obligatorio'),
-    sexo: yup.string().required('El sexo es obligatorio'),
+        .matches(/^\+?[0-9]*$/, words.val_phone_numbers_only)
+        .required(words.val_req_phone),
+    sexo: yup.string().required(words.val_req_gender),
     fecha_nacimiento: yup.date()
-        .required('La fecha de nacimiento es obligatoria')
+        .required(words.val_req_birthdate)
         .nullable()
-        .test('is-18', 'Debes ser mayor de 18 años', (value) => {
+        .test('is-18', words.val_min_age_18, (value) => {
             if (!value) return false;
-
             const today = new Date();
             const birthDate = new Date(value);
             let age = today.getFullYear() - birthDate.getFullYear();
             const m = today.getMonth() - birthDate.getMonth();
-
-            // Ajuste si el mes actual es menor al de nacimiento
             if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
                 age--;
             }
-
             return age >= 18;
         })
 });
@@ -108,34 +153,212 @@ const [fecha_nacimiento, fecha_nacimientoAttrs] = defineField('fecha_nacimiento'
 const [sexo, sexoAttrs] = defineField('sexo');
 const [cargo, cargoAttrs] = defineField('cargo');
 
-const fieldNames = {
-    tipo_doc: 'Tipo de Documento',
-    documento: 'Numero de Documento',
-    nombres: 'Nombres',
-    apellido_paterno: 'Apellido Paterno',
-    apellido_materno: 'Apellido Materno',
-    pais: 'Pais',
-    direccionPersona: 'Direccion',
-    correo: 'Correo Electronico',
-    celular: 'Celular',
-    sexo: 'Sexo',
-    fecha_nacimiento: 'Fecha de Nacimiento',
-    empresa: 'Empresa',
-    cargo: 'Cargo'
-};
+// const fieldNames = {
+//     tipo_doc: 'Tipo de Documento',
+//     documento: 'Numero de Documento',
+//     nombres: 'Nombres',
+//     apellido_paterno: 'Apellido Paterno',
+//     apellido_materno: 'Apellido Materno',
+//     pais: 'Pais',
+//     direccionPersona: 'Direccion',
+//     correo: 'Correo Electronico',
+//     celular: 'Celular',
+//     sexo: 'Sexo',
+//     fecha_nacimiento: 'Fecha de Nacimiento',
+//     empresa: 'Empresa',
+//     cargo: 'Cargo'
+// };
+
+const fieldNames = computed(() => ({
+    tipo_doc: words.lbl_doc_type,
+    documento: words.lbl_doc_num,
+    nombres: words.lbl_names,
+    apellido_paterno: words.lbl_last_name_p,
+    apellido_materno: words.lbl_last_name_m,
+    pais: words.lbl_country,
+    direccionPersona: words.lbl_address,
+    correo: words.lbl_email,
+    celular: words.lbl_phone,
+    sexo: words.lbl_gender,
+    fecha_nacimiento: words.lbl_birthdate,
+    empresa: words.lbl_company,
+    cargo: words.lbl_job_title
+}));
 
 const missingFields = computed(() => {
     return Object.keys(errors.value).map(key => fieldNames[key] || key);
 });
 
+// const searchPerson = async () => {
+//     if (!tipo_doc.value || !documento.value) {
+//         toast.add({ severity: 'warn', summary: 'Atención', detail: 'Por favor ingrese el tipo y número de documento', life: 3000 });
+//         return;
+//     }
+
+//     loadingSearch.value = true;
+//     hasSearched.value = true; // Indicar que ya se inició una búsqueda
+//     noEncontrado.value = false;
+//     searchSuccess.value = false;
+//     searchError.value = false;
+//     esSocio.value = false;
+
+//     try {
+//         const response = await axios.post('/api/getperson', {
+//             id_tipo_documento: tipo_doc.value,
+//             numero_documento: documento.value
+//         });
+
+//         const data = response.data;
+
+//         // CAMBIO CLAVE: Verificamos si existe el objeto persona, independientemente del status
+//         if (data.persona) {
+//             const p = data.persona;
+
+//             searchSuccess.value = true;
+
+//             // Asignamos si es socio o no
+//             esSocio.value = p.es_socio;
+//             noEncontrado.value = false;
+//             // Manejo de país y departamentos
+//             const paisAsignado = props.tipo_origen === 1 ? 75 : (p.pais || p.id_pais);
+//             if (p.pais || p.id_pais) {
+//                 pais.value = p.pais || p.id_pais;
+//                 await loadDepartamentos();
+//             }
+
+//             if (p.pais || p.id_pais) {
+//                 pais.value = p.pais || p.id_pais;
+
+//                 // Cargar departamentos y ESPERAR
+//                 departamentos.value = await Functions.loadDepartamentos(pais.value);
+
+//                 if (p.departamento) {
+//                     departamento.value = p.departamento;
+//                     // Cargar provincias y ESPERAR
+//                     provincias.value = await Functions.loadProvincias(pais.value, departamento.value);
+
+//                     if (p.provincia) {
+//                         provincia.value = p.provincia;
+//                         // Cargar distritos y ESPERAR
+//                         distritos.value = await Functions.loadDistritos(pais.value, departamento.value, provincia.value);
+
+//                         if (p.distrito) {
+//                             distrito.value = p.distrito;
+//                         }
+//                     }
+//                 }
+//             }
+
+//             datosOriginalesServidor.value = { ...p };
+//             console.log('--- DEPURACIÓN SEARCH ---');
+//             console.log('Perfil ID actual:', props.perfil_id);
+//             console.log('¿Es Socio?:', esSocio.value);
+
+//             if ([1, 3].includes(props.perfil_id)) {
+
+//                 if (esSocio.value) {
+//                     setValues({
+//                         tipo_doc: p.id_tipo_documento || tipo_doc.value,
+//                         documento: p.documento || documento.value,
+//                         nombres: p.nombres || '',
+//                         apellido_paterno: p.apellido_paterno || '',
+//                         apellido_materno: p.apellido_materno || '',
+//                         correo: p.correo || '',
+//                         celular: p.celular || '',
+//                         direccionPersona: p.direccionPersona || p.direccion?.direccion || '',
+//                         empresa: p.empresa_nombre || p.empresa || '',
+//                         cargo: p.cargo || '',
+//                         pais: p.pais || p.id_pais || paisAsignado,
+//                         sexo: p.sexo || '',
+//                         /*fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento) : null,*/
+//                         fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento.replace(/-/g, '\/')) : null,
+//                         departamento: departamento.value,
+//                         provincia: provincia.value,
+//                         distrito: distrito.value
+
+//                     });
+
+//                 } else {
+//                     setValues({
+//                         tipo_doc: p.id_tipo_documento || tipo_doc.value,
+//                         documento: p.documento || documento.value,
+//                         nombres: '',
+//                         apellido_paterno: '',
+//                         apellido_materno: '',
+//                         correo: '',
+//                         celular: '',
+//                         direccionPersona: '',
+//                         empresa: '',
+//                         cargo: '',
+//                         pais: '',
+//                         sexo: '',
+//                         fecha_nacimiento: null
+//                     });
+
+//                     setErrors({});
+
+//                 }
+//             } else {
+
+//                 // RELLENAR DATOS (Autocompletado)
+//                 setValues({
+//                     tipo_doc: p.id_tipo_documento || tipo_doc.value,
+//                     documento: p.documento || documento.value,
+//                     nombres: p.nombres || '',
+//                     apellido_paterno: p.apellido_paterno || '',
+//                     apellido_materno: p.apellido_materno || '',
+//                     correo: p.correo || '',
+//                     celular: p.celular || '',
+//                     direccionPersona: p.direccionPersona || p.direccion?.direccion || '',
+//                     empresa: p.empresa_nombre || p.empresa || '',
+//                     cargo: p.cargo || '',
+//                     pais: p.pais || p.id_pais || paisAsignado,
+//                     sexo: p.sexo || '',
+//                     // fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento) : null,
+//                     fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento.replace(/-/g, '\/')) : null,
+//                     departamento: departamento.value,
+//                     provincia: provincia.value,
+//                     distrito: distrito.value
+//                 });
+//             }
+
+
+
+//         } else {
+//             // SI REALMENTE NO EXISTE LA PERSONA EN LA BD
+//             noEncontrado.value = true;
+//             searchSuccess.value = false;
+
+//             // IMPORTANTE: No limpies los campos aquí si quieres que el usuario
+//             setValues({
+//                 ...values, // Mantenemos lo que ya está en el formulario
+//                 nombres: '',
+//                 apellido_paterno: '',
+//                 apellido_materno: '',
+//                 fecha_nacimiento: null
+//                 // No tocamos tipo_doc ni documento para que no se borren
+//             });
+//             setErrors({ fecha_nacimiento: undefined });
+//             hasSearched.value = true;
+//             toast.add({ severity: 'info', summary: 'No encontrado', detail: 'No se encontraron datos. Por favor, regístrese manualmente.', life: 3000 });
+//         }
+//     } catch (error) {
+//         searchError.value = true;
+//         console.error("Search error:", error);
+//         toast.add({ severity: 'error', summary: 'Error', detail: 'Hubo un problema al conectar con el servidor', life: 3000 });
+//     } finally {
+//         loadingSearch.value = false;
+//     }
+// };
+
 const searchPerson = async () => {
     if (!tipo_doc.value || !documento.value) {
-        toast.add({ severity: 'warn', summary: 'Atención', detail: 'Por favor ingrese el tipo y número de documento', life: 3000 });
+        toast.add({ severity: 'warn', summary: words.toast_warn_title, detail: words.toast_warn_doc, life: 3000 });
         return;
     }
 
     loadingSearch.value = true;
-    hasSearched.value = true; // Indicar que ya se inició una búsqueda
+    hasSearched.value = true;
     noEncontrado.value = false;
     searchSuccess.value = false;
     searchError.value = false;
@@ -149,36 +372,23 @@ const searchPerson = async () => {
 
         const data = response.data;
 
-        // CAMBIO CLAVE: Verificamos si existe el objeto persona, independientemente del status
         if (data.persona) {
             const p = data.persona;
-
             searchSuccess.value = true;
-
-            // Asignamos si es socio o no
             esSocio.value = p.es_socio;
             noEncontrado.value = false;
-            // Manejo de país y departamentos
+
             const paisAsignado = props.tipo_origen === 1 ? 75 : (p.pais || p.id_pais);
             if (p.pais || p.id_pais) {
                 pais.value = p.pais || p.id_pais;
-                await loadDepartamentos();
-            }
-
-            if (p.pais || p.id_pais) {
-                pais.value = p.pais || p.id_pais;
-
-                // Cargar departamentos y ESPERAR
                 departamentos.value = await Functions.loadDepartamentos(pais.value);
 
                 if (p.departamento) {
                     departamento.value = p.departamento;
-                    // Cargar provincias y ESPERAR
                     provincias.value = await Functions.loadProvincias(pais.value, departamento.value);
 
                     if (p.provincia) {
                         provincia.value = p.provincia;
-                        // Cargar distritos y ESPERAR
                         distritos.value = await Functions.loadDistritos(pais.value, departamento.value, provincia.value);
 
                         if (p.distrito) {
@@ -189,12 +399,8 @@ const searchPerson = async () => {
             }
 
             datosOriginalesServidor.value = { ...p };
-            console.log('--- DEPURACIÓN SEARCH ---');
-            console.log('Perfil ID actual:', props.perfil_id);
-            console.log('¿Es Socio?:', esSocio.value);
 
             if ([1, 3].includes(props.perfil_id)) {
-
                 if (esSocio.value) {
                     setValues({
                         tipo_doc: p.id_tipo_documento || tipo_doc.value,
@@ -209,37 +415,22 @@ const searchPerson = async () => {
                         cargo: p.cargo || '',
                         pais: p.pais || p.id_pais || paisAsignado,
                         sexo: p.sexo || '',
-                        /*fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento) : null,*/
                         fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento.replace(/-/g, '\/')) : null,
                         departamento: departamento.value,
                         provincia: provincia.value,
                         distrito: distrito.value
-
                     });
-
                 } else {
                     setValues({
                         tipo_doc: p.id_tipo_documento || tipo_doc.value,
                         documento: p.documento || documento.value,
-                        nombres: '',
-                        apellido_paterno: '',
-                        apellido_materno: '',
-                        correo: '',
-                        celular: '',
-                        direccionPersona: '',
-                        empresa: '',
-                        cargo: '',
-                        pais: '',
-                        sexo: '',
-                        fecha_nacimiento: null
+                        nombres: '', apellido_paterno: '', apellido_materno: '',
+                        correo: '', celular: '', direccionPersona: '', empresa: '',
+                        cargo: '', pais: '', sexo: '', fecha_nacimiento: null
                     });
-
                     setErrors({});
-
                 }
             } else {
-
-                // RELLENAR DATOS (Autocompletado)
                 setValues({
                     tipo_doc: p.id_tipo_documento || tipo_doc.value,
                     documento: p.documento || documento.value,
@@ -253,43 +444,30 @@ const searchPerson = async () => {
                     cargo: p.cargo || '',
                     pais: p.pais || p.id_pais || paisAsignado,
                     sexo: p.sexo || '',
-                    // fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento) : null,
                     fecha_nacimiento: p.fecha_nacimiento ? new Date(p.fecha_nacimiento.replace(/-/g, '\/')) : null,
                     departamento: departamento.value,
                     provincia: provincia.value,
                     distrito: distrito.value
                 });
             }
-
-
-
         } else {
-            // SI REALMENTE NO EXISTE LA PERSONA EN LA BD
             noEncontrado.value = true;
             searchSuccess.value = false;
-
-            // IMPORTANTE: No limpies los campos aquí si quieres que el usuario
             setValues({
-                ...values, // Mantenemos lo que ya está en el formulario
-                nombres: '',
-                apellido_paterno: '',
-                apellido_materno: '',
-                fecha_nacimiento: null
-                // No tocamos tipo_doc ni documento para que no se borren
+                ...values,
+                nombres: '', apellido_paterno: '', apellido_materno: '', fecha_nacimiento: null
             });
             setErrors({ fecha_nacimiento: undefined });
             hasSearched.value = true;
-            toast.add({ severity: 'info', summary: 'No encontrado', detail: 'No se encontraron datos. Por favor, regístrese manualmente.', life: 3000 });
+            toast.add({ severity: 'info', summary: words.toast_info_not_found, detail: words.toast_info_manual_reg, life: 3000 });
         }
     } catch (error) {
         searchError.value = true;
-        console.error("Search error:", error);
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Hubo un problema al conectar con el servidor', life: 3000 });
+        toast.add({ severity: 'error', summary: words.toast_error_title, detail: words.toast_error_server, life: 3000 });
     } finally {
         loadingSearch.value = false;
     }
 };
-
 
 const defaultViewDate = computed(() => {
     const date = new Date();
@@ -298,42 +476,70 @@ const defaultViewDate = computed(() => {
 });
 
 
+// const onlyNumberKey = (event) => {
+//     const charCode = event.which ? event.which : event.keyCode;
+
+//     // 1. Permitir teclas de control (Backspace, Delete, Tab, flechas)
+//     if ([8, 46, 9, 37, 39].includes(charCode)) return true;
+
+//     // 2. Permitir combinaciones de teclas (Ctrl+A, Ctrl+C, Ctrl+V)
+//     if (event.ctrlKey || event.metaKey) return true;
+
+//     if (tipo_doc.value == 1) {
+//         // 3. Si hay una selección de texto (el usuario seleccionó todo para borrar/sobrescribir)
+//         // permitimos la entrada porque la selección será reemplazada.
+//         const selection = window.getSelection().toString();
+//         if (selection.length > 0 && selection.length === documento.value?.length) {
+//             return true;
+//         }
+
+//         // 4. Bloquear si no es número
+//         if (charCode < 48 || charCode > 57) {
+//             event.preventDefault();
+//             return false;
+//         }
+
+//         // 5. Bloquear si ya llegó a 8 dígitos Y MOSTRAR MENSAJE
+//         if (documento.value?.length >= 8) {
+//             dniMessage.value = "Solo se permiten 8 dígitos";
+
+//             // Limpiar el mensaje automáticamente después de 3 segundos
+//             setTimeout(() => {
+//                 dniMessage.value = '';
+//             }, 3000);
+
+//             event.preventDefault();
+//             return false;
+//         } else {
+//             dniMessage.value = ''; // Limpiar si el usuario borra y vuelve a tener espacio
+//         }
+//     }
+//     return true;
+// };
+
 const onlyNumberKey = (event) => {
     const charCode = event.which ? event.which : event.keyCode;
-
-    // 1. Permitir teclas de control (Backspace, Delete, Tab, flechas)
     if ([8, 46, 9, 37, 39].includes(charCode)) return true;
-
-    // 2. Permitir combinaciones de teclas (Ctrl+A, Ctrl+C, Ctrl+V)
     if (event.ctrlKey || event.metaKey) return true;
 
     if (tipo_doc.value == 1) {
-        // 3. Si hay una selección de texto (el usuario seleccionó todo para borrar/sobrescribir)
-        // permitimos la entrada porque la selección será reemplazada.
         const selection = window.getSelection().toString();
         if (selection.length > 0 && selection.length === documento.value?.length) {
             return true;
         }
 
-        // 4. Bloquear si no es número
         if (charCode < 48 || charCode > 57) {
             event.preventDefault();
             return false;
         }
 
-        // 5. Bloquear si ya llegó a 8 dígitos Y MOSTRAR MENSAJE
         if (documento.value?.length >= 8) {
-            dniMessage.value = "Solo se permiten 8 dígitos";
-
-            // Limpiar el mensaje automáticamente después de 3 segundos
-            setTimeout(() => {
-                dniMessage.value = '';
-            }, 3000);
-
+            dniMessage.value = words.msg_only_8_digits;
+            setTimeout(() => { dniMessage.value = ''; }, 3000);
             event.preventDefault();
             return false;
         } else {
-            dniMessage.value = ''; // Limpiar si el usuario borra y vuelve a tener espacio
+            dniMessage.value = '';
         }
     }
     return true;
@@ -557,12 +763,23 @@ const bloqueoEmpresa = computed(() => esCampoBloqueado('empresa_nombre', empresa
 const bloqueoDireccion = computed(() => esCampoBloqueado('direccionPersona', direccionPersona.value));
 
 // EXTREMA SEGURIDAD: Watcher para limpiar si pegan texto con símbolos
+// watch(documento, (newValue) => {
+//     if (tipo_doc.value !== 1 && newValue) { // Solo si NO es DNI
+//         const cleaned = newValue.replace(/[^a-zA-Z0-9]/g, '');
+//         if (cleaned !== newValue) {
+//             documento.value = cleaned;
+//             alphanumericMessage.value = "Special characters were removed";
+//             setTimeout(() => { alphanumericMessage.value = ''; }, 3000);
+//         }
+//     }
+// });
+
 watch(documento, (newValue) => {
-    if (tipo_doc.value !== 1 && newValue) { // Solo si NO es DNI
+    if (tipo_doc.value !== 1 && newValue) {
         const cleaned = newValue.replace(/[^a-zA-Z0-9]/g, '');
         if (cleaned !== newValue) {
             documento.value = cleaned;
-            alphanumericMessage.value = "Special characters were removed";
+            alphanumericMessage.value = words.msg_special_chars_removed;
             setTimeout(() => { alphanumericMessage.value = ''; }, 3000);
         }
     }
@@ -590,7 +807,7 @@ onMounted(() => {
         <Card class="mt-5 overflow-hidden shadow-lg border border-gray-200">
             <template #header>
                 <div class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc">
-                    Buscar y Validar Documento
+                    {{ $page.props.language.words.lbl_search_validate }}
                 </div>
             </template>
             <template #content>
@@ -668,12 +885,10 @@ onMounted(() => {
                         role="alert">
                         <div class="flex items-center">
                             <i class="pi pi-exclamation-triangle mr-2 text-xl"></i>
-                            <span class="text-sm font-bold">Usted no es asociado.</span>
+                            <span class="text-sm font-bold">{{ $page.props.language.words.msg_not_partner }}</span>
                         </div>
                         <div class="mt-2 text-sm">
-                            Esta categoría es exclusiva para asociados. Por favor, contacte a <a
-                                href="mailto:asociados@iimp.org.pe"
-                                class="font-bold underline">asociados@iimp.org.pe</a> o cambie su categoría.
+                            {{ $page.props.language.words.msg_exclusive_partner }} <a href="mailto:asociados@iimp.org.pe" class="font-bold underline">asociados@iimp.org.pe</a> {{ $page.props.language.words.msg_change_category }}
                         </div>
                     </div>
 
@@ -683,7 +898,7 @@ onMounted(() => {
                     <div
                         class="text-green-iimp font-bold max-w-[650px] w-full p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="col-span-1">
-                            <label for="tipo_doc">Tipo de Documento <span class="text-red-600">*</span></label>
+                            <label for="tipo_doc">{{ $page.props.language.words.lbl_doc_type }} <span class="text-red-600">*</span></label>
                             <Select name="tipo_doc" v-model="tipo_doc" v-bind="tipo_docAttrs" translate="no"
                                 :options="tiposDocumentoFiltrados" @change="clearDocument" optionLabel="name_es"
                                 optionValue="sie_code" placeholder="Seleccionar documento" showClear checkmark
@@ -692,12 +907,12 @@ onMounted(() => {
                         </div>
                         <div class="col-span-1">
                             <label for="documento" translate="no">
-                                {{ 'Numero de Documento' }} <span class="text-red-600">*</span>
+                                {{ $page.props.language.words.lbl_doc_num }} <span class="text-red-600">*</span>
                             </label>
                             <InputGroup>
                                 <InputText name="documento" v-model="documento" v-bind="documentoAttrs"
                                     class="w-full border-green-iimp"
-                                    :placeholder="esDNI ? 'Ingrese 8 dígitos' : 'Ingrese número de documento'"
+                                    :placeholder="esDNI ?  $page.props.language.words.plh_enter_8_digits : '{{ $page.props.language.words.plh_enter_doc_num }}'"
                                     :maxlength="esDNI ? 8 : 15" :disabled="loadingSearch"
                                     @keypress="esDNI ? onlyNumberKey($event) : onlyAlphanumericKey($event)" />
 
@@ -726,8 +941,7 @@ onMounted(() => {
         /==============================  -->
         <Card class="mt-5 overflow-hidden shadow-lg border border-gray-200">
             <template #header>
-                <div class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc">Detalles
-                    Personales
+                <div class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc">
                 </div>
             </template>
             <template #content>
@@ -738,10 +952,10 @@ onMounted(() => {
                             role="alert">
                             <div class="flex items-center">
                                 <i class="pi pi-exclamation-circle mr-2 text-xl"></i>
-                                <span class="text-sm font-bold">Información Requerida</span>
+                                <span class="text-sm font-bold">{{ $page.props.language.words.lbl_req_info }}</span>
                             </div>
                             <div class="mt-2 text-sm">
-                                Por favor complete los siguientes campos para continuar con su inscripción:
+                                {{ $page.props.language.words.lbl_req_info_desc }}
                                 <ul class="list-disc ml-5 mt-1">
                                     <li v-for="field in missingFields" :key="field">{{ field }}</li>
                                 </ul>
@@ -752,7 +966,7 @@ onMounted(() => {
                     <!-- NOMBRES Y APELLIDOS -->
                     <div class="grid gap-6 m-6 md:grid-cols-2">
                         <div class="w-full">
-                            <label for="nombres">Nombres <span class="text-red-600">*</span></label>
+                            <label for="nombres">{{ $page.props.language.words.lbl_names }} <span class="text-red-600">*</span></label>
                             <InputText name="nombres" v-model="nombres" v-bind="nombresAttrs" :disabled="bloqueoNombres"
                                 class="w-full border-green-iimp" />
                             <small v-if="errors.nombres && !ocultarErroresPorNoSocio" class="text-red-600">
@@ -761,7 +975,7 @@ onMounted(() => {
                         </div>
                         <div class="grid gap-6 md:grid-cols-2">
                             <div class="w-full">
-                                <label for="apellido_paterno">Apellido Paterno <span
+                                <label for="apellido_paterno">{{ $page.props.language.words.lbl_last_name_p }} <span
                                         class="text-red-600">*</span></label>
                                 <InputText name="apellido_paterno" v-model="apellido_paterno"
                                     v-bind="apellido_paternoAttrs" :disabled="bloqueoApellidos"
@@ -773,7 +987,7 @@ onMounted(() => {
                             </div>
 
                             <div class="col-span-3 sm:col-span-1">
-                                <label for="apellido_materno" class="">Apellido Materno <span
+                                <label for="apellido_materno" class="">{{ $page.props.language.words.lbl_last_name_m }} <span
                                         class="text-red-600">*</span></label>
                                 <InputText name="apellido_materno" v-model="apellido_materno"
                                     :disabled="bloqueoApellidoMaterno" v-bind="apellido_maternoAttrs"
@@ -787,7 +1001,7 @@ onMounted(() => {
                     <div class="grid gap-6 m-6 md:grid-cols-2">
                         <div class="grid gap-6 md:grid-cols-2">
                             <div class="col-span-3 sm:col-span-1">
-                                <label for="correo" class="">Correo Electronico <span
+                                <label for="correo" class="">{{ $page.props.language.words.lbl_email }} <span
                                         class="font-normal text-red-600">*</span></label>
                                 <InputText name="correo" v-model="correo" v-bind="correoAttrs" :disabled="bloqueoCorreo"
                                     class="w-full border-green-iimp" />
@@ -795,7 +1009,7 @@ onMounted(() => {
                                     errors.correo }}</small>
                             </div>
                             <div class="col-span-3 sm:col-span-1">
-                                <label for="celular" class="">Celular <span
+                                <label for="celular" class="">{{ $page.props.language.words.lbl_cellphone }} <span
                                         class="font-normal text-red-600">*</span></label>
                                 <InputText name="celular" v-model="celular" v-bind="celularAttrs"
                                     @keypress="onlyPhoneKeys" :disabled="bloqueoCelular"
@@ -805,7 +1019,7 @@ onMounted(() => {
                             </div>
                         </div>
                         <div class="w-full sm:col-span-1">
-                            <label for="direccionPersona">Dirección <span class="text-red-600">*</span></label>
+                            <label for="direccionPersona">{{ $page.props.language.words.lbl_address }} <span class="text-red-600">*</span></label>
                             <InputText name="direccionPersona" v-model="direccionPersona" v-bind="direccionPersonaAttrs"
                                 :disabled="bloqueoDireccion" class="w-full border-green-iimp" />
                             <small v-if="errors.direccion && !ocultarErroresPorNoSocio" class="text-red-600">{{
@@ -817,7 +1031,7 @@ onMounted(() => {
                     <div class="grid gap-6 m-6 md:grid-cols-4">
 
                         <div class="w-full md:col-span-1">
-                            <label for="pais">Pais <span class="text-red-600">*</span></label>
+                            <label for="pais">{{ $page.props.language.words.lbl_country }} <span class="text-red-600">*</span></label>
                             <Select name="pais" v-model="pais" v-bind="paisAttrs" :options="paises" optionLabel="name"
                                 optionValue="id" placeholder="Select" showClear filter @change="loadDepartamentos"
                                 :disabled="bloqueoPais" translate="no" class="w-full border-green-iimp" />
@@ -826,7 +1040,7 @@ onMounted(() => {
                         </div>
 
                         <div class="col-span-3 sm:col-span-1">
-                            <label for="departamento" class="">Departamento</label>
+                            <label for="departamento" class="">{{ $page.props.language.words.lbl_department }}</label>
                             <Select name="departamento" v-model="departamento" v-bind="departamentoAttrs" filter
                                 @change="loadProvincias" :options="departamentos" optionLabel="name"
                                 :disabled="bloqueoDepartamento" optionValue="id_departamento" placeholder="Elegir"
@@ -835,7 +1049,7 @@ onMounted(() => {
                         </div>
 
                         <div class="w-full sm:col-span-1">
-                            <label for="provincia" class="">Provincia</label>
+                            <label for="provincia" class="">{{ $page.props.language.words.lbl_province }}</label>
                             <Select name="provincia" v-model="provincia" v-bind="provinciaAttrs" filter
                                 @change="loadDistritos" :options="provincias" optionLabel="name"
                                 :disabled="bloqueoProvincia" optionValue="id_provincia" placeholder="Elegir" showClear
@@ -843,7 +1057,7 @@ onMounted(() => {
                             <span class="font-normal text-red-600">{{ errors.provincia }}</span>
                         </div>
                         <div class="w-full sm:col-span-1">
-                            <label for="distrito" class="">Distrito</label>
+                            <label for="distrito" class="">{{ $page.props.language.words.lbl_district }}</label>
                             <Select name="distrito" v-model="distrito" v-bind="distritoAttrs" filter
                                 :disabled="bloqueoDistrito" :options="distritos" optionLabel="name"
                                 optionValue="id_distrito" placeholder="Elegir" showClear
@@ -854,7 +1068,7 @@ onMounted(() => {
 
                     <div class="grid gap-6 m-6 grid-cols-1 md:grid-cols-4">
                         <div class="w-full">
-                            <label for="sexo" class="">Sexo <span class="font-normal text-red-600"> *</span></label>
+                            <label for="sexo" class="">{{ $page.props.language.words.lbl_gender }} <span class="font-normal text-red-600"> *</span></label>
                             <Select name="sexo" v-model="sexo" v-bind="sexoAttrs" optionLabel="label"
                                 optionValue="value" placeholder="Selecccionar" showClear checkmark :options="generos"
                                 :disabled="bloqueoSexo" class="w-full border-green-iimp" />
@@ -862,7 +1076,7 @@ onMounted(() => {
                                 }}</small>
                         </div>
                         <div class="w-full">
-                            <label for="fecha_nacimiento">Fecha de Nacimiento <span
+                            <label for="fecha_nacimiento">{{ $page.props.language.words.lbl_birthdate }} <span
                                     class="text-red-600">*</span></label>
                             <InputGroup class="w-full h-[42px]">
                                 <InputGroupAddon class="border-green-iimp border-r-0 bg-white text-green-iimp">
@@ -879,7 +1093,7 @@ onMounted(() => {
                         </div>
 
                         <div class="w-full">
-                            <label for="empresa" class="">Empresa <span class="text-red-600">*</span></label>
+                            <label for="empresa" class="">{{ $page.props.language.words.lbl_company }} <span class="text-red-600">*</span></label>
                             <InputText name="empresa" v-model="empresa" v-bind="empresaAttrs" :disabled="bloqueoEmpresa"
                                 class="w-full border-green-iimp" />
                             <small v-if="errors.empresa && !ocultarErroresPorNoSocio" class=" text-red-600">{{
@@ -887,7 +1101,7 @@ onMounted(() => {
                         </div>
 
                         <div class="w-full sm:col-span-1">
-                            <label for="cargo" class="">Cargo <span class="text-red-600">*</span></label>
+                            <label for="cargo" class="">{{ $page.props.language.words.lbl_job_title }} <span class="text-red-600">*</span></label>
                             <InputText name="cargo" v-model="cargo" v-bind="cargoAttrs" :disabled="bloqueoCargo"
                                 class="w-full border-green-iimp" />
                             <small v-if="errors.cargo && !ocultarErroresPorNoSocio" class="text-red-600">{{ errors.cargo

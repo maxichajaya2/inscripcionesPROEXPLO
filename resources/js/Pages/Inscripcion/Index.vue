@@ -36,25 +36,53 @@ const copiarCorreo = () => {
     });
 };
 
+// const categoriasVisibles = computed(() => {
+//     if (!grupoSeleccionado.value) return [];
+
+//     return props.categorias.filter(cat => {
+//         const nombreEn = cat.nombre_en.toUpperCase();
+
+//         if (grupoSeleccionado.value === 'general') {
+//             // Filtra los que NO sean estudiantes ni docentes
+//             return !nombreEn.includes('ESTUDIANTE') && !nombreEn.includes('DOCENTE') && !nombreEn.includes('STUDENT');
+//         }
+
+//         if (grupoSeleccionado.value === 'estudiante') {
+//             // Solo los que digan Estudiante
+//             return nombreEn.includes('ESTUDIANTE') || nombreEn.includes('STUDENT');
+//         }
+
+//         if (grupoSeleccionado.value === 'docente') {
+//             // Solo los que digan Docente
+//             return nombreEn.includes('DOCENTE');
+//         }
+
+//         return false;
+//     });
+// });
+
 const categoriasVisibles = computed(() => {
     if (!grupoSeleccionado.value) return [];
 
     return props.categorias.filter(cat => {
-        const nombreEn = cat.nombre_en.toUpperCase();
+        // Obtenemos ambos nombres en mayúsculas para comparar seguro
+        const nombreEn = cat.nombre_en ? cat.nombre_en.toUpperCase() : '';
+        const nombreEs = cat.nombre_es ? cat.nombre_es.toUpperCase() : '';
 
         if (grupoSeleccionado.value === 'general') {
-            // Filtra los que NO sean estudiantes ni docentes
-            return !nombreEn.includes('ESTUDIANTE') && !nombreEn.includes('DOCENTE') && !nombreEn.includes('STUDENT');
+            // Filtra que NO sea Estudiante/Student Y que NO sea Docente/Teacher
+            return !nombreEs.includes('ESTUDIANTE') && !nombreEn.includes('STUDENT') &&
+                   !nombreEs.includes('DOCENTE') && !nombreEn.includes('TEACHER') && !nombreEn.includes('ACADEMIC');
         }
 
         if (grupoSeleccionado.value === 'estudiante') {
-            // Solo los que digan Estudiante
-            return nombreEn.includes('ESTUDIANTE') || nombreEn.includes('STUDENT');
+            // Solo los que digan Estudiante o Student
+            return nombreEs.includes('ESTUDIANTE') || nombreEn.includes('STUDENT');
         }
 
         if (grupoSeleccionado.value === 'docente') {
-            // Solo los que digan Docente
-            return nombreEn.includes('DOCENTE');
+            // Solo los que digan Docente o Teacher (o Academic)
+            return nombreEs.includes('DOCENTE') || nombreEn.includes('TEACHER') || nombreEn.includes('ACADEMIC');
         }
 
         return false;
@@ -146,7 +174,7 @@ const scrollToCategories = () => {
 
             <div id="titulo_inicial" class="mb-1 text-left animate-fade-in-down">
                 <h1 class="text-4xl md:text-5xl font-black text-pro-orange tracking-tight mb-2">
-                    XV Congreso Internacional de Prospectores y Exploradores <span class="text-pro-green">PROEXPLO
+                    {{ $page.props.language.words.top_title }} <span class="text-pro-green">PROEXPLO
                         2026</span>
                 </h1>
                 <h3 class="text-xl md:text-2xl text-white font-medium opacity-90 mb-4">
@@ -168,11 +196,11 @@ const scrollToCategories = () => {
                             <div class="flex flex-col z-10">
                                 <span
                                     class="text-orange-100 text-xs uppercase tracking-widest font-bold mb-1 drop-shadow-sm">
-                                    Registro Oficial
+                                    {{ $page.props.language.words.official_reg }}
                                 </span>
                                 <h5
                                     class="text-2xl font-black text-white group-hover:text-orange-50 transition-colors flex items-center gap-3 uppercase drop-shadow-md">
-                                    Inscripción al Evento
+                                    {{ $page.props.language.words.main_event }}
                                     <span class="relative flex h-3 w-3">
                                         <span
                                             class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
@@ -193,11 +221,11 @@ const scrollToCategories = () => {
 
                             <div class="flex flex-col z-10">
                                 <span class="text-pro-green text-xs uppercase tracking-widest font-bold mb-1">
-                                    Actividades Extras
+                                    {{ $page.props.language.words.extra_activities }}
                                 </span>
                                 <h5
                                     class="text-2xl font-black text-slate-800 group-hover:text-green-700 transition-colors uppercase leading-tight">
-                                    Cursos Cortos y Visitas Técnicas
+                                    {{ $page.props.language.words.courses_visits }}
                                 </h5>
                             </div>
 
@@ -214,7 +242,9 @@ const scrollToCategories = () => {
                             <div class="rotate-180">
                                 <GreenArrowRight class="w-4 h-4 text-slate-600" />
                             </div>
-                            <span class="text-slate-700 text-xs font-black uppercase">Volver</span>
+                            <span class="text-slate-700 text-xs font-black uppercase">
+                                {{ $page.props.language.words.btn_back }}
+                            </span>
                         </button>
 
                         <button v-for="perfil in ['general', 'docente', 'estudiante']" :key="perfil"
@@ -226,11 +256,15 @@ const scrollToCategories = () => {
                             <div class="z-10">
                                 <span :class="grupoSeleccionado === perfil ? 'text-orange-200' : 'text-orange-600'"
                                     class="text-[10px] font-bold uppercase tracking-widest mb-1 block">
-                                    Perfil
+                                    {{ $page.props.language.words.profile_label }}
                                 </span>
-                                <h5 :class="grupoSeleccionado === perfil ? 'text-white' : 'text-slate-800'"
+                                <!-- <h5 :class="grupoSeleccionado === perfil ? 'text-white' : 'text-slate-800'"
                                     class="text-2xl font-black transition-colors">
                                     {{ perfil }}
+                                </h5> -->
+                                <h5 :class="grupoSeleccionado === perfil ? 'text-white' : 'text-slate-800'"
+                                    class="text-2xl font-black transition-colors uppercase">
+                                    {{ $page.props.language.words['profile_' + perfil] }}
                                 </h5>
                             </div>
 
@@ -264,10 +298,13 @@ const scrollToCategories = () => {
                                 </div>
                                 <h4
                                     class="text-lg md:text-xl font-bold text-slate-800 leading-tight group-hover:text-orange-700 transition-colors">
-                                    {{ cat.nombre_en }}
+                                    <h4
+                                        class="text-lg md:text-xl font-bold text-slate-800 leading-tight group-hover:text-orange-700 transition-colors">
+                                        {{ $page.props.language.current === 'en' ? cat.nombre_en : cat.nombre_es }}
+                                    </h4>
                                 </h4>
                                 <p class="text-xs text-slate-500 mt-1 group-hover:text-slate-600 transition-colors">
-                                    {{ cat.categoria_description }}
+                                 {{ $page.props.language.current === 'en' ? cat.categoria_description_en : cat.categoria_description_es }}
                                 </p>
                             </div>
 
@@ -294,47 +331,44 @@ const scrollToCategories = () => {
                             class="p-8 bg-[#FFF7ED] border-l-4 border-pro-orange rounded-r-2xl shadow-sm animate-fade-in">
                             <h6
                                 class="text-pro-orange font-black uppercase tracking-widest mb-4 flex items-center gap-2 text-xs md:text-sm">
-                                ℹ️ Los inscritos al Congreso tendrán los siguientes beneficios:
+                                ℹ️ {{ $page.props.language.words.benefits_title }}
                             </h6>
 
                             <ul class="space-y-2 text-slate-700 text-sm">
                                 <li class="flex items-start gap-2">
                                     <span class="shrink-0">✅</span>
-                                    <span class="leading-relaxed">Asistencia a las conferencias con interpretación
-                                        simultánea (inglés - español)</span>
+                                    <span class="leading-relaxed">{{ $page.props.language.words.benefit_1 }}</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <span class="shrink-0">✅</span>
-                                    <span class="leading-relaxed">Ingreso a la Exhibición Técnica</span>
+                                    <span class="leading-relaxed">{{ $page.props.language.words.benefit_2 }}</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <span class="shrink-0">✅</span>
-                                    <span class="leading-relaxed">Participación en las ceremonias de inauguración y clausura(Solo para las categorías Asociado y No Asociado )</span>
+                                    <span class="leading-relaxed">{{ $page.props.language.words.benefit_3 }}</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <span class="shrink-0">✅</span>
-                                    <span class="leading-relaxed">Acceso a las presentaciones en PDF
-                                        (autorizadas)</span>
+                                    <span class="leading-relaxed">{{ $page.props.language.words.benefit_4 }}</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <span class="shrink-0">✅</span>
-                                    <span class="leading-relaxed">Certificado digital de participación a
-                                        solicitud</span>
+                                    <span class="leading-relaxed">{{ $page.props.language.words.benefit_5 }}</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <span class="shrink-0">✅</span>
-                                    <span class="leading-relaxed">Almuerzo incluido(Solo para las categorías Asociado y No Asociado )</span>
+                                    <span class="leading-relaxed">{{ $page.props.language.words.benefit_6 }}</span>
                                 </li>
                                 <li class="flex items-start gap-2">
                                     <span class="shrink-0">✅</span>
-                                    <span class="leading-relaxed">Recesos de café</span>
+                                    <span class="leading-relaxed">{{ $page.props.language.words.benefit_7 }}</span>
                                 </li>
                             </ul>
 
                             <div class="mt-4 pt-4 border-t border-orange-200 flex items-center gap-3">
                                 <div class="w-2 h-2 rounded-full bg-pro-orange animate-pulse"></div>
                                 <p class="text-pro-orange text-[10px] md:text-xs font-bold tracking-wider uppercase">
-                                    Selecciona tu perfil a la izquierda para continuar
+                                    {{ $page.props.language.words.select_profile }}
                                 </p>
                             </div>
                         </div>

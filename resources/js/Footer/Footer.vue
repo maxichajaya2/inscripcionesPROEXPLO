@@ -12,7 +12,9 @@ import LogoIIMPRender from '@/Components/LogoIIMPRender.vue';
                     <div class="flex flex-col space-y-4">
                         <LogoIIMPRender class="block w-auto" />
                         <div class="border-l-2 border-[#b8904d] pl-4">
-                            <span class="block text-[10px] uppercase tracking-tighter text-gray-500">Organizado por:</span>
+                            <span class="block text-[10px] uppercase tracking-tighter text-gray-500">
+                                {{ $page.props.language.words.footer_organized_by }}
+                            </span>
                             <span class="text-xs font-bold text-slate-900">IIMP - Instituto de Ingenieros de Minas del
                                 Perú</span>
                         </div>
@@ -21,56 +23,57 @@ import LogoIIMPRender from '@/Components/LogoIIMPRender.vue';
 
                 <div>
                     <h3 class="text-xs font-bold mb-5 uppercase text-[#b8904d] tracking-widest flex items-center">
-                        <i class="pi pi-shield mr-2"></i> Información Legal
+                        <i class="pi pi-shield mr-2"></i> {{ $page.props.language.words.footer_legal_info }}
                     </h3>
 
-                    <div class="space-y-2">
+                    <!-- <div class="space-y-2">
                         <a href="/documents/reglamento.pdf" target="_blank"
+                            class="flex items-center justify-between bg-gray-50 p-2 rounded border border-gray-200 shadow-sm hover:bg-gray-100 transition-all duration-300 group">
+                            <div class="flex items-center space-x-2">
+                                <i class="pi pi-file-pdf text-gray-400 group-hover:text-[#b8904d] transition-colors text-[11px]"></i>
+                                <span class="text-[9px] text-gray-600 uppercase tracking-widest font-medium group-hover:text-slate-900 transition-colors">
+                                    {{ $page.props.language.words.footer_terms }}
+                                </span>
+                            </div>
+                            <i class="pi pi-external-link text-[7px] text-gray-400 group-hover:text-[#b8904d] transition-colors"></i>
+                        </a>
+                    </div> -->
+
+                    <div class="space-y-2">
+                        <a :href="$page.props.language.words.doc_privacy_policies" target="_blank"
                             class="flex items-center justify-between bg-gray-50 p-2 rounded border border-gray-200 shadow-sm hover:bg-gray-100 transition-all duration-300 group">
                             <div class="flex items-center space-x-2">
                                 <i
                                     class="pi pi-file-pdf text-gray-400 group-hover:text-[#b8904d] transition-colors text-[11px]"></i>
                                 <span
                                     class="text-[9px] text-gray-600 uppercase tracking-widest font-medium group-hover:text-slate-900 transition-colors">
-                                    Términos y Condiciones
+                                    {{ $page.props.language.words.lbl_privacy_policies }}
                                 </span>
                             </div>
                             <i
                                 class="pi pi-external-link text-[7px] text-gray-400 group-hover:text-[#b8904d] transition-colors"></i>
                         </a>
 
-                        <!-- <a href="/documents/politicas.pdf" target="_blank"
+                        <a :href="$page.props.language.words.doc_participation_rules" target="_blank"
                             class="flex items-center justify-between bg-gray-50 p-2 rounded border border-gray-200 shadow-sm hover:bg-gray-100 transition-all duration-300 group">
                             <div class="flex items-center space-x-2">
                                 <i
-                                    class="pi pi-list text-gray-400 group-hover:text-[#b8904d] transition-colors text-[11px]"></i>
+                                    class="pi pi-file-pdf text-gray-400 group-hover:text-[#b8904d] transition-colors text-[11px]"></i>
                                 <span
                                     class="text-[9px] text-gray-600 uppercase tracking-widest font-medium group-hover:text-slate-900 transition-colors">
-                                    Políticas de Registro
+                                    {{ $page.props.language.words.lbl_participation_rules }}
                                 </span>
                             </div>
                             <i
                                 class="pi pi-external-link text-[7px] text-gray-400 group-hover:text-[#b8904d] transition-colors"></i>
-                        </a> -->
-
-                        <!-- <a href="/documents/privacy_policy.pdf" target="_blank"
-                            class="flex items-center justify-between bg-gray-50 p-2 rounded border border-gray-200 shadow-sm hover:bg-gray-100 transition-all duration-300 group">
-                            <div class="flex items-center space-x-2">
-                                <i
-                                    class="pi pi-verified text-gray-400 group-hover:text-[#b8904d] transition-colors text-[11px]"></i>
-                                <span
-                                    class="text-[9px] text-gray-600 uppercase tracking-widest font-medium group-hover:text-slate-900 transition-colors">
-                                    Privacidad y Politica
-                                </span>
-                            </div>
-                            <i
-                                class="pi pi-external-link text-[7px] text-gray-400 group-hover:text-[#b8904d] transition-colors"></i>
-                        </a> -->
+                        </a>
                     </div>
                 </div>
 
                 <div>
-                    <h3 class="text-xs font-bold mb-5 uppercase text-[#b8904d] tracking-widest">Seguridad de Plataforma</h3>
+                    <h3 class="text-xs font-bold mb-5 uppercase text-[#b8904d] tracking-widest">
+                        {{ $page.props.language.words.footer_platform_security }}
+                    </h3>
                     <div class="space-y-4">
                         <a href="https://aws.amazon.com/security/" target="_blank" rel="noopener noreferrer"
                             class="flex items-center space-x-3 bg-gray-50 p-3 rounded border border-gray-200 shadow-sm hover:bg-gray-100 transition-all duration-300 group cursor-pointer w-full">
@@ -108,7 +111,9 @@ import LogoIIMPRender from '@/Components/LogoIIMPRender.vue';
                 </div>
 
                 <div>
-                    <h3 class="text-xs font-bold mb-5 uppercase text-[#b8904d] tracking-widest">Pagos Seguros</h3>
+                    <h3 class="text-xs font-bold mb-5 uppercase text-[#b8904d] tracking-widest">
+                        {{ $page.props.language.words.footer_secure_payments }}
+                    </h3>
                     <a href="https://www.pcisecuritystandards.org/about_us/" target="_blank" rel="noopener noreferrer"
                         class="block group">
                         <div
@@ -117,7 +122,9 @@ import LogoIIMPRender from '@/Components/LogoIIMPRender.vue';
                                 alt="PCI Compliant"
                                 class="h-9 bg-white p-1 rounded shadow-sm group-hover:shadow-md transition-shadow">
                             <div class="leading-none">
-                                <span class="block text-[8px] font-bold text-gray-500 uppercase">Certificado</span>
+                                <span class="block text-[8px] font-bold text-gray-500 uppercase">
+                                    {{ $page.props.language.words.footer_certified }}
+                                </span>
                                 <span
                                     class="text-[9px] text-slate-900 font-medium uppercase tracking-tighter group-hover:text-blue-600 transition-colors">
                                     PCI-DSS Compliant
@@ -134,11 +141,10 @@ import LogoIIMPRender from '@/Components/LogoIIMPRender.vue';
             <div class="mt-6 pt-6 border-t border-gray-100 text-center space-y-4 pb-2">
                 <div class="text-[13px] text-gray-500 flex flex-col items-center justify-center space-y-1">
                     <p>
-                        &copy; {{ new Date().getFullYear() }} <strong class="text-slate-800">XV Congreso Internacional de Prospectores y Exploradores</strong>. Todos los derechos reservados.
+                        &copy; {{ new Date().getFullYear() }} <strong class="text-slate-800">{{
+                            $page.props.language.words.footer_congress_name }}</strong>. {{
+                                $page.props.language.words.footer_rights }}
                     </p>
-                    <!-- <p class="text-[14px] text-gray-400">
-                        Organized by Instituto de Ingenieros de Minas del Perú (IIMP)
-                    </p> -->
                 </div>
             </div>
         </div>

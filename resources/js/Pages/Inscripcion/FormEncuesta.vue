@@ -1,18 +1,21 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
-import Toast from 'primevue/toast'; // IMPORTANTE: Importar el componente físico
+import Toast from 'primevue/toast';
 
+const page = usePage(); // Necesario para extraer los textos en el script
 const toast = useToast();
-const loading = ref(false); // Estado para controlar el spinner y el botón
+const loading = ref(false);
 
-const categorias = [
-    { id: 1, nombre: 'Programa de Conferencias', url: 'https://proexplo.com.pe/es/programa-de-conferencias' },
-    { id: 2, nombre: 'Cursos Cortos', url: 'https://proexplo.com.pe/es/cursos-cortos' },
-    { id: 3, nombre: 'Visitas Técnicas', url: 'https://proexplo.com.pe/es/visitas-tecnicas' },
-    { id: 4, nombre: 'Core Shack', url: 'https://proexplo.com.pe/es/core-shack-es' },
-];
+// Convertimos a computed para que los nombres cambien al instante si cambia el idioma
+// Nota: Estamos reciclando las llaves btn_program, btn_courses... que ya tenías!
+const categorias = computed(() => [
+    { id: 1, nombre: page.props.language.words.btn_program, url: 'https://proexplo.com.pe/es/programa-de-conferencias' },
+    { id: 2, nombre: page.props.language.words.btn_courses, url: 'https://proexplo.com.pe/es/cursos-cortos' },
+    { id: 3, nombre: page.props.language.words.btn_visits, url: 'https://proexplo.com.pe/es/visitas-tecnicas' },
+    { id: 4, nombre: page.props.language.words.btn_core, url: 'https://proexplo.com.pe/es/core-shack-es' },
+]);
 
 const form = ref({
     nombres: '',
@@ -61,7 +64,7 @@ const paisSeleccionado = ref(paises[0]);
 
 const enviarFormulario = () => {
     if (formularioValido.value) {
-        loading.value = true; // Activar carga
+        loading.value = true;
 
         router.post(route('contactanos.store'), {
             ...form.value,
@@ -70,19 +73,19 @@ const enviarFormulario = () => {
             onSuccess: () => {
                 toast.add({
                     severity: 'success',
-                    summary: '¡Enviado!',
-                    detail: 'Su mensaje ha sido recibido con éxito.',
+                    summary: page.props.language.words.toast_success_title,
+                    detail: page.props.language.words.toast_success_msg,
                     life: 5000
                 });
                 form.value = { nombres: '', apellidos: '', email: '', telefono: '', mensaje: '' };
-                loading.value = false; // Desactivar carga
+                loading.value = false;
             },
             onError: (errors) => {
-                loading.value = false; // Desactivar carga
+                loading.value = false;
                 toast.add({
                     severity: 'error',
-                    summary: 'Error',
-                    detail: 'No se pudo enviar el mensaje. Verifique los datos.',
+                    summary: page.props.language.words.toast_error_title,
+                    detail: page.props.language.words.toast_error_msg,
                     life: 5000
                 });
             }
@@ -107,13 +110,13 @@ const enviarFormulario = () => {
                 <img src="/images/icon-fence.svg" class="w-12 h-12 opacity-60" alt="Icono">
             </div>
             <div class="text-center md:text-left">
-                <h4 class="text-pro-blue font-black uppercase text-lg mb-1">Otros Participantes</h4>
+                <h4 class="text-pro-blue font-black uppercase text-lg mb-1">{{ $page.props.language.words.contact_others_title }}</h4>
                 <p class="text-pro-gray text-sm md:text-base leading-relaxed">
-                    Si eres auspiciador, exhibidor o prensa, comunícate con nosotros al correo
-                    <a href="mailto:inscripciones@iimp.org.pe" class="text-pro-orange font-bold hover:underline">
+                    {{ $page.props.language.words.contact_others_text_1 }}
+                    <a href="mailto:inscripciones@iimp.org.pe" class="text-pro-orange font-bold hover:underline mx-1">
                         inscripciones@iimp.org.pe
                     </a>
-                    para orientarte sobre el proceso de inscripción.
+                    {{ $page.props.language.words.contact_others_text_2 }}
                 </p>
             </div>
         </div>
@@ -126,7 +129,7 @@ const enviarFormulario = () => {
 
             <div class="relative z-10 p-8 md:p-16 text-white">
                 <h2 class="text-3xl md:text-3xl font-black text-center mb-1 tracking-tight uppercase">
-                    Contáctanos
+                    {{ $page.props.language.words.contact_title }}
                 </h2>
                 <div class="w-20 h-1.5 bg-pro-orange mx-auto mb-12 rounded-full shadow-[0_0_15px_rgba(226,122,17,0.4)]">
                 </div>
@@ -134,25 +137,25 @@ const enviarFormulario = () => {
                 <form @submit.prevent="enviarFormulario" class="max-w-4xl mx-auto space-y-8">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div class="group">
-                            <label class="block text-[10px] uppercase font-black tracking-[0.2em] text-white/50 mb-3 ml-5">Nombres *</label>
-                            <input v-model="form.nombres" type="text" placeholder="Escriba sus nombres" required
+                            <label class="block text-[10px] uppercase font-black tracking-[0.2em] text-white/50 mb-3 ml-5">{{ $page.props.language.words.form_names }}</label>
+                            <input v-model="form.nombres" type="text" :placeholder="$page.props.language.words.form_names_ph" required
                                 class="w-full bg-white/95 text-slate-900 rounded-full px-7 py-4 border-none focus:ring-4 focus:ring-pro-orange/50 outline-none transition-all placeholder:text-slate-400">
                         </div>
                         <div class="group">
-                            <label class="block text-[10px] uppercase font-black tracking-[0.2em] text-white/50 mb-3 ml-5">Apellidos *</label>
-                            <input v-model="form.apellidos" type="text" placeholder="Escriba sus apellidos" required
+                            <label class="block text-[10px] uppercase font-black tracking-[0.2em] text-white/50 mb-3 ml-5">{{ $page.props.language.words.form_lastnames }}</label>
+                            <input v-model="form.apellidos" type="text" :placeholder="$page.props.language.words.form_lastnames_ph" required
                                 class="w-full bg-white/95 text-slate-900 rounded-full px-7 py-4 border-none focus:ring-4 focus:ring-pro-orange/50 outline-none transition-all placeholder:text-slate-400">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
                         <div class="md:col-span-7">
-                            <label class="block text-[10px] uppercase font-black tracking-[0.2em] text-white/50 mb-3 ml-5">E-mail corporativo *</label>
-                            <input v-model="form.email" type="email" placeholder="ejemplo@empresa.com" required
+                            <label class="block text-[10px] uppercase font-black tracking-[0.2em] text-white/50 mb-3 ml-5">{{ $page.props.language.words.form_email }}</label>
+                            <input v-model="form.email" type="email" :placeholder="$page.props.language.words.form_email_ph" required
                                 class="w-full bg-white/95 text-slate-900 rounded-full px-7 py-4 border-none focus:ring-4 focus:ring-pro-orange/50 outline-none transition-all">
                         </div>
                         <div class="md:col-span-5">
-                            <label class="block text-[10px] uppercase font-black tracking-[0.2em] text-white/50 mb-3 ml-5">Teléfono *</label>
+                            <label class="block text-[10px] uppercase font-black tracking-[0.2em] text-white/50 mb-3 ml-5">{{ $page.props.language.words.form_phone }}</label>
                             <div class="flex gap-3">
                                 <div class="relative bg-white/95 text-slate-900 rounded-full px-5 py-4 flex items-center gap-2 font-bold shadow-inner">
                                     <span class="text-xl">{{ paisSeleccionado.bandera }}</span>
@@ -163,15 +166,15 @@ const enviarFormulario = () => {
                                         </option>
                                     </select>
                                 </div>
-                                <input v-model="form.telefono" type="tel" placeholder="Número" required
+                                <input v-model="form.telefono" type="tel" :placeholder="$page.props.language.words.form_phone_ph" required
                                     class="w-full bg-white/95 text-slate-900 rounded-full px-7 py-4 border-none focus:ring-4 focus:ring-pro-orange/40 outline-none transition-all placeholder:text-slate-400 font-medium">
                             </div>
                         </div>
                     </div>
 
                     <div class="group">
-                        <label class="block text-[10px] uppercase font-black tracking-[0.2em] text-white/50 mb-3 ml-5">Mensaje o Consulta *</label>
-                        <textarea v-model="form.mensaje" rows="4" placeholder="¿En qué podemos ayudarle?" required
+                        <label class="block text-[10px] uppercase font-black tracking-[0.2em] text-white/50 mb-3 ml-5">{{ $page.props.language.words.form_message }}</label>
+                        <textarea v-model="form.mensaje" rows="4" :placeholder="$page.props.language.words.form_message_ph" required
                             class="w-full bg-white/95 text-slate-900 rounded-[2rem] px-8 py-6 border-none focus:ring-4 focus:ring-pro-orange/50 outline-none transition-all resize-none"></textarea>
                     </div>
 
@@ -182,7 +185,7 @@ const enviarFormulario = () => {
 
                             <i v-if="loading" class="pi pi-spin pi-spinner mr-2"></i>
 
-                            <span class="relative z-10">{{ loading ? 'Enviando...' : 'Enviar formulario' }}</span>
+                            <span class="relative z-10">{{ loading ? $page.props.language.words.form_sending : $page.props.language.words.form_send }}</span>
 
                             <div v-if="formularioValido && !loading"
                                 class="absolute inset-0 bg-gradient-to-b from-pro-orange to-pro-red opacity-0 group-hover:opacity-100 transition-opacity duration-500">

@@ -35,6 +35,7 @@ const codigoVoucher = ref('');
 const loadingCupon = ref(false);
 const cuponAplicado = ref(false);
 const mensajeVoucher = ref({ texto: '', tipo: '' });
+const words = page.props.language.words;
 
 
 const empresasAliadas = computed(() => {
@@ -58,17 +59,28 @@ const empresasAliadas = computed(() => {
     return lista.sort((a, b) => a.nombre.localeCompare(b.nombre));
 });
 
-const fieldNames = {
-    selected_categoria: 'Categoría de Inscripción',
-    tipoDocumentoEmpresa: 'Tipo de Documento de Facturación',
-    documentoEmpresa: 'Número de Documento de Facturación',
-    razonSocial: 'Razón Social / Nombre Completo',
-    direccionEmpresa: 'Dirección de Facturación',
-    responsable: 'Nombre del Contacto de Facturación',
-    correo_facturador: 'Correo Electrónico de Facturación',
-    reglamento: 'Aceptación de Términos y Condiciones',
-    uploadDocument: 'Documento Requerido de la Categoría'
-};
+// const fieldNames = {
+//     selected_categoria: 'Categoría de Inscripción',
+//     tipoDocumentoEmpresa: 'Tipo de Documento de Facturación',
+//     documentoEmpresa: 'Número de Documento de Facturación',
+//     razonSocial: 'Razón Social / Nombre Completo',
+//     direccionEmpresa: 'Dirección de Facturación',
+//     responsable: 'Nombre del Contacto de Facturación',
+//     correo_facturador: 'Correo Electrónico de Facturación',
+//     reglamento: 'Aceptación de Términos y Condiciones',
+//     uploadDocument: 'Documento Requerido de la Categoría'
+// };
+
+const fieldNames = computed(() => ({
+    selected_categoria: words.lbl_category_details,
+    tipoDocumentoEmpresa: words.lbl_doc_type_billing,
+    documentoEmpresa: words.lbl_doc_number_billing,
+    razonSocial: words.lbl_business_name,
+    direccionEmpresa: words.lbl_fiscal_address,
+    responsable: words.lbl_billing_contact,
+    correo_facturador: words.lbl_billing_email,
+    uploadDocument: words.lbl_required_document
+}));
 
 const es_socio = ref(false);
 const showWelcomeBillingModal = ref(false);
@@ -100,27 +112,47 @@ const modalConfig = ref({ title: '', message: '', icon: '', colorClass: '' });
 
 const formManualErrors = ref({ reglamento: null, total: null, uploadDocument: null });
 
+// const { defineField, errors, setValues, values, validate } = useForm({
+//     validationSchema: yup.object({
+//         razonSocial: yup.string().trim().required('La razón social es obligatoria'),
+//         // direccionEmpresa: yup.string().trim().required('La dirección de la empresa es obligatoria'),
+//         direccionEmpresa: yup.string()
+//             .trim()
+//             .required('La dirección de la empresa es obligatoria')
+//             .min(5, 'La dirección es demasiado corta')
+//             .test('no-garbage', 'Por favor, ingrese una dirección válida', (value) => {
+//                 if (!value) return false;
+//                 // Verifica que contenga al menos 3 letras o números
+//                 // y que no sean solo símbolos repetidos como --- o ***
+//                 const hasContent = /[a-zA-Z0-9]{3,}/.test(value);
+//                 const isNotJustSymbols = !/^[ \-*.;,_]+$/.test(value);
+//                 return hasContent && isNotJustSymbols;
+//             }),
+//         responsable: yup.string().trim().required('El nombre del responsable es obligatorio'),
+//         correo_facturador: yup.string().trim()
+//             .email('Formato de correo inválido')
+//             .required('El correo de facturación es obligatorio'),
+//     })
+// });
+
 const { defineField, errors, setValues, values, validate } = useForm({
-    validationSchema: yup.object({
-        razonSocial: yup.string().trim().required('La razón social es obligatoria'),
-        // direccionEmpresa: yup.string().trim().required('La dirección de la empresa es obligatoria'),
+    validationSchema: computed(() => yup.object({
+        razonSocial: yup.string().trim().required(words.val_req_business_name),
         direccionEmpresa: yup.string()
             .trim()
-            .required('La dirección de la empresa es obligatoria')
-            .min(5, 'La dirección es demasiado corta')
-            .test('no-garbage', 'Por favor, ingrese una dirección válida', (value) => {
+            .required(words.val_req_company_address)
+            .min(5, words.val_address_too_short)
+            .test('no-garbage', words.val_invalid_address, (value) => {
                 if (!value) return false;
-                // Verifica que contenga al menos 3 letras o números
-                // y que no sean solo símbolos repetidos como --- o ***
                 const hasContent = /[a-zA-Z0-9]{3,}/.test(value);
                 const isNotJustSymbols = !/^[ \-*.;,_]+$/.test(value);
                 return hasContent && isNotJustSymbols;
             }),
-        responsable: yup.string().trim().required('El nombre del responsable es obligatorio'),
+        responsable: yup.string().trim().required(words.val_req_contact_name),
         correo_facturador: yup.string().trim()
-            .email('Formato de correo inválido')
-            .required('El correo de facturación es obligatorio'),
-    })
+            .email(words.val_invalid_email)
+            .required(words.val_req_billing_email),
+    }))
 });
 
 const dniMessageEmpresa = ref('');
@@ -159,13 +191,72 @@ const MODAL_DATA = {
     }
 };
 
+// const MODAL_DATA = computed(() => ({
+//     DNI: {
+//         title: words.lbl_boleta_info,
+//         message: words.msg_boleta_info,
+//         icon: 'pi pi-user',
+//         colorClass: 'text-blue-600'
+//     },
+//     RUC: {
+//         title: words.lbl_factura_info,
+//         message: words.msg_factura_info,
+//         icon: 'pi pi-building',
+//         colorClass: 'text-purple-600'
+//     }
+// }));
+
+// function changeCategory(id, precioRecibido) {
+//     if (!id) return;
+
+//     const categoria = props.categorias.find(c => c.id === id);
+//     if (!categoria) return;
+
+//     // LÓGICA CRÍTICA: Forzamos a 0 si la sección es 'viajes'
+//     if (esSeccionViajes.value) {
+//         current_price = 0;
+//     } else {
+//         current_price = (precioRecibido > 0) ? precioRecibido : (categoria.precio_disponible?.valor || 0);
+//     }
+
+//     nextTick(() => {
+//         show_document.value = Boolean(categoria.requiere_documento);
+
+//         if (show_document.value) {
+//             const nombre = categoria.nombre_en.toUpperCase();
+
+//             if (nombre.includes('STUDENT') || nombre.includes('ESTUDIANTE')) {
+//                 // Mensaje para Estudiantes (Quinto Superior)
+//                 upload_instruction.value = "Para acceder a esta tarifa es obligatorio presentar una constancia de pertenencia al quinto superior.";
+//             }
+//             else if (nombre.includes('FACULTY') || nombre.includes('DOCENTE')) {
+//                 // Mensaje para Docentes (Carta de institución)
+//                 upload_instruction.value = "Para acceder a esta tarifa es obligatorio presentar una carta de la institución donde labora. (No aplica a docentes de postgrado).";
+//             }
+//             else {
+//                 // Mensaje por defecto para otras categorías que pidan documento
+//                 upload_instruction.value = "Por favor, adjunte el documento de sustento requerido para esta categoría.";
+//             }
+//         }
+
+//         if (id == 39) {
+//             show_days.value = true;
+//             // Al multiplicar por current_price (que es 0), el total será 0
+//             let count = Object.values(current_days).filter(v => v).length;
+//             total.value = count * current_price;
+//         } else {
+//             show_days.value = false;
+//             total.value = current_price; // Será 0
+//         }
+//     });
+// }
+
 function changeCategory(id, precioRecibido) {
     if (!id) return;
 
     const categoria = props.categorias.find(c => c.id === id);
     if (!categoria) return;
 
-    // LÓGICA CRÍTICA: Forzamos a 0 si la sección es 'viajes'
     if (esSeccionViajes.value) {
         current_price = 0;
     } else {
@@ -179,40 +270,77 @@ function changeCategory(id, precioRecibido) {
             const nombre = categoria.nombre_en.toUpperCase();
 
             if (nombre.includes('STUDENT') || nombre.includes('ESTUDIANTE')) {
-                // Mensaje para Estudiantes (Quinto Superior)
-                upload_instruction.value = "Para acceder a esta tarifa es obligatorio presentar una constancia de pertenencia al quinto superior.";
+                upload_instruction.value = words.msg_student_req;
             }
             else if (nombre.includes('FACULTY') || nombre.includes('DOCENTE')) {
-                // Mensaje para Docentes (Carta de institución)
-                upload_instruction.value = "Para acceder a esta tarifa es obligatorio presentar una carta de la institución donde labora. (No aplica a docentes de postgrado).";
+                upload_instruction.value = words.msg_faculty_req;
             }
             else {
-                // Mensaje por defecto para otras categorías que pidan documento
-                upload_instruction.value = "Por favor, adjunte el documento de sustento requerido para esta categoría.";
+                upload_instruction.value = words.msg_default_req;
             }
         }
 
         if (id == 39) {
             show_days.value = true;
-            // Al multiplicar por current_price (que es 0), el total será 0
             let count = Object.values(current_days).filter(v => v).length;
             total.value = count * current_price;
         } else {
             show_days.value = false;
-            total.value = current_price; // Será 0
+            total.value = current_price;
         }
     });
 }
 
+// const validarCuponLocal = async () => {
+//     // Si no hay empresa seleccionada o código escrito, no hacemos nada
+//     if (!codigoVoucher.value || !empresaCupon.value) return;
+
+//     loadingCupon.value = true;
+//     mensajeVoucher.value = { texto: '', tipo: '' };
+
+//     try {
+//         // Buscamos el cupón en los datos originales que coincida con el ID seleccionado y el código escrito
+//         const cuponData = Object.values(props.cupones).find(c =>
+//             c.id === empresaCupon.value.id &&
+//             c.codigo_cupon.trim().toUpperCase() === codigoVoucher.value.trim().toUpperCase()
+//         );
+
+//         if (cuponData) {
+//             cuponAplicado.value = true;
+//             descuentoAplicadoMonto.value = cuponData.valor; // Guardamos el % o monto
+//             cuponIdSeleccionado.value = cuponData.id;
+
+//             mensajeVoucher.value = {
+//                 texto: `¡Cupón de ${cuponData.valor}% válido para ${cuponData.razon_social}!`,
+//                 tipo: 'success'
+//             };
+
+//             toast.add({
+//                 severity: 'success',
+//                 summary: 'Cupón Validado',
+//                 detail: 'Se han cargado los datos de facturación de la empresa.',
+//                 life: 4000
+//             });
+
+//         } else {
+//             mensajeVoucher.value = {
+//                 texto: 'El código no coincide con la empresa seleccionada.',
+//                 tipo: 'error'
+//             };
+//         }
+//     } catch (e) {
+//         mensajeVoucher.value = { texto: 'Error al validar cupón.', tipo: 'error' };
+//     } finally {
+//         loadingCupon.value = false;
+//     }
+// };
 const validarCuponLocal = async () => {
-    // Si no hay empresa seleccionada o código escrito, no hacemos nada
     if (!codigoVoucher.value || !empresaCupon.value) return;
 
     loadingCupon.value = true;
     mensajeVoucher.value = { texto: '', tipo: '' };
 
     try {
-        // Buscamos el cupón en los datos originales que coincida con el ID seleccionado y el código escrito
         const cuponData = Object.values(props.cupones).find(c =>
             c.id === empresaCupon.value.id &&
             c.codigo_cupon.trim().toUpperCase() === codigoVoucher.value.trim().toUpperCase()
@@ -220,34 +348,33 @@ const validarCuponLocal = async () => {
 
         if (cuponData) {
             cuponAplicado.value = true;
-            descuentoAplicadoMonto.value = cuponData.valor; // Guardamos el % o monto
+            descuentoAplicadoMonto.value = cuponData.valor;
             cuponIdSeleccionado.value = cuponData.id;
 
             mensajeVoucher.value = {
-                texto: `¡Cupón de ${cuponData.valor}% válido para ${cuponData.razon_social}!`,
+                texto: `${words.msg_coupon_of} ${cuponData.valor}% ${words.msg_coupon_valid_for} ${cuponData.razon_social}!`,
                 tipo: 'success'
             };
 
             toast.add({
                 severity: 'success',
-                summary: 'Cupón Validado',
-                detail: 'Se han cargado los datos de facturación de la empresa.',
+                summary: words.msg_coupon_validated,
+                detail: words.msg_billing_data_loaded,
                 life: 4000
             });
 
         } else {
             mensajeVoucher.value = {
-                texto: 'El código no coincide con la empresa seleccionada.',
+                texto: words.err_code_mismatch,
                 tipo: 'error'
             };
         }
     } catch (e) {
-        mensajeVoucher.value = { texto: 'Error al validar cupón.', tipo: 'error' };
+        mensajeVoucher.value = { texto: words.err_coupon_validation, tipo: 'error' };
     } finally {
         loadingCupon.value = false;
     }
 };
-
 
 const getInscripcion = async () => {
     const result = await validate();
@@ -691,7 +818,7 @@ defineExpose({
                 <template #header>
                     <div
                         class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc text-blue-900">
-                        Detalles de Categoria
+                        {{ $page.props.language.words.lbl_category_details }}
                     </div>
                 </template>
 
@@ -701,8 +828,7 @@ defineExpose({
                         <div v-if="is_category_fixed"
                             class="w-full p-4 bg-blue-50 border border-blue-200 rounded-xl shadow-sm flex justify-between items-center">
                             <div class="flex flex-col">
-                                <span class="text-[10px] uppercase text-blue-400 font-black tracking-widest">Selected
-                                    Profile</span>
+                                <span class="text-[10px] uppercase text-blue-400 font-black tracking-widest">{{ $page.props.language.words.lbl_selected_profile }}</span>
                                 <h4 class="text-lg font-bold text-blue-900 leading-tight">
                                     {{categorias.find(c => c.id === selected_categoria)?.nombre_en}}
                                 </h4>
@@ -750,7 +876,7 @@ defineExpose({
 
                             <div class="flex justify-center mt-6 pt-4 border-t border-blue-200">
                                 <div class="text-blue-900 font-black flex items-center gap-4">
-                                    <span class="text-sm uppercase tracking-wider">Subtotal:</span>
+                                    <span class="text-sm uppercase tracking-wider">{{ $page.props.language.words.lbl_subtotal }}</span>
                                     <span class="text-2xl text-yellow-price">USD {{ total }}</span>
                                 </div>
 
@@ -770,17 +896,18 @@ defineExpose({
                                     <i class="pi pi-exclamation-triangle text-white text-lg"></i>
                                 </div>
                                 <div class="flex flex-col">
-                                    <span class="text-red-800 font-black text-sm uppercase">Documento Requerido</span>
-                                    <p class="text-red-700 text-sm font-medium leading-tight">
+                                    <span class="text-red-800 font-black text-sm uppercase">{{ words.lbl_required_document }}</span>
+                                    <!-- <p class="text-red-700 text-sm font-medium leading-tight">
                                         La categoría seleccionada requiere un <strong>archivo adjunto</strong>. Por
                                         favor, cargue su documento a continuación.
-                                    </p>
+                                    </p> -->
+                                    <p class="text-red-700 text-sm font-medium leading-tight" v-html="words.msg_category_requires_file"></p>
                                 </div>
                             </div>
 
                             <div v-if="upload_instruction"
                                 class="mb-4 p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-700">
-                                <p class="text-sm font-bold">Requerimiento:</p>
+                                <p class="text-sm font-bold">{{ words.lbl_requirement }}</p>
                                 <p class="text-sm">{{ upload_instruction }}</p>
                             </div>
 
@@ -808,7 +935,7 @@ defineExpose({
                                     :chooseLabel="'Adjuntar Documento'" @select="onFileSelect" name="uploadDocument" />
 
                                 <small class="text-slate-500 mt-3 text-center block text-xs">
-                                    Aceptado: PDF, JPG, PNG (Máx. 6MB)
+                                   {{ words.lbl_accepted_files }}
                                 </small>
                             </div>
                         </template>
@@ -822,21 +949,22 @@ defineExpose({
                             <!-- Mensaje Informativo Superior -->
                             <div class="flex items-start gap-3 mb-4 p-3 bg-white/60 rounded-lg border border-blue-100">
                                 <i class="pi pi-info-circle text-blue-500 mt-1"></i>
-                                <p class="text-xs text-blue-800 leading-tight">
+                                <!-- <p class="text-xs text-blue-800 leading-tight">
                                     El cupón de descuento aplica exclusivamente para <strong>empresas e instituciones
                                         aliadas</strong> previamente registradas. Si tu organización cuenta con un
                                     convenio vigente, selecciona el nombre y valida el código.
-                                </p>
+                                </p> -->
+                                <p class="text-xs text-blue-800 leading-tight" v-html="words.msg_coupon_exclusive"></p>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                                 <!-- Selector de Empresa -->
                                 <div class="flex flex-col gap-2">
                                     <label class="text-xs font-black text-blue-900 uppercase tracking-wider">
-                                        Empresa / Institución
+                                       {{ words.lbl_company_institution }}
                                     </label>
                                     <Select v-model="empresaCupon" :options="empresasAliadas" optionLabel="nombre"
-                                        optionDisabled="disabled" placeholder="Escribe para buscar tu empresa..."
+                                        optionDisabled="disabled" :placeholder="words.plh_search_company"
                                         class="w-full border-blue-300" :filter="true"
                                         filterPlaceholder="Ej: ALS PERU, MDH..." resetFilterOnHide>
                                         <template #option="slotProps">
@@ -850,12 +978,12 @@ defineExpose({
                                                     <!-- Badge de Agotado opcional -->
                                                     <span v-if="slotProps.option.disabled"
                                                         class="bg-red-100 text-red-600 text-[9px] px-2 py-0.5 rounded-full font-black uppercase">
-                                                        Agotado
+                                                        {{ words.lbl_sold_out }}
                                                     </span>
                                                 </div>
                                                 <small v-if="slotProps.option.disabled"
                                                     class="text-red-600 italic text-[10px]">
-                                                    El cupón corporativo ha llegado a su límite de usos.
+                                                    {{ words.msg_coupon_limit_reached }}
                                                 </small>
                                             </div>
                                         </template>
@@ -864,12 +992,11 @@ defineExpose({
 
                                 <!-- Input de Código y Botón -->
                                 <div class="flex flex-col gap-2">
-                                    <label class="text-xs font-black text-blue-900 uppercase tracking-wider">Código de
-                                        Descuento</label>
+                                    <label class="text-xs font-black text-blue-900 uppercase tracking-wider">{{ words.lbl_discount_code }}</label>
                                     <InputGroup>
-                                        <InputText v-model="codigoVoucher" placeholder="Ingresa el código"
+                                        <InputText v-model="codigoVoucher" :placeholder="words.plh_enter_code"
                                             class="border-blue-300 uppercase" :disabled="!empresaCupon" />
-                                        <Button label="Validar" icon="pi pi-ticket"
+                                        <Button :label="words.btn_validate" icon="pi pi-ticket"
                                             class="!bg-blue-700 !border-blue-700 hover:!bg-blue-800"
                                             :loading="loadingCupon" :disabled="!codigoVoucher"
                                             @click="validarCuponLocal" />
@@ -894,7 +1021,7 @@ defineExpose({
                         class="mt-6 p-4 bg-green-50 border border-green-200 rounded-xl animate-fade-in">
                         <div class="flex flex-col gap-2">
                             <div class="flex justify-between items-center text-gray-600">
-                                <span class="text-sm font-medium">Precio Base:</span>
+                                <span class="text-sm font-medium">{{ words.lbl_base_price }}</span>
                                 <!-- Usamos Number() para prevenir el error de toFixed -->
                                 <span class="text-sm line-through">USD {{ Number(total || 0).toFixed(2) }}</span>
                             </div>
@@ -903,7 +1030,7 @@ defineExpose({
                                 <div class="flex items-center gap-2">
                                     <i class="pi pi-tag text-xs"></i>
                                     <span class="text-sm uppercase tracking-tight">
-                                        Descuento Corporativo ({{ descuentoAplicadoMonto }}%):
+                                        {{ words.lbl_corporate_discount }} ({{ descuentoAplicadoMonto }}%):
                                     </span>
                                 </div>
                                 <span class="text-sm">- USD {{ Number(montoDescuentoEfectivo || 0).toFixed(2) }}</span>
@@ -912,14 +1039,13 @@ defineExpose({
                             <Divider class="!my-1" />
 
                             <div class="flex justify-between items-center">
-                                <span class="text-blue-900 font-black uppercase text-xs tracking-widest">Total a
-                                    Pagar:</span>
+                                <span class="text-blue-900 font-black uppercase text-xs tracking-widest">{{ words.lbl_total_to_pay }}</span>
                                 <div class="flex flex-col items-end">
                                     <span class="text-2xl font-black text-green-700 leading-none">
                                         USD {{ Number(totalFinalConDescuento || 0).toFixed(2) }}
                                     </span>
                                     <small class="text-[10px] text-green-600 font-bold uppercase tracking-tighter">
-                                        ¡Beneficio aplicado correctamente!
+                                        {{ words.msg_benefit_applied }}
                                     </small>
                                 </div>
                             </div>
@@ -935,17 +1061,18 @@ defineExpose({
             <Card class="mt-5 overflow-hidden">
                 <template #header>
                     <div class="w-full py-3 text-xl font-bold text-center bg-lightblue-wmc border-blue-wmc mb-2">
-                        Información de Facturación
+                        {{ words.lbl_billing_info }}
                     </div>
                     <div v-if="missingFields.length > 0"
                         class="flex flex-col p-4 mb-6 text-orange-800 border-t-4 border-orange-300 bg-orange-50 rounded-lg shadow-sm"
                         role="alert">
                         <div class="flex items-center">
                             <i class="pi pi-exclamation-circle mr-2 text-xl"></i>
-                            <span class="text-sm font-bold">Información de facturación incompleta</span>
+                            <span class="text-sm font-bold">{{ words.lbl_incomplete_billing }}</span>
                         </div>
                         <div class="mt-2 text-sm">
-                            Por favor, complete los siguientes campos obligatorios para continuar con el pago:
+                            <!-- Por favor, complete los siguientes campos obligatorios para continuar con el pago: -->
+                             {{ words.msg_complete_mandatory_fields }}
                             <ul class="list-disc ml-5 mt-1 font-semibold">
                                 <li v-for="field in missingFields" :key="field">{{ field }}</li>
                             </ul>
@@ -995,9 +1122,10 @@ defineExpose({
                             <i class="pi pi-check-circle text-white text-lg"></i>
                         </div>
                         <div class="flex flex-col">
-                            <span class="text-green-900 font-black text-sm uppercase tracking-wide">Éxito</span>
+                            <span class="text-green-900 font-black text-sm uppercase tracking-wide">{{ words.toast_success_title }}</span>
                             <p class="text-green-800 text-sm font-medium leading-tight">
-                                Datos encontrados y cargados correctamente.
+                                {{ words.toast_success_loaded }}
+                                <!-- Datos encontrados y cargados correctamente. -->
                             </p>
                         </div>
                         <Button icon="pi pi-times" class="p-button-text p-button-rounded text-green-400 ml-auto"
@@ -1009,11 +1137,12 @@ defineExpose({
                             <i class="pi pi-info-circle text-white text-lg"></i>
                         </div>
                         <div class="flex flex-col">
-                            <span class="text-blue-900 font-black text-sm uppercase tracking-wide">Información</span>
+                            <span class="text-blue-900 font-black text-sm uppercase tracking-wide">{{ words.toast_info_title }}</span>
                             <p class="text-blue-800 text-sm font-medium leading-tight">
-                                Registro no encontrado. Por favor, complete los datos de facturación manualmente para
+                                <!-- Registro no encontrado. Por favor, complete los datos de facturación manualmente para
                                 continuar con su
-                                inscripción A ProExplo2026.
+                                inscripción A ProExplo2026. -->
+                                {{ words.msg_manual_billing_req }}
                             </p>
                         </div>
                         <Button icon="pi pi-times" class="p-button-text p-button-rounded text-blue-400 ml-auto"
@@ -1023,7 +1152,7 @@ defineExpose({
                     <div class="grid gap-6 m-6 md:grid-cols-2">
                         <div class="grid gap-6 md:grid-cols-2">
                             <div class="col-span-3 sm:col-span-1">
-                                <label class="block mb-1">Tipo de Documento <span class="text-red-600">*</span></label>
+                                <label class="block mb-1">{{ words.lbl_doc_type_billing }} <span class="text-red-600">*</span></label>
                                 <Select v-model="tipoDocumentoEmpresa" :options="filteredDocTypes" optionLabel="name_es"
                                     optionValue="id" class="w-full border-green-iimp" @change="setTipoDocPago" />
                                 <small class="text-red-600" v-if="errors.tipoDocumentoEmpresa">{{
@@ -1031,7 +1160,7 @@ defineExpose({
                             </div>
 
                             <div class="col-span-3 sm:col-span-1">
-                                <label class="block mb-1">Numero de Documento <span
+                                <label class="block mb-1">{{ words.lbl_doc_number_billing }} <span
                                         class="text-red-600">*</span></label>
                                 <InputGroup>
                                     <InputText v-model="documentoEmpresa" class="border-green-iimp"
@@ -1056,7 +1185,7 @@ defineExpose({
                         </div>
 
                         <div class="w-full sm:col-span-1">
-                            <label class="block mb-1">Nombre o Razon Social <span class="text-red-600">*</span></label>
+                            <label class="block mb-1">{{ words.lbl_business_name }} <span class="text-red-600">*</span></label>
                             <InputText v-model="razonSocial" v-bind="razonSocialAttrs" class="w-full border-green-iimp"
                                 :disabled="loading_doc || esRuc20" :readonly="camposFacturacionBloqueados"
                                 :class="{ 'bg-gray-100 font-semibold': esRuc20 && !showManualAlert }" />
@@ -1066,7 +1195,7 @@ defineExpose({
 
                     <div class="grid gap-6 m-6 md:grid-cols-2">
                         <div class="w-full sm:col-span-1">
-                            <label class="block mb-1">Dirección Fiscal <span class="text-red-600">*</span></label>
+                            <label class="block mb-1">{{ words.lbl_fiscal_address }} <span class="text-red-600">*</span></label>
                             <InputText v-model="direccionEmpresa" v-bind="direccionEmpresaAttrs"
                                 class="w-full border-green-iimp" :readonly="camposFacturacionBloqueados"
                                 :disabled="loading_doc || esRuc20"
@@ -1077,7 +1206,7 @@ defineExpose({
 
                         <div class="grid gap-6 md:grid-cols-2">
                             <div class="w-full sm:col-span-1">
-                                <label class="block mb-1">Responsable Facturación <span
+                                <label class="block mb-1">{{ words.lbl_billing_contact }} <span
                                         class="text-red-600">*</span></label>
                                 <InputText v-model="responsable" v-bind="responsableAttrs"
                                     class="w-full border-green-iimp" :disabled="loading_doc" />
@@ -1085,7 +1214,7 @@ defineExpose({
                             </div>
 
                             <div class="w-full sm:col-span-1">
-                                <label class="block mb-1">Email Facturación <span class="text-red-600">*</span></label>
+                                <label class="block mb-1">{{ words.lbl_billing_email }} <span class="text-red-600">*</span></label>
                                 <InputText v-model="correo_facturador" v-bind="correo_facturadorAttrs"
                                     class="w-full border-green-iimp" :disabled="loading_doc" />
                                 <small class="text-red-600" v-if="errors.correo_facturador">{{ errors.correo_facturador
@@ -1128,7 +1257,7 @@ defineExpose({
     </Dialog>
 
 
-    <Dialog v-model:visible="showWelcomeBillingModal" modal header=" " :style="{ width: '30rem' }"
+    <!-- <Dialog v-model:visible="showWelcomeBillingModal" modal header=" " :style="{ width: '30rem' }"
         :breakpoints="{ '1199px': '75vw', '575px': '95vw' }" class="welcome-billing-modal" appendTo="body">
 
         <div class="flex flex-col items-center p-4 text-center">
@@ -1172,7 +1301,50 @@ defineExpose({
                 class="w-full !bg-blue-900 !border-blue-900 font-black py-4 shadow-lg hover:bg-blue-800 hover:scale-[1.02] transition-all"
                 @click="showWelcomeBillingModal = false" />
         </div>
+    </Dialog> -->
+    <Dialog v-model:visible="showWelcomeBillingModal" modal header=" " :style="{ width: '30rem' }"
+        :breakpoints="{ '1199px': '75vw', '575px': '95vw' }" class="welcome-billing-modal" appendTo="body">
+
+        <div class="flex flex-col items-center p-4 text-center">
+            <div
+                class="rounded-full w-20 h-20 bg-blue-50 text-blue-900 flex items-center justify-center mb-6 shadow-sm border border-blue-100">
+                <i class="pi pi-exclamation-circle" style="font-size: 3rem"></i>
+            </div>
+
+            <h2 class="text-2xl font-black mb-4 text-blue-950 leading-tight uppercase tracking-tight">
+                {{ words.lbl_important_billing_notice }}
+            </h2>
+
+            <p class="text-slate-600 leading-relaxed mb-6 font-medium">
+                {{ words.msg_billing_notice_desc }}
+                <span class="text-blue-800 font-bold text-lg block mt-1">PROEXPLO 2026</span>
+            </p>
+
+            <div class="grid grid-cols-2 gap-4 w-full mb-8">
+                <div class="p-4 bg-slate-50 rounded-xl border-2 border-blue-800 flex flex-col items-center shadow-sm">
+                    <i class="pi pi-user text-blue-800 mb-2 font-bold"></i>
+                    <span class="text-xs font-black text-blue-900 uppercase">{{ words.lbl_natural_person }}</span>
+                    <span class="text-[10px] text-blue-700 font-bold italic">{{ words.lbl_boleta_emission }}</span>
+                </div>
+                <div class="p-4 bg-amber-50 rounded-xl border-2 border-amber-400 flex flex-col items-center shadow-sm">
+                    <i class="pi pi-building text-amber-600 mb-2 font-bold"></i>
+                    <span class="text-xs font-black text-amber-900 uppercase">{{ words.lbl_legal_entity }}</span>
+                    <span class="text-[10px] text-amber-700 font-bold italic">{{ words.lbl_factura_emission }}</span>
+                </div>
+            </div>
+
+            <div class="bg-blue-50/50 p-4 rounded-lg mb-8 border-l-4 border-blue-800">
+                <p class="text-[11px] text-slate-600 text-left leading-tight italic">
+                    {{ words.msg_billing_warning }}
+                </p>
+            </div>
+
+            <Button :label="words.btn_understand_continue"
+                class="w-full !bg-blue-900 !border-blue-900 font-black py-4 shadow-lg hover:bg-blue-800 hover:scale-[1.02] transition-all"
+                @click="showWelcomeBillingModal = false" />
+        </div>
     </Dialog>
+
 </template>
 <style scoped>
 /* Quitar bordes innecesarios del Dialog */

@@ -43,6 +43,13 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/cupones/{cupon}/usos', [CuponController::class, 'getUsos'])->name('cupones.usos');
 });
 
+Route::get('set-locale/{locale}', function ($locale) {
+    if (in_array($locale, ['es', 'en'])) {
+        session(['locale' => $locale]);
+    }
+    return back();
+});
+
 // --- RUTAS DE ASOCIADOS ---
 Route::middleware(['auth', 'role:asociado|admin'])->group(function () {
     Route::get('/asociados/index', [AsociadosController::class, 'index'])->name('asociados.index');

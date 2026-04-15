@@ -43,7 +43,7 @@ class HandleInertiaRequests extends Middleware
     {
         $sharedData = parent::share($request);
 
-         // --- DATOS DEL USUARIO (Lo que faltaba) ---
+        // --- DATOS DEL USUARIO (Lo que faltaba) ---
         $sharedData['auth'] = [
             'user' => $request->user() ? [
                 'id' => $request->user()->id,
@@ -58,22 +58,32 @@ class HandleInertiaRequests extends Middleware
             ] : null,
         ];
 
+        // --- LÓGICA DE IDIOMAS (NUEVO) ---
+        // Obtenemos el locale actual de la sesión o del config por defecto
+        $locale = session('locale', config('app.locale'));
+        app()->setLocale($locale);
+
+        $sharedData['language'] = [
+            'current' => $locale,
+            'words' => trans('messages'), // Busca en lang/es/messages.php o lang/en/messages.php
+        ];
+
 
         $sharedData['general.paises'] = Pais::where('isactive', true)->get();
         /** PASO 1 */
         $sharedData['general.tipDocPer'] = TipoDocumento::where('isactive', true)
-                ->whereIn('sie_code', [1,4,7])
-                ->whereJsonContains('tipo', 'persona')
-                ->get();
+            ->whereIn('sie_code', [1, 4, 7])
+            ->whereJsonContains('tipo', 'persona')
+            ->get();
         $sharedData['general.tipoDocumentoPago'] = TipoDocumentoPago::where('isactive', true)->get();
         /** PASO 2 */
         $sharedData['general.tipDocEmp'] = TipoDocumento::where('isactive', true)
-                // ->whereJsonContains('tipo', 'empresa')
-                ->orWhere('name_en', '=','DNI')
-                ->orWhere('name_en', '=','PASSPORT')
-                // ->orWhere('name_en', '=','RUT')
-                ->orWhere('name_en', '=','RUC')
-                ->get(); // se agrego dni como documento para el pago
+            // ->whereJsonContains('tipo', 'empresa')
+            ->orWhere('name_en', '=', 'DNI')
+            ->orWhere('name_en', '=', 'PASSPORT')
+            // ->orWhere('name_en', '=','RUT')
+            ->orWhere('name_en', '=', 'RUC')
+            ->get(); // se agrego dni como documento para el pago
         $sharedData['general.tipoServicios'] = TipoServicio::where('isactive', true)->get();
         $sharedData['general.generos'] = config('data.generos');
         $sharedData['general.reglamento_inscripciones'] = config('app.reglamento_inscripciones');
@@ -93,6 +103,5 @@ class HandleInertiaRequests extends Middleware
 
 
         return $sharedData;
-
     }
 }
