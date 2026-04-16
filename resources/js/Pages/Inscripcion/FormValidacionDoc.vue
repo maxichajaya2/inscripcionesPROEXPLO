@@ -103,7 +103,7 @@ const schema = yup.object({
         }),
     nombres: yup.string().required(words.val_req_names),
     apellido_paterno: yup.string().required(words.val_req_last_name_p),
-    apellido_materno: yup.string().required(words.val_req_last_name_m),
+    // apellido_materno: yup.string().required(words.val_req_last_name_m),
     pais: yup.mixed().required(words.val_req_country),
     direccionPersona: yup.string().required(words.val_req_address),
     empresa: yup.string().required(words.val_req_company),
@@ -912,7 +912,7 @@ onMounted(() => {
                             <InputGroup>
                                 <InputText name="documento" v-model="documento" v-bind="documentoAttrs"
                                     class="w-full border-green-iimp"
-                                    :placeholder="esDNI ?  $page.props.language.words.plh_enter_8_digits : '{{ $page.props.language.words.plh_enter_doc_num }}'"
+                                    :placeholder="esDNI ? $page.props.language.words.plh_enter_8_digits : $page.props.language.words.plh_enter_doc_num"
                                     :maxlength="esDNI ? 8 : 15" :disabled="loadingSearch"
                                     @keypress="esDNI ? onlyNumberKey($event) : onlyAlphanumericKey($event)" />
 

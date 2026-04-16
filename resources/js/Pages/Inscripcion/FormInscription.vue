@@ -137,6 +137,7 @@ const formManualErrors = ref({ reglamento: null, total: null, uploadDocument: nu
 
 const { defineField, errors, setValues, values, validate } = useForm({
     validationSchema: computed(() => yup.object({
+        documentoEmpresa: yup.string().trim().required(words.val_req_doc_num),
         razonSocial: yup.string().trim().required(words.val_req_business_name),
         direccionEmpresa: yup.string()
             .trim()
