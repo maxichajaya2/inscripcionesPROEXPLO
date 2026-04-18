@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\CuponController;
 use App\Http\Controllers\Admin\InscritosController;
+use App\Http\Controllers\Logistica\ProveedorController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,6 +60,13 @@ Route::middleware(['auth', 'role:asociado|admin'])->group(function () {
     Route::get('/cupones/{cupon}/usos', [CuponController::class, 'getUsos'])->name('cupones.usos');
 });
 
+Route::middleware(['auth', 'role:logistica'])->group(function () {
+Route::get('/proveedores', [ProveedorController::class, 'index'])->name('proveedores.index');
+Route::post('/proveedores', [ProveedorController::class, 'store'])->name('proveedores.store');
+Route::put('/proveedores/{proveedor}', [ProveedorController::class, 'update'])->name('proveedores.update');
+Route::delete('/proveedores/{proveedor}', [ProveedorController::class, 'destroy'])->name('proveedores.destroy');
+Route::post('/proveedores/enviar-masivo', [ProveedorController::class, 'enviarMasivo'])->name('proveedores.enviar-masivo');
+});
 
 Route::get('/', [InscripcionController::class, 'index'])->name('inscripcion.index');
 Route::get('/cursos/{id}', [InscripcionController::class, 'indexCursos'])->name('inscripcion.indexCursos');

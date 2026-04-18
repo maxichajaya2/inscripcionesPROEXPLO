@@ -46,6 +46,16 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN'),
         ],
 
+        'proveedores' => [
+            'transport' => 'smtp',
+            'host' => env('PROV_MAIL_HOST', 'smtp.gmail.com'),
+            'port' => env('PROV_MAIL_PORT', 587),
+            'encryption' => env('PROV_MAIL_ENCRYPTION', 'tls'),
+            'username' => env('PROV_MAIL_USERNAME'),
+            'password' => env('PROV_MAIL_PASSWORD'),
+            'timeout' => null,
+        ],
+
         'ses' => [
             'transport' => 'ses',
         ],

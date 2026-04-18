@@ -19,7 +19,7 @@ const authUser = computed(() => {
 const isAdmin = computed(() => authUser.value.roles.includes('admin'));
 const isAsociado = computed(() => authUser.value.roles.includes('asociado') ||
     authUser.value.roles.includes('Asociado'));
-
+const isLogistica = computed(() => authUser.value.roles.includes('logistica'));
 console.log('Usuario autenticado:', authUser.value);
 </script>
 
@@ -49,7 +49,8 @@ console.log('Usuario autenticado:', authUser.value);
             </div>
 
             <nav class="flex-1 px-4 py-8 space-y-1 overflow-y-auto custom-scrollbar">
-                <p  v-if="isAdmin" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-4 mb-3">General</p>
+                <p v-if="isAdmin" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-4 mb-3">
+                    General</p>
                 <div v-if="isAdmin" class="pt-6">
                     <Link :href="route('admin.index')" v-if="isAdmin"
                         class="flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all"
@@ -106,6 +107,25 @@ console.log('Usuario autenticado:', authUser.value);
                                 d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
                         Usuarios
+                    </Link>
+                </div>
+
+                <div v-if="isLogistica" class="pt-6">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-4 mb-3">
+                        Proveedores & Logística
+                    </p>
+
+                    <Link :href="route('proveedores.index')"
+                        class="flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all mt-1"
+                        :class="route().current('proveedores.*') ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/50' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
+
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                        </svg>
+
+                        Proveedores
                     </Link>
                 </div>
             </nav>

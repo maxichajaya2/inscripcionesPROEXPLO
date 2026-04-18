@@ -289,7 +289,7 @@ class InscripcionController extends Controller
     //     return $this->generateNiubizResponse($persona, $inscripcion, $facturacion, $descuento);
     // }
 
-     public function getForm(Request $request)
+    public function getForm(Request $request)
     {
 
         $sie_code_recibido = $request->input('tipo_doc');
@@ -709,63 +709,63 @@ class InscripcionController extends Controller
 
         $respuesta = app(\App\Http\Controllers\NiubizController::class)->authorization($cuota->respuesta_api, $facturacion->total, $transactiontoken, $order);
 
-        // $respuesta = '{
-        //     "header": {
-        //         "ecoreTransactionUUID": "3746e2a1-19bb-4251-b920-f7d2cc7c7c6e",
-        //         "ecoreTransactionDate": 1749744006879,
-        //         "millis": 958
-        //     },
-        //     "fulfillment": {
-        //         "channel": "web",
-        //         "merchantId": "456879853",
-        //         "terminalId": "00000001",
-        //         "captureType": "manual",
-        //         "countable": true,
-        //         "fastPayment": false,
-        //         "signature": "3746e2a1-19bb-4251-b920-f7d2cc7c7c6e"
-        //     },
-        //     "order": {
-        //         "tokenId": "3624210E49BA4F80A4210E49BA4F80E0",
-        //         "purchaseNumber": "8291",
-        //         "amount": 2200,
-        //         "installment": 0,
-        //         "currency": "USD",
-        //         "authorizedAmount": 2200,
-        //         "authorizationCode": "091800",
-        //         "actionCode": "000",
-        //         "traceNumber": "31645",
-        //         "transactionDate": "250612110006",
-        //         "transactionId": "993211570048581"
-        //     },
-        //     "dataMap": {
-        //         "TERMINAL": "00000001",
-        //         "BRAND_ACTION_CODE": "00",
-        //         "BRAND_HOST_DATE_TIME": "201222141839",
-        //         "TRACE_NUMBER": "31645",
-        //         "CARD_TYPE": "D",
-        //         "ECI_DESCRIPTION": "Transaccion no autenticada pero enviada en canal seguro",
-        //         "SIGNATURE": "3746e2a1-19bb-4251-b920-f7d2cc7c7c6e",
-        //         "CARD": "447411******2240",
-        //         "MERCHANT": "109705108",
-        //         "STATUS": "Authorized",
-        //         "ACTION_DESCRIPTION": "Aprobado y completado con exito",
-        //         "ID_UNICO": "993211570048581",
-        //         "AMOUNT": "1900.0",
-        //         "AUTHORIZATION_CODE": "091800",
-        //         "YAPE_ID": "",
-        //         "CURRENCY": "0604",
-        //         "TRANSACTION_DATE": "250612110006",
-        //         "ACTION_CODE": "000",
-        //         "CVV2_VALIDATION_RESULT": "M",
-        //         "ECI": "07",
-        //         "ID_RESOLUTOR": "420201222142237",
-        //         "BRAND": "visa",
-        //         "ADQUIRENTE": "570002",
-        //         "BRAND_NAME": "VI",
-        //         "PROCESS_CODE": "000000",
-        //         "TRANSACTION_ID": "993211570048581"
-        //     }
-        // }';
+        $respuesta = '{
+            "header": {
+                "ecoreTransactionUUID": "3746e2a1-19bb-4251-b920-f7d2cc7c7c6e",
+                "ecoreTransactionDate": 1749744006879,
+                "millis": 958
+            },
+            "fulfillment": {
+                "channel": "web",
+                "merchantId": "456879853",
+                "terminalId": "00000001",
+                "captureType": "manual",
+                "countable": true,
+                "fastPayment": false,
+                "signature": "3746e2a1-19bb-4251-b920-f7d2cc7c7c6e"
+            },
+            "order": {
+                "tokenId": "3624210E49BA4F80A4210E49BA4F80E0",
+                "purchaseNumber": "8291",
+                "amount": 2200,
+                "installment": 0,
+                "currency": "USD",
+                "authorizedAmount": 2200,
+                "authorizationCode": "091800",
+                "actionCode": "000",
+                "traceNumber": "31645",
+                "transactionDate": "250612110006",
+                "transactionId": "993211570048581"
+            },
+            "dataMap": {
+                "TERMINAL": "00000001",
+                "BRAND_ACTION_CODE": "00",
+                "BRAND_HOST_DATE_TIME": "201222141839",
+                "TRACE_NUMBER": "31645",
+                "CARD_TYPE": "D",
+                "ECI_DESCRIPTION": "Transaccion no autenticada pero enviada en canal seguro",
+                "SIGNATURE": "3746e2a1-19bb-4251-b920-f7d2cc7c7c6e",
+                "CARD": "447411******2240",
+                "MERCHANT": "109705108",
+                "STATUS": "Authorized",
+                "ACTION_DESCRIPTION": "Aprobado y completado con exito",
+                "ID_UNICO": "993211570048581",
+                "AMOUNT": "1900.0",
+                "AUTHORIZATION_CODE": "091800",
+                "YAPE_ID": "",
+                "CURRENCY": "0604",
+                "TRANSACTION_DATE": "250612110006",
+                "ACTION_CODE": "000",
+                "CVV2_VALIDATION_RESULT": "M",
+                "ECI": "07",
+                "ID_RESOLUTOR": "420201222142237",
+                "BRAND": "visa",
+                "ADQUIRENTE": "570002",
+                "BRAND_NAME": "VI",
+                "PROCESS_CODE": "000000",
+                "TRANSACTION_ID": "993211570048581"
+            }
+        }';
 
         $filtered_response = app(\App\Http\Controllers\NiubizController::class)->filterResponse($respuesta);
 
@@ -868,6 +868,8 @@ class InscripcionController extends Controller
             $service_wmc = app(\App\Http\Controllers\WebServiceController::class)
                 ->wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz, $cupon);
 
+
+
             // 2. Intentar procesar la respuesta del servicio (QR, etc.)
             if (isset($service_wmc->Response) && $service_wmc->Response->Status === true) {
                 $inscripcion->qr = (string)$service_wmc->Response->QR;
@@ -884,6 +886,24 @@ class InscripcionController extends Controller
                 // Si falla, solo lo logueamos y marcamos el fallo, pero el flujo sigue
                 $inscripcion->ws_status = false;
                 Log::error("ERROR SIE PROEXPLO para Inscripción ID: " . $inscripcion->id, (array)$service_wmc);
+            }
+
+            // WS DE MULTIEVENTOS
+            try {
+                // 1. Guardamos lo que nos responde tu función en una variable
+                $wsResponse = app(\App\Http\Controllers\WebServiceController::class)->wsMultieventos_PROEXPLO($facturacion, $persona, $inscripcion, $niubiz);
+                // 2. Evaluamos si el Web Service reportó un error (400, 401, 409, etc.)
+                if (isset($wsResponse['success']) && $wsResponse['success'] === false) {
+                    // Aquí grabamos en el log el mensaje exacto que armamos en el switch
+                    Log::error("Error API WS Multieventos (Inscripción ID: {$inscripcion->id}) -> Código: {$wsResponse['code']} | Detalle: {$wsResponse['message']}");
+
+                } else {
+                    // Si todo fue bien (200 o 201), podemos dejar un registro de éxito
+                    Log::info("Éxito WS Multieventos (Inscripción ID: {$inscripcion->id}) -> " . $wsResponse['message']);
+                }
+            } catch (\Exception $e) {
+                // 3. Este catch atrapará errores críticos (ej. fallo interno de PHP o caída de cURL)
+                Log::error("Excepción Crítica en WS Multieventos (Inscripción ID: {$inscripcion->id}) -> Error: " . $e->getMessage() . " | Archivo: " . $e->getFile() . " | Línea: " . $e->getLine());
             }
 
             // 3. Lógica extra de viajes (fuera del IF del servicio)

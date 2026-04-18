@@ -44,6 +44,8 @@ class RedirectIfAuthenticated
                 // if ($user->hasRole('asociado')) return redirect('/asociados/index');
                 if ($user->hasRole('asociado')) return redirect('/cupones');
 
+                if ($user->hasRole('logistica')) return redirect('/proveedores');
+
                 return redirect(RouteServiceProvider::HOME);
             }
         }
