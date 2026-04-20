@@ -100,6 +100,7 @@ const allowedTypes = ['application/pdf', 'image/png', 'image/jpg', 'image/jpeg']
 const fileupload = ref(null);
 const alphanumericMessage = ref('');
 const descuentoAplicadoMonto = ref(0);
+const tipoDescuentoAplicado = ref('');
 // Agregamos un estado para controlar si el usuario puede editar manualmente
 const isEditingBilling = ref(true);
 const cuponIdSeleccionado = ref(null);
@@ -352,10 +353,21 @@ const validarCuponLocal = async () => {
             descuentoAplicadoMonto.value = cuponData.valor;
             cuponIdSeleccionado.value = cuponData.id;
 
+            tipoDescuentoAplicado.value = cuponData.tipo_descuento?.toLowerCase() || 'porcentaje';
+
+            const textoValor = tipoDescuentoAplicado.value === 'fijo'
+                ? `USD ${cuponData.valor}`
+                : `${cuponData.valor}%`;
+
             mensajeVoucher.value = {
-                texto: `${words.msg_coupon_of} ${cuponData.valor}% ${words.msg_coupon_valid_for} ${cuponData.razon_social}!`,
+                texto: `${words.msg_coupon_of} ${textoValor} ${words.msg_coupon_valid_for} ${cuponData.razon_social}!`,
                 tipo: 'success'
             };
+
+            // mensajeVoucher.value = {
+            //     texto: `${words.msg_coupon_of} ${cuponData.valor}% ${words.msg_coupon_valid_for} ${cuponData.razon_social}!`,
+            //     tipo: 'success'
+            // };
 
             toast.add({
                 severity: 'success',
@@ -596,6 +608,7 @@ watch(empresaCupon, () => {
     mensajeVoucher.value = { texto: '', tipo: '' };
     cuponAplicado.value = false;
     descuentoAplicadoMonto.value = 0;
+    tipoDescuentoAplicado.value = '';
 });
 
 watch(() => props.activarModal, (valor) => {
@@ -741,10 +754,10 @@ const filteredDocTypes = computed(() => {
     if (!tipoDocumento.value) return [];
 
 
-        // Retorna SOLO DNI (1) y RUC (2)
-        const filtrados = tipoDocumento.value.filter(d => d.id == 1 || d.id == 2 || d.id == 3 || d.id == 4 || d.id == 5);
-        // console.log("Documentos para Peruano:", filtrados);
-        return filtrados;
+    // Retorna SOLO DNI (1) y RUC (2)
+    const filtrados = tipoDocumento.value.filter(d => d.id == 1 || d.id == 2 || d.id == 3 || d.id == 4 || d.id == 5);
+    // console.log("Documentos para Peruano:", filtrados);
+    return filtrados;
 
 });
 
@@ -780,9 +793,23 @@ const onlyNumberKey = (event) => {
     return true;
 };
 
+// const montoDescuentoEfectivo = computed(() => {
+//     // Calculamos cuánto dinero representa el % de descuento sobre el total
+//     return (total.value * descuentoAplicadoMonto.value) / 100;
+// });
+
 const montoDescuentoEfectivo = computed(() => {
-    // Calculamos cuánto dinero representa el % de descuento sobre el total
-    return (total.value * descuentoAplicadoMonto.value) / 100;
+    if (!cuponAplicado.value) return 0;
+
+    if (tipoDescuentoAplicado.value === 'fijo') {
+        // Lógica Fija: El descuento es directamente la cantidad.
+        // Usamos Math.min por seguridad: si el total es $50 y el cupón fijo es de $100,
+        // solo descontamos $50 para que el totalFinal no sea negativo.
+        return Math.min(Number(descuentoAplicadoMonto.value), Number(total.value));
+    } else {
+        // Lógica original de Porcentaje
+        return (Number(total.value) * Number(descuentoAplicadoMonto.value)) / 100;
+    }
 });
 
 const totalFinalConDescuento = computed(() => {
@@ -829,7 +856,8 @@ defineExpose({
                         <div v-if="is_category_fixed"
                             class="w-full p-4 bg-blue-50 border border-blue-200 rounded-xl shadow-sm flex justify-between items-center">
                             <div class="flex flex-col">
-                                <span class="text-[10px] uppercase text-blue-400 font-black tracking-widest">{{ $page.props.language.words.lbl_selected_profile }}</span>
+                                <span class="text-[10px] uppercase text-blue-400 font-black tracking-widest">{{
+                                    $page.props.language.words.lbl_selected_profile }}</span>
                                 <h4 class="text-lg font-bold text-blue-900 leading-tight">
                                     {{categorias.find(c => c.id === selected_categoria)?.nombre_en}}
                                 </h4>
@@ -877,7 +905,8 @@ defineExpose({
 
                             <div class="flex justify-center mt-6 pt-4 border-t border-blue-200">
                                 <div class="text-blue-900 font-black flex items-center gap-4">
-                                    <span class="text-sm uppercase tracking-wider">{{ $page.props.language.words.lbl_subtotal }}</span>
+                                    <span class="text-sm uppercase tracking-wider">{{
+                                        $page.props.language.words.lbl_subtotal }}</span>
                                     <span class="text-2xl text-yellow-price">USD {{ total }}</span>
                                 </div>
 
@@ -897,12 +926,14 @@ defineExpose({
                                     <i class="pi pi-exclamation-triangle text-white text-lg"></i>
                                 </div>
                                 <div class="flex flex-col">
-                                    <span class="text-red-800 font-black text-sm uppercase">{{ words.lbl_required_document }}</span>
+                                    <span class="text-red-800 font-black text-sm uppercase">{{
+                                        words.lbl_required_document }}</span>
                                     <!-- <p class="text-red-700 text-sm font-medium leading-tight">
                                         La categoría seleccionada requiere un <strong>archivo adjunto</strong>. Por
                                         favor, cargue su documento a continuación.
                                     </p> -->
-                                    <p class="text-red-700 text-sm font-medium leading-tight" v-html="words.msg_category_requires_file"></p>
+                                    <p class="text-red-700 text-sm font-medium leading-tight"
+                                        v-html="words.msg_category_requires_file"></p>
                                 </div>
                             </div>
 
@@ -936,7 +967,7 @@ defineExpose({
                                     :chooseLabel="'Adjuntar Documento'" @select="onFileSelect" name="uploadDocument" />
 
                                 <small class="text-slate-500 mt-3 text-center block text-xs">
-                                   {{ words.lbl_accepted_files }}
+                                    {{ words.lbl_accepted_files }}
                                 </small>
                             </div>
                         </template>
@@ -962,7 +993,7 @@ defineExpose({
                                 <!-- Selector de Empresa -->
                                 <div class="flex flex-col gap-2">
                                     <label class="text-xs font-black text-blue-900 uppercase tracking-wider">
-                                       {{ words.lbl_company_institution }}
+                                        {{ words.lbl_company_institution }}
                                     </label>
                                     <Select v-model="empresaCupon" :options="empresasAliadas" optionLabel="nombre"
                                         optionDisabled="disabled" :placeholder="words.plh_search_company"
@@ -993,7 +1024,8 @@ defineExpose({
 
                                 <!-- Input de Código y Botón -->
                                 <div class="flex flex-col gap-2">
-                                    <label class="text-xs font-black text-blue-900 uppercase tracking-wider">{{ words.lbl_discount_code }}</label>
+                                    <label class="text-xs font-black text-blue-900 uppercase tracking-wider">{{
+                                        words.lbl_discount_code }}</label>
                                     <InputGroup>
                                         <InputText v-model="codigoVoucher" :placeholder="words.plh_enter_code"
                                             class="border-blue-300 uppercase" :disabled="!empresaCupon" />
@@ -1030,8 +1062,14 @@ defineExpose({
                             <div class="flex justify-between items-center text-red-600 font-bold">
                                 <div class="flex items-center gap-2">
                                     <i class="pi pi-tag text-xs"></i>
-                                    <span class="text-sm uppercase tracking-tight">
+                                    <!-- <span class="text-sm uppercase tracking-tight">
                                         {{ words.lbl_corporate_discount }} ({{ descuentoAplicadoMonto }}%):
+                                    </span> -->
+                                    <span class="text-sm uppercase tracking-tight">
+                                        {{ words.lbl_corporate_discount }}
+                                        ({{ tipoDescuentoAplicado === 'fijo' ? 'USD ' + descuentoAplicadoMonto :
+                                        descuentoAplicadoMonto +
+                                        '%' }}):
                                     </span>
                                 </div>
                                 <span class="text-sm">- USD {{ Number(montoDescuentoEfectivo || 0).toFixed(2) }}</span>
@@ -1040,7 +1078,8 @@ defineExpose({
                             <Divider class="!my-1" />
 
                             <div class="flex justify-between items-center">
-                                <span class="text-blue-900 font-black uppercase text-xs tracking-widest">{{ words.lbl_total_to_pay }}</span>
+                                <span class="text-blue-900 font-black uppercase text-xs tracking-widest">{{
+                                    words.lbl_total_to_pay }}</span>
                                 <div class="flex flex-col items-end">
                                     <span class="text-2xl font-black text-green-700 leading-none">
                                         USD {{ Number(totalFinalConDescuento || 0).toFixed(2) }}
@@ -1073,7 +1112,7 @@ defineExpose({
                         </div>
                         <div class="mt-2 text-sm">
                             <!-- Por favor, complete los siguientes campos obligatorios para continuar con el pago: -->
-                             {{ words.msg_complete_mandatory_fields }}
+                            {{ words.msg_complete_mandatory_fields }}
                             <ul class="list-disc ml-5 mt-1 font-semibold">
                                 <li v-for="field in missingFields" :key="field">{{ field }}</li>
                             </ul>
@@ -1123,7 +1162,8 @@ defineExpose({
                             <i class="pi pi-check-circle text-white text-lg"></i>
                         </div>
                         <div class="flex flex-col">
-                            <span class="text-green-900 font-black text-sm uppercase tracking-wide">{{ words.toast_success_title }}</span>
+                            <span class="text-green-900 font-black text-sm uppercase tracking-wide">{{
+                                words.toast_success_title }}</span>
                             <p class="text-green-800 text-sm font-medium leading-tight">
                                 {{ words.toast_success_loaded }}
                                 <!-- Datos encontrados y cargados correctamente. -->
@@ -1138,7 +1178,8 @@ defineExpose({
                             <i class="pi pi-info-circle text-white text-lg"></i>
                         </div>
                         <div class="flex flex-col">
-                            <span class="text-blue-900 font-black text-sm uppercase tracking-wide">{{ words.toast_info_title }}</span>
+                            <span class="text-blue-900 font-black text-sm uppercase tracking-wide">{{
+                                words.toast_info_title }}</span>
                             <p class="text-blue-800 text-sm font-medium leading-tight">
                                 <!-- Registro no encontrado. Por favor, complete los datos de facturación manualmente para
                                 continuar con su
@@ -1153,7 +1194,8 @@ defineExpose({
                     <div class="grid gap-6 m-6 md:grid-cols-2">
                         <div class="grid gap-6 md:grid-cols-2">
                             <div class="col-span-3 sm:col-span-1">
-                                <label class="block mb-1">{{ words.lbl_doc_type_billing }} <span class="text-red-600">*</span></label>
+                                <label class="block mb-1">{{ words.lbl_doc_type_billing }} <span
+                                        class="text-red-600">*</span></label>
                                 <Select v-model="tipoDocumentoEmpresa" :options="filteredDocTypes" optionLabel="name_es"
                                     optionValue="id" class="w-full border-green-iimp" @change="setTipoDocPago" />
                                 <small class="text-red-600" v-if="errors.tipoDocumentoEmpresa">{{
@@ -1186,7 +1228,8 @@ defineExpose({
                         </div>
 
                         <div class="w-full sm:col-span-1">
-                            <label class="block mb-1">{{ words.lbl_business_name }} <span class="text-red-600">*</span></label>
+                            <label class="block mb-1">{{ words.lbl_business_name }} <span
+                                    class="text-red-600">*</span></label>
                             <InputText v-model="razonSocial" v-bind="razonSocialAttrs" class="w-full border-green-iimp"
                                 :disabled="loading_doc || esRuc20" :readonly="camposFacturacionBloqueados"
                                 :class="{ 'bg-gray-100 font-semibold': esRuc20 && !showManualAlert }" />
@@ -1196,7 +1239,8 @@ defineExpose({
 
                     <div class="grid gap-6 m-6 md:grid-cols-2">
                         <div class="w-full sm:col-span-1">
-                            <label class="block mb-1">{{ words.lbl_fiscal_address }} <span class="text-red-600">*</span></label>
+                            <label class="block mb-1">{{ words.lbl_fiscal_address }} <span
+                                    class="text-red-600">*</span></label>
                             <InputText v-model="direccionEmpresa" v-bind="direccionEmpresaAttrs"
                                 class="w-full border-green-iimp" :readonly="camposFacturacionBloqueados"
                                 :disabled="loading_doc || esRuc20"
@@ -1215,7 +1259,8 @@ defineExpose({
                             </div>
 
                             <div class="w-full sm:col-span-1">
-                                <label class="block mb-1">{{ words.lbl_billing_email }} <span class="text-red-600">*</span></label>
+                                <label class="block mb-1">{{ words.lbl_billing_email }} <span
+                                        class="text-red-600">*</span></label>
                                 <InputText v-model="correo_facturador" v-bind="correo_facturadorAttrs"
                                     class="w-full border-green-iimp" :disabled="loading_doc" />
                                 <small class="text-red-600" v-if="errors.correo_facturador">{{ errors.correo_facturador
