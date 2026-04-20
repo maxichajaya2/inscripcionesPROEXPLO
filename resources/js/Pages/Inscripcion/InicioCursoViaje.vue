@@ -213,6 +213,26 @@ const handleBeforeUnload = (event) => {
 };
 
 onUnmounted(() => {
+
+    // ==========================================
+    // DEBUG: IMPRIMIR LO QUE LLEGA DESDE LARAVEL
+    // ==========================================
+    console.log("=== DATOS EN EL COMPONENTE PADRE ===");
+    console.log("1. Categorías crudas (props.categorias):", props.categorias);
+
+    // Si viene como objeto, lo pasamos a array para contar cuántas hay realmente
+    const categoriasArray = props.categorias
+        ? (Array.isArray(props.categorias) ? props.categorias : Object.values(props.categorias))
+        : [];
+    console.log("-> Total de categorías recibidas en Vue:", categoriasArray.length);
+
+    console.log("2. Perfil ID (props.perfil_id):", props.perfil_id);
+    console.log("3. Adicionales (props.adicionales):", props.adicionales);
+    console.log("4. Parámetros de la URL:");
+    console.log("   - category:", urlParams.get('category'));
+    console.log("   - profile:", urlParams.get('profile'));
+    console.log("   - section:", urlParams.get('section'));
+    console.log("======================================");
     window.removeEventListener('beforeunload', handleBeforeUnload);
 });
 

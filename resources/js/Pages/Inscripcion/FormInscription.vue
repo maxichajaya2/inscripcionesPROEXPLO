@@ -441,6 +441,8 @@ const isInvalid = computed(() => {
 });
 
 onMounted(() => {
+
+
     // Configuraciones iniciales
     tipoDocumentoEmpresa.value = 1;
     selectTipoDocPago.value = 2;
@@ -452,6 +454,14 @@ onMounted(() => {
 
 
     let targetCategoryId = null;
+
+
+     // ======== DEBUG ========
+    console.log("=== DATOS RECIBIDOS DESDE PHP ===");
+    console.log("Todas las categorias:", props.categorias);
+
+    console.log("ID en la URL (category):", urlParams.get('category'));
+    console.log("Perfil en la URL (profile):", urlParams.get('profile'));
 
     if (props.saved_values && props.saved_values.selected_categoria) {
         targetCategoryId = props.saved_values.selected_categoria;

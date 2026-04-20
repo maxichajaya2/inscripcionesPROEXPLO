@@ -90,7 +90,7 @@
                                     </tr>
                                     <tr>
                                         <td style="padding: 5px 0; color: #64748b;">
-                                            {{ $inscripcion->persona->tipoDocumento->nombre ?? 'Documento' }}:
+                                            {{ $inscripcion->persona->tipoDocumento->name_es ?? 'Documento' }}:
                                         </td>
                                         <td style="padding: 5px 0; font-weight: 600;">
                                             {{ $inscripcion->persona->documento ?? '' }}
@@ -245,7 +245,7 @@
                                     </tr>
 
                                     <tr>
-                                        <td style="padding: 5px 0; color: #cbd5e1;">RUC / N° Documento:</td>
+                                        <td style="padding: 5px 0; color: #cbd5e1;">{{ $inscripcion->facturacion?->tipoDocumentoFacturador?->name_es ?? 'N° RUC / DNI ' }} :</td>
                                         <td style="padding: 5px 0; font-weight: 500; text-align: right;">
                                             {{ $inscripcion->facturacion->numero_doc_facturador ?? 'N/A' }}
                                         </td>

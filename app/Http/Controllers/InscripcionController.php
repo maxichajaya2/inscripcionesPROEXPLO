@@ -100,6 +100,7 @@ class InscripcionController extends Controller
         //  dd($categorias->toArray());
         $title = "Registration WMC 2026";
 
+    //    dd($categorias,$cursos);
         return Inertia::render('Inscripcion/IndexCourse', [
             'categorias' => $categorias,
             'title' => $title,
@@ -186,6 +187,7 @@ class InscripcionController extends Controller
         // 1. Cargamos los Perfiles Principales (Inscripción al Congreso)
         $categorias = CategoriaInscripcion::with(['precio' => $filtroPrecios])
             ->where('nombre_en', 'LIKE', $filtro)
+            ->orWhere('nombre_es', 'LIKE', $filtro)
             ->where('isactive', true)
             ->orderBy('orden_es', 'ASC')
             ->get()
