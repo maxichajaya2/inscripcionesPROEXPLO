@@ -476,8 +476,27 @@ class InscripcionController extends Controller
                 ->where('is_active', true)
                 ->first();
 
+            // if ($cupon) {
+            //     $descuento_monto = ($valor_unitario_cat * ($cupon->valor / 100));
+            //     $valor_unitario_cat = $valor_unitario_cat - $descuento_monto;
+            // }
+
             if ($cupon) {
-                $descuento_monto = ($valor_unitario_cat * ($cupon->valor / 100));
+                // 1. Leemos el tipo de descuento (por defecto asumimos porcentaje por seguridad)
+                $tipoDescuento = $cupon->tipo_descuento ?? 'porcentaje';
+
+                if (strtolower($tipoDescuento) === 'fijo') {
+                    // LÓGICA FIJA: El monto de descuento es directamente el valor del cupón
+                    $descuento_monto = (float)$cupon->valor;
+                } else {
+                    // LÓGICA PORCENTAJE: La matemática original que ya tenías
+                    $descuento_monto = ($valor_unitario_cat * ((float)$cupon->valor / 100));
+                }
+
+                // 2. Seguridad crucial: Evitar que el descuento sea mayor al precio (totales negativos)
+                $descuento_monto = min($descuento_monto, $valor_unitario_cat);
+
+                // 3. Restamos el descuento calculado al valor de la categoría
                 $valor_unitario_cat = $valor_unitario_cat - $descuento_monto;
             }
         }
@@ -896,7 +915,6 @@ class InscripcionController extends Controller
                 if (isset($wsResponse['success']) && $wsResponse['success'] === false) {
                     // Aquí grabamos en el log el mensaje exacto que armamos en el switch
                     Log::error("Error API WS Multieventos (Inscripción ID: {$inscripcion->id}) -> Código: {$wsResponse['code']} | Detalle: {$wsResponse['message']}");
-
                 } else {
                     // Si todo fue bien (200 o 201), podemos dejar un registro de éxito
                     Log::info("Éxito WS Multieventos (Inscripción ID: {$inscripcion->id}) -> " . $wsResponse['message']);
