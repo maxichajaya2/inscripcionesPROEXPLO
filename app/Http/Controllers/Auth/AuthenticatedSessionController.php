@@ -41,9 +41,12 @@ class AuthenticatedSessionController extends Controller
         }
 
         if ($user->hasRole('asociado')) {
-            return redirect()->intended(route('asociados.index'));
+            return redirect()->intended(route('asociados.cupones'));
         }
 
+        if ($user->hasRole('logistica')) {
+            return redirect()->intended(route('proveedores.index'));
+        }
 
         return redirect()->intended(RouteServiceProvider::HOME);
     }
