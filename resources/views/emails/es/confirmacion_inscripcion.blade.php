@@ -368,6 +368,9 @@
                                 <p style="margin: 15px 0 0 0; font-size: 11px; color: #94a3b8;">
                                     * Válido para el servicio de alojamiento/traslado del evento.
                                 </p>
+                                <p style="margin: 5px 0 0 0; font-size: 11px; color: #94a3b8; font-style: italic;">
+                                    Aplica términos y condiciones.
+                                </p>
                             </td>
                         </tr>
                     @endif
