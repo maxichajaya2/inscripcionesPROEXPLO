@@ -220,7 +220,7 @@ const scriptData = computed(() => {
                             </div>
                         </div>
 
-                        <div class="px-4 mb-6 text-align-center">
+                        <!-- <div class="px-4 mb-6 text-align-center">
                             <div class="flex items-start gap-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
                                 <input type="checkbox" id="check_terms" v-model="termsAccepted"
                                     class="mt-1 w-5 h-5 cursor-pointer accent-blue-600" />
@@ -236,6 +236,45 @@ const scriptData = computed(() => {
                                         class="text-blue-700 font-bold underline">
                                         {{ words.lbl_participation_rules }}
                                     </a>
+                                    {{ words.lbl_of_proexplo }}
+                                </label>
+                            </div>
+                        </div> -->
+
+                        <div class="px-4 mb-6 text-align-center">
+                            <div class="flex items-start gap-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                                <input type="checkbox" id="check_terms" v-model="termsAccepted"
+                                    class="mt-1 w-5 h-5 cursor-pointer accent-blue-600" />
+                                <label for="check_terms"
+                                    class="text-xs text-gray-700 leading-tight cursor-pointer select-none">
+                                    {{ words.lbl_i_accept_the }}
+
+                                    <a :href="words.doc_privacy_policies" target="_blank"
+                                        class="text-blue-700 font-bold underline hover:text-blue-900 transition-colors">
+                                        {{ words.lbl_privacy_policies }}
+                                    </a>
+
+                                    <template v-if="esSeccionViajes">
+                                        {{ words.lbl_and_the }}
+                                        <a :href="words.doc_participation_rules" target="_blank"
+                                            class="text-blue-700 font-bold underline hover:text-blue-900 transition-colors">
+                                            {{ words.lbl_participation_rules }}
+                                        </a>
+                                    </template>
+
+                                    <template v-else>
+                                        ,
+                                        <a :href="words.doc_participation_rules" target="_blank"
+                                            class="text-blue-700 font-bold underline hover:text-blue-900 transition-colors">
+                                            {{ words.lbl_participation_rules }}
+                                        </a>
+                                        {{ words.lbl_and_the }}
+                                        <a :href="words.doc_terms_conditions" target="_blank"
+                                            class="text-blue-700 font-bold underline hover:text-blue-900 transition-colors">
+                                            {{ words.footer_terms }}
+                                        </a>
+                                    </template>
+
                                     {{ words.lbl_of_proexplo }}
                                 </label>
                             </div>
@@ -256,7 +295,8 @@ const scriptData = computed(() => {
                                 <p v-if="esFactura">
                                     {{ words.msg_you_are_requesting }} <strong>{{ words.lbl_commercial_invoice
                                     }}</strong> {{ words.lbl_in_the_name_of }}
-                                    <span class="text-purple-700 font-bold">{{ datos_facturacion?.razonSocial || 'la empresa' }}</span> {{ words.lbl_with_ruc }}
+                                    <span class="text-purple-700 font-bold">{{ datos_facturacion?.razonSocial || 'la empresa' }}</span> {{
+                                    words.lbl_with_ruc }}
                                     <span class="text-purple-700 font-bold">{{ datos_facturacion?.documentoEmpresa || ''
                                     }}</span>.
                                 </p>

@@ -310,6 +310,7 @@ return [
     'lbl_of_proexplo' => 'de PROEXPLO 2026.',
     'lbl_and_the' => 'y el',
     'doc_participation_rules' => '/documents/politicas_es.pdf',
+    'doc_terms_conditions' => '/documents/terminos_es.pdf',
     'doc_privacy_policies' => '/documents/reglamento_es.pdf',
 
     // CONFIRMACIÓN DE COMPROBANTE

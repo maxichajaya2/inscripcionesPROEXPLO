@@ -345,7 +345,7 @@ const validarCuponLocal = async () => {
     try {
         const cuponData = Object.values(props.cupones).find(c =>
             c.id === empresaCupon.value.id &&
-            c.codigo_cupon.trim().toUpperCase() === codigoVoucher.value.trim().toUpperCase()
+            c.codigo_cupon.trim() === codigoVoucher.value.trim()
         );
 
         if (cuponData) {
@@ -1038,7 +1038,7 @@ defineExpose({
                                         words.lbl_discount_code }}</label>
                                     <InputGroup>
                                         <InputText v-model="codigoVoucher" :placeholder="words.plh_enter_code"
-                                            class="border-blue-300 uppercase" :disabled="!empresaCupon" />
+                                            class="border-blue-300" :disabled="!empresaCupon" />
                                         <Button :label="words.btn_validate" icon="pi pi-ticket"
                                             class="!bg-blue-700 !border-blue-700 hover:!bg-blue-800"
                                             :loading="loadingCupon" :disabled="!codigoVoucher"

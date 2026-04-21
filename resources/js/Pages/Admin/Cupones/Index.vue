@@ -461,7 +461,7 @@ const executeDelete = () => {
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div class="md:col-span-1">
                                         <label class="block text-xs font-bold text-slate-700 mb-1 uppercase">Código <span class="text-red-500">*</span></label>
-                                        <input v-model="form.codigo_cupon" type="text" placeholder="Ej: MINEX-2026" :class="{ 'border-red-500 ring-2 ring-red-100': form.errors.codigo_cupon }" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 focus:ring-2 focus:ring-indigo-500 outline-none text-sm text-slate-700 font-bold uppercase" />
+                                        <input v-model="form.codigo_cupon" type="text" placeholder="Ej: MINEX-2026" :class="{ 'border-red-500 ring-2 ring-red-100': form.errors.codigo_cupon }" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 focus:ring-2 focus:ring-indigo-500 outline-none text-sm text-slate-700 font-bold" />
                                         <span v-if="form.errors.codigo_cupon" class="block text-red-500 text-[10px] mt-1 font-bold">{{ form.errors.codigo_cupon }}</span>
                                     </div>
                                     <div>
@@ -484,24 +484,24 @@ const executeDelete = () => {
                                 <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 mb-4">Datos de la Empresa</h4>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div class="md:col-span-2">
-                                        <label class="block text-xs font-bold text-slate-700 mb-1 uppercase">Razón Social <span class="text-red-500">*</span></label>
-                                        <input v-model="form.razon_social" type="text" :class="{ 'border-red-500': form.errors.razon_social }" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 outline-none text-sm uppercase" />
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">Razón Social <span class="text-red-500">*</span></label>
+                                        <input v-model="form.razon_social" type="text" :class="{ 'border-red-500': form.errors.razon_social }" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 outline-none text-sm" />
                                         <span v-if="form.errors.razon_social" class="block text-red-500 text-[10px] mt-1 font-bold">{{ form.errors.razon_social }}</span>
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-700 mb-1 uppercase">Tipo Doc. <span class="text-red-500">*</span></label>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">Tipo Doc. <span class="text-red-500">*</span></label>
                                         <select v-model="form.tipo_documento" :class="{ 'border-red-500': form.errors.tipo_documento }" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 outline-none text-sm font-medium">
                                             <option value="6">RUC (6)</option>
                                         </select>
                                         <span v-if="form.errors.tipo_documento" class="block text-red-500 text-[10px] mt-1 font-bold">{{ form.errors.tipo_documento }}</span>
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-700 mb-1 uppercase">Nº Documento <span class="text-red-500">*</span></label>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">Nº Documento <span class="text-red-500">*</span></label>
                                         <input v-model="form.num_documento" type="text" :class="{ 'border-red-500': form.errors.num_documento }" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 outline-none text-sm font-bold" />
                                         <span v-if="form.errors.num_documento" class="block text-red-500 text-[10px] mt-1 font-bold">{{ form.errors.num_documento }}</span>
                                     </div>
                                     <div class="md:col-span-2">
-                                        <label class="block text-xs font-bold text-slate-700 mb-1 uppercase">Código ECI <span class="text-red-500">*</span></label>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">Código ECI <span class="text-red-500">*</span></label>
                                         <input v-model="form.eci_cod" type="text" :class="{ 'border-red-500': form.errors.eci_cod }" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 outline-none text-sm font-bold" />
                                         <span v-if="form.errors.eci_cod" class="block text-red-500 text-[10px] mt-1 font-bold">{{ form.errors.eci_cod }}</span>
                                     </div>

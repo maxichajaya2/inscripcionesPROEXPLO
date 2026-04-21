@@ -301,6 +301,7 @@ return [
     'lbl_and_the' => 'and the',
     'lbl_participation_rules' => 'Participation Rules',
     'doc_participation_rules' => '/documents/reglamento_en.pdf',
+    'doc_terms_conditions' => '/documents/terminos_en.pdf',
     'lbl_of_proexplo' => 'of PROEXPLO 2026.',
 
     // RECEIPT CONFIRMATION

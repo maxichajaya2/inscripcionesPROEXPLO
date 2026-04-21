@@ -100,7 +100,7 @@ class InscripcionController extends Controller
         //  dd($categorias->toArray());
         $title = "Registration WMC 2026";
 
-    //    dd($categorias,$cursos);
+        //    dd($categorias,$cursos);
         return Inertia::render('Inscripcion/IndexCourse', [
             'categorias' => $categorias,
             'title' => $title,
@@ -201,6 +201,7 @@ class InscripcionController extends Controller
             ->where('fecha_inicio', '<=', $now) // Debe haber empezado (inicio menor o igual a hoy)
             ->where('fecha_fin', '>=', $now)   // No debe haber terminado (fin mayor o igual a hoy)
             // ->whereRaw('usos_actuales < limite_usos') // Validación extra de stock
+            ->orderBy('razon_social', 'asc') // <-- Aquí ordenas por razón social de la A a la Z
             ->get();
 
 
