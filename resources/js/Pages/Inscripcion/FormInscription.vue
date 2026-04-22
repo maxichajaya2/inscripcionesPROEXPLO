@@ -440,6 +440,11 @@ const isInvalid = computed(() => {
     return basicFields || missingDoc || hasErrors;
 });
 
+const camposContactoBloqueados = computed(() => {
+    // Se bloquean solo si NO ha habido una búsqueda exitosa y NO está en modo manual
+    return !showSuccessAlert.value && !showManualAlert.value;
+});
+
 onMounted(() => {
 
 
@@ -1281,7 +1286,7 @@ defineExpose({
                                         class="text-red-600">*</span></label>
                                 <InputText v-model="responsable" v-bind="responsableAttrs"
                                     class="w-full border-green-iimp"
-                                    :disabled="loading_doc || camposFacturacionBloqueados" />
+                                    :disabled="loading_doc || camposContactoBloqueados" />
                                 <small class="text-red-600" v-if="errors.responsable">{{ errors.responsable }}</small>
                             </div>
 
@@ -1290,7 +1295,7 @@ defineExpose({
                                         class="text-red-600">*</span></label>
                                 <InputText v-model="correo_facturador" v-bind="correo_facturadorAttrs"
                                     class="w-full border-green-iimp"
-                                    :disabled="loading_doc || camposFacturacionBloqueados" />
+                                    :disabled="loading_doc || camposContactoBloqueados" />
                                 <small class="text-red-600" v-if="errors.correo_facturador">{{ errors.correo_facturador
                                 }}</small>
                             </div>
