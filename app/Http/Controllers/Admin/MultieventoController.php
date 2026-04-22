@@ -181,7 +181,8 @@ class MultieventoController extends Controller
                         $errores++;
                     } else {
                         // SI EL ENVÍO ES EXITOSO: Actualizamos la columna para no repetir el proceso
-                        $inscripcion->update(['envio_multievento' => true]);
+                        $inscripcion->envio_multievento = true;
+                        $inscripcion->save();
 
                         Log::info("Éxito WS Multieventos (ID: {$inscripcion->id}) -> " . ($wsResponse['message'] ?? 'Procesado correctamente'));
                         $enviados++;
