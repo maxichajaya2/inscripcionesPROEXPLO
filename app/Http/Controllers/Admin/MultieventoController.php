@@ -174,7 +174,7 @@ class MultieventoController extends Controller
                 if (!empty($inscripcion->id_categoria_inscripcion)) {
 
                     $wsResponse = app(\App\Http\Controllers\WebServiceController::class)
-                        ->wsMultieventos_WMC($facturacion, $persona, $inscripcion, $niubiz);
+                        ->wsMultieventos_PROEXPLO($facturacion, $persona, $inscripcion, $niubiz);
 
                     if (isset($wsResponse['success']) && $wsResponse['success'] === false) {
                         Log::error("Error API WS Multieventos (ID: {$inscripcion->id}) -> Código: {$wsResponse['code']} | Detalle: {$wsResponse['message']}");
