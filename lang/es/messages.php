@@ -236,6 +236,10 @@ return [
     'msg_limit_reached' => 'Límite alcanzado:',
     'msg_invalid_chars_removed' => 'Caracteres no permitidos eliminados',
 
+    // Instrucción de Búsqueda Previa
+    'lbl_search_required_title' => 'Validación Requerida',
+    'msg_click_search_first' => 'Para habilitar estos campos, por favor ingresa tu Número de Documento y haz clic en el ícono de la lupa primero. Esto nos ayuda a autocompletar y validar tus datos.',
+
     // Modales de Boleta/Factura
     'lbl_boleta_info' => 'Información de Boleta',
     'msg_boleta_info' => 'Al seleccionar DNI, se emitirá una Boleta de Venta electrónica a nombre de la persona natural.',

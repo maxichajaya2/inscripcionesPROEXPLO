@@ -102,7 +102,7 @@ const alphanumericMessage = ref('');
 const descuentoAplicadoMonto = ref(0);
 const tipoDescuentoAplicado = ref('');
 // Agregamos un estado para controlar si el usuario puede editar manualmente
-const isEditingBilling = ref(true);
+const isEditingBilling = ref(false);
 const cuponIdSeleccionado = ref(null);
 let current_price = 0;
 const tipoDocumento = computed(() => page.props.general.tipDocEmp)
@@ -456,7 +456,7 @@ onMounted(() => {
     let targetCategoryId = null;
 
 
-     // ======== DEBUG ========
+    // ======== DEBUG ========
     console.log("=== DATOS RECIBIDOS DESDE PHP ===");
     console.log("Todas las categorias:", props.categorias);
 
@@ -772,7 +772,8 @@ const filteredDocTypes = computed(() => {
 });
 
 const missingFields = computed(() => {
-    return Object.keys(errors.value).map(key => fieldNames[key] || key);
+    //return Object.keys(errors.value).map(key => fieldNames[key] || key);
+    return Object.keys(errors.value).map(key => fieldNames.value[key] || key);
 });
 
 const onlyNumberKey = (event) => {
@@ -1078,8 +1079,8 @@ defineExpose({
                                     <span class="text-sm uppercase tracking-tight">
                                         {{ words.lbl_corporate_discount }}
                                         ({{ tipoDescuentoAplicado === 'fijo' ? 'USD ' + descuentoAplicadoMonto :
-                                        descuentoAplicadoMonto +
-                                        '%' }}):
+                                            descuentoAplicadoMonto +
+                                            '%' }}):
                                     </span>
                                 </div>
                                 <span class="text-sm">- USD {{ Number(montoDescuentoEfectivo || 0).toFixed(2) }}</span>
@@ -1201,6 +1202,21 @@ defineExpose({
                             @click="showManualAlert = false" />
                     </div>
 
+                    <div v-if="camposFacturacionBloqueados && !showManualAlert && !showSuccessAlert"
+                        class="mx-6 mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-4 animate-fade-in shadow-sm">
+                        <div class="bg-amber-500 rounded-full p-2 flex-none">
+                            <i class="pi pi-search text-white text-lg"></i>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-amber-900 font-black text-sm uppercase tracking-wide">
+                                {{ words.lbl_search_required_title }}
+                            </span>
+                            <p class="text-amber-800 text-sm font-medium leading-tight mt-1">
+                                {{ words.msg_click_search_first }}
+                            </p>
+                        </div>
+                    </div>
+
                     <div class="grid gap-6 m-6 md:grid-cols-2">
                         <div class="grid gap-6 md:grid-cols-2">
                             <div class="col-span-3 sm:col-span-1">
@@ -1241,7 +1257,7 @@ defineExpose({
                             <label class="block mb-1">{{ words.lbl_business_name }} <span
                                     class="text-red-600">*</span></label>
                             <InputText v-model="razonSocial" v-bind="razonSocialAttrs" class="w-full border-green-iimp"
-                                :disabled="loading_doc || esRuc20" :readonly="camposFacturacionBloqueados"
+                                :disabled="loading_doc || esRuc20 || camposFacturacionBloqueados"
                                 :class="{ 'bg-gray-100 font-semibold': esRuc20 && !showManualAlert }" />
                             <small class="text-red-600" v-if="errors.razonSocial">{{ errors.razonSocial }}</small>
                         </div>
@@ -1252,11 +1268,11 @@ defineExpose({
                             <label class="block mb-1">{{ words.lbl_fiscal_address }} <span
                                     class="text-red-600">*</span></label>
                             <InputText v-model="direccionEmpresa" v-bind="direccionEmpresaAttrs"
-                                class="w-full border-green-iimp" :readonly="camposFacturacionBloqueados"
-                                :disabled="loading_doc || esRuc20"
+                                class="w-full border-green-iimp"
+                                :disabled="loading_doc || esRuc20 || camposFacturacionBloqueados"
                                 :class="{ 'bg-gray-100': esRuc20 && !showManualAlert }" />
                             <small class="text-red-600" v-if="errors.direccionEmpresa">{{ errors.direccionEmpresa
-                                }}</small>
+                            }}</small>
                         </div>
 
                         <div class="grid gap-6 md:grid-cols-2">
@@ -1264,7 +1280,8 @@ defineExpose({
                                 <label class="block mb-1">{{ words.lbl_billing_contact }} <span
                                         class="text-red-600">*</span></label>
                                 <InputText v-model="responsable" v-bind="responsableAttrs"
-                                    class="w-full border-green-iimp" :disabled="loading_doc" />
+                                    class="w-full border-green-iimp"
+                                    :disabled="loading_doc || camposFacturacionBloqueados" />
                                 <small class="text-red-600" v-if="errors.responsable">{{ errors.responsable }}</small>
                             </div>
 
@@ -1272,9 +1289,10 @@ defineExpose({
                                 <label class="block mb-1">{{ words.lbl_billing_email }} <span
                                         class="text-red-600">*</span></label>
                                 <InputText v-model="correo_facturador" v-bind="correo_facturadorAttrs"
-                                    class="w-full border-green-iimp" :disabled="loading_doc" />
+                                    class="w-full border-green-iimp"
+                                    :disabled="loading_doc || camposFacturacionBloqueados" />
                                 <small class="text-red-600" v-if="errors.correo_facturador">{{ errors.correo_facturador
-                                    }}</small>
+                                }}</small>
                             </div>
                         </div>
                     </div>

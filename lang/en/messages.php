@@ -217,6 +217,10 @@ return [
     'lbl_billing_email' => 'Billing Email',
     'lbl_accept_terms' => 'Acceptance of Terms and Conditions',
 
+    // Instrucción de Búsqueda Previa
+    'lbl_search_required_title' => 'Validation Required',
+    'msg_click_search_first' => 'To enable these fields, please enter your Document Number and click the search icon (magnifying glass) first. This helps us auto-complete and validate your data.',
+
     // Validaciones Yup
     'val_req_business_name' => 'Business name is required',
     'val_req_company_address' => 'Company address is required',
