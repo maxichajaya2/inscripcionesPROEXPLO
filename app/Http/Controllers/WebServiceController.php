@@ -471,12 +471,13 @@ class WebServiceController extends Controller
                 "lastName"     => substr(strtoupper($clean($persona->apellido_paterno . ' ' . ($persona->apellido_materno ?? ''))), 0, 60),
                 "name"         => substr(strtoupper($clean($nombreCompleto)), 0, 90),
                 "email"        => (string)$persona->correo,
-                "documentType" => "DNI",
+                "documentType" => $persona->tipoDocumento?->name_en ?? "DNI",
                 "documentNum"  => (string)$persona->documento,
                 "phone"        => substr($persona->celular ?? "999999999", 0, 20),
                 "companyName"  => substr(strtoupper($clean($persona->empresa ?? " ")), 0, 50),
                 "position"     => substr(strtoupper($clean($persona->ocupacion ?? " ")), 0, 50),
-                "country"      => "PE"
+                "country"      => $persona->nacionalidad?->codigo ?? "PE"
+
             ],
         ];
 

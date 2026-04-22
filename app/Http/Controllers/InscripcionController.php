@@ -890,8 +890,6 @@ class InscripcionController extends Controller
             $service_wmc = app(\App\Http\Controllers\WebServiceController::class)
                 ->wsInscripcion_WMC_2026($facturacion, $persona, $inscripcion, $niubiz, $cupon);
 
-
-
             // 2. Intentar procesar la respuesta del servicio (QR, etc.)
             if (isset($service_wmc->Response) && $service_wmc->Response->Status === true) {
                 $inscripcion->qr = (string)$service_wmc->Response->QR;
@@ -910,22 +908,33 @@ class InscripcionController extends Controller
                 Log::error("ERROR SIE PROEXPLO para Inscripción ID: " . $inscripcion->id, (array)$service_wmc);
             }
 
+
+
             // WS DE MULTIEVENTOS
             try {
-                // 1. Guardamos lo que nos responde tu función en una variable
-                $wsResponse = app(\App\Http\Controllers\WebServiceController::class)->wsMultieventos_PROEXPLO($facturacion, $persona, $inscripcion, $niubiz);
-                // 2. Evaluamos si el Web Service reportó un error (400, 401, 409, etc.)
-                if (isset($wsResponse['success']) && $wsResponse['success'] === false) {
-                    // Aquí grabamos en el log el mensaje exacto que armamos en el switch
-                    Log::error("Error API WS Multieventos (Inscripción ID: {$inscripcion->id}) -> Código: {$wsResponse['code']} | Detalle: {$wsResponse['message']}");
+                // Validamos que el ID de categoría no sea nulo o vacío antes de proceder
+                if (!empty($inscripcion->id_categoria_inscripcion)) {
+
+                    // 1. Guardamos lo que nos responde tu función en una variable
+                    $wsResponse = app(\App\Http\Controllers\WebServiceController::class)
+                        ->wsMultieventos_PROEXPLO($facturacion, $persona, $inscripcion, $niubiz);
+
+                    // 2. Evaluamos si el Web Service reportó un error (400, 401, 409, etc.)
+                    if (isset($wsResponse['success']) && $wsResponse['success'] === false) {
+                        Log::error("Error API WS Multieventos (Inscripción ID: {$inscripcion->id}) -> Código: {$wsResponse['code']} | Detalle: {$wsResponse['message']}");
+                    } else {
+                        // Si todo fue bien (200 o 201)
+                        Log::info("Éxito WS Multieventos (Inscripción ID: {$inscripcion->id}) -> " . ($wsResponse['message'] ?? 'Procesado correctamente'));
+                    }
                 } else {
-                    // Si todo fue bien (200 o 201), podemos dejar un registro de éxito
-                    Log::info("Éxito WS Multieventos (Inscripción ID: {$inscripcion->id}) -> " . $wsResponse['message']);
+                    // Opcional: Registrar en el log que se saltó el envío por falta de categoría
+                    Log::warning("WS Multieventos omitido: id_categoria_inscripcion está vacío para la Inscripción ID: {$inscripcion->id}");
                 }
             } catch (\Exception $e) {
                 // 3. Este catch atrapará errores críticos (ej. fallo interno de PHP o caída de cURL)
-                Log::error("Excepción Crítica en WS Multieventos (Inscripción ID: {$inscripcion->id}) -> Error: " . $e->getMessage() . " | Archivo: " . $e->getFile() . " | Línea: " . $e->getLine());
+                Log::error("Excepción Crítica en WS Multieventos (Inscripción ID: {$inscripcion->id}) -> Error: " . $e->getMessage());
             }
+
 
             // 3. Lógica extra de viajes (fuera del IF del servicio)
             if ($inscripcion->id_categoria_inscripcion == null) {
