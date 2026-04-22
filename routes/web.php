@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\CuponController;
 use App\Http\Controllers\Admin\InscritosController;
+use App\Http\Controllers\Admin\MultieventoController;
 use App\Http\Controllers\Logistica\ProveedorController;
 
 /*
@@ -42,6 +43,15 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/inscritos', [InscritosController::class, 'index'])->name('inscritos.index');
     Route::get('/cupones/{cupone}', [CuponController::class, 'show'])->name('cupones.show');
     Route::get('/cupones/{cupon}/usos', [CuponController::class, 'getUsos'])->name('cupones.usos');
+
+    Route::get('/multieventos', [MultieventoController::class, 'index'])->name('multieventos.index');
+    Route::post('/multieventos', [MultieventoController::class, 'store'])->name('multieventos.store');
+    Route::put('/multieventos/{multievento}', [MultieventoController::class, 'update'])->name('multieventos.update');
+    Route::delete('/multieventos/{multievento}', [MultieventoController::class, 'destroy'])->name('multieventos.destroy');
+
+    // Envío Masivo a la API
+    Route::get('/multieventos/inscritos', [MultieventoController::class, 'index'])->name('multieventos.index');
+    Route::post('/multieventos/enviar-api', [MultieventoController::class, 'enviarApi'])->name('multieventos.enviar-api');
 });
 
 Route::get('set-locale/{locale}', function ($locale) {
@@ -61,11 +71,11 @@ Route::middleware(['auth', 'role:asociado|admin'])->group(function () {
 });
 
 Route::middleware(['auth', 'role:logistica'])->group(function () {
-Route::get('/proveedores', [ProveedorController::class, 'index'])->name('proveedores.index');
-Route::post('/proveedores', [ProveedorController::class, 'store'])->name('proveedores.store');
-Route::put('/proveedores/{proveedor}', [ProveedorController::class, 'update'])->name('proveedores.update');
-Route::delete('/proveedores/{proveedor}', [ProveedorController::class, 'destroy'])->name('proveedores.destroy');
-Route::post('/proveedores/enviar-masivo', [ProveedorController::class, 'enviarMasivo'])->name('proveedores.enviar-masivo');
+    Route::get('/proveedores', [ProveedorController::class, 'index'])->name('proveedores.index');
+    Route::post('/proveedores', [ProveedorController::class, 'store'])->name('proveedores.store');
+    Route::put('/proveedores/{proveedor}', [ProveedorController::class, 'update'])->name('proveedores.update');
+    Route::delete('/proveedores/{proveedor}', [ProveedorController::class, 'destroy'])->name('proveedores.destroy');
+    Route::post('/proveedores/enviar-masivo', [ProveedorController::class, 'enviarMasivo'])->name('proveedores.enviar-masivo');
 });
 
 Route::get('/', [InscripcionController::class, 'index'])->name('inscripcion.index');
