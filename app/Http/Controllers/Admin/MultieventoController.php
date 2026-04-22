@@ -67,6 +67,7 @@ class MultieventoController extends Controller
                     'cargo' => $inscripcion->texto_cargo ?? 'No especificado',
                     'qr' => $inscripcion->qr ?? null,
                     'cupon_viaje' => $inscripcion->cupon_viaje ?? null,
+                    'envio_multievento' => $inscripcion->envio_multievento, // Nueva variable para saber si ya fue enviado a la API
 
                     // Variables nuevas agregadas para Vue
                     'marca_tarjeta' => $marcaTarjeta,
