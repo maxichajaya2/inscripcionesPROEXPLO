@@ -12,6 +12,13 @@ class InscritosController extends Controller
 
     public function index()
     {
+        // 1. OPTIMIZACIÓN CRÍTICA: Traemos todas las categorías a memoria UNA SOLA VEZ.
+        // Esto evita hacer una consulta a la base de datos por cada inscrito dentro del map().
+        $todasLasCategorias = \App\Models\CategoriaCursoViaje::select('id', 'nombre_es', 'tipo')
+            ->get()
+            ->keyBy('id');
+
+        // 2. CONSULTA PRINCIPAL
         $inscripciones = Inscripcion::with([
             'persona.tipoDocumento',
             'facturacion.tipoDocumentoFacturador',
@@ -24,7 +31,8 @@ class InscritosController extends Controller
         ])
             ->orderBy('id', 'desc')
             ->get() // <-- Traemos los datos primero
-            // MAGIA AQUÍ: Filtramos la colección en memoria para evitar el error de PostgreSQL
+
+            // 3. MAGIA AQUÍ: Filtramos la colección en memoria para evitar el error de PostgreSQL
             ->filter(function ($inscripcion) {
                 // Si no tiene facturación o cuotas, lo descartamos
                 if (!$inscripcion->facturacion || !$inscripcion->facturacion->cuotas) {
@@ -33,7 +41,9 @@ class InscritosController extends Controller
                 // Nos quedamos SOLO con los que tengan al menos una cuota con registro en Niubiz
                 return $inscripcion->facturacion->cuotas->contains(fn($c) => $c->niubiz !== null);
             })
-            ->map(function ($inscripcion) {
+
+            // 4. MAPEO DE DATOS PARA VUE
+            ->map(function ($inscripcion) use ($todasLasCategorias) {
                 // Buscamos la primera cuota que tenga un registro de Niubiz
                 $cuotaPagada = $inscripcion->facturacion?->cuotas->first(fn($c) => $c->niubiz !== null);
                 $pagoNiubiz = $cuotaPagada?->niubiz;
@@ -57,6 +67,17 @@ class InscritosController extends Controller
                 }
                 // -------------------------------------------------------------------
 
+                // --- LÓGICA OPTIMIZADA DE CURSOS/VIAJES (Sin tocar la BD) ---
+                $cursosViajes = [];
+                if (!empty($inscripcion->id_categoria_cursos_viajes)) {
+                    foreach ($inscripcion->id_categoria_cursos_viajes as $idCurso) {
+                        if (isset($todasLasCategorias[$idCurso])) {
+                            $cursosViajes[] = $todasLasCategorias[$idCurso];
+                        }
+                    }
+                }
+                // -------------------------------------------------------------------
+
                 return [
                     'id' => $inscripcion->id,
                     'fecha_registro' => $inscripcion->created_at ? $inscripcion->created_at->format('d/m/Y H:i') : '-',
@@ -66,7 +87,7 @@ class InscritosController extends Controller
                     'qr'=> $inscripcion->qr ?? null,
                     'cupon_viaje' => $inscripcion->cupon_viaje ?? null,
 
-                    // Variables nuevas agregadas para Vue
+                    // Variables de tarjeta
                     'marca_tarjeta' => $marcaTarjeta,
                     'numero_tarjeta' => $cardNum,
 
@@ -74,7 +95,6 @@ class InscritosController extends Controller
                     'persona' => $inscripcion->persona,
                     'nombres' => trim(($inscripcion->persona?->nombres ?? '') . ' ' . ($inscripcion->persona?->apellidos ?? '')),
                     'documento' => $inscripcion->persona?->dni ?? $inscripcion->persona?->documento ?? '-',
-
                     'tipo_documento' => $inscripcion->persona?->tipoDocumento?->name_es ?? 'Sin tipo',
                     'email' => $inscripcion->persona?->correo ?? 'Sin correo',
 
@@ -94,11 +114,8 @@ class InscritosController extends Controller
                         'nombre_es' => $inscripcion->categoria_inscripcion->nombre_es
                     ] : null,
 
-                    'categoria_cursos_viajes' => !empty($inscripcion->id_categoria_cursos_viajes)
-                        ? \App\Models\CategoriaCursoViaje::whereIn('id', $inscripcion->id_categoria_cursos_viajes)
-                        ->get(['nombre_es', 'tipo'])
-                        ->toArray()
-                        : [],
+                    // Usamos el arreglo optimizado en memoria
+                    'categoria_cursos_viajes' => $cursosViajes,
 
                     // Cupon
                     'cupon' => $inscripcion->cupon ? [
@@ -123,10 +140,10 @@ class InscritosController extends Controller
                     'estado_pago' => 'PAGADO', // Como ya filtramos los pendientes arriba, aquí todos son PAGADOS
                 ];
             })
-            ->values(); // <-- IMPORTANTE: values() reordena los índices tras el filter() inicial para que Vue no se rompa
+            ->values(); // <-- IMPORTANTE: values() reordena los índices tras el filter() inicial
 
 
-        return Inertia::render('Admin/Inscritos/Index', [
+        return \Inertia\Inertia::render('Admin/Inscritos/Index', [
             'inscritos' => $inscripciones
         ]);
     }
