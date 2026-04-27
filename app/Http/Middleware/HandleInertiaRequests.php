@@ -69,6 +69,14 @@ class HandleInertiaRequests extends Middleware
         ];
 
 
+        $sharedData['flash'] = [
+            'success' => fn() => $request->session()->get('success'),
+            'error' => fn() => $request->session()->get('error'),
+            'warning' => fn() => $request->session()->get('warning'),
+            'info' => fn() => $request->session()->get('info'),
+            'payment_error_code' => fn() => $request->session()->get('payment_error_code'),
+        ];
+
         $sharedData['general.paises'] = Pais::where('isactive', true)->get();
         /** PASO 1 */
         $sharedData['general.tipDocPer'] = TipoDocumento::where('isactive', true)

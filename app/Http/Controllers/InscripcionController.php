@@ -894,6 +894,7 @@ class InscripcionController extends Controller
             if (isset($service_wmc->Response) && $service_wmc->Response->Status === true) {
                 $inscripcion->qr = (string)$service_wmc->Response->QR;
                 $inscripcion->ws_status = true;
+                $inscripcion->envio_sie= true;
 
                 // REGLA DE ORO: Solo guardamos el cupón de hospedaje si NO es sección viajes
                 // Y si el usuario realmente usó un cupón corporativo ($cupon no es null)
