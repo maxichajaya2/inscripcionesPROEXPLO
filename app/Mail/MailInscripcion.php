@@ -32,16 +32,16 @@ class MailInscripcion extends Mailable
                     from: new Address('inscripciones@iimp.org.pe', config('app.event_name')),
                     subject: config('app.event_name') . " - ProExplo 2026 Confirmación de Inscripción",
                     //   cc: ['ext_analistaprogramador2@iimp.org.pe']
-                    // cc: ['inscripciones@iimp.org.pe', 'cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
-                    // bcc: ['wmc.itsupport@iimp.org.pe', 'john.moron@iimp.org.pe']
+                    cc: ['inscripciones@iimp.org.pe', 'cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
+                    bcc: ['wmc.itsupport@iimp.org.pe', 'john.moron@iimp.org.pe']
                 );
             } else {
                 return new Envelope(
                     from: new Address('inscripciones@iimp.org.pe', config('app.event_name')),
                     subject: config('app.event_name') . " - ProExplo 2026 Confirmación de Inscripción",
                     //  cc: ['ext_analistaprogramador2@iimp.org.pe']
-                    // cc: ['inscripciones@iimp.org.pe', 'cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
-                    // bcc: ['wmc.itsupport@iimp.org.pe', 'john.moron@iimp.org.pe']
+                    cc: ['inscripciones@iimp.org.pe', 'cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
+                    bcc: ['wmc.itsupport@iimp.org.pe', 'john.moron@iimp.org.pe']
                 );
             }
         } else {
@@ -50,16 +50,16 @@ class MailInscripcion extends Mailable
                     from: new Address('inscripciones@iimp.org.pe', config('app.event_name')),
                     subject: config('app.event_name') . " - ProExplo 2026 Confirmación de Inscripción",
                     //  cc: [ 'ext_analistaprogramador2@iimp.org.pe']
-                    // cc: ['inscripciones@iimp.org.pe', 'cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
-                    // bcc: ['wmc.itsupport@iimp.org.pe', 'john.moron@iimp.org.pe']
+                    cc: ['inscripciones@iimp.org.pe', 'cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
+                    bcc: ['wmc.itsupport@iimp.org.pe', 'john.moron@iimp.org.pe']
                 );
             } else {
                 return new Envelope(
                     from: new Address('inscripciones@iimp.org.pe', config('app.event_name')),
                     subject: config('app.event_name') . " - ProExplo 2026 Confirmación de Inscripción",
                     //  cc: [ 'ext_analistaprogramador2@iimp.org.pe']
-                    // cc: ['inscripciones@iimp.org.pe', 'cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
-                    // bcc: ['wmc.itsupport@iimp.org.pe', 'john.moron@iimp.org.pe']
+                    cc: ['inscripciones@iimp.org.pe', 'cobranzas@iimp.org.pe', $this->inscripcion->facturacion->correo_facturador],
+                    bcc: ['wmc.itsupport@iimp.org.pe', 'john.moron@iimp.org.pe']
                 );
             }
         }
