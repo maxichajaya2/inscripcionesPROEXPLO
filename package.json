@@ -26,6 +26,7 @@
         "vee-validate": "^4.12.8",
         "vue-dragscroll": "^4.0.5",
         "vue-i18n": "^11.1.2",
-        "vue3-apexcharts": "^1.11.1"
+        "vue3-apexcharts": "^1.11.1",
+        "xlsx": "^0.18.5"
     }
 }
