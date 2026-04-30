@@ -27,7 +27,7 @@ class ProveedorMontajeController extends Controller
         $request->validate([
             'nombre_empresa' => 'required|string|max:255',
             // FIX: Forzamos la conexión pgsql_second para la regla unique
-            'email_principal' => 'required|email|unique:pgsql_second.proveedores,email_principal',
+            'email_principal' => 'required|email|unique:pgsql_second.proveedores_montaje,email_principal',
             'emails_cc' => 'nullable|array',
             'emails_cc.*' => 'email'
         ]);
@@ -47,7 +47,7 @@ class ProveedorMontajeController extends Controller
         $request->validate([
             'nombre_empresa' => 'required|string|max:255',
             // FIX: Forzamos pgsql_second e ignoramos el ID del proveedor actual
-            'email_principal' => 'required|email|unique:pgsql_second.proveedores,email_principal,' . $proveedor->id,
+            'email_principal' => 'required|email|unique:pgsql_second.proveedores_montaje,email_principal,' . $proveedor->id,
             'emails_cc' => 'nullable|array',
             'emails_cc.*' => 'email',
             'is_active' => 'boolean'
@@ -71,10 +71,12 @@ class ProveedorMontajeController extends Controller
 
     public function enviarMasivo(Request $request)
     {
+
+      dd($request->all()); // <-- Agrega este dd() para verificar que estás recibiendo los IDs correctamente
         // 1. Validar la petición (asegúrate de quitar el dd() que tenías)
         $request->validate([
             'proveedores_ids' => 'required|array',
-            'proveedores_ids.*' => 'exists:pgsql_second.proveedores,id'
+            'proveedores_ids.*' => 'exists:pgsql_second.proveedores_montaje,id'
         ]);
 
         // 2. Obtener proveedores activos
@@ -82,6 +84,7 @@ class ProveedorMontajeController extends Controller
             ->where('is_active', true)
             ->get();
 
+           // <-- Elimina este dd() después de verificar que estás obteniendo los proveedores correctos
         $enviados = 0;
         $errores = 0;
 
