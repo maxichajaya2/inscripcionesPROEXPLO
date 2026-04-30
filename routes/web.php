@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\CuponController;
 use App\Http\Controllers\Admin\InscritosController;
 use App\Http\Controllers\Admin\MultieventoController;
 use App\Http\Controllers\Logistica\ProveedorController;
+use App\Http\Controllers\Logistica\ProveedorMontajeController;
 use App\Http\Controllers\Admin\SieController;
 
 /*
@@ -76,11 +77,19 @@ Route::middleware(['auth', 'role:asociado|admin'])->group(function () {
 });
 
 Route::middleware(['auth', 'role:logistica'])->group(function () {
-    Route::get('/proveedores', [ProveedorController::class, 'index'])->name('proveedores.index');
+
+Route::get('/proveedores', [ProveedorController::class, 'index'])->name('proveedores.index');
     Route::post('/proveedores', [ProveedorController::class, 'store'])->name('proveedores.store');
     Route::put('/proveedores/{proveedor}', [ProveedorController::class, 'update'])->name('proveedores.update');
     Route::delete('/proveedores/{proveedor}', [ProveedorController::class, 'destroy'])->name('proveedores.destroy');
     Route::post('/proveedores/enviar-masivo', [ProveedorController::class, 'enviarMasivo'])->name('proveedores.enviar-masivo');
+
+    Route::get('/proveedores-montaje', [ProveedorMontajeController::class, 'index'])->name('proveedores-montaje.index');
+    Route::post('/proveedores-montaje', [ProveedorMontajeController::class, 'store'])->name('proveedores-montaje.store');
+    Route::put('/proveedores-montaje/{proveedor}', [ProveedorMontajeController::class, 'update'])->name('proveedores-montaje.update');
+    Route::delete('/proveedores-montaje/{proveedor}', [ProveedorMontajeController::class, 'destroy'])->name('proveedores-montaje.destroy');
+    Route::post('/proveedores-montaje/enviar-masivo', [ProveedorMontajeController::class, 'enviarMasivo'])->name('proveedores-montaje.enviar-masivo');
+
 });
 
 Route::get('/', [InscripcionController::class, 'index'])->name('inscripcion.index');
