@@ -9,6 +9,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Envelope;
 use App\Models\Proveedor; // <-- No olvides importar tu modelo
+use App\Models\ProveedorMontaje;
 
 class MailProveedorMontaje extends Mailable
 {
@@ -17,7 +18,7 @@ class MailProveedorMontaje extends Mailable
     public $proveedor;
 
     // Recibimos el proveedor desde el controlador
-    public function __construct(Proveedor $proveedor)
+    public function __construct(ProveedorMontaje $proveedor)
     {
         $this->proveedor = $proveedor;
     }
