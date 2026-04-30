@@ -15,7 +15,7 @@ class ProveedorMontajeController extends Controller
     public function index()
     {
         // Eloquent ya sabe usar pgsql_second por el modelo
-        $proveedores = Proveedor::orderBy('id', 'desc')->get();
+        $proveedores = ProveedorMontajeController::orderBy('id', 'desc')->get();
         return Inertia::render('Logistica/ProveedorMontaje/Index', [
             'proveedores' => $proveedores
         ]);
@@ -31,7 +31,7 @@ class ProveedorMontajeController extends Controller
             'emails_cc.*' => 'email'
         ]);
 
-        Proveedor::create([
+        ProveedorMontajeController::create([
             'nombre_empresa' => $request->nombre_empresa,
             'email_principal' => $request->email_principal,
             'emails_cc' => $request->emails_cc,
@@ -77,7 +77,7 @@ class ProveedorMontajeController extends Controller
         ]);
 
         // 2. Obtener proveedores activos
-        $proveedores = Proveedor::whereIn('id', $request->proveedores_ids)
+        $proveedores = ProveedorMontajeController::whereIn('id', $request->proveedores_ids)
             ->where('is_active', true)
             ->get();
 
