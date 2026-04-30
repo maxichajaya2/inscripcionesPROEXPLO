@@ -9,13 +9,14 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\MensajeProveedor; // Asegúrate de tener este Mailable creado
 use Illuminate\Support\Facades\Log;
+use App\Models\ProveedorMontaje;
 
 class ProveedorMontajeController extends Controller
 {
     public function index()
     {
         // Eloquent ya sabe usar pgsql_second por el modelo
-        $proveedores = ProveedorMontajeController::orderBy('id', 'desc')->get();
+        $proveedores = ProveedorMontaje::orderBy('id', 'desc')->get();
         return Inertia::render('Logistica/ProveedorMontaje/Index', [
             'proveedores' => $proveedores
         ]);
@@ -31,7 +32,7 @@ class ProveedorMontajeController extends Controller
             'emails_cc.*' => 'email'
         ]);
 
-        ProveedorMontajeController::create([
+        ProveedorMontaje::create([
             'nombre_empresa' => $request->nombre_empresa,
             'email_principal' => $request->email_principal,
             'emails_cc' => $request->emails_cc,
@@ -77,7 +78,7 @@ class ProveedorMontajeController extends Controller
         ]);
 
         // 2. Obtener proveedores activos
-        $proveedores = ProveedorMontajeController::whereIn('id', $request->proveedores_ids)
+        $proveedores = ProveedorMontaje::whereIn('id', $request->proveedores_ids)
             ->where('is_active', true)
             ->get();
 
