@@ -72,7 +72,7 @@ class ProveedorMontajeController extends Controller
     public function enviarMasivo(Request $request)
     {
 
-      dd($request->all()); // <-- Agrega este dd() para verificar que estás recibiendo los IDs correctamente
+         // <-- Agrega este dd() para verificar que estás recibiendo los IDs correctamente
         // 1. Validar la petición (asegúrate de quitar el dd() que tenías)
         $request->validate([
             'proveedores_ids' => 'required|array',
