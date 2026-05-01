@@ -138,15 +138,14 @@ console.log('Usuario autenticado:', authUser.value);
 
                 <div v-if="isLogistica" class="pt-6">
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-4 mb-3">
-                        Correos Masivos
+                        Gestion de Montajistas
                     </p>
 
                     <!-- Enlace: Proveedores Generales -->
-                    <Link :href="route('proveedores.index')"
+                    <!-- <Link :href="route('proveedores.index')"
                         class="flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all mt-1"
                         :class="route().current('proveedores.*') ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/50' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
 
-                        <!-- Icono: Grupo de Usuarios (Representa lista de contactos) -->
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -154,12 +153,26 @@ console.log('Usuario autenticado:', authUser.value);
                         </svg>
 
                         Proveedores
-                    </Link>
+                    </Link> -->
 
                     <!-- Enlace: Proveedores Montaje -->
-                    <Link :href="route('proveedores-montaje.index')"
+                    <!-- <Link :href="route('proveedores-montaje.index')"
                         class="flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all mt-1"
                         :class="route().current('proveedores-montaje.index') ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/50' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
+
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                        </svg>
+
+                        Proveedores Montaje
+                    </Link> -->
+
+                    <Link :href="route('personal-montaje.index')"
+                        class="flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all mt-1"
+                        :class="route().current('personal-montaje.index') ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/50' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
 
                         <!-- Icono: Camión de logística (Representa montaje/equipamiento) -->
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -169,7 +182,7 @@ console.log('Usuario autenticado:', authUser.value);
                                 d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
                         </svg>
 
-                        Proveedores Montaje
+                       Montajistas
                     </Link>
                 </div>
             </nav>

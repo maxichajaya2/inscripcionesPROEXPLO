@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\InscritosController;
 use App\Http\Controllers\Admin\MultieventoController;
 use App\Http\Controllers\Logistica\ProveedorController;
 use App\Http\Controllers\Logistica\ProveedorMontajeController;
+use App\Http\Controllers\Logistica\MontajistaController;
 use App\Http\Controllers\Admin\SieController;
 
 /*
@@ -89,6 +90,21 @@ Route::get('/proveedores', [ProveedorController::class, 'index'])->name('proveed
     Route::put('/proveedores-montaje/{proveedor}', [ProveedorMontajeController::class, 'update'])->name('proveedores-montaje.update');
     Route::delete('/proveedores-montaje/{proveedor}', [ProveedorMontajeController::class, 'destroy'])->name('proveedores-montaje.destroy');
     Route::post('/proveedores-montaje/enviar-masivo', [ProveedorMontajeController::class, 'enviarMasivo'])->name('proveedores-montaje.enviar-masivo');
+
+
+    // Vista principal para gestionar/listar al personal
+    Route::get('/personal-montaje', [MontajistaController::class, 'index'])->name('personal-montaje.index');
+    Route::post('/personal-montaje', [MontajistaController::class, 'store'])->name('personal-montaje.store');
+    Route::put('/personal-montaje/{id}', [MontajistaController::class, 'update'])->name('personal-montaje.update');
+    Route::delete('/personal-montaje/{id}', [MontajistaController::class, 'destroy'])->name('personal-montaje.destroy');
+
+    // Vista especializada para el guardia de seguridad (Escáner)
+    Route::get('/escaner-seguridad', [MontajistaController::class, 'escaner'])->name('escaner.index');
+    // Endpoint para procesar el "disparo" de la pistola láser
+    Route::post('/escaner-seguridad/validar', [MontajistaController::class, 'validar'])->name('escaner.validar');
+    Route::post('/personal-montaje/importar', [MontajistaController::class, 'importar'])->name('personal-montaje.importar');
+
+    Route::patch('/personal-montaje/{id}/toggle-presencia', [MontajistaController::class, 'togglePresencia'])->name('personal-montaje.toggle-presencia');
 
 });
 
