@@ -1,43 +1,10 @@
-@php
-    $dias_nombres = [
-        'lun' => 'Lunes',
-        'mar' => 'Martes',
-        'mie' => 'Miércoles',
-        'jue' => 'Jueves',
-        'vie' => 'Viernes',
-    ];
-    $dias_seleccionados = [];
-
-    $nombre_cat_es = strtoupper($inscripcion->categoria_inscripcion->nombre_es);
-    $nombre_cat_en = strtoupper($inscripcion->categoria_inscripcion->nombre_en);
-
-    $es_estudiante = str_contains($nombre_cat_en, 'STUDENT') || str_contains($nombre_cat_es, 'ESTUDIANTE');
-
-    if (
-        !empty($inscripcion->dias) &&
-        !$es_estudiante &&
-        (str_contains($nombre_cat_es, ' DIA') || str_contains($nombre_cat_en, ' DAY'))
-    ) {
-        $dias_inscripcion = json_decode($inscripcion->dias, true);
-        if (is_array($dias_inscripcion)) {
-            foreach ($dias_inscripcion as $key => $dia) {
-                if ($dia == 1) {
-                    $dias_seleccionados[] = $dias_nombres[$key];
-                }
-            }
-        }
-    }
-
-    $digitos = substr($pago->card_num, -4);
-@endphp
-
 <!DOCTYPE html>
-<html>
+<html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Credenciales - PROEXPLO 2026</title>
+    <title>Credenciales de Acceso - PROEXPLO 2026</title>
 </head>
 
 <body style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f4f8; margin: 0; padding: 0;">
@@ -55,18 +22,24 @@
                                 alt="PROEXPLO 2026" width="220" style="display: block; margin: 0 auto 25px auto;">
                             <h1
                                 style="color: #001e3d; font-size: 26px; font-weight: 800; margin: 0; text-transform: uppercase;">
-                                Credenciales de Acceso</h1>
+                                Detalle de la Inscripción</h1>
                             <div style="width: 80px; height: 4px; background-color: #22c55e; margin: 15px auto;"></div>
                         </td>
                     </tr>
 
+                    {{-- SALUDO --}}
                     <tr>
-                        <td style="padding: 0 40px 30px 40px; text-align: center; color: #334155; line-height: 1.6;">
-                            <p style="font-size: 18px; margin: 0;">Estimado(a)
+                        <td style="padding: 0 40px 25px 40px; text-align: center; color: #334155; line-height: 1.6;">
+                            <p style="font-size: 18px; margin: 0 0 8px 0;">Estimado(a)
                                 <strong>{{ $inscripcion->persona->nombres }}</strong>,
                             </p>
-                            <p style="font-size: 16px; margin: 10px 0 0 0;">Nos complace informarle que sus credenciales de acceso
-                                para <strong>{{ config('app.event_name') }}</strong> han sido procesadas con éxito.</p>
+                            <p style="font-size: 16px; margin: 0;">El Instituto de Ingenieros de Minas del Perú le da una cordial bienvenida a {{ config('app.event_name', 'PROEXPLO 2026') }}.</p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding: 0 40px 30px 40px; text-align: center; color: #334155;">
+                            <p style="font-size: 16px; margin: 0;">A continuación, le compartimos sus datos de acceso al evento:</p>
                         </td>
                     </tr>
 
@@ -80,26 +53,45 @@
                                     Detalles del Participante
                                 </h3>
 
-                                <table width="100%" style="font-size: 14px; color: #334155;">
+                                <table width="100%" style="font-size: 14px; color: #334155; border-collapse: collapse;">
                                     <tr>
-                                        <td style="padding: 5px 0; color: #64748b; width: 40%;">Nombre Completo:</td>
-                                        <td style="padding: 5px 0; font-weight: 600;">
+                                        <td style="padding: 8px 0; color: #64748b; width: 50%;">Nombre Completo:</td>
+                                        <td style="padding: 8px 0; font-weight: 600; text-align: right;">
                                             {{ $inscripcion->persona->nombres ?? '' }}
                                             {{ $inscripcion->persona->apellido_paterno ?? '' }}
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td style="padding: 5px 0; color: #64748b;">
-                                            {{ $inscripcion->persona->tipoDocumento->name_es ?? 'Documento' }}:
+                                        <td style="padding: 8px 0; color: #64748b;">
+                                            Tipo de Documento:
                                         </td>
-                                        <td style="padding: 5px 0; font-weight: 600;">
+                                        <td style="padding: 8px 0; font-weight: 600; text-align: right;">
+                                            {{ $inscripcion->persona->tipoDocumento->name_es ?? 'Documento' }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px 0; color: #64748b;">
+                                            Número de Documento:
+                                        </td>
+                                        <td style="padding: 8px 0; font-weight: 600; text-align: right;">
                                             {{ $inscripcion->persona->documento ?? '' }}
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td style="padding: 5px 0; color: #64748b;">Teléfono:</td>
-                                        <td style="padding: 5px 0; font-weight: 600;">
-                                            {{ $inscripcion->persona->celular ?? '' }}
+                                        <td style="padding: 8px 0; color: #64748b;">Clave:</td>
+                                        <td style="padding: 8px 0; font-weight: 700; color: #001e3d; text-align: right;">
+                                            {{ $inscripcion->sie_password ?? '123456' }}
+                                        </td>
+                                    </tr>
+
+                                    {{-- BOTÓN DE INGRESO AL PORTAL --}}
+                                    <tr>
+                                        <td colspan="2" style="padding: 20px 10px 10px 10px; text-align: center;">
+                                            <p style="margin: 0 0 12px 0; font-size: 14px; color: #475569;">Puede ingresar a su cuenta utilizando el siguiente enlace:</p>
+                                            <a href="https://multiperfil.sistemasiimp.org.pe/"
+                                                style="display: inline-block; padding: 12px 22px; background-color: #f97316; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 600; border-radius: 8px;">
+                                                Ingresar al portal
+                                            </a>
                                         </td>
                                     </tr>
                                 </table>
@@ -107,70 +99,47 @@
                         </td>
                     </tr>
 
+                    {{-- SECCIÓN CÓDIGO QR --}}
+                    @if ($inscripcion->qr)
+                        <tr>
+                            <td style="padding: 0 40px 40px 40px; text-align: center;">
+                                <div
+                                    style="display: inline-block; padding: 20px; background-color: #ffffff; border: 2px solid #f1f5f9; border-radius: 16px;">
+                                    <p
+                                        style="margin: 0 0 10px 0; font-size: 12px; font-weight: bold; color: #64748b; text-transform: uppercase;">
+                                        Pase de Entrada / Código QR</p>
+                                    <img src="{{ $qr_url }}" alt="Código QR" width="160" height="160">
+                                </div>
+                            </td>
+                        </tr>
+                    @endif
 
                     {{-- CONTACTO --}}
                     <tr>
-                        <td style="padding: 0 40px 40px 40px;">
-                            <table width="100%" border="0" cellspacing="0" cellpadding="0"
-                                style="border-top: 1px solid #e2e8f0; padding-top: 25px; text-align: center;">
-
-                                <tr>
-                                    <td style="padding-bottom: 10px;">
-                                        <p style="color: #64748b; font-weight: 500; margin: 0; font-size: 13px;">
-                                            Para alojamiento con tarifas preferenciales:
-                                        </p>
-                                        <p style="margin: 5px 0 20px 0;">
-                                            <a href="mailto:reservas@iimp.org.pe"
-                                                style="color: #f97316; text-decoration: none; font-weight: bold; font-size: 14px; margin-right: 15px;">
-                                                <span style="font-size: 16px;">✉</span> reservas@iimp.org.pe
-                                            </a>
-                                            <a href="https://wa.me/51942797524" target="_blank"
-                                                style="color: #22c55e; text-decoration: none; font-weight: bold; font-size: 14px;">
-                                                <span style="font-size: 16px;">📱</span> +51 942 797 254 (Melisa Ramos)
-                                            </a>
-                                        </p>
-                                    </td>
-                                </tr>
-
-                                <tr>
-                                    <td style="padding-top: 10px; border-top: 1px dashed #f1f5f9;">
-                                        <p
-                                            style="color: #64748b; font-weight: 500; margin: 0; font-size: 13px; padding-top: 15px;">
-                                            Para cualquier consulta adicional, contáctenos:
-                                        </p>
-                                        <p style="margin: 5px 0 0 0;">
-                                            <a href="mailto:inscripciones.wmc@iimp.org.pe"
-                                                style="color: #f97316; text-decoration: none; font-weight: bold; font-size: 14px; margin-right: 15px;">
-                                                <span style="font-size: 16px;">✉</span> inscripciones@iimp.org.pe
-                                            </a>
-                                            <a href="https://wa.me/51951294314" target="_blank"
-                                                style="color: #22c55e; text-decoration: none; font-weight: bold; font-size: 14px;">
-                                                <span style="font-size: 16px;">📱</span> +51 951 294 314 (Helen Loaiza)
-                                            </a>
-                                        </p>
-                                    </td>
-                                </tr>
-
-                            </table>
+                        <td style="padding: 0 40px 40px 40px; text-align: center;">
+                            <p style="color: #64748b; font-size: 13px; margin: 0 0 10px 0;">Le recomendamos conservar esta información y no compartirla con terceros.</p>
+                            <p style="color: #64748b; font-size: 13px; margin: 10px 0 5px 0;">Para cualquier consulta adicional:</p>
+                            <p style="margin: 0;">
+                                <a href="mailto:inscripciones@iimp.org.pe" style="color: #f97316; text-decoration: none; font-weight: bold;">inscripciones@iimp.org.pe</a>
+                            </p>
                         </td>
                     </tr>
 
+                    {{-- PIE DE PÁGINA INTERNO --}}
                     <tr>
                         <td
                             style="padding: 0 40px 40px 40px; text-align: center; font-size: 13px; color: #94a3b8; line-height: 1.5;">
-                            <p>Gracias por ser parte de <strong>{{ config('app.event_name') }}</strong>.</p>
-                            <p style="margin-top: 15px; font-size: 11px; color: #cbd5e1;">Este es un mensaje
-                                automático.
-                                Por favor, no responda a este correo. Si tiene alguna pregunta, póngase en contacto con
-                                nuestro equipo de soporte.</p>
+                            <p style="margin: 0;">Gracias por ser parte de <strong>{{ config('app.event_name', 'PROEXPLO 2026') }}</strong>.</p>
+                            <p style="margin-top: 15px; font-size: 11px; color: #cbd5e1;">Este es un mensaje automático. Por favor, no responda a este correo.</p>
                         </td>
                     </tr>
                 </table>
 
+                {{-- COPYRIGHT EXTERNO --}}
                 <table width="100%" style="max-width: 600px; margin-top: 20px; text-align: center;">
                     <tr>
                         <td style="font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">
-                            &copy; {{ date('Y') }} {{ config('app.event_name') }}. Todos los derechos reservados.
+                            &copy; {{ date('Y') }} {{ config('app.event_name', 'PROEXPLO') }}. Todos los derechos reservados.
                         </td>
                     </tr>
                 </table>

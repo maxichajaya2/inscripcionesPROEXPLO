@@ -32,7 +32,6 @@ class PersonalMontajeImport implements ToCollection, WithHeadingRow
                 DB::connection('pgsql_second')->table('personal_montaje')
                     ->where('id', $registroExistente->id)
                     ->update([
-                        // Agregamos tipo_documento aquí
                         'tipo_documento' => $row['tipo_documento'] ?? $registroExistente->tipo_documento,
                         'nombres' => $row['nombres'] ?? $registroExistente->nombres,
                         'apellidos' => $row['apellidos'] ?? $registroExistente->apellidos,
@@ -40,12 +39,14 @@ class PersonalMontajeImport implements ToCollection, WithHeadingRow
                         'cargo' => $row['cargo'] ?? $registroExistente->cargo,
                         'ruc_empresa' => $row['ruc_empresa'] ?? $registroExistente->ruc_empresa,
                         'nombre_empresa' => $row['nombre_empresa'] ?? $registroExistente->nombre_empresa,
+                        // Añadimos la actualización de aseguradora y poliza
+                        'aseguradora' => $row['aseguradora'] ?? $registroExistente->aseguradora,
+                        'poliza' => $row['poliza'] ?? $registroExistente->poliza,
                         'updated_at' => Carbon::now(),
                     ]);
             } else {
                 // 4. SI NO EXISTE: Lo insertamos como nuevo
                 DB::connection('pgsql_second')->table('personal_montaje')->insert([
-                    // Agregamos tipo_documento aquí (con 'DNI' como valor por defecto si viene vacío)
                     'tipo_documento' => $row['tipo_documento'] ?? 'DNI',
                     'documento' => $row['documento'],
                     'nombres' => $row['nombres'] ?? 'SIN NOMBRE',
@@ -54,6 +55,9 @@ class PersonalMontajeImport implements ToCollection, WithHeadingRow
                     'cargo' => $row['cargo'] ?? null,
                     'ruc_empresa' => $row['ruc_empresa'] ?? '00000000000',
                     'nombre_empresa' => $row['nombre_empresa'] ?? 'SIN EMPRESA',
+                    // Añadimos la inserción de aseguradora y poliza
+                    'aseguradora' => $row['aseguradora'] ?? null,
+                    'poliza' => $row['poliza'] ?? null,
                     'codigo_qr' => 'PROX26-' . strtoupper(Str::random(6)),
                     'autorizado' => true,
                     'motivo_bloqueo' => null,

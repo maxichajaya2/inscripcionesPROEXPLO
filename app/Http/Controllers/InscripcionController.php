@@ -894,16 +894,15 @@ class InscripcionController extends Controller
             if (isset($service_wmc->Response) && $service_wmc->Response->Status === true) {
                 $inscripcion->qr = (string)$service_wmc->Response->QR;
                 $inscripcion->ws_status = true;
-                $inscripcion->envio_sie= true;
+                $inscripcion->envio_sie = true;
 
                 /** Credenciales Qr */
-                // $inscripcion->sie_password = (string)$service_wmc->Response->Password;
+                $inscripcion->sie_password = (string)$service_wmc->Response->Password;
 
-                //  Mail::to($persona->correo)->send(new \App\Mail\MailCredenciales($inscripcion, $niubiz));
-                // REGLA DE ORO: Solo guardamos el cupón de hospedaje si NO es sección viajes
                 // Y si el usuario realmente usó un cupón corporativo ($cupon no es null)
                 if ($inscripcion->id_categoria_inscripcion !== null) {
                     $inscripcion->cupon_viaje = (string)$service_wmc->Response->Codigo;
+                    Mail::to($persona->correo)->send(new \App\Mail\MailCredenciales($inscripcion, $niubiz));
                 } else {
                     $inscripcion->cupon_viaje = null; // Forzamos null en BD para viajes
                 }
