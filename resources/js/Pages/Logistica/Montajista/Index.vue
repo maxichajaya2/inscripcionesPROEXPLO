@@ -417,6 +417,20 @@ const closeHistorialModal = () => {
     document.body.style.overflow = 'auto';
 };
 
+// DESCARGA DE PLANTILLA
+// ==========================================
+const descargarPlantilla = () => {
+    // La ruta debe apuntar a la carpeta 'public' de tu proyecto Laravel
+    // Asegúrate de que el archivo esté físicamente en: public/documents/formato_montajistas.xlsx
+    const url = '/documents/formato_montajistas.xlsx';
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'formato_montajistas.xlsx');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
 
 const getInitials = (nombres, apellidos) => {
     return ((nombres?.[0] || '') + (apellidos?.[0] || '')).toUpperCase() || 'NN';
