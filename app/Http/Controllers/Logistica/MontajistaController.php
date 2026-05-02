@@ -18,6 +18,7 @@ class MontajistaController extends Controller
     {
         $personal_montaje = DB::connection($this->connection)
             ->table('personal_montaje')
+            ->whereNull('deleted_at')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -112,11 +113,18 @@ class MontajistaController extends Controller
 
     public function destroy($id)
     {
-        DB::connection($this->connection)->table('personal_historial_accesos')->where('personal_montaje_id', $id)->delete();
-        DB::connection($this->connection)->table('personal_montaje')->where('id', $id)->delete();
+        // Ya no borramos el historial, solo marcamos al trabajador como eliminado
+        DB::connection($this->connection)
+            ->table('personal_montaje')
+            ->where('id', $id)
+            ->update([
+                'deleted_at' => Carbon::now(),
+                'autorizado' => false, // Opcional: le quitamos el permiso por seguridad
+                'updated_at' => Carbon::now(),
+            ]);
+
         return redirect()->back();
     }
-
     // public function validar(Request $request)
     // {
     //     // Validamos que llegue el campo 'documento'
@@ -199,8 +207,11 @@ class MontajistaController extends Controller
         // 2. Buscamos a la persona
         $persona = DB::connection($this->connection)
             ->table('personal_montaje')
-            ->where('documento', $documento)
-            ->orWhere('codigo_qr', $documento)
+            ->where(function ($query) use ($documento) {
+                $query->where('documento', $documento)
+                    ->orWhere('codigo_qr', $documento);
+            })
+            ->whereNull('deleted_at') // <--- Solo si no está borrado
             ->first();
 
         if (!$persona) {
