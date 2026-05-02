@@ -34,6 +34,7 @@ class MontajistaController extends Controller
 
     public function store(Request $request)
     {
+        // 1. Añadimos aseguradora y poliza a la validación
         $request->validate([
             'documento' => 'required|string|max:15',
             'nombres' => 'required|string|max:100',
@@ -42,6 +43,8 @@ class MontajistaController extends Controller
             'cargo' => 'nullable|string|max:100',
             'ruc_empresa' => 'required|string|max:11',
             'nombre_empresa' => 'required|string|max:255',
+            'aseguradora' => 'nullable|string|max:255', // NUEVO
+            'poliza' => 'nullable|string|max:255', // NUEVO
             'codigo_qr' => ['required', 'string', 'max:100', Rule::unique('pgsql_second.personal_montaje', 'codigo_qr')],
             'autorizado' => 'required|boolean',
             'motivo_bloqueo' => 'nullable|string|max:255',
@@ -55,8 +58,11 @@ class MontajistaController extends Controller
             'cargo' => $request->cargo,
             'ruc_empresa' => $request->ruc_empresa,
             'nombre_empresa' => $request->nombre_empresa,
+            'aseguradora' => $request->aseguradora, // NUEVO
+            'poliza' => $request->poliza, // NUEVO
             'codigo_qr' => $request->codigo_qr,
             'autorizado' => $request->autorizado,
+            // Si está autorizado, forzamos el motivo a null en la DB por seguridad
             'motivo_bloqueo' => $request->autorizado ? null : $request->motivo_bloqueo,
             'estado_presencia' => 'Afuera',
             'created_at' => Carbon::now(),
@@ -68,6 +74,7 @@ class MontajistaController extends Controller
 
     public function update(Request $request, $id)
     {
+        // 1. Añadimos aseguradora y poliza a la validación
         $request->validate([
             'documento' => 'required|string|max:15',
             'nombres' => 'required|string|max:100',
@@ -76,6 +83,8 @@ class MontajistaController extends Controller
             'cargo' => 'nullable|string|max:100',
             'ruc_empresa' => 'required|string|max:11',
             'nombre_empresa' => 'required|string|max:255',
+            'aseguradora' => 'nullable|string|max:255', // NUEVO
+            'poliza' => 'nullable|string|max:255', // NUEVO
             'codigo_qr' => 'required|string|max:100|unique:pgsql_second.personal_montaje,codigo_qr,' . $id,
             'autorizado' => 'required|boolean',
             'motivo_bloqueo' => 'nullable|string|max:255',
@@ -89,8 +98,11 @@ class MontajistaController extends Controller
             'cargo' => $request->cargo,
             'ruc_empresa' => $request->ruc_empresa,
             'nombre_empresa' => $request->nombre_empresa,
+            'aseguradora' => $request->aseguradora, // NUEVO
+            'poliza' => $request->poliza, // NUEVO
             'codigo_qr' => $request->codigo_qr,
             'autorizado' => $request->autorizado,
+            // Si está autorizado, forzamos el motivo a null en la DB por seguridad
             'motivo_bloqueo' => $request->autorizado ? null : $request->motivo_bloqueo,
             'updated_at' => Carbon::now(),
         ]);
@@ -119,73 +131,13 @@ class MontajistaController extends Controller
             ->where('id', $id)
             ->update([
                 'deleted_at' => Carbon::now(),
-                'autorizado' => false, // Opcional: le quitamos el permiso por seguridad
+                'autorizado' => false, // Al eliminar, por seguridad se bloquea el acceso
+                'motivo_bloqueo' => 'Trabajador eliminado del sistema', // Dejamos rastro del bloqueo
                 'updated_at' => Carbon::now(),
             ]);
 
         return redirect()->back();
     }
-    // public function validar(Request $request)
-    // {
-    //     // Validamos que llegue el campo 'documento'
-    //     $request->validate(['documento' => 'required|string']);
-    //     $documento = $request->documento;
-
-    //     // Caso Maestro (Pase de Emergencia)
-    //     if ($documento === 'PROX26-MASTER') {
-    //         return response()->json([
-    //             'status' => 'success',
-    //             'color' => 'bg-fuchsia-600',
-    //             'titulo' => 'ACCESO MAESTRO',
-    //             'mensaje' => 'Pase de Emergencia Autorizado.',
-    //             'persona' => ['nombres' => 'ADMIN', 'apellidos' => 'MASTER', 'nombre_empresa' => 'ORGANIZACIÓN', 'documento' => 'MASTER']
-    //         ]);
-    //     }
-
-    //     // Buscamos a la persona por DNI o por Código QR
-    //     $persona = DB::connection($this->connection)
-    //         ->table('personal_montaje')
-    //         ->where('documento', $documento)
-    //         ->orWhere('codigo_qr', $documento)
-    //         ->first();
-
-    //     if (!$persona) {
-    //         return response()->json([
-    //             'status' => 'error',
-    //             'color' => 'bg-red-600',
-    //             'titulo' => 'NO ENCONTRADO',
-    //             'mensaje' => 'El documento o código no existe en el sistema.',
-    //         ]);
-    //     }
-
-    //     if (!$persona->autorizado) {
-    //         return response()->json([
-    //             'status' => 'error',
-    //             'color' => 'bg-slate-800', // Este es el único plomo/oscuro intencional
-    //             'titulo' => 'ACCESO BLOQUEADO',
-    //             'mensaje' => $persona->motivo_bloqueo ?? 'No autorizado por seguridad.',
-    //             'persona' => $persona
-    //         ]);
-    //     }
-
-    //     // Lógica de Toggle Adentro/Afuera (Manejando NULL para usuarios nuevos)
-    //     $esEntrada = in_array($persona->estado_presencia, ['Afuera', null, '']);
-    //     $nuevoEstado = $esEntrada ? 'Adentro' : 'Afuera';
-
-    //     DB::connection($this->connection)->table('personal_montaje')->where('id', $persona->id)->update([
-    //         'estado_presencia' => $nuevoEstado,
-    //         'updated_at' => \Carbon\Carbon::now()
-    //     ]);
-
-    //     return response()->json([
-    //         'status' => 'success',
-    //         'color' => $esEntrada ? 'bg-emerald-600' : 'bg-blue-600',
-    //         'titulo' => $esEntrada ? 'PASE CORRECTO' : 'SALIDA REGISTRADA',
-    //         'mensaje' => $esEntrada ? 'Bienvenido al recinto.' : 'Regrese pronto.',
-    //         'persona' => $persona
-    //     ]);
-    // }
-
 
     public function validar(Request $request)
     {
@@ -298,26 +250,6 @@ class MontajistaController extends Controller
             return redirect()->back()->withErrors(['error_importacion' => 'El archivo está vacío o no tiene el formato correcto.']);
         }
     }
-
-
-    // public function togglePresencia(Request $request, $id)
-    // {
-    //     // El dd() rompe a Inertia, por eso lo quitamos
-
-    //     $request->validate([
-    //         'estado_presencia' => 'required|in:Adentro,Afuera' // <-- Corregido a Afuera
-    //     ]);
-
-    //     DB::connection($this->connection)
-    //         ->table('personal_montaje')
-    //         ->where('id', $id)
-    //         ->update([
-    //             'estado_presencia' => $request->estado_presencia,
-    //             'updated_at' => Carbon::now(),
-    //         ]);
-
-    //     return back();
-    // }
 
     public function togglePresencia(Request $request, $id)
     {

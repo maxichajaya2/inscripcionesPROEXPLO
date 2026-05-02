@@ -272,7 +272,6 @@ const enviarQRsSeleccionados = () => {
     });
 };
 
-// Añade esto a tu lógica de acciones
 const imprimirQR = (persona) => {
     const urlQR = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${persona.codigo_qr}`;
 
@@ -327,9 +326,7 @@ const handleFileUpload = (event) => {
             event.target.value = '';
         },
         onError: (errors) => {
-            // AQUÍ ESTÁ LA MAGIA: Leemos el error exacto que nos manda Laravel
             const mensajeExacto = errors.archivo || errors.error_importacion || 'Hubo un error con el archivo.';
-
             displayToast(mensajeExacto, 'error');
             console.error("Detalle del error del servidor:", errors);
             event.target.value = '';
@@ -344,7 +341,6 @@ const handleFileUpload = (event) => {
 // ==========================================
 // CAMBIO MANUAL DE PRESENCIA (INGRESO/SALIDA)
 // ==========================================
-// Guardará el ID de la persona que está cargando
 const processingId = ref(null);
 
 const togglePresencia = (persona) => {
@@ -357,9 +353,7 @@ const togglePresencia = (persona) => {
     const nuevoEstado = estadoActual === 'Adentro' ? 'Afuera' : 'Adentro';
     const accionTexto = estadoActual === 'Adentro' ? 'registrar la SALIDA' : 'registrar el INGRESO';
 
-    // Abrimos el modal de confirmación antes de hacer la petición
     openConfirm(`¿Estás seguro de ${accionTexto} manual de ${persona.nombres}?`, () => {
-        // 1. Activamos el spinner para ESTA persona específica
         processingId.value = persona.id;
 
         router.patch(route('personal-montaje.toggle-presencia', persona.id), {
@@ -374,7 +368,6 @@ const togglePresencia = (persona) => {
                 displayToast('Hubo un error al cambiar el estado.', 'error');
             },
             onFinish: () => {
-                // 2. Apagamos el spinner cuando la petición termine
                 processingId.value = null;
             }
         });
@@ -394,8 +387,7 @@ const openHistorial = (persona) => {
     loadingHistorial.value = true;
     document.body.style.overflow = 'hidden';
 
-    // Petición al servidor para obtener el historial de este ID
-    // Asumiendo que crearás esta ruta en Laravel
+    // Asumiendo que usas axios para esto
     axios.get(route('personal-montaje.historial-especifico', persona.id))
         .then(response => {
             historialData.value = response.data;
@@ -420,10 +412,7 @@ const closeHistorialModal = () => {
 // DESCARGA DE PLANTILLA
 // ==========================================
 const descargarPlantilla = () => {
-    // La ruta debe apuntar a la carpeta 'public' de tu proyecto Laravel
-    // Asegúrate de que el archivo esté físicamente en: public/documents/formato_montajistas.xlsx
     const url = '/documents/formato_montajistas.xlsx';
-
     const link = document.createElement('a');
     link.href = url;
     link.setAttribute('download', 'formato_montajistas.xlsx');
@@ -461,10 +450,9 @@ const getInitials = (nombres, apellidos) => {
                     <p class="text-sm text-slate-500 mt-1 pl-12">Gestiona ingresos, autorizaciones y fotochecks.</p>
                 </div>
 
-                <!-- Controles Responsivos (Buscador + Botones) -->
+                <!-- Controles Responsivos -->
                 <div class="flex flex-col md:flex-row items-center gap-3 w-full xl:w-auto">
 
-                    <!-- Buscador Frontend (Ocupa todo el ancho en móvil, ancho fijo en PC) -->
                     <div class="relative w-full md:w-64 lg:w-72 flex-shrink-0">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -476,7 +464,6 @@ const getInitials = (nombres, apellidos) => {
                             class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all text-sm outline-none text-slate-700 placeholder-slate-400" />
                     </div>
 
-                    <!-- Botones en Grid (1 columna en celular, 3 columnas en tablet/pc) -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full md:w-auto">
 
                         <!-- Botón Escáner -->
@@ -500,7 +487,6 @@ const getInitials = (nombres, apellidos) => {
                             <span class="whitespace-nowrap">Registrar</span>
                         </button>
 
-                        <!-- Input Oculto para archivo -->
                         <input type="file" ref="fileInput" class="hidden"
                             accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
                             @change="handleFileUpload">
@@ -553,8 +539,7 @@ const getInitials = (nombres, apellidos) => {
                 leave-to-class="opacity-0 -translate-y-full">
                 <div v-if="selectedItems.length > 0"
                     class="absolute top-0 inset-x-0 bg-blue-600 px-6 py-3 flex items-center justify-between z-20 shadow-md">
-                    <span class="text-white font-bold text-sm">{{ selectedItems.length }} trabajadores
-                        seleccionados</span>
+                    <span class="text-white font-bold text-sm">{{ selectedItems.length }} trabajadores seleccionados</span>
                     <button @click="enviarQRsSeleccionados" :disabled="isSending"
                         class="bg-white text-blue-600 px-4 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider hover:bg-blue-50 transition-colors shadow-sm">
                         Enviar Fotochecks QR
@@ -571,27 +556,13 @@ const getInitials = (nombres, apellidos) => {
                                     :disabled="paginatedPersonal.filter(p => p.autorizado).length === 0"
                                     class="rounded border-slate-300 text-orange-600 focus:ring-orange-500 w-4 h-4 cursor-pointer disabled:opacity-50">
                             </th>
-                            <th
-                                class="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                Trabajador</th>
-                            <th
-                                class="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                Documento / Cargo</th>
-                            <th
-                                class="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                Empresa</th>
-                            <th
-                                class="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                Seguridad</th>
-                            <th
-                                class="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                Estado</th>
-                            <th
-                                class="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                Código QR / Pase</th>
-                            <th
-                                class="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                Acciones</th>
+                            <th class="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Trabajador</th>
+                            <th class="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Documento / Cargo</th>
+                            <th class="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Empresa</th>
+                            <th class="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">Seguridad</th>
+                            <th class="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">Estado</th>
+                            <th class="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Código QR / Pase</th>
+                            <th class="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 bg-white">
@@ -613,10 +584,8 @@ const getInitials = (nombres, apellidos) => {
                                         {{ getInitials(persona.nombres, persona.apellidos) }}
                                     </div>
                                     <div class="flex flex-col">
-                                        <span class="text-sm font-bold text-slate-900">{{ persona.nombres }} {{
-                                            persona.apellidos }}</span>
-                                        <span class="text-[11px] font-medium text-slate-500">{{ persona.correo ||
-                                            'Sin correo' }}</span>
+                                        <span class="text-sm font-bold text-slate-900">{{ persona.nombres }} {{ persona.apellidos }}</span>
+                                        <span class="text-[11px] font-medium text-slate-500">{{ persona.correo || 'Sin correo' }}</span>
                                     </div>
                                 </div>
                             </td>
@@ -632,10 +601,8 @@ const getInitials = (nombres, apellidos) => {
                             <!-- Empresa y SCTR -->
                             <td class="px-6 py-4">
                                 <div class="flex flex-col">
-                                    <span class="text-sm font-bold text-orange-700">{{ persona.nombre_empresa
-                                        }}</span>
-                                    <span class="text-xs text-slate-500 font-mono mb-1">RUC: {{ persona.ruc_empresa
-                                        }}</span>
+                                    <span class="text-sm font-bold text-orange-700">{{ persona.nombre_empresa }}</span>
+                                    <span class="text-xs text-slate-500 font-mono mb-1">RUC: {{ persona.ruc_empresa }}</span>
 
                                     <!-- Indicador visual de Seguro -->
                                     <span v-if="persona.aseguradora"
@@ -660,28 +627,22 @@ const getInitials = (nombres, apellidos) => {
                                     class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm">
                                     <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                            d="M5 13l4 4L19 7" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                                     </svg>
                                     AUTORIZADO
                                 </span>
                                 <div v-else class="flex flex-col items-center group/tooltip relative">
-                                    <span
-                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold border border-rose-200 bg-rose-50 text-rose-700 shadow-sm cursor-help">
-                                        <svg class="w-3 h-3 text-rose-500" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                                d="M6 18L18 6M6 6l12 12" />
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold border border-rose-200 bg-rose-50 text-rose-700 shadow-sm cursor-help">
+                                        <svg class="w-3 h-3 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
                                         </svg>
                                         BLOQUEADO
                                     </span>
-                                    <span class="text-[10px] text-rose-500 mt-1 italic max-w-[120px] truncate"
-                                        :title="persona.motivo_bloqueo">{{ persona.motivo_bloqueo }}</span>
+                                    <span class="text-[10px] text-rose-500 mt-1 italic max-w-[120px] truncate" :title="persona.motivo_bloqueo">{{ persona.motivo_bloqueo }}</span>
                                 </div>
                             </td>
 
-                            <!-- Estado Presencia (AHORA ES CLICABLE PARA CAMBIO MANUAL) -->
-                            <!-- Estado Presencia (AHORA ES CLICABLE CON SPINNER) -->
+                            <!-- Estado Presencia -->
                             <td class="px-6 py-4 text-center">
                                 <button @click="togglePresencia(persona)" :disabled="processingId === persona.id"
                                     title="Clic para cambiar ingreso/salida manualmente"
@@ -706,29 +667,24 @@ const getInitials = (nombres, apellidos) => {
                                     <!-- ESTADO NORMAL -->
                                     <template v-else>
                                         {{ (persona.estado_presencia || 'AFUERA').toUpperCase() }}
-                                        <!-- Icono de flechas que aparece al pasar el mouse -->
                                         <svg class="w-3 h-3 opacity-40 group-hover/btn:opacity-100 transition-opacity"
                                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                                         </svg>
                                     </template>
-
                                 </button>
                             </td>
 
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
-                                    <!-- Miniatura del QR -->
                                     <div class="h-12 w-12 bg-white border border-slate-200 rounded-lg p-1 shadow-sm flex-shrink-0 group-hover:scale-110 transition-transform cursor-pointer"
                                         @click="imprimirQR(persona)">
-                                        <img :src="`https://api.qrserver.com/v1/create-qr-code/?size=50x50&data=${persona.codigo_qr}`"
-                                            alt="QR">
+                                        <img :src="`https://api.qrserver.com/v1/create-qr-code/?size=50x50&data=${persona.codigo_qr}`" alt="QR">
                                     </div>
 
                                     <div class="flex flex-col">
-                                        <span
-                                            class="text-[10px] font-mono font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded w-fit">
+                                        <span class="text-[10px] font-mono font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded w-fit">
                                             {{ persona.codigo_qr }}
                                         </span>
                                         <button @click="imprimirQR(persona)"
@@ -746,14 +702,6 @@ const getInitials = (nombres, apellidos) => {
                             <!-- Acciones -->
                             <td class="px-6 py-4 text-center">
                                 <div class="flex items-center justify-center gap-2">
-                                    <!-- <button @click="openDetails(persona)"
-                                        class="p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all shadow-sm"><svg
-                                            class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                        </svg></button> -->
                                     <button @click="openEditModal(persona)"
                                         class="p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all shadow-sm"><svg
                                             class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -766,7 +714,6 @@ const getInitials = (nombres, apellidos) => {
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg></button>
-
                                     <button @click="openHistorial(persona)"
                                         class="p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-orange-600 hover:bg-orange-50 transition-all shadow-sm"
                                         title="Ver historial de accesos">
@@ -800,10 +747,8 @@ const getInitials = (nombres, apellidos) => {
             <div v-if="filteredPersonal.length > 0"
                 class="px-6 py-4 border-t border-slate-200 flex items-center justify-between bg-slate-50">
                 <span class="text-xs text-slate-500 font-medium">
-                    Mostrando <span class="font-black text-slate-700">{{ ((currentPage - 1) * itemsPerPage) + 1
-                        }}</span> al
-                    <span class="font-black text-slate-700">{{ Math.min(currentPage * itemsPerPage,
-                        filteredPersonal.length) }}</span>
+                    Mostrando <span class="font-black text-slate-700">{{ ((currentPage - 1) * itemsPerPage) + 1 }}</span> al
+                    <span class="font-black text-slate-700">{{ Math.min(currentPage * itemsPerPage, filteredPersonal.length) }}</span>
                     de <span class="font-black text-slate-700">{{ filteredPersonal.length }}</span> registros
                 </span>
 
@@ -813,26 +758,14 @@ const getInitials = (nombres, apellidos) => {
                         Anterior
                     </button>
 
-                    <!-- Páginas -->
-                    <!-- <div class="flex gap-1 hidden sm:flex">
-                        <button v-for="page in totalPages" :key="page" @click="currentPage = page"
-                            :class="currentPage === page ? 'bg-orange-600 text-white border-orange-600 shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
-                            class="w-8 h-8 rounded-lg border text-xs font-black flex items-center justify-center transition-colors">
-                            {{ page }}
-                        </button>
-                    </div> -->
-
                     <div class="flex gap-1 hidden sm:flex">
                         <template v-for="page in displayedPages" :key="page">
-                            <!-- Si es un número, mostrar botón -->
                             <button v-if="page !== '...'" @click="currentPage = page" :class="currentPage === page
                                 ? 'bg-orange-600 text-white border-orange-600 shadow-sm'
                                 : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
                                 class="w-8 h-8 rounded-lg border text-xs font-black flex items-center justify-center transition-colors">
                                 {{ page }}
                             </button>
-
-                            <!-- Si son puntos suspensivos, mostrar texto plano -->
                             <span v-else class="w-8 h-8 flex items-center justify-center text-slate-400 font-bold">
                                 ...
                             </span>
@@ -885,63 +818,64 @@ const getInitials = (nombres, apellidos) => {
                                     </div>
 
                                     <div class="p-6 space-y-6">
-                                        <!-- Card Seguridad -->
+                                        <!-- Card Seguridad PRINCIPAL (Arriba) -->
+                                        <!-- ========== AQUI ESTA EL CAMBIO SOLICITADO ========== -->
                                         <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
                                             <div class="flex items-center justify-between mb-4">
                                                 <div>
-                                                    <span class="text-xs font-black text-slate-900 uppercase">Aprobación
-                                                        de Seguridad (SST)</span>
-                                                    <p class="text-[11px] text-slate-500">Determina si la persona puede
-                                                        cruzar los molinetes.</p>
+                                                    <span class="text-xs font-black text-slate-900 uppercase">Aprobación de Seguridad (SST)</span>
+                                                    <p class="text-[11px] text-slate-500">Determina si la persona puede cruzar los molinetes.</p>
                                                 </div>
-                                                <button type="button" @click="form.autorizado = !form.autorizado"
-                                                    :class="form.autorizado ? 'bg-emerald-500' : 'bg-rose-500'"
-                                                    class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none shadow-inner">
-                                                    <span :class="form.autorizado ? 'translate-x-5' : 'translate-x-0'"
-                                                        class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200"></span>
-                                                </button>
+                                                <div class="flex items-center gap-3">
+                                                    <!-- TEXTO DINÁMICO AUTORIZADO/BLOQUEADO -->
+                                                    <span class="text-[11px] font-black uppercase tracking-wider"
+                                                        :class="form.autorizado ? 'text-emerald-600' : 'text-rose-600'">
+                                                        {{ form.autorizado ? 'AUTORIZADO' : 'BLOQUEADO' }}
+                                                    </span>
+                                                    <!-- BOTÓN SWITCH -->
+                                                    <button type="button" @click="form.autorizado = !form.autorizado"
+                                                        :class="form.autorizado ? 'bg-emerald-500' : 'bg-rose-500'"
+                                                        class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none shadow-inner">
+                                                        <span :class="form.autorizado ? 'translate-x-5' : 'translate-x-0'"
+                                                            class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200"></span>
+                                                    </button>
+                                                </div>
                                             </div>
+
+                                            <!-- INPUT MOTIVO (Solo visible si esta bloqueado) -->
                                             <div v-if="!form.autorizado" class="mt-3">
-                                                <label
-                                                    class="block text-xs font-bold text-rose-700 uppercase mb-1">Motivo
-                                                    del Bloqueo <span class="text-rose-500">*</span></label>
+                                                <label class="block text-xs font-bold text-rose-700 uppercase mb-1">Motivo del Bloqueo <span class="text-rose-500">*</span></label>
                                                 <input v-model="form.motivo_bloqueo" type="text"
                                                     class="w-full px-4 py-2 border border-rose-300 bg-rose-50 rounded-lg focus:ring-rose-500 focus:border-rose-500 text-sm placeholder-rose-300 text-rose-900"
                                                     placeholder="Ej. Falta SCTR, Charla pendiente...">
                                             </div>
                                         </div>
+                                        <!-- ==================================================== -->
 
                                         <!-- Grid Datos -->
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                             <!-- Datos Personales -->
                                             <div class="space-y-4">
-                                                <h4
-                                                    class="text-xs font-black text-orange-600 uppercase tracking-widest border-b border-slate-100 pb-1">
+                                                <h4 class="text-xs font-black text-orange-600 uppercase tracking-widest border-b border-slate-100 pb-1">
                                                     Datos Personales</h4>
                                                 <div class="grid grid-cols-2 gap-4">
                                                     <div class="col-span-2">
-                                                        <label
-                                                            class="block text-xs font-bold text-slate-700 uppercase mb-1">DNI
-                                                            / Carnet</label>
+                                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">DNI / Carnet</label>
                                                         <input v-model="form.documento" type="text" required
                                                             class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 text-sm">
                                                     </div>
                                                     <div class="col-span-1">
-                                                        <label
-                                                            class="block text-xs font-bold text-slate-700 uppercase mb-1">Nombres</label>
+                                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nombres</label>
                                                         <input v-model="form.nombres" type="text" required
                                                             class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 text-sm">
                                                     </div>
                                                     <div class="col-span-1">
-                                                        <label
-                                                            class="block text-xs font-bold text-slate-700 uppercase mb-1">Apellidos</label>
+                                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Apellidos</label>
                                                         <input v-model="form.apellidos" type="text" required
                                                             class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 text-sm">
                                                     </div>
                                                     <div class="col-span-2">
-                                                        <label
-                                                            class="block text-xs font-bold text-slate-700 uppercase mb-1">Correo
-                                                            (Opcional - Envío QR)</label>
+                                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Correo (Opcional - Envío QR)</label>
                                                         <input v-model="form.correo" type="email"
                                                             class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 text-sm">
                                                     </div>
@@ -950,26 +884,21 @@ const getInitials = (nombres, apellidos) => {
 
                                             <!-- Datos Laborales y Seguro -->
                                             <div class="space-y-4">
-                                                <h4
-                                                    class="text-xs font-black text-orange-600 uppercase tracking-widest border-b border-slate-100 pb-1">
+                                                <h4 class="text-xs font-black text-orange-600 uppercase tracking-widest border-b border-slate-100 pb-1">
                                                     Datos Laborales y Seguro</h4>
                                                 <div>
-                                                    <label
-                                                        class="block text-xs font-bold text-slate-700 uppercase mb-1">Empresa
-                                                        Contratista</label>
+                                                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Empresa Contratista</label>
                                                     <input v-model="form.nombre_empresa" type="text" required
                                                         class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 text-sm">
                                                 </div>
                                                 <div class="grid grid-cols-2 gap-4">
                                                     <div>
-                                                        <label
-                                                            class="block text-xs font-bold text-slate-700 uppercase mb-1">RUC</label>
+                                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">RUC</label>
                                                         <input v-model="form.ruc_empresa" type="text" required
                                                             class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 text-sm">
                                                     </div>
                                                     <div>
-                                                        <label
-                                                            class="block text-xs font-bold text-slate-700 uppercase mb-1">Cargo</label>
+                                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Cargo</label>
                                                         <input v-model="form.cargo" type="text"
                                                             class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 text-sm placeholder-slate-400"
                                                             placeholder="Ej. Operario">
@@ -979,17 +908,13 @@ const getInitials = (nombres, apellidos) => {
                                                 <!-- NUEVOS CAMPOS: Aseguradora y Póliza -->
                                                 <div class="grid grid-cols-2 gap-4">
                                                     <div>
-                                                        <label
-                                                            class="block text-xs font-bold text-slate-700 uppercase mb-1">Aseguradora
-                                                            (SCTR)</label>
+                                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Aseguradora (SCTR)</label>
                                                         <input v-model="form.aseguradora" type="text"
                                                             class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 text-sm placeholder-slate-400"
                                                             placeholder="Ej. Rimac, Pacífico...">
                                                     </div>
                                                     <div>
-                                                        <label
-                                                            class="block text-xs font-bold text-slate-700 uppercase mb-1">N°
-                                                            Póliza</label>
+                                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">N° Póliza</label>
                                                         <input v-model="form.poliza" type="text"
                                                             class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 text-sm placeholder-slate-400"
                                                             placeholder="N° de documento">
@@ -997,12 +922,10 @@ const getInitials = (nombres, apellidos) => {
                                                 </div>
 
                                                 <div>
-                                                    <label
-                                                        class="block text-xs font-bold text-slate-700 uppercase mb-1 flex justify-between">
+                                                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1 flex justify-between">
                                                         Código Escáner (QR)
                                                         <button type="button" @click="generarCodigoQR"
-                                                            class="text-[10px] text-orange-600 hover:text-orange-800 underline">Generar
-                                                            Nuevo</button>
+                                                            class="text-[10px] text-orange-600 hover:text-orange-800 underline">Generar Nuevo</button>
                                                     </label>
                                                     <input v-model="form.codigo_qr" type="text" required
                                                         class="w-full px-4 py-2 bg-slate-100 border border-slate-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 font-mono text-sm text-slate-600">
@@ -1088,8 +1011,6 @@ const getInitials = (nombres, apellidos) => {
             </Transition>
         </Teleport>
 
-        <!-- OTROS MODALES (Progreso, Toast, Detalles, Confirmación) irían aquí usando la misma estructura que compartiste antes -->
-        <!-- (Mantenidos igual que en tu código original para no hacer el archivo excesivamente largo, solo actualizando las variables) -->
         <Transition enter-active-class="transform ease-out duration-300 transition"
             enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
             enter-to-class="translate-y-0 opacity-100 sm:translate-x-0"
@@ -1127,9 +1048,7 @@ const getInitials = (nombres, apellidos) => {
                             <div class="p-6 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
                                 <div>
                                     <h3 class="text-xl font-black text-slate-800">Estructura del Excel</h3>
-                                    <p class="text-xs text-slate-500">Asegúrate de que la primera fila contenga estos
-                                        nombres
-                                        exactos.</p>
+                                    <p class="text-xs text-slate-500">Asegúrate de que la primera fila contenga estos nombres exactos.</p>
                                 </div>
                                 <button @click="showHelpModal = false"
                                     class="text-slate-400 hover:text-slate-600 transition-colors">
@@ -1146,15 +1065,9 @@ const getInitials = (nombres, apellidos) => {
                                     <table class="min-w-full divide-y divide-slate-200 text-xs">
                                         <thead class="bg-slate-100">
                                             <tr>
-                                                <th
-                                                    class="px-4 py-3 text-left font-black text-slate-700 uppercase tracking-wider">
-                                                    Encabezado en Excel</th>
-                                                <th
-                                                    class="px-4 py-3 text-left font-black text-slate-700 uppercase tracking-wider">
-                                                    Obligatorio</th>
-                                                <th
-                                                    class="px-4 py-3 text-left font-black text-slate-700 uppercase tracking-wider">
-                                                    Ejemplo / Formato</th>
+                                                <th class="px-4 py-3 text-left font-black text-slate-700 uppercase tracking-wider">Encabezado en Excel</th>
+                                                <th class="px-4 py-3 text-left font-black text-slate-700 uppercase tracking-wider">Obligatorio</th>
+                                                <th class="px-4 py-3 text-left font-black text-slate-700 uppercase tracking-wider">Ejemplo / Formato</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-slate-100">
@@ -1198,10 +1111,8 @@ const getInitials = (nombres, apellidos) => {
                                                 <td class="px-4 py-2 text-slate-400">No</td>
                                                 <td class="px-4 py-2 text-slate-600">CONTRATISTA GENERAL SAC</td>
                                             </tr>
-                                            <!-- CAMPOS NUEVOS SCTR -->
                                             <tr class="bg-orange-50/50">
-                                                <td class="px-4 py-2 font-mono text-orange-700 font-bold">aseguradora
-                                                </td>
+                                                <td class="px-4 py-2 font-mono text-orange-700 font-bold">aseguradora</td>
                                                 <td class="px-4 py-2 text-slate-400">No</td>
                                                 <td class="px-4 py-2 text-slate-600">RIMAC / PACIFICO</td>
                                             </tr>
@@ -1215,8 +1126,7 @@ const getInitials = (nombres, apellidos) => {
                                 </div>
 
                                 <!-- Footer Info -->
-                                <div
-                                    class="flex flex-col md:flex-row gap-4 items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                <div class="flex flex-col md:flex-row gap-4 items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-200">
                                     <div class="flex items-center gap-3">
                                         <div class="p-2 bg-orange-100 rounded-lg">
                                             <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor"
@@ -1227,11 +1137,8 @@ const getInitials = (nombres, apellidos) => {
                                             </svg>
                                         </div>
                                         <p class="text-[11px] text-slate-600 leading-tight">
-                                            <span class="font-bold block text-slate-800">Nota sobre
-                                                Actualizaciones:</span>
-                                            Si el <span class="font-mono bg-slate-200 px-1">documento</span> ya existe
-                                            en el
-                                            sistema, los datos se <b>actualizarán</b> con la información del Excel.
+                                            <span class="font-bold block text-slate-800">Nota sobre Actualizaciones:</span>
+                                            Si el <span class="font-mono bg-slate-200 px-1">documento</span> ya existe en el sistema, los datos se <b>actualizarán</b> con la información del Excel.
                                         </p>
                                     </div>
                                     <button @click="descargarPlantilla"
@@ -1271,12 +1178,8 @@ const getInitials = (nombres, apellidos) => {
                                         </svg>
                                     </div>
                                     <div>
-                                        <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Historial
-                                            de
-                                            Accesos</h3>
-                                        <p class="text-[11px] text-slate-500 font-bold">{{ selectedPersona?.nombres }}
-                                            {{
-                                                selectedPersona?.apellidos }}</p>
+                                        <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Historial de Accesos</h3>
+                                        <p class="text-[11px] text-slate-500 font-bold">{{ selectedPersona?.nombres }} {{ selectedPersona?.apellidos }}</p>
                                     </div>
                                 </div>
                                 <button @click="closeHistorialModal" class="text-slate-400 hover:text-slate-600">
@@ -1310,16 +1213,12 @@ const getInitials = (nombres, apellidos) => {
 
                                         <div class="flex flex-col">
                                             <div class="flex justify-between items-center">
-                                                <span class="text-xs font-black text-slate-800 tracking-tight">{{
-                                                    log.tipo_movimiento }}</span>
-                                                <span class="text-[10px] font-mono font-bold text-slate-400">{{
-                                                    log.fecha_hora
-                                                }}</span>
+                                                <span class="text-xs font-black text-slate-800 tracking-tight">{{ log.tipo_movimiento }}</span>
+                                                <span class="text-[10px] font-mono font-bold text-slate-400">{{ log.fecha_hora }}</span>
                                             </div>
                                             <p class="text-[11px] text-slate-500 mt-0.5">Puerta: <span
                                                     class="text-slate-700 font-bold">{{ log.puerta_acceso }}</span></p>
-                                            <p class="text-[10px] text-slate-400 italic">Operador: {{
-                                                log.usuario_seguridad }}
+                                            <p class="text-[10px] text-slate-400 italic">Operador: {{ log.usuario_seguridad }}
                                             </p>
                                         </div>
                                     </div>
@@ -1327,9 +1226,7 @@ const getInitials = (nombres, apellidos) => {
 
                                 <!-- Sin Registros -->
                                 <div v-else class="py-12 text-center">
-                                    <p class="text-xs font-bold text-slate-400 uppercase">No hay movimientos registrados
-                                        aún.
-                                    </p>
+                                    <p class="text-xs font-bold text-slate-400 uppercase">No hay movimientos registrados aún.</p>
                                 </div>
                             </div>
 
