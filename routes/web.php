@@ -106,6 +106,8 @@ Route::get('/proveedores', [ProveedorController::class, 'index'])->name('proveed
 
     Route::patch('/personal-montaje/{id}/toggle-presencia', [MontajistaController::class, 'togglePresencia'])->name('personal-montaje.toggle-presencia');
 
+    Route::get('/historial-especifico/{id}', [MontajistaController::class, 'historialEspecifico'])->name('personal-montaje.historial-especifico');
+
 });
 
 Route::get('/', [InscripcionController::class, 'index'])->name('inscripcion.index');

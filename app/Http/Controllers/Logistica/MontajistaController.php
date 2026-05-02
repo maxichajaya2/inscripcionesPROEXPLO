@@ -97,6 +97,19 @@ class MontajistaController extends Controller
         return redirect()->back();
     }
 
+    public function historialEspecifico($id)
+    {
+        // Buscamos los logs de la tabla historial_accesos para este personal_id
+        $logs = DB::connection($this->connection)
+            ->table('historial_accesos')
+            ->where('personal_id', $id)
+            ->orderBy('fecha_hora', 'desc')
+            ->get();
+
+        return response()->json($logs);
+    }
+
+
     public function destroy($id)
     {
         DB::connection($this->connection)->table('personal_historial_accesos')->where('personal_montaje_id', $id)->delete();
@@ -104,9 +117,71 @@ class MontajistaController extends Controller
         return redirect()->back();
     }
 
+    // public function validar(Request $request)
+    // {
+    //     // Validamos que llegue el campo 'documento'
+    //     $request->validate(['documento' => 'required|string']);
+    //     $documento = $request->documento;
+
+    //     // Caso Maestro (Pase de Emergencia)
+    //     if ($documento === 'PROX26-MASTER') {
+    //         return response()->json([
+    //             'status' => 'success',
+    //             'color' => 'bg-fuchsia-600',
+    //             'titulo' => 'ACCESO MAESTRO',
+    //             'mensaje' => 'Pase de Emergencia Autorizado.',
+    //             'persona' => ['nombres' => 'ADMIN', 'apellidos' => 'MASTER', 'nombre_empresa' => 'ORGANIZACIÓN', 'documento' => 'MASTER']
+    //         ]);
+    //     }
+
+    //     // Buscamos a la persona por DNI o por Código QR
+    //     $persona = DB::connection($this->connection)
+    //         ->table('personal_montaje')
+    //         ->where('documento', $documento)
+    //         ->orWhere('codigo_qr', $documento)
+    //         ->first();
+
+    //     if (!$persona) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'color' => 'bg-red-600',
+    //             'titulo' => 'NO ENCONTRADO',
+    //             'mensaje' => 'El documento o código no existe en el sistema.',
+    //         ]);
+    //     }
+
+    //     if (!$persona->autorizado) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'color' => 'bg-slate-800', // Este es el único plomo/oscuro intencional
+    //             'titulo' => 'ACCESO BLOQUEADO',
+    //             'mensaje' => $persona->motivo_bloqueo ?? 'No autorizado por seguridad.',
+    //             'persona' => $persona
+    //         ]);
+    //     }
+
+    //     // Lógica de Toggle Adentro/Afuera (Manejando NULL para usuarios nuevos)
+    //     $esEntrada = in_array($persona->estado_presencia, ['Afuera', null, '']);
+    //     $nuevoEstado = $esEntrada ? 'Adentro' : 'Afuera';
+
+    //     DB::connection($this->connection)->table('personal_montaje')->where('id', $persona->id)->update([
+    //         'estado_presencia' => $nuevoEstado,
+    //         'updated_at' => \Carbon\Carbon::now()
+    //     ]);
+
+    //     return response()->json([
+    //         'status' => 'success',
+    //         'color' => $esEntrada ? 'bg-emerald-600' : 'bg-blue-600',
+    //         'titulo' => $esEntrada ? 'PASE CORRECTO' : 'SALIDA REGISTRADA',
+    //         'mensaje' => $esEntrada ? 'Bienvenido al recinto.' : 'Regrese pronto.',
+    //         'persona' => $persona
+    //     ]);
+    // }
+
+
     public function validar(Request $request)
     {
-        // Validamos que llegue el campo 'documento'
+        // 1. Validamos la entrada
         $request->validate(['documento' => 'required|string']);
         $documento = $request->documento;
 
@@ -121,7 +196,7 @@ class MontajistaController extends Controller
             ]);
         }
 
-        // Buscamos a la persona por DNI o por Código QR
+        // 2. Buscamos a la persona
         $persona = DB::connection($this->connection)
             ->table('personal_montaje')
             ->where('documento', $documento)
@@ -137,24 +212,46 @@ class MontajistaController extends Controller
             ]);
         }
 
+        // 3. Verificamos autorización
         if (!$persona->autorizado) {
             return response()->json([
                 'status' => 'error',
-                'color' => 'bg-slate-800', // Este es el único plomo/oscuro intencional
+                'color' => 'bg-slate-800',
                 'titulo' => 'ACCESO BLOQUEADO',
                 'mensaje' => $persona->motivo_bloqueo ?? 'No autorizado por seguridad.',
                 'persona' => $persona
             ]);
         }
 
-        // Lógica de Toggle Adentro/Afuera (Manejando NULL para usuarios nuevos)
+        // 4. Lógica de Historial e Intercambio de Estado
         $esEntrada = in_array($persona->estado_presencia, ['Afuera', null, '']);
         $nuevoEstado = $esEntrada ? 'Adentro' : 'Afuera';
+        $movimiento = $esEntrada ? 'INGRESO' : 'SALIDA';
 
-        DB::connection($this->connection)->table('personal_montaje')->where('id', $persona->id)->update([
-            'estado_presencia' => $nuevoEstado,
-            'updated_at' => \Carbon\Carbon::now()
-        ]);
+        // Iniciamos una transacción para asegurar que ambos inserts ocurran o ninguno
+        DB::connection($this->connection)->transaction(function () use ($persona, $nuevoEstado, $movimiento) {
+            // Actualizar estado en tabla principal
+            DB::connection($this->connection)
+                ->table('personal_montaje')
+                ->where('id', $persona->id)
+                ->update([
+                    'estado_presencia' => $nuevoEstado,
+                    'updated_at' => Carbon::now()
+                ]);
+
+            // Insertar en historial_accesos (Nombres de columnas según tu imagen)
+            DB::connection($this->connection)
+                ->table('historial_accesos')
+                ->insert([
+                    'personal_id'      => $persona->id,
+                    'tipo_movimiento'  => $movimiento,
+                    'fecha_hora'       => Carbon::now(),
+                    'puerta_acceso'    => 'SCANNER_PRINCIPAL',
+                    'usuario_seguridad' => auth()->user()->name ?? 'SISTEMA_AUTO',
+                    'acceso_concedido' => true,
+                    'notas'            => 'Validación mediante terminal de escaneo'
+                ]);
+        });
 
         return response()->json([
             'status' => 'success',
@@ -192,21 +289,57 @@ class MontajistaController extends Controller
     }
 
 
-   public function togglePresencia(Request $request, $id)
-    {
-        // El dd() rompe a Inertia, por eso lo quitamos
+    // public function togglePresencia(Request $request, $id)
+    // {
+    //     // El dd() rompe a Inertia, por eso lo quitamos
 
+    //     $request->validate([
+    //         'estado_presencia' => 'required|in:Adentro,Afuera' // <-- Corregido a Afuera
+    //     ]);
+
+    //     DB::connection($this->connection)
+    //         ->table('personal_montaje')
+    //         ->where('id', $id)
+    //         ->update([
+    //             'estado_presencia' => $request->estado_presencia,
+    //             'updated_at' => Carbon::now(),
+    //         ]);
+
+    //     return back();
+    // }
+
+    public function togglePresencia(Request $request, $id)
+    {
         $request->validate([
-            'estado_presencia' => 'required|in:Adentro,Afuera' // <-- Corregido a Afuera
+            'estado_presencia' => 'required|in:Adentro,Afuera'
         ]);
 
-        DB::connection($this->connection)
-            ->table('personal_montaje')
-            ->where('id', $id)
-            ->update([
-                'estado_presencia' => $request->estado_presencia,
-                'updated_at' => Carbon::now(),
-            ]);
+        $nuevoEstado = $request->estado_presencia;
+        $movimiento = ($nuevoEstado === 'Adentro') ? 'INGRESO' : 'SALIDA';
+
+        DB::connection($this->connection)->transaction(function () use ($id, $nuevoEstado, $movimiento) {
+            // 1. Actualizar tabla principal
+            DB::connection($this->connection)
+                ->table('personal_montaje')
+                ->where('id', $id)
+                ->update([
+                    'estado_presencia' => $nuevoEstado,
+                    'updated_at' => Carbon::now(),
+                ]);
+
+            // 2. Registrar en historial
+            DB::connection($this->connection)
+                ->table('historial_accesos')
+                ->insert([
+                    'personal_id'      => $id,
+                    'tipo_movimiento'  => $movimiento,
+                    'fecha_hora'       => Carbon::now(),
+                    'puerta_acceso'    => 'CONTROL_MANUAL',
+                    'usuario_seguridad' => auth()->user()->name ?? 'ADMIN',
+                    'acceso_concedido' => true,
+                    'notas'            => 'Cambio de estado forzado desde el panel de administración'
+                ]);
+        });
 
         return back();
     }

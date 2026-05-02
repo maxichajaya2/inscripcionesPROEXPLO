@@ -45,7 +45,7 @@ class AuthenticatedSessionController extends Controller
         }
 
         if ($user->hasRole('logistica')) {
-            return redirect()->intended(route('proveedores.index'));
+            return redirect()->intended(route('personal-montaje.index'));
         }
 
         return redirect()->intended(RouteServiceProvider::HOME);

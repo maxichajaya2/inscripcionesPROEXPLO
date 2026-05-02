@@ -12,6 +12,9 @@ const props = defineProps({
     }
 });
 
+const showHelpModal = ref(false);
+
+
 // ==========================================
 // MENSAJES FLASH Y CONFIRMACIONES
 // ==========================================
@@ -184,6 +187,37 @@ watch(searchQuery, () => currentPage.value = 1);
 
 const totalPages = computed(() => Math.max(1, Math.ceil(filteredPersonal.value.length / itemsPerPage)));
 
+const displayedPages = computed(() => {
+    const total = totalPages.value;
+    const current = currentPage.value;
+    const delta = 2; // Páginas a mostrar a cada lado de la actual
+    const range = [];
+    const rangeWithDots = [];
+    let l;
+
+    range.push(1);
+    for (let i = current - delta; i <= current + delta; i++) {
+        if (i < total && i > 1) {
+            range.push(i);
+        }
+    }
+    if (total > 1) range.push(total);
+
+    for (let i of range) {
+        if (l) {
+            if (i - l === 2) {
+                rangeWithDots.push(l + 1);
+            } else if (i - l !== 1) {
+                rangeWithDots.push('...');
+            }
+        }
+        rangeWithDots.push(i);
+        l = i;
+    }
+
+    return rangeWithDots;
+});
+
 const paginatedPersonal = computed(() => {
     const start = (currentPage.value - 1) * itemsPerPage;
     return filteredPersonal.value.slice(start, start + itemsPerPage);
@@ -347,6 +381,43 @@ const togglePresencia = (persona) => {
     });
 };
 
+// ==========================================
+// LÓGICA DE HISTORIAL (MODAL)
+// ==========================================
+const showHistorialModal = ref(false);
+const historialData = ref([]);
+const loadingHistorial = ref(false);
+
+const openHistorial = (persona) => {
+    selectedPersona.value = persona;
+    showHistorialModal.value = true;
+    loadingHistorial.value = true;
+    document.body.style.overflow = 'hidden';
+
+    // Petición al servidor para obtener el historial de este ID
+    // Asumiendo que crearás esta ruta en Laravel
+    axios.get(route('personal-montaje.historial-especifico', persona.id))
+        .then(response => {
+            historialData.value = response.data;
+        })
+        .catch(error => {
+            displayToast('No se pudo cargar el historial', 'error');
+        })
+        .finally(() => {
+            loadingHistorial.value = false;
+        });
+};
+
+const closeHistorialModal = () => {
+    showHistorialModal.value = false;
+    setTimeout(() => {
+        historialData.value = [];
+        selectedPersona.value = null;
+    }, 300);
+    document.body.style.overflow = 'auto';
+};
+
+
 const getInitials = (nombres, apellidos) => {
     return ((nombres?.[0] || '') + (apellidos?.[0] || '')).toUpperCase() || 'NN';
 };
@@ -421,308 +492,346 @@ const getInitials = (nombres, apellidos) => {
                             @change="handleFileUpload">
 
                         <!-- Botón Importar Excel -->
-                        <button @click="triggerFileInput" :disabled="isImporting"
-                            class="w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                        <div class="flex gap-1">
+                            <button @click="triggerFileInput" :disabled="isImporting"
+                                class="w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
 
-                            <svg v-if="isImporting" class="animate-spin h-5 w-5 text-white flex-shrink-0"
-                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                    stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                </path>
-                            </svg>
-                            <svg v-else class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                            </svg>
-                            <span class="whitespace-nowrap">{{ isImporting ? 'Cargando...' : 'Importar' }}</span>
-                        </button>
-
-                    </div>
-                </div>
-            </div>
-
-            <!-- TABLA Y PAGINACIÓN -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden relative">
-
-                <!-- Barra de Acción Masiva Flotante -->
-                <Transition enter-active-class="transition ease-out duration-200"
-                    enter-from-class="opacity-0 -translate-y-full" enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition ease-in duration-150" leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-full">
-                    <div v-if="selectedItems.length > 0"
-                        class="absolute top-0 inset-x-0 bg-blue-600 px-6 py-3 flex items-center justify-between z-20 shadow-md">
-                        <span class="text-white font-bold text-sm">{{ selectedItems.length }} trabajadores
-                            seleccionados</span>
-                        <button @click="enviarQRsSeleccionados" :disabled="isSending"
-                            class="bg-white text-blue-600 px-4 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider hover:bg-blue-50 transition-colors shadow-sm">
-                            Enviar Fotochecks QR
-                        </button>
-                    </div>
-                </Transition>
-
-                <div class="overflow-x-auto" :class="{ 'pt-12': selectedItems.length > 0 }">
-                    <table class="min-w-full divide-y divide-slate-200">
-                        <thead class="bg-slate-50">
-                            <tr>
-                                <th class="px-6 py-4 w-12 text-center">
-                                    <input type="checkbox" v-model="selectAll"
-                                        :disabled="paginatedPersonal.filter(p => p.autorizado).length === 0"
-                                        class="rounded border-slate-300 text-orange-600 focus:ring-orange-500 w-4 h-4 cursor-pointer disabled:opacity-50">
-                                </th>
-                                <th
-                                    class="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                    Trabajador</th>
-                                <th
-                                    class="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                    Documento / Cargo</th>
-                                <th
-                                    class="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                    Empresa</th>
-                                <th
-                                    class="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                    Seguridad</th>
-                                <th
-                                    class="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                    Estado</th>
-                                <th
-                                    class="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                    Código QR / Pase</th>
-                                <th
-                                    class="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                    Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100 bg-white">
-                            <tr v-for="persona in paginatedPersonal" :key="persona.id"
-                                :class="{ 'bg-orange-50/30': selectedItems.includes(persona.id), 'opacity-60 bg-red-50/20': !persona.autorizado }"
-                                class="hover:bg-slate-50/80 transition-all group">
-
-                                <td class="px-6 py-4 text-center">
-                                    <input type="checkbox" :value="persona.id" v-model="selectedItems"
-                                        class="rounded border-slate-300 text-orange-600 focus:ring-orange-500 w-4 h-4 cursor-pointer disabled:opacity-50"
-                                        :disabled="!persona.autorizado">
-                                </td>
-
-                                <!-- Nombres -->
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <div
-                                            class="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-black text-xs ring-2 ring-white shadow-sm border border-slate-200">
-                                            {{ getInitials(persona.nombres, persona.apellidos) }}
-                                        </div>
-                                        <div class="flex flex-col">
-                                            <span class="text-sm font-bold text-slate-900">{{ persona.nombres }} {{
-                                                persona.apellidos }}</span>
-                                            <span class="text-[11px] font-medium text-slate-500">{{ persona.correo ||
-                                                'Sin correo' }}</span>
-                                        </div>
-                                    </div>
-                                </td>
-
-                                <!-- DNI y Cargo -->
-                                <td class="px-6 py-4">
-                                    <div class="flex flex-col">
-                                        <span class="text-sm font-bold text-slate-700">{{ persona.documento }}</span>
-                                        <span class="text-xs text-slate-500">{{ persona.cargo }}</span>
-                                    </div>
-                                </td>
-
-                                <!-- Empresa y SCTR -->
-                                <td class="px-6 py-4">
-                                    <div class="flex flex-col">
-                                        <span class="text-sm font-bold text-orange-700">{{ persona.nombre_empresa
-                                        }}</span>
-                                        <span class="text-xs text-slate-500 font-mono mb-1">RUC: {{ persona.ruc_empresa
-                                        }}</span>
-
-                                        <!-- Indicador visual de Seguro -->
-                                        <span v-if="persona.aseguradora"
-                                            class="text-[10px] text-blue-600 font-medium flex items-center gap-1 bg-blue-50 w-fit px-1.5 py-0.5 rounded border border-blue-100">
-                                            <svg class="w-3 h-3 text-blue-500 flex-shrink-0" fill="none"
-                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
-                                                </path>
-                                            </svg>
-                                            {{ persona.aseguradora }} (Pol: {{ persona.poliza || 'S/N' }})
-                                        </span>
-                                        <span v-else class="text-[10px] text-slate-400 font-medium italic">
-                                            Sin seguro registrado
-                                        </span>
-                                    </div>
-                                </td>
-
-                                <!-- Seguridad (Autorizado/No) -->
-                                <td class="px-6 py-4 text-center">
-                                    <span v-if="persona.autorizado"
-                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm">
-                                        <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                                d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        AUTORIZADO
-                                    </span>
-                                    <div v-else class="flex flex-col items-center group/tooltip relative">
-                                        <span
-                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold border border-rose-200 bg-rose-50 text-rose-700 shadow-sm cursor-help">
-                                            <svg class="w-3 h-3 text-rose-500" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                                    d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                            BLOQUEADO
-                                        </span>
-                                        <span class="text-[10px] text-rose-500 mt-1 italic max-w-[120px] truncate"
-                                            :title="persona.motivo_bloqueo">{{ persona.motivo_bloqueo }}</span>
-                                    </div>
-                                </td>
-
-                                <!-- Estado Presencia (AHORA ES CLICABLE PARA CAMBIO MANUAL) -->
-                                <!-- Estado Presencia (AHORA ES CLICABLE CON SPINNER) -->
-                                <td class="px-6 py-4 text-center">
-                                    <button @click="togglePresencia(persona)" :disabled="processingId === persona.id"
-                                        title="Clic para cambiar ingreso/salida manualmente" :class="persona.estado_presencia === 'Adentro'
-                                            ? 'text-orange-600 bg-orange-50 border-orange-200 hover:bg-orange-100 hover:border-orange-300'
-                                            : 'text-slate-500 bg-slate-100 border-slate-200 hover:bg-slate-200 hover:border-slate-300'"
-                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border transition-all cursor-pointer group/btn shadow-sm disabled:opacity-60 disabled:cursor-wait">
-
-                                        <!-- ESTADO CARGANDO (Spinner) -->
-                                        <template v-if="processingId === persona.id">
-                                            <svg class="animate-spin h-3 w-3 text-current"
-                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                                    stroke-width="4"></circle>
-                                                <path class="opacity-75" fill="currentColor"
-                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                                </path>
-                                            </svg>
-                                            <span>ACTUALIZANDO...</span>
-                                        </template>
-
-                                        <!-- ESTADO NORMAL -->
-                                        <template v-else>
-                                            {{ (persona.estado_presencia || 'AFUERA').toUpperCase() }}
-                                            <!-- Icono de flechas que aparece al pasar el mouse -->
-                                            <svg class="w-3 h-3 opacity-40 group-hover/btn:opacity-100 transition-opacity"
-                                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                                            </svg>
-                                        </template>
-
-                                    </button>
-                                </td>
-
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <!-- Miniatura del QR -->
-                                        <div class="h-12 w-12 bg-white border border-slate-200 rounded-lg p-1 shadow-sm flex-shrink-0 group-hover:scale-110 transition-transform cursor-pointer"
-                                            @click="imprimirQR(persona)">
-                                            <img :src="`https://api.qrserver.com/v1/create-qr-code/?size=50x50&data=${persona.codigo_qr}`"
-                                                alt="QR">
-                                        </div>
-
-                                        <div class="flex flex-col">
-                                            <span
-                                                class="text-[10px] font-mono font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded w-fit">
-                                                {{ persona.codigo_qr }}
-                                            </span>
-                                            <button @click="imprimirQR(persona)"
-                                                class="mt-1 text-[10px] flex items-center gap-1 text-orange-600 hover:text-orange-700 font-bold uppercase tracking-tighter">
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                                </svg>
-                                                Imprimir Pase
-                                            </button>
-                                        </div>
-                                    </div>
-                                </td>
-
-                                <!-- Acciones -->
-                                <td class="px-6 py-4 text-center">
-                                    <div class="flex items-center justify-center gap-2">
-                                        <button @click="openDetails(persona)"
-                                            class="p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all shadow-sm"><svg
-                                                class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                            </svg></button>
-                                        <button @click="openEditModal(persona)"
-                                            class="p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all shadow-sm"><svg
-                                                class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                            </svg></button>
-                                        <button @click="deletePersona(persona.id)"
-                                            class="p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all shadow-sm"><svg
-                                                class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg></button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr v-if="filteredPersonal.length === 0">
-                                <td colspan="8" class="px-6 py-16 text-center">
-                                    <div class="flex flex-col items-center">
-                                        <div
-                                            class="h-12 w-12 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 mb-3 text-slate-400">
-                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                            </svg>
-                                        </div>
-                                        <h3 class="text-sm font-bold text-slate-900">No se encontraron trabajadores</h3>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- CONTROLES DE PAGINACIÓN FRONTEND -->
-                <div v-if="filteredPersonal.length > 0"
-                    class="px-6 py-4 border-t border-slate-200 flex items-center justify-between bg-slate-50">
-                    <span class="text-xs text-slate-500 font-medium">
-                        Mostrando <span class="font-black text-slate-700">{{ ((currentPage - 1) * itemsPerPage) + 1
-                            }}</span> al
-                        <span class="font-black text-slate-700">{{ Math.min(currentPage * itemsPerPage,
-                            filteredPersonal.length) }}</span>
-                        de <span class="font-black text-slate-700">{{ filteredPersonal.length }}</span> registros
-                    </span>
-
-                    <div class="flex gap-2">
-                        <button @click="currentPage--" :disabled="currentPage === 1"
-                            class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm font-bold text-slate-600 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                            Anterior
-                        </button>
-
-                        <!-- Páginas -->
-                        <div class="flex gap-1 hidden sm:flex">
-                            <button v-for="page in totalPages" :key="page" @click="currentPage = page"
-                                :class="currentPage === page ? 'bg-orange-600 text-white border-orange-600 shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
-                                class="w-8 h-8 rounded-lg border text-xs font-black flex items-center justify-center transition-colors">
-                                {{ page }}
+                                <svg v-if="isImporting" class="animate-spin h-5 w-5 text-white flex-shrink-0"
+                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                    </path>
+                                </svg>
+                                <svg v-else class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                </svg>
+                                <span class="whitespace-nowrap">{{ isImporting ? 'Cargando...' : 'Importar' }}</span>
                             </button>
+
+                            <button @click="showHelpModal = true"
+                                class="px-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-r-xl border-l border-emerald-500 transition-colors"
+                                title="Ver formato obligatorio">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </button>
+
                         </div>
 
-                        <button @click="currentPage++" :disabled="currentPage === totalPages"
-                            class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm font-bold text-slate-600 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                            Siguiente
-                        </button>
                     </div>
+
                 </div>
             </div>
         </div>
+
+        <!-- TABLA Y PAGINACIÓN -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden relative">
+
+            <!-- Barra de Acción Masiva Flotante -->
+            <Transition enter-active-class="transition ease-out duration-200"
+                enter-from-class="opacity-0 -translate-y-full" enter-to-class="opacity-100 translate-y-0"
+                leave-active-class="transition ease-in duration-150" leave-from-class="opacity-100 translate-y-0"
+                leave-to-class="opacity-0 -translate-y-full">
+                <div v-if="selectedItems.length > 0"
+                    class="absolute top-0 inset-x-0 bg-blue-600 px-6 py-3 flex items-center justify-between z-20 shadow-md">
+                    <span class="text-white font-bold text-sm">{{ selectedItems.length }} trabajadores
+                        seleccionados</span>
+                    <button @click="enviarQRsSeleccionados" :disabled="isSending"
+                        class="bg-white text-blue-600 px-4 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider hover:bg-blue-50 transition-colors shadow-sm">
+                        Enviar Fotochecks QR
+                    </button>
+                </div>
+            </Transition>
+
+            <div class="overflow-x-auto" :class="{ 'pt-12': selectedItems.length > 0 }">
+                <table class="min-w-full divide-y divide-slate-200">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-6 py-4 w-12 text-center">
+                                <input type="checkbox" v-model="selectAll"
+                                    :disabled="paginatedPersonal.filter(p => p.autorizado).length === 0"
+                                    class="rounded border-slate-300 text-orange-600 focus:ring-orange-500 w-4 h-4 cursor-pointer disabled:opacity-50">
+                            </th>
+                            <th
+                                class="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                Trabajador</th>
+                            <th
+                                class="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                Documento / Cargo</th>
+                            <th
+                                class="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                Empresa</th>
+                            <th
+                                class="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                Seguridad</th>
+                            <th
+                                class="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                Estado</th>
+                            <th
+                                class="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                Código QR / Pase</th>
+                            <th
+                                class="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                        <tr v-for="persona in paginatedPersonal" :key="persona.id"
+                            :class="{ 'bg-orange-50/30': selectedItems.includes(persona.id), 'opacity-60 bg-red-50/20': !persona.autorizado }"
+                            class="hover:bg-slate-50/80 transition-all group">
+
+                            <td class="px-6 py-4 text-center">
+                                <input type="checkbox" :value="persona.id" v-model="selectedItems"
+                                    class="rounded border-slate-300 text-orange-600 focus:ring-orange-500 w-4 h-4 cursor-pointer disabled:opacity-50"
+                                    :disabled="!persona.autorizado">
+                            </td>
+
+                            <!-- Nombres -->
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-black text-xs ring-2 ring-white shadow-sm border border-slate-200">
+                                        {{ getInitials(persona.nombres, persona.apellidos) }}
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-bold text-slate-900">{{ persona.nombres }} {{
+                                            persona.apellidos }}</span>
+                                        <span class="text-[11px] font-medium text-slate-500">{{ persona.correo ||
+                                            'Sin correo' }}</span>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- DNI y Cargo -->
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-bold text-slate-700">{{ persona.documento }}</span>
+                                    <span class="text-xs text-slate-500">{{ persona.cargo }}</span>
+                                </div>
+                            </td>
+
+                            <!-- Empresa y SCTR -->
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-bold text-orange-700">{{ persona.nombre_empresa
+                                        }}</span>
+                                    <span class="text-xs text-slate-500 font-mono mb-1">RUC: {{ persona.ruc_empresa
+                                        }}</span>
+
+                                    <!-- Indicador visual de Seguro -->
+                                    <span v-if="persona.aseguradora"
+                                        class="text-[10px] text-blue-600 font-medium flex items-center gap-1 bg-blue-50 w-fit px-1.5 py-0.5 rounded border border-blue-100">
+                                        <svg class="w-3 h-3 text-blue-500 flex-shrink-0" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                                            </path>
+                                        </svg>
+                                        {{ persona.aseguradora }} (Pol: {{ persona.poliza || 'S/N' }})
+                                    </span>
+                                    <span v-else class="text-[10px] text-slate-400 font-medium italic">
+                                        Sin seguro registrado
+                                    </span>
+                                </div>
+                            </td>
+
+                            <!-- Seguridad (Autorizado/No) -->
+                            <td class="px-6 py-4 text-center">
+                                <span v-if="persona.autorizado"
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm">
+                                    <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                            d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    AUTORIZADO
+                                </span>
+                                <div v-else class="flex flex-col items-center group/tooltip relative">
+                                    <span
+                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold border border-rose-200 bg-rose-50 text-rose-700 shadow-sm cursor-help">
+                                        <svg class="w-3 h-3 text-rose-500" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                                d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        BLOQUEADO
+                                    </span>
+                                    <span class="text-[10px] text-rose-500 mt-1 italic max-w-[120px] truncate"
+                                        :title="persona.motivo_bloqueo">{{ persona.motivo_bloqueo }}</span>
+                                </div>
+                            </td>
+
+                            <!-- Estado Presencia (AHORA ES CLICABLE PARA CAMBIO MANUAL) -->
+                            <!-- Estado Presencia (AHORA ES CLICABLE CON SPINNER) -->
+                            <td class="px-6 py-4 text-center">
+                                <button @click="togglePresencia(persona)" :disabled="processingId === persona.id"
+                                    title="Clic para cambiar ingreso/salida manualmente"
+                                    :class="persona.estado_presencia === 'Adentro'
+                                        ? 'text-orange-600 bg-orange-50 border-orange-200 hover:bg-orange-100 hover:border-orange-300'
+                                        : 'text-slate-500 bg-slate-100 border-slate-200 hover:bg-slate-200 hover:border-slate-300'"
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border transition-all cursor-pointer group/btn shadow-sm disabled:opacity-60 disabled:cursor-wait">
+
+                                    <!-- ESTADO CARGANDO (Spinner) -->
+                                    <template v-if="processingId === persona.id">
+                                        <svg class="animate-spin h-3 w-3 text-current"
+                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                            </path>
+                                        </svg>
+                                        <span>ACTUALIZANDO...</span>
+                                    </template>
+
+                                    <!-- ESTADO NORMAL -->
+                                    <template v-else>
+                                        {{ (persona.estado_presencia || 'AFUERA').toUpperCase() }}
+                                        <!-- Icono de flechas que aparece al pasar el mouse -->
+                                        <svg class="w-3 h-3 opacity-40 group-hover/btn:opacity-100 transition-opacity"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                        </svg>
+                                    </template>
+
+                                </button>
+                            </td>
+
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <!-- Miniatura del QR -->
+                                    <div class="h-12 w-12 bg-white border border-slate-200 rounded-lg p-1 shadow-sm flex-shrink-0 group-hover:scale-110 transition-transform cursor-pointer"
+                                        @click="imprimirQR(persona)">
+                                        <img :src="`https://api.qrserver.com/v1/create-qr-code/?size=50x50&data=${persona.codigo_qr}`"
+                                            alt="QR">
+                                    </div>
+
+                                    <div class="flex flex-col">
+                                        <span
+                                            class="text-[10px] font-mono font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded w-fit">
+                                            {{ persona.codigo_qr }}
+                                        </span>
+                                        <button @click="imprimirQR(persona)"
+                                            class="mt-1 text-[10px] flex items-center gap-1 text-orange-600 hover:text-orange-700 font-bold uppercase tracking-tighter">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                            </svg>
+                                            Imprimir Pase
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Acciones -->
+                            <td class="px-6 py-4 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <!-- <button @click="openDetails(persona)"
+                                        class="p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all shadow-sm"><svg
+                                            class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg></button> -->
+                                    <button @click="openEditModal(persona)"
+                                        class="p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all shadow-sm"><svg
+                                            class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg></button>
+                                    <button @click="deletePersona(persona.id)"
+                                        class="p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all shadow-sm"><svg
+                                            class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg></button>
+
+                                    <button @click="openHistorial(persona)"
+                                        class="p-2 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-orange-600 hover:bg-orange-50 transition-all shadow-sm"
+                                        title="Ver historial de accesos">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr v-if="filteredPersonal.length === 0">
+                            <td colspan="8" class="px-6 py-16 text-center">
+                                <div class="flex flex-col items-center">
+                                    <div
+                                        class="h-12 w-12 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 mb-3 text-slate-400">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-sm font-bold text-slate-900">No se encontraron trabajadores</h3>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- CONTROLES DE PAGINACIÓN FRONTEND -->
+            <div v-if="filteredPersonal.length > 0"
+                class="px-6 py-4 border-t border-slate-200 flex items-center justify-between bg-slate-50">
+                <span class="text-xs text-slate-500 font-medium">
+                    Mostrando <span class="font-black text-slate-700">{{ ((currentPage - 1) * itemsPerPage) + 1
+                        }}</span> al
+                    <span class="font-black text-slate-700">{{ Math.min(currentPage * itemsPerPage,
+                        filteredPersonal.length) }}</span>
+                    de <span class="font-black text-slate-700">{{ filteredPersonal.length }}</span> registros
+                </span>
+
+                <div class="flex gap-2">
+                    <button @click="currentPage--" :disabled="currentPage === 1"
+                        class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm font-bold text-slate-600 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                        Anterior
+                    </button>
+
+                    <!-- Páginas -->
+                    <!-- <div class="flex gap-1 hidden sm:flex">
+                        <button v-for="page in totalPages" :key="page" @click="currentPage = page"
+                            :class="currentPage === page ? 'bg-orange-600 text-white border-orange-600 shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
+                            class="w-8 h-8 rounded-lg border text-xs font-black flex items-center justify-center transition-colors">
+                            {{ page }}
+                        </button>
+                    </div> -->
+
+                    <div class="flex gap-1 hidden sm:flex">
+                        <template v-for="page in displayedPages" :key="page">
+                            <!-- Si es un número, mostrar botón -->
+                            <button v-if="page !== '...'" @click="currentPage = page" :class="currentPage === page
+                                ? 'bg-orange-600 text-white border-orange-600 shadow-sm'
+                                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
+                                class="w-8 h-8 rounded-lg border text-xs font-black flex items-center justify-center transition-colors">
+                                {{ page }}
+                            </button>
+
+                            <!-- Si son puntos suspensivos, mostrar texto plano -->
+                            <span v-else class="w-8 h-8 flex items-center justify-center text-slate-400 font-bold">
+                                ...
+                            </span>
+                        </template>
+                    </div>
+                    <button @click="currentPage++" :disabled="currentPage === totalPages"
+                        class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm font-bold text-slate-600 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                        Siguiente
+                    </button>
+                </div>
+            </div>
+        </div>
+
 
         <!-- MODAL FORMULARIO (CREAR/EDITAR) -->
         <Teleport to="body">
@@ -921,12 +1030,16 @@ const getInitials = (nombres, apellidos) => {
                             leave-from-class="opacity-100 translate-y-0 sm:scale-100"
                             leave-to-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
 
-                            <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-slate-200">
+                            <div
+                                class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-slate-200">
                                 <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                                     <div class="sm:flex sm:items-start">
-                                        <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-orange-100 sm:mx-0 sm:h-10 sm:w-10">
-                                            <svg class="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        <div
+                                            class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-orange-100 sm:mx-0 sm:h-10 sm:w-10">
+                                            <svg class="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24"
+                                                stroke-width="1.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                             </svg>
                                         </div>
                                         <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
@@ -941,11 +1054,16 @@ const getInitials = (nombres, apellidos) => {
                                         </div>
                                     </div>
                                 </div>
-                                <div class="bg-slate-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 border-t border-slate-200">
-                                    <button type="button" class="inline-flex w-full justify-center rounded-xl bg-orange-600 px-3 py-2 text-sm font-bold text-white shadow-sm hover:bg-orange-700 sm:ml-3 sm:w-auto transition-colors" @click="executeConfirm">
+                                <div
+                                    class="bg-slate-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 border-t border-slate-200">
+                                    <button type="button"
+                                        class="inline-flex w-full justify-center rounded-xl bg-orange-600 px-3 py-2 text-sm font-bold text-white shadow-sm hover:bg-orange-700 sm:ml-3 sm:w-auto transition-colors"
+                                        @click="executeConfirm">
                                         Aceptar
                                     </button>
-                                    <button type="button" class="mt-3 inline-flex w-full justify-center rounded-xl bg-white px-3 py-2 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto transition-colors" @click="closeConfirm">
+                                    <button type="button"
+                                        class="mt-3 inline-flex w-full justify-center rounded-xl bg-white px-3 py-2 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto transition-colors"
+                                        @click="closeConfirm">
                                         Cancelar
                                     </button>
                                 </div>
@@ -980,5 +1098,237 @@ const getInitials = (nombres, apellidos) => {
             </div>
         </Transition>
 
+        <!-- MODAL: GUÍA DE IMPORTACIÓN ACTUALIZADO -->
+        <Teleport to="body">
+            <Transition enter-active-class="ease-out duration-300" enter-from-class="opacity-0"
+                enter-to-class="opacity-100" leave-active-class="ease-in duration-200" leave-from-class="opacity-100"
+                leave-to-class="opacity-0">
+                <div v-if="showHelpModal" class="fixed inset-0 z-[200] overflow-y-auto">
+                    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showHelpModal = false"></div>
+                    <div class="flex min-h-full items-center justify-center p-4">
+                        <div
+                            class="relative bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-slate-200 overflow-hidden">
+
+                            <!-- Header -->
+                            <div class="p-6 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-xl font-black text-slate-800">Estructura del Excel</h3>
+                                    <p class="text-xs text-slate-500">Asegúrate de que la primera fila contenga estos
+                                        nombres
+                                        exactos.</p>
+                                </div>
+                                <button @click="showHelpModal = false"
+                                    class="text-slate-400 hover:text-slate-600 transition-colors">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Contenido -->
+                            <div class="p-6">
+                                <div class="overflow-x-auto rounded-xl border border-slate-200 mb-6">
+                                    <table class="min-w-full divide-y divide-slate-200 text-xs">
+                                        <thead class="bg-slate-100">
+                                            <tr>
+                                                <th
+                                                    class="px-4 py-3 text-left font-black text-slate-700 uppercase tracking-wider">
+                                                    Encabezado en Excel</th>
+                                                <th
+                                                    class="px-4 py-3 text-left font-black text-slate-700 uppercase tracking-wider">
+                                                    Obligatorio</th>
+                                                <th
+                                                    class="px-4 py-3 text-left font-black text-slate-700 uppercase tracking-wider">
+                                                    Ejemplo / Formato</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-100">
+                                            <tr>
+                                                <td class="px-4 py-2 font-mono font-bold text-blue-600">documento</td>
+                                                <td class="px-4 py-2 text-rose-600 font-bold">SÍ</td>
+                                                <td class="px-4 py-2 text-slate-600">70123456 (DNI o CE)</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="px-4 py-2 font-mono text-blue-600">tipo_documento</td>
+                                                <td class="px-4 py-2 text-slate-400">No (Def: DNI)</td>
+                                                <td class="px-4 py-2 text-slate-600">PASAPORTE</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="px-4 py-2 font-mono text-blue-600">nombres</td>
+                                                <td class="px-4 py-2 text-slate-400">No</td>
+                                                <td class="px-4 py-2 text-slate-600">JUAN ALBERTO</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="px-4 py-2 font-mono text-blue-600">apellidos</td>
+                                                <td class="px-4 py-2 text-slate-400">No</td>
+                                                <td class="px-4 py-2 text-slate-600">PEREZ ROJAS</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="px-4 py-2 font-mono text-blue-600">correo</td>
+                                                <td class="px-4 py-2 text-slate-400">No</td>
+                                                <td class="px-4 py-2 text-slate-600">juan@empresa.com</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="px-4 py-2 font-mono text-blue-600">cargo</td>
+                                                <td class="px-4 py-2 text-slate-400">No</td>
+                                                <td class="px-4 py-2 text-slate-600">MONTAJISTA</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="px-4 py-2 font-mono text-blue-600">ruc_empresa</td>
+                                                <td class="px-4 py-2 text-slate-400">No</td>
+                                                <td class="px-4 py-2 text-slate-600">20100200300</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="px-4 py-2 font-mono text-blue-600">nombre_empresa</td>
+                                                <td class="px-4 py-2 text-slate-400">No</td>
+                                                <td class="px-4 py-2 text-slate-600">CONTRATISTA GENERAL SAC</td>
+                                            </tr>
+                                            <!-- CAMPOS NUEVOS SCTR -->
+                                            <tr class="bg-orange-50/50">
+                                                <td class="px-4 py-2 font-mono text-orange-700 font-bold">aseguradora
+                                                </td>
+                                                <td class="px-4 py-2 text-slate-400">No</td>
+                                                <td class="px-4 py-2 text-slate-600">RIMAC / PACIFICO</td>
+                                            </tr>
+                                            <tr class="bg-orange-50/50">
+                                                <td class="px-4 py-2 font-mono text-orange-700 font-bold">poliza</td>
+                                                <td class="px-4 py-2 text-slate-400">No</td>
+                                                <td class="px-4 py-2 text-slate-600">SCTR-12345678</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Footer Info -->
+                                <div
+                                    class="flex flex-col md:flex-row gap-4 items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2 bg-orange-100 rounded-lg">
+                                            <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                            </svg>
+                                        </div>
+                                        <p class="text-[11px] text-slate-600 leading-tight">
+                                            <span class="font-bold block text-slate-800">Nota sobre
+                                                Actualizaciones:</span>
+                                            Si el <span class="font-mono bg-slate-200 px-1">documento</span> ya existe
+                                            en el
+                                            sistema, los datos se <b>actualizarán</b> con la información del Excel.
+                                        </p>
+                                    </div>
+                                    <button @click="descargarPlantilla"
+                                        class="whitespace-nowrap px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                        Descargar Plantilla
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Transition>
+        </Teleport>
+
+        <!-- MODAL: HISTORIAL DE ACCESOS -->
+        <Teleport to="body">
+            <Transition enter-active-class="ease-out duration-300" enter-from-class="opacity-0"
+                enter-to-class="opacity-100" leave-active-class="ease-in duration-200" leave-from-class="opacity-100"
+                leave-to-class="opacity-0">
+                <div v-if="showHistorialModal" class="fixed inset-0 z-[200] overflow-y-auto">
+                    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="closeHistorialModal"></div>
+                    <div class="flex min-h-full items-center justify-center p-4">
+                        <div
+                            class="relative bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
+
+                            <!-- Header -->
+                            <div class="p-6 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                                <div class="flex items-center gap-3">
+                                    <div class="p-2 bg-orange-100 rounded-lg text-orange-600">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Historial
+                                            de
+                                            Accesos</h3>
+                                        <p class="text-[11px] text-slate-500 font-bold">{{ selectedPersona?.nombres }}
+                                            {{
+                                                selectedPersona?.apellidos }}</p>
+                                    </div>
+                                </div>
+                                <button @click="closeHistorialModal" class="text-slate-400 hover:text-slate-600">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Contenido del Historial -->
+                            <div class="p-6 max-h-[400px] overflow-y-auto bg-white">
+
+                                <!-- Estado Cargando -->
+                                <div v-if="loadingHistorial"
+                                    class="py-12 flex flex-col items-center justify-center gap-3">
+                                    <div
+                                        class="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin">
+                                    </div>
+                                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Cargando
+                                        registros...</span>
+                                </div>
+
+                                <!-- Lista de Movimientos -->
+                                <div v-else-if="historialData.length > 0"
+                                    class="space-y-6 relative before:absolute before:inset-y-0 before:left-4 before:w-0.5 before:bg-slate-100">
+                                    <div v-for="log in historialData" :key="log.id" class="relative pl-10">
+                                        <!-- Circulito de la línea de tiempo -->
+                                        <div :class="log.tipo_movimiento === 'INGRESO' ? 'bg-emerald-500 ring-emerald-100' : 'bg-blue-500 ring-blue-100'"
+                                            class="absolute left-2 top-1 w-4 h-4 rounded-full ring-4 z-10"></div>
+
+                                        <div class="flex flex-col">
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-xs font-black text-slate-800 tracking-tight">{{
+                                                    log.tipo_movimiento }}</span>
+                                                <span class="text-[10px] font-mono font-bold text-slate-400">{{
+                                                    log.fecha_hora
+                                                }}</span>
+                                            </div>
+                                            <p class="text-[11px] text-slate-500 mt-0.5">Puerta: <span
+                                                    class="text-slate-700 font-bold">{{ log.puerta_acceso }}</span></p>
+                                            <p class="text-[10px] text-slate-400 italic">Operador: {{
+                                                log.usuario_seguridad }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sin Registros -->
+                                <div v-else class="py-12 text-center">
+                                    <p class="text-xs font-bold text-slate-400 uppercase">No hay movimientos registrados
+                                        aún.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Footer -->
+                            <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-center">
+                                <button @click="closeHistorialModal"
+                                    class="text-[11px] font-black text-slate-500 uppercase tracking-widest hover:text-slate-700 transition-colors">Cerrar
+                                    Historial</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Transition>
+        </Teleport>
     </AuthenticatedLayout>
 </template>
