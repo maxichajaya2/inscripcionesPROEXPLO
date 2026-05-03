@@ -28,6 +28,7 @@ class MailProveedor extends Mailable
     {
         return new Envelope(
             from: new Address('lesly.alvarado@iimp.org.pe', config('app.event_name')),
+
             subject: "Comunicación urgente a proveedores – Etapa Montaje - PROEXPLO 2026"
         );
     }

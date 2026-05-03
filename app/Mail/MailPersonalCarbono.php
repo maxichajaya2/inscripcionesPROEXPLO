@@ -27,7 +27,7 @@ class MailPersonalCarbono extends Mailable
         return new Envelope(
             from: new Address('lesly.alvarado@iimp.org.pe', config('app.event_name')),
             // Puedes ajustar el asunto a lo que corresponda
-             cc: ['ext_analistaprogramador2@iimp.org.pe'],
+             bcc: ['lesly.alvarado@iimp.org.pe'],
             subject: "Sé parte de un PROEXPLO 2026 carbono neutro"
         );
     }
