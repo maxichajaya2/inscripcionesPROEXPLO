@@ -20,6 +20,7 @@ use App\Http\Controllers\Logistica\ProveedorController;
 use App\Http\Controllers\Logistica\ProveedorMontajeController;
 use App\Http\Controllers\Logistica\MontajistaController;
 use App\Http\Controllers\Admin\SieController;
+use App\Http\Controllers\Logistica\PersonalCarbonoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -79,7 +80,7 @@ Route::middleware(['auth', 'role:asociado|admin'])->group(function () {
 
 Route::middleware(['auth', 'role:logistica'])->group(function () {
 
-Route::get('/proveedores', [ProveedorController::class, 'index'])->name('proveedores.index');
+    Route::get('/proveedores', [ProveedorController::class, 'index'])->name('proveedores.index');
     Route::post('/proveedores', [ProveedorController::class, 'store'])->name('proveedores.store');
     Route::put('/proveedores/{proveedor}', [ProveedorController::class, 'update'])->name('proveedores.update');
     Route::delete('/proveedores/{proveedor}', [ProveedorController::class, 'destroy'])->name('proveedores.destroy');
@@ -91,6 +92,12 @@ Route::get('/proveedores', [ProveedorController::class, 'index'])->name('proveed
     Route::delete('/proveedores-montaje/{proveedor}', [ProveedorMontajeController::class, 'destroy'])->name('proveedores-montaje.destroy');
     Route::post('/proveedores-montaje/enviar-masivo', [ProveedorMontajeController::class, 'enviarMasivo'])->name('proveedores-montaje.enviar-masivo');
 
+    Route::get('/personal-carbono', [PersonalCarbonoController::class, 'index'])->name('personal-carbono.index');
+    Route::post('/personal-carbono', [PersonalCarbonoController::class, 'store'])->name('personal-carbono.store');
+    Route::put('/personal-carbono/{carbono}', [PersonalCarbonoController::class, 'update'])->name('personal-carbono.update');
+    Route::delete('/personal-carbono/{carbono}', [PersonalCarbonoController::class, 'destroy'])->name('personal-carbono.destroy');
+    Route::post('/personal-carbono/enviar-masivo', [PersonalCarbonoController::class, 'enviarMasivo'])->name('personal-carbono.enviar-masivo');
+    Route::post('/personal-carbono/importar', [PersonalCarbonoController::class, 'importarExcel'])->name('personal-carbono.importar');
 
     // Vista principal para gestionar/listar al personal
     Route::get('/personal-montaje', [MontajistaController::class, 'index'])->name('personal-montaje.index');
@@ -107,7 +114,6 @@ Route::get('/proveedores', [ProveedorController::class, 'index'])->name('proveed
     Route::patch('/personal-montaje/{id}/toggle-presencia', [MontajistaController::class, 'togglePresencia'])->name('personal-montaje.toggle-presencia');
 
     Route::get('/historial-especifico/{id}', [MontajistaController::class, 'historialEspecifico'])->name('personal-montaje.historial-especifico');
-
 });
 
 Route::get('/', [InscripcionController::class, 'index'])->name('inscripcion.index');

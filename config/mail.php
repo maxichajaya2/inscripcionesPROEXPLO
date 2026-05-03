@@ -45,9 +45,8 @@ return [
             'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN'),
         ],
-
         'proveedores' => [
-            'transport' => 'smtp',
+            'transport' => env('PROV_MAIL_MAILER', 'smtp'), // <-- Esta es la única línea que cambia
             'host' => env('PROV_MAIL_HOST', 'smtp.gmail.com'),
             'port' => env('PROV_MAIL_PORT', 587),
             'encryption' => env('PROV_MAIL_ENCRYPTION', 'tls'),
