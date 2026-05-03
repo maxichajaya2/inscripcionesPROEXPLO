@@ -194,25 +194,33 @@ const isSending = ref(false);
 const totalAEnviar = ref(0);
 const enviadoActual = ref(0);
 
+// MODIFICADO: Ahora ignora a los que ya tienen enviado en true
 const selectAll = computed({
     get: () => {
-        if (paginatedPersonal.value.length === 0) return false;
-        return paginatedPersonal.value.every(p => selectedPersonalIds.value.includes(p.id));
+        const seleccionables = paginatedPersonal.value.filter(p => !p.enviado);
+        if (seleccionables.length === 0) return false;
+        return seleccionables.every(p => selectedPersonalIds.value.includes(p.id));
     },
     set: (val) => {
+        const seleccionables = paginatedPersonal.value.filter(p => !p.enviado);
         if (val) {
-            paginatedPersonal.value.forEach(p => {
+            seleccionables.forEach(p => {
                 if (!selectedPersonalIds.value.includes(p.id)) {
                     selectedPersonalIds.value.push(p.id);
                 }
             });
         } else {
-            paginatedPersonal.value.forEach(p => {
+            seleccionables.forEach(p => {
                 const index = selectedPersonalIds.value.indexOf(p.id);
                 if (index > -1) selectedPersonalIds.value.splice(index, 1);
             });
         }
     }
+});
+
+// Calculamos si hay registros disponibles para seleccionar en la página actual
+const haySeleccionablesEnPagina = computed(() => {
+    return paginatedPersonal.value.some(p => !p.enviado);
 });
 
 // Simulador de progreso para el UI
@@ -251,7 +259,7 @@ const enviarCorreosSeleccionados = () => {
                 onSuccess: () => {
                     enviadoActual.value = totalAEnviar.value;
                     selectedPersonalIds.value = [];
-                    displayToast('Correos masivos enviados exitosamente.', 'success');
+                    // Ya no necesitamos displayToast manual si usas flash sessions en back
                 },
                 onError: () => {
                     displayToast('Hubo un problema al enviar los correos.', 'error');
@@ -275,9 +283,8 @@ const handleFileChange = (e) => {
     importForm.archivo_excel = e.target.files[0];
 
     if (importForm.archivo_excel) {
-        // Disparamos la confirmación o el envío directo
         openConfirm(`¿Deseas importar el archivo: ${importForm.archivo_excel.name}?`, () => {
-             submitImportBtn.value.click(); // Forzamos el submit
+             submitImportBtn.value.click();
         });
     }
 };
@@ -286,8 +293,7 @@ const submitImport = () => {
     importForm.post(route('personal-carbono.importar'), {
         preserveScroll: true,
         onSuccess: () => {
-            displayToast('Datos importados correctamente.', 'success');
-            // Limpiamos el input para que pueda volver a subir el mismo archivo si hay error
+            // displayToast('Datos importados correctamente.', 'success'); // Opcional si usas flash
             if(fileInput.value) fileInput.value.value = '';
             importForm.reset('archivo_excel');
         },
@@ -382,7 +388,8 @@ const formatDate = (dateString) => {
                         <thead class="bg-slate-50">
                             <tr>
                                 <th scope="col" class="px-6 py-4 w-12 text-center">
-                                    <input type="checkbox" v-model="selectAll" :disabled="paginatedPersonal.length === 0" class="rounded border-slate-300 text-orange-600 focus:ring-orange-500 w-4 h-4 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <!-- Modificado para deshabilitarse si no hay a quien enviarle -->
+                                    <input type="checkbox" v-model="selectAll" :disabled="!haySeleccionablesEnPagina" class="rounded border-slate-300 text-orange-600 focus:ring-orange-500 w-4 h-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
                                 </th>
                                 <th scope="col" class="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nombre Completo</th>
                                 <th scope="col" class="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Correo Electrónico</th>
@@ -390,24 +397,42 @@ const formatDate = (dateString) => {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 bg-white">
-                            <tr v-for="persona in paginatedPersonal" :key="persona.id" :class="{ 'bg-orange-50/30': selectedPersonalIds.includes(persona.id) }" class="hover:bg-slate-50/80 transition-all group">
+                            <!-- Modificado para agregar estilo atenuado si ya fue enviado -->
+                            <tr v-for="persona in paginatedPersonal" :key="persona.id"
+                                :class="[
+                                    selectedPersonalIds.includes(persona.id) ? 'bg-orange-50/30' : '',
+                                    persona.enviado ? 'bg-slate-50 opacity-80' : 'hover:bg-slate-50/80'
+                                ]"
+                                class="transition-all group">
+
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    <input type="checkbox" :value="persona.id" v-model="selectedPersonalIds" class="rounded border-slate-300 text-orange-600 focus:ring-orange-500 w-4 h-4 cursor-pointer">
+                                    <!-- Checkbox deshabilitado si ya fue enviado -->
+                                    <input type="checkbox" :value="persona.id" v-model="selectedPersonalIds" :disabled="persona.enviado" class="rounded border-slate-300 text-orange-600 focus:ring-orange-500 w-4 h-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
                                 </td>
 
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center gap-3">
-                                        <div class="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 font-bold text-xs ring-2 ring-white shadow-sm">
+                                        <div :class="persona.enviado ? 'bg-slate-200 text-slate-500 ring-transparent' : 'bg-slate-100 text-slate-700 ring-white shadow-sm'" class="h-9 w-9 rounded-full flex items-center justify-center font-bold text-xs ring-2">
                                             {{ getInitials(persona.nombre) }}
                                         </div>
                                         <div class="flex flex-col">
-                                            <span class="text-sm font-bold text-slate-900">{{ persona.nombre }}</span>
+                                            <span :class="persona.enviado ? 'text-slate-500' : 'text-slate-900'" class="text-sm font-bold">{{ persona.nombre }}</span>
                                         </div>
                                     </div>
                                 </td>
 
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="text-sm font-medium text-orange-600">{{ persona.correo }}</span>
+                                    <div class="flex items-center gap-2">
+                                        <span :class="persona.enviado ? 'text-slate-500' : 'text-orange-600'" class="text-sm font-medium">{{ persona.correo }}</span>
+
+                                        <!-- BADGE DE "ENVIADO" -->
+                                        <span v-if="persona.enviado" class="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            Enviado
+                                        </span>
+                                    </div>
                                 </td>
 
                                 <td class="px-6 py-4 text-center whitespace-nowrap">
@@ -484,7 +509,7 @@ const formatDate = (dateString) => {
                         <Transition enter-active-class="ease-out duration-300" enter-from-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to-class="opacity-100 translate-y-0 sm:scale-100" leave-active-class="ease-in duration-200" leave-from-class="opacity-100 translate-y-0 sm:scale-100" leave-to-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
                             <div class="relative transform overflow-hidden rounded-2xl bg-white text-center shadow-2xl transition-all sm:my-8 w-full max-w-sm border border-slate-200 p-6">
                                 <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-orange-100 mb-4">
-                                    <svg class="h-8 w-8 text-orange-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <svg class="h-8 w-8 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                     </svg>
                                 </div>
@@ -527,6 +552,9 @@ const formatDate = (dateString) => {
                                                     <p class="text-[10px] uppercase font-bold text-slate-400">Correo Electrónico</p>
                                                     <p class="text-sm font-bold text-orange-600 mt-1">{{ selectedPersona.correo }}</p>
                                                 </div>
+                                                <span v-if="selectedPersona.enviado" class="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                                                    Enviado
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
